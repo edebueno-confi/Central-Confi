@@ -2,7 +2,7 @@ create extension if not exists pgtap with schema extensions;
 
 begin;
 
-select plan(7);
+select plan(9);
 
 select is(
   (
@@ -43,10 +43,10 @@ select is(
       on n.oid = p.pronamespace
     where n.nspname = 'public'
       and p.prosecdef
-      and p.proname like 'rpc_admin_%'
+      and p.proname like 'rpc_%'
   ),
-  7,
-  'as 7 RPCs administrativas existem como funcoes SECURITY DEFINER expostas'
+  14,
+  'as 14 RPCs expostas existem como funcoes SECURITY DEFINER controladas'
 );
 
 select is(
@@ -57,10 +57,10 @@ select is(
       on n.oid = p.pronamespace
     where n.nspname = 'public'
       and p.prosecdef
-      and p.proname not like 'rpc_admin_%'
+      and p.proname not like 'rpc_%'
   ),
   0,
-  'nao existe SECURITY DEFINER exposta fora do control plane administrativo'
+  'nao existe SECURITY DEFINER exposta fora das RPCs controladas'
 );
 
 select is(
@@ -69,9 +69,14 @@ select is(
       select unnest(array[
         'current_user_id',
         'has_global_role',
+        'has_any_global_role',
         'has_tenant_role',
         'is_active_tenant_member',
-        'can_manage_membership_role'
+        'can_manage_membership_role',
+        'can_create_ticket',
+        'can_manage_ticket',
+        'can_view_internal_ticket_content',
+        'can_assign_ticket'
       ]) as proname
     ),
     grants as (
@@ -135,14 +140,50 @@ select is(
       left join lateral aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) as a
         on true
       where n.nspname = 'public'
-        and p.proname like 'rpc_admin_%'
+        and p.proname like 'rpc_%'
     )
     select count(distinct proname)::integer
     from grants
     where grantee = (select oid from pg_roles where rolname = 'authenticated')
   ),
-  7,
-  'authenticated recebe execute em todas as RPCs administrativas e somente por grant explicito'
+  14,
+  'authenticated recebe execute em todas as RPCs expostas e somente por grant explicito'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from information_schema.table_privileges as tp
+    where tp.grantee = 'authenticated'
+      and tp.privilege_type = 'SELECT'
+      and tp.table_schema = 'public'
+      and tp.table_name in (
+        'tickets',
+        'ticket_messages',
+        'ticket_events',
+        'ticket_assignments',
+        'ticket_attachments'
+      )
+  ),
+  0,
+  'authenticated nao possui SELECT direto nas tabelas base de ticketing'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from information_schema.table_privileges as tp
+    where tp.grantee = 'authenticated'
+      and tp.privilege_type = 'SELECT'
+      and tp.table_schema = 'public'
+      and tp.table_name in (
+        'vw_tickets_list',
+        'vw_ticket_detail',
+        'vw_ticket_timeline'
+      )
+  ),
+  3,
+  'authenticated possui SELECT apenas nas views contratuais de ticketing'
 );
 
 select * from finish();

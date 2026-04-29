@@ -9,6 +9,7 @@ Validar isolamento multi-tenant, permissões por papel e bloqueio de acesso inde
 - Usuário do tenant A não lê tickets do tenant B.
 - Contato do cliente não vê tickets de outro cliente.
 - Anexos respeitam o mesmo escopo do ticket.
+- Timeline respeita o mesmo escopo do ticket.
 - `tenant_manager` não lê `tenant_contacts` de outro tenant.
 - `tenant_admin` não cria membership fora do próprio tenant.
 - `tenant_admin` não usa RPC administrativa fora do próprio tenant.
@@ -19,6 +20,7 @@ Validar isolamento multi-tenant, permissões por papel e bloqueio de acesso inde
 - Support Manager vê fila do tenant conforme escopo.
 - Engineering Member vê work items permitidos.
 - Customer Contact só cria e acompanha tickets do próprio tenant.
+- Usuário comum não vê nota interna.
 - `tenant_manager` não cria `platform_admin`.
 - `tenant_manager` não se autopromove.
 - Usuário comum não cria membership.
@@ -28,6 +30,7 @@ Validar isolamento multi-tenant, permissões por papel e bloqueio de acesso inde
 - Cliente não altera prioridade interna.
 - Cliente não atribui responsável.
 - Engenharia não altera mensagem pública sem regra explícita.
+- App autenticado não faz `SELECT` direto nas tabelas base de ticketing.
 - `WITH CHECK` deve bloquear insert/update cross-tenant.
 - `tenant_memberships.tenant_id` deve ser imutável em updates.
 - `profiles` deve bloquear alteração direta de `email` e `is_active`.
@@ -38,6 +41,8 @@ Validar isolamento multi-tenant, permissões por papel e bloqueio de acesso inde
 - Criar ticket gera audit log.
 - Alterar status gera ticket_event e audit log.
 - Alterar responsável gera ticket_event e audit log.
+- Adicionar mensagem pública gera ticket_event e audit log.
+- Adicionar nota interna gera ticket_event e audit log.
 - Criar work item gera audit log.
 - `audit.audit_logs` não aceita `update`.
 - `audit.audit_logs` não aceita `delete`.
@@ -48,11 +53,12 @@ Validar isolamento multi-tenant, permissões por papel e bloqueio de acesso inde
 ## Critério de aprovação
 Nenhuma tela ou API operacional pode avançar sem testes mínimos de RLS passando.
 
-## Cobertura atual da Fase 1.2
+## Cobertura atual até a Fase 2
 - `supabase/tests/001_phase1_identity_tenancy_rls.sql`
 - `supabase/tests/002_phase1_1_hardening.sql`
 - `supabase/tests/003_phase1_2_admin_control_plane.sql`
 - `supabase/tests/004_phase1_2_function_audit.sql`
+- `supabase/tests/005_phase2_ticketing_core.sql`
 
 Validações já materializadas:
 - sync `auth.users -> profiles`
@@ -67,3 +73,11 @@ Validações já materializadas:
 - RPC administrativa negada cross-tenant
 - RPC administrativa negada para usuário comum
 - auditoria estrutural de ACL e `SECURITY DEFINER` validada
+- app autenticado sem `SELECT` direto nas tabelas base de ticketing
+- views contratuais de ticketing expostas para `authenticated`
+- ticket cross-tenant read negado
+- ticket cross-tenant write negado
+- nota interna invisível para perfil externo
+- transição inválida de status bloqueada
+- assignment indevido bloqueado
+- auditoria gerada em create, update, status, message e eventos de ticket

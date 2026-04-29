@@ -4,7 +4,7 @@ O backend do Genius Support OS será materializado aqui.
 
 ## Estado atual
 
-O projeto Supabase local foi inicializado e a Fase 1 passou a usar:
+O projeto Supabase local foi inicializado e o backend executável atual usa:
 - `config.toml` versionado;
 - `migrations/` oficiais;
 - `tests/` de banco para RLS e auditoria;
@@ -12,6 +12,7 @@ O projeto Supabase local foi inicializado e a Fase 1 passou a usar:
 - `bootstrap/` para o primeiro `platform_admin`;
 - CI obrigatoria para reset, pgTAP e lint.
 - control plane administrativo por RPCs seguras.
+- ticketing core por views contratuais e RPCs seguras.
 
 Os documentos canônicos para essa etapa são:
 
@@ -27,7 +28,7 @@ Os documentos canônicos para essa etapa são:
 1. Tratar `migrations/` como fonte executável de verdade.
 2. Manter `blueprints/` apenas como histórico e rascunho não executável.
 3. Cobrir RLS, triggers, functions e RPCs com testes de banco.
-4. So depois abrir contratos de leitura/escrita da Fase 2.
+4. Materializar contratos tipados so depois da migration e dos testes locais.
 
 ## Hardening Fase 1.2
 
@@ -52,6 +53,44 @@ Os documentos canônicos para essa etapa são:
 - Pipeline CI:
   - `.github/workflows/supabase-db.yml`
 
+## Ticketing Core Fase 2
+
+- Migration oficial:
+  - `supabase/migrations/20260429225342_phase2_ticketing_core_backend_contracts.sql`
+- Tabelas:
+  - `tickets`
+  - `ticket_messages`
+  - `ticket_events`
+  - `ticket_assignments`
+  - `ticket_attachments`
+- Views contratuais:
+  - `vw_tickets_list`
+  - `vw_ticket_detail`
+  - `vw_ticket_timeline`
+- RPCs de ticketing:
+  - `rpc_create_ticket`
+  - `rpc_update_ticket_status`
+  - `rpc_assign_ticket`
+  - `rpc_add_ticket_message`
+  - `rpc_add_internal_ticket_note`
+  - `rpc_close_ticket`
+  - `rpc_reopen_ticket`
+- Garantias atuais:
+  - `authenticated` nao possui `SELECT` direto nas tabelas base de ticketing;
+  - o app le tickets apenas pelas views contratuais;
+  - o app escreve tickets apenas pelas RPCs;
+  - mensagens internas e publicas sao separadas por `visibility`;
+  - toda mutacao gera `ticket_events` e `audit.audit_logs`.
+
+## Verificacao local atual
+
+- `npx supabase db reset --local --yes`
+- `npx supabase test db --local`
+- `npx supabase db lint --local`
+- Resultado atual:
+  - `Files=5, Tests=78, Result: PASS`
+  - `No schema errors found`
+
 ## Regras de operacao
 
 - Nunca usar seed demo para criar `platform_admin`.
@@ -59,6 +98,7 @@ Os documentos canônicos para essa etapa são:
 - Alteracoes sensiveis de `profiles` devem passar por Auth/backend controlado.
 - Toda mudanca de tenancy e papel precisa continuar compatível com os testes pgTAP.
 - Toda mutacao administrativa do app deve usar RPC; nao usar DML direto nas tabelas administrativas.
+- O app nao deve consultar tabelas base de ticketing; usar apenas as views contratuais.
 
 ## Estrutura esperada
 
@@ -66,6 +106,7 @@ Os documentos canônicos para essa etapa são:
 - `migrations/`: migrations oficiais geradas pelo fluxo do Supabase CLI.
 - `seeds/`: apenas bootstrap controlado e nunca mocks de produto.
 - `bootstrap/`: fluxo controlado para a primeira elevacao de `platform_admin`.
+- `tests/`: pgTAP para tenancy, hardening administrativo, ACL de functions e ticketing core.
 
 ## Comandos operacionais
 
