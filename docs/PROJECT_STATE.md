@@ -62,6 +62,7 @@ Documentos históricos:
 - `authenticated` não possui DML direto em `tenants`, `tenant_memberships`, `tenant_contacts` e `user_global_roles`; essas mutações passam por RPCs auditadas.
 - Funções auditadas com `SECURITY DEFINER` endurecido, `search_path` explícito e ACLs revisadas.
 - Pipeline CI para banco em `.github/workflows/supabase-db.yml`.
+- CI remota validada no GitHub pela workflow `Supabase DB`, run `25136285480`, branch `codex/phase1-2-admin-control-plane`, conclusão `success`.
 - Base bruta preservada em `raw_knowledge/octadesk_export/latest/`.
 
 ### Não existe ainda
@@ -70,7 +71,6 @@ Documentos históricos:
 - Views/read models contratuais para tickets, knowledge base e engenharia.
 - Aplicação de migrations em ambiente remoto oficial.
 - Execução remota validada do bootstrap do primeiro `platform_admin`.
-- Evidência de CI remota executada em branch/PR até esta revisão documental.
 
 ## Situação por fase
 
