@@ -15,6 +15,10 @@ Fase 2:
 - `authenticated` não possui `SELECT`, `INSERT`, `UPDATE` nem `DELETE` direto em `tickets`, `ticket_messages`, `ticket_events`, `ticket_assignments` e `ticket_attachments`.
 - As views de tickets aplicam filtro explícito por caller via `auth.uid()` e helpers em `app_private`.
 
+Fase 2.1:
+- Os contratos tipados de ticketing foram materializados em `packages/contracts`.
+- A auditoria estrutural das views foi formalizada em pgTAP.
+
 ## Views contratuais vigentes
 
 ### `vw_tickets_list`
@@ -25,6 +29,7 @@ Fase 2:
   - só expõe `assigned_to_*` quando o caller pode ver conteúdo interno;
   - `internal_message_count` fica zerado para perfis sem acesso interno;
   - `last_message_at` considera apenas mensagens visíveis ao caller.
+  - usa `security_barrier = true`.
 
 ### `vw_ticket_detail`
 - Finalidade: read model detalhado de um ticket.
@@ -33,6 +38,7 @@ Fase 2:
   - só retorna tickets de tenants acessíveis ao caller;
   - requester contact é carregado do mesmo tenant do ticket;
   - anexos e mensagens internas só entram nas contagens quando o caller pode ver conteúdo interno.
+  - usa `security_barrier = true`.
 
 ### `vw_ticket_timeline`
 - Finalidade: timeline unificada de mensagens e eventos de ticket.
@@ -41,6 +47,32 @@ Fase 2:
   - mensagens públicas e eventos públicos ficam visíveis para membros do tenant;
   - mensagens internas e eventos internos só ficam visíveis para perfis com permissão interna;
   - timeline não depende de `SELECT` direto nas tabelas base.
+  - usa `security_barrier = true`.
+
+## Auditoria das views oficiais
+
+### Configuração atual
+- As três views oficiais são views PostgreSQL padrão no schema `public`.
+- Elas não usam `security_invoker = true`.
+- Elas usam `security_barrier = true`.
+
+### Justificativa
+- Em Postgres e Supabase, `security_invoker = true` faria o caller precisar de permissão direta nas tabelas base.
+- Isso conflita com a regra do produto de não expor `SELECT` direto do app autenticado em `tickets` e tabelas-filhas.
+- Por isso, a estratégia atual não depende da RLS implícita das tabelas base durante a leitura das views.
+- O isolamento é imposto explicitamente dentro da própria definição das views com:
+  - `app_private.is_active_tenant_member(...)`
+  - `app_private.can_view_internal_ticket_content(...)`
+- O hardening complementar é:
+  - `security_barrier = true` nas views;
+  - `SELECT` revogado das tabelas base para `authenticated`;
+  - pgTAP estrutural para ACL, filtros e visibilidade.
+
+### Conclusão da auditoria
+- Não foi encontrado vazamento cross-tenant nas views oficiais.
+- Não foi encontrado vazamento de nota interna para perfil externo.
+- As views não dependem de grant implícito inseguro nas tabelas base.
+- Qualquer alteração futura em grants ou remoção dos filtros explícitos quebra a suíte pgTAP.
 
 ## RPCs administrativas vigentes
 
@@ -162,7 +194,6 @@ Fase 2:
   - `rpc_reopen_ticket`
 
 ## Próximos contratos planejados
-- Contratos tipados em `packages/contracts/` espelhando as views e RPCs vigentes.
 - Views e RPCs de knowledge base.
 - Views e RPCs de intake para engenharia.
 

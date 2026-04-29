@@ -67,12 +67,13 @@ Documentos históricos:
 - Views contratuais de leitura materializadas em `vw_tickets_list`, `vw_ticket_detail` e `vw_ticket_timeline`.
 - RPCs contratuais de escrita materializadas em `rpc_create_ticket`, `rpc_update_ticket_status`, `rpc_assign_ticket`, `rpc_add_ticket_message`, `rpc_add_internal_ticket_note`, `rpc_close_ticket` e `rpc_reopen_ticket`.
 - `authenticated` não possui `SELECT`, `INSERT`, `UPDATE` nem `DELETE` direto nas tabelas base de ticketing; o app lê via views e escreve via RPCs.
+- Pacote `packages/contracts` materializado com tipos TypeScript para views e RPCs de ticketing.
+- Auditoria estrutural das views oficializada com `security_barrier = true`, filtros explícitos por caller e teste pgTAP dedicado.
 - Pipeline CI para banco em `.github/workflows/supabase-db.yml`.
 - CI remota validada no GitHub pela workflow `Supabase DB`, run `25136285480`, branch `codex/phase1-2-admin-control-plane`, conclusão `success`.
 - Base bruta preservada em `raw_knowledge/octadesk_export/latest/`.
 
 ### Não existe ainda
-- Contratos tipados materializados em `packages/contracts/`.
 - Frontend React, TypeScript e Tailwind iniciado.
 - Views/read models contratuais para knowledge base e engenharia.
 - Aplicação de migrations em ambiente remoto oficial.
@@ -98,7 +99,11 @@ Documentos históricos:
   - Views contratuais e RPCs de ticketing materializadas.
   - Máquina de estados, diferenciação entre mensagens públicas e notas internas e auditoria automática validadas com pgTAP.
   - Leitura direta das tabelas-base de ticketing bloqueada para `authenticated`.
-  - Ainda faltam contratos tipados em `packages/contracts/`, aplicação remota controlada e qualquer consumo por frontend.
+  - Ainda faltam aplicação remota controlada e qualquer consumo por frontend.
+- Fase 2.1: contratos tipados e auditoria de views concluídos localmente.
+  - `packages/contracts` descreve enums, DTOs de views e payloads/responses de RPCs.
+  - A estratégia de segurança das views foi auditada e documentada.
+  - A CI agora também valida `contracts:typecheck`.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -115,6 +120,6 @@ Documentos históricos:
 - Não permitir leitura direta do app nas tabelas base de ticketing.
 
 ## Próxima prioridade
-Materializar `packages/contracts/` a partir das views e RPCs já implementadas,
-aplicar as migrations em ambiente remoto oficial com aprovação explícita e só
-então abrir qualquer camada de frontend para tickets.
+Aplicar as migrations em ambiente remoto oficial com aprovação explícita,
+materializar o consumo desses contratos no backend/app server e só então abrir
+qualquer camada de frontend para tickets.

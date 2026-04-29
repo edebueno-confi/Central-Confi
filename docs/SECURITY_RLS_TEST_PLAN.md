@@ -59,6 +59,7 @@ Nenhuma tela ou API operacional pode avançar sem testes mínimos de RLS passand
 - `supabase/tests/003_phase1_2_admin_control_plane.sql`
 - `supabase/tests/004_phase1_2_function_audit.sql`
 - `supabase/tests/005_phase2_ticketing_core.sql`
+- `supabase/tests/006_phase2_1_view_security_audit.sql`
 
 Validações já materializadas:
 - sync `auth.users -> profiles`
@@ -75,9 +76,12 @@ Validações já materializadas:
 - auditoria estrutural de ACL e `SECURITY DEFINER` validada
 - app autenticado sem `SELECT` direto nas tabelas base de ticketing
 - views contratuais de ticketing expostas para `authenticated`
+- views oficiais de ticketing endurecidas com `security_barrier = true`
+- views oficiais auditadas sem `security_invoker` e sem dependência de grant direto nas tabelas base
 - ticket cross-tenant read negado
 - ticket cross-tenant write negado
 - nota interna invisível para perfil externo
+- lista e detalhe ocultam sinais internos para perfil externo
 - transição inválida de status bloqueada
 - assignment indevido bloqueado
 - auditoria gerada em create, update, status, message e eventos de ticket

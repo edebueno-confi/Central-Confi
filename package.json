@@ -9,6 +9,7 @@
     "packages/*"
   ],
   "scripts": {
+    "contracts:typecheck": "npm run typecheck --workspace @genius-support-os/contracts",
     "extract:octadesk": "node raw_knowledge/octadesk_export/export-octadesk-kb.mjs",
     "supabase:bootstrap:first-admin": "node supabase/bootstrap/bootstrap-first-platform-admin.mjs",
     "supabase:start": "supabase start",
@@ -18,6 +19,7 @@
     "supabase:verify": "npm run supabase:db:reset && npm run supabase:test:db && npm run supabase:lint:db"
   },
   "devDependencies": {
-    "supabase": "^2.95.6"
+    "supabase": "^2.95.6",
+    "typescript": "^5.9.3"
   }
 }

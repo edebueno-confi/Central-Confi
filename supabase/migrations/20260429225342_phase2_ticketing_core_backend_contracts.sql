@@ -669,6 +669,7 @@ using (
 );
 
 create or replace view public.vw_tickets_list
+with (security_barrier = true)
 as
   with accessible_tickets as (
     select
@@ -747,6 +748,7 @@ as
     on ms.ticket_id = t.id;
 
 create or replace view public.vw_ticket_detail
+with (security_barrier = true)
 as
   with accessible_tickets as (
     select
@@ -854,6 +856,7 @@ as
     on ats.ticket_id = t.id;
 
 create or replace view public.vw_ticket_timeline
+with (security_barrier = true)
 as
   with accessible_tickets as (
     select

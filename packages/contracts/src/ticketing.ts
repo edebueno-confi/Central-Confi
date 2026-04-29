@@ -1,0 +1,238 @@
+export type Uuid = string;
+export type IsoTimestamp = string;
+
+export type JsonPrimitive = string | number | boolean | null;
+export type JsonValue = JsonPrimitive | JsonObject | JsonValue[];
+export interface JsonObject {
+  [key: string]: JsonValue;
+}
+
+export const TICKET_STATUSES = [
+  'new',
+  'triage',
+  'waiting_customer',
+  'waiting_support',
+  'waiting_engineering',
+  'in_progress',
+  'resolved',
+  'closed',
+  'cancelled',
+] as const;
+
+export type TicketStatus = (typeof TICKET_STATUSES)[number];
+
+export const TICKET_PRIORITIES = ['low', 'normal', 'high', 'urgent'] as const;
+export type TicketPriority = (typeof TICKET_PRIORITIES)[number];
+
+export const TICKET_SEVERITIES = ['low', 'medium', 'high', 'critical'] as const;
+export type TicketSeverity = (typeof TICKET_SEVERITIES)[number];
+
+export const TICKET_SOURCES = [
+  'portal',
+  'email',
+  'chat',
+  'phone',
+  'api',
+  'internal',
+] as const;
+export type TicketSource = (typeof TICKET_SOURCES)[number];
+
+export const TICKET_MESSAGE_VISIBILITIES = ['internal', 'customer'] as const;
+export type TicketMessageVisibility = (typeof TICKET_MESSAGE_VISIBILITIES)[number];
+
+export const TICKET_EVENT_TYPES = [
+  'ticket_created',
+  'status_changed',
+  'priority_changed',
+  'assigned',
+  'unassigned',
+  'message_added',
+  'internal_note_added',
+  'attachment_added',
+  'escalated_to_engineering',
+  'linked_to_work_item',
+  'resolved',
+  'closed',
+  'reopened',
+  'cancelled',
+] as const;
+export type TicketEventType = (typeof TICKET_EVENT_TYPES)[number];
+
+export const TICKET_TIMELINE_ENTRY_TYPES = ['message', 'event'] as const;
+export type TicketTimelineEntryType = (typeof TICKET_TIMELINE_ENTRY_TYPES)[number];
+
+export type TicketStatusUpdateTarget = Exclude<TicketStatus, 'closed'>;
+
+export interface TicketRecord {
+  id: Uuid;
+  tenantId: Uuid;
+  requesterContactId: Uuid | null;
+  title: string;
+  description: string;
+  source: TicketSource;
+  status: TicketStatus;
+  priority: TicketPriority;
+  severity: TicketSeverity;
+  closeReason: string | null;
+  createdByUserId: Uuid;
+  assignedToUserId: Uuid | null;
+  resolvedAt: IsoTimestamp | null;
+  closedAt: IsoTimestamp | null;
+  createdAt: IsoTimestamp;
+  updatedAt: IsoTimestamp;
+  updatedByUserId: Uuid | null;
+}
+
+export interface TicketMessageRecord {
+  id: Uuid;
+  tenantId: Uuid;
+  ticketId: Uuid;
+  visibility: TicketMessageVisibility;
+  body: string;
+  createdByUserId: Uuid;
+  metadata: JsonObject;
+  createdAt: IsoTimestamp;
+  updatedAt: IsoTimestamp;
+}
+
+export interface TicketViewPermissionFlags {
+  canViewInternal: boolean;
+  canAddMessage: boolean;
+  canUpdateStatus: boolean;
+  canAddInternalNote: boolean;
+  canAssign: boolean;
+  canClose: boolean;
+  canReopen: boolean;
+}
+
+export interface TicketListItem extends TicketViewPermissionFlags {
+  id: Uuid;
+  tenantId: Uuid;
+  requesterContactId: Uuid | null;
+  title: string;
+  source: TicketSource;
+  status: TicketStatus;
+  priority: TicketPriority;
+  severity: TicketSeverity;
+  createdByUserId: Uuid;
+  createdByFullName: string | null;
+  assignedToUserId: Uuid | null;
+  assignedToFullName: string | null;
+  createdAt: IsoTimestamp;
+  updatedAt: IsoTimestamp;
+  resolvedAt: IsoTimestamp | null;
+  closedAt: IsoTimestamp | null;
+  lastMessageAt: IsoTimestamp | null;
+  customerMessageCount: number;
+  internalMessageCount: number;
+}
+
+export interface TicketDetail extends TicketViewPermissionFlags {
+  id: Uuid;
+  tenantId: Uuid;
+  requesterContactId: Uuid | null;
+  requesterContactFullName: string | null;
+  requesterContactEmail: string | null;
+  title: string;
+  description: string;
+  source: TicketSource;
+  status: TicketStatus;
+  priority: TicketPriority;
+  severity: TicketSeverity;
+  closeReason: string | null;
+  createdByUserId: Uuid;
+  createdByFullName: string | null;
+  assignedToUserId: Uuid | null;
+  assignedToFullName: string | null;
+  createdAt: IsoTimestamp;
+  updatedAt: IsoTimestamp;
+  resolvedAt: IsoTimestamp | null;
+  closedAt: IsoTimestamp | null;
+  lastMessageAt: IsoTimestamp | null;
+  customerMessageCount: number;
+  internalMessageCount: number;
+  customerAttachmentCount: number;
+  internalAttachmentCount: number;
+}
+
+export interface TicketTimelineMessageItem {
+  ticketId: Uuid;
+  tenantId: Uuid;
+  timelineEntryId: Uuid;
+  entryType: 'message';
+  visibility: TicketMessageVisibility;
+  occurredAt: IsoTimestamp;
+  actorUserId: Uuid | null;
+  messageId: Uuid;
+  eventId: null;
+  eventType: null;
+  assignmentId: null;
+  body: string;
+  metadata: JsonObject;
+}
+
+export interface TicketTimelineEventItem {
+  ticketId: Uuid;
+  tenantId: Uuid;
+  timelineEntryId: Uuid;
+  entryType: 'event';
+  visibility: TicketMessageVisibility;
+  occurredAt: IsoTimestamp;
+  actorUserId: Uuid | null;
+  messageId: Uuid | null;
+  eventId: Uuid;
+  eventType: TicketEventType;
+  assignmentId: Uuid | null;
+  body: null;
+  metadata: JsonObject;
+}
+
+export type TicketTimelineItem = TicketTimelineMessageItem | TicketTimelineEventItem;
+
+export interface RpcCreateTicketPayload {
+  tenantId: Uuid;
+  title: string;
+  description: string;
+  source: TicketSource;
+  priority?: TicketPriority;
+  severity?: TicketSeverity;
+  requesterContactId?: Uuid | null;
+}
+export type RpcCreateTicketResponse = TicketRecord;
+
+export interface RpcUpdateTicketStatusPayload {
+  ticketId: Uuid;
+  status: TicketStatusUpdateTarget;
+  note?: string | null;
+}
+export type RpcUpdateTicketStatusResponse = TicketRecord;
+
+export interface RpcAssignTicketPayload {
+  ticketId: Uuid;
+  assignedToUserId?: Uuid | null;
+}
+export type RpcAssignTicketResponse = TicketRecord;
+
+export interface RpcAddTicketMessagePayload {
+  ticketId: Uuid;
+  body: string;
+}
+export type RpcAddTicketMessageResponse = TicketMessageRecord;
+
+export interface RpcAddInternalTicketNotePayload {
+  ticketId: Uuid;
+  body: string;
+}
+export type RpcAddInternalTicketNoteResponse = TicketMessageRecord;
+
+export interface RpcCloseTicketPayload {
+  ticketId: Uuid;
+  closeReason: string;
+}
+export type RpcCloseTicketResponse = TicketRecord;
+
+export interface RpcReopenTicketPayload {
+  ticketId: Uuid;
+  reopenReason?: string | null;
+}
+export type RpcReopenTicketResponse = TicketRecord;
