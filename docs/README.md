@@ -1,24 +1,46 @@
 # Docs
 
-Entrada principal da documentação viva do Genius Support OS.
+Fonte oficial da documentação do Genius Support OS.
 
-## Fundação
+## Regra de leitura
 
-- [architecture.md](./architecture.md): visão macro, bounded contexts e regras
-  de desenho.
-- [repository-structure.md](./repository-structure.md): estrutura canônica do
-  monorepo e responsabilidades por pasta.
-- [data-model.md](./data-model.md): modelo inicial de banco, entidades e
-  relacionamentos.
-- [access-and-audit.md](./access-and-audit.md): estratégia de autenticação,
-  RLS, tenancy, storage e auditoria.
-- [implementation-phases.md](./implementation-phases.md): plano técnico em
-  fases com entregáveis e gates.
+- Os documentos estratégicos em caixa alta são a fonte prioritária de verdade.
+- `PROJECT_STATE.md` descreve o estado real atual do repositório.
+- `CLEANUP_REPORT.md` é histórico e não descreve mais a estrutura corrente.
+
+## Visão e estado
+
+- [PROJECT_STATE.md](./PROJECT_STATE.md)
+- [PRODUCT_VISION.md](./PRODUCT_VISION.md)
+- [ROADMAP.md](./ROADMAP.md)
+- [MVP_30_DAYS.md](./MVP_30_DAYS.md)
+
+## Arquitetura e backend
+
+- [ARCHITECTURE_RULES.md](./ARCHITECTURE_RULES.md)
+- [REPOSITORY_STRUCTURE.md](./REPOSITORY_STRUCTURE.md)
+- [DATA_MODEL_STRATEGY.md](./DATA_MODEL_STRATEGY.md)
+- [DATA_DICTIONARY_MVP.md](./DATA_DICTIONARY_MVP.md)
+- [AUTH_CONTEXT_STRATEGY.md](./AUTH_CONTEXT_STRATEGY.md)
+- [AUDIT_LOGGING_STRATEGY.md](./AUDIT_LOGGING_STRATEGY.md)
+- [VIEW_RPC_CONTRACTS.md](./VIEW_RPC_CONTRACTS.md)
+- [SECURITY_RLS_TEST_PLAN.md](./SECURITY_RLS_TEST_PLAN.md)
+- [SLA_STRATEGY.md](./SLA_STRATEGY.md)
+- [AI_GOVERNANCE.md](./AI_GOVERNANCE.md)
+
+## Fluxos de domínio
+
+- [SUPPORT_WORKFLOW.md](./SUPPORT_WORKFLOW.md)
+- [TICKET_LIFECYCLE.md](./TICKET_LIFECYCLE.md)
+- [ENGINEERING_WORKFLOW.md](./ENGINEERING_WORKFLOW.md)
+- [KNOWLEDGE_BASE_STRATEGY.md](./KNOWLEDGE_BASE_STRATEGY.md)
+
+## Planejamento e execução
+
+- [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)
+- [VALIDATION_CHECKLIST.md](./VALIDATION_CHECKLIST.md)
+- [CODEX_EXECUTION_RULES.md](./CODEX_EXECUTION_RULES.md)
 
 ## Histórico
 
-- [CLEANUP_REPORT.md](./CLEANUP_REPORT.md): registro da higienização anterior
-  que deixou o repositório pronto para a reconstrução.
-
-O relatório de cleanup permanece apenas como contexto histórico. A fonte atual
-de verdade arquitetural começa nos documentos desta pasta.
+- [CLEANUP_REPORT.md](./CLEANUP_REPORT.md)

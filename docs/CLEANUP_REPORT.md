@@ -1,5 +1,8 @@
 # Cleanup Report
 
+> Documento histórico. Este arquivo registra o snapshot da higienização feita
+> antes da fundação atual e não descreve a estrutura vigente do repositório.
+
 ## Objetivo
 Executar uma limpeza controlada do projeto, removendo toda a tentativa de produto/app construída após a fase de extração inicial e preservando exclusivamente o conhecimento bruto já coletado.
 
@@ -128,4 +131,5 @@ C:.
 ```
 
 ## Estado final
-O repositório está higienizado e pronto para recomeçar com base arquitetural nova, sem carregar a bagunça técnica da tentativa anterior.
+O repositório foi higienizado naquele momento e ficou pronto para recomeçar com
+base arquitetural nova, sem carregar a bagunça técnica da tentativa anterior.

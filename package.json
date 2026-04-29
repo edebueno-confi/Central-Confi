@@ -9,6 +9,15 @@
     "packages/*"
   ],
   "scripts": {
-    "extract:octadesk": "node raw_knowledge/octadesk_export/export-octadesk-kb.mjs"
+    "extract:octadesk": "node raw_knowledge/octadesk_export/export-octadesk-kb.mjs",
+    "supabase:bootstrap:first-admin": "node supabase/bootstrap/bootstrap-first-platform-admin.mjs",
+    "supabase:start": "supabase start",
+    "supabase:db:reset": "supabase db reset --local --yes",
+    "supabase:test:db": "supabase test db --local",
+    "supabase:lint:db": "supabase db lint --local",
+    "supabase:verify": "npm run supabase:db:reset && npm run supabase:test:db && npm run supabase:lint:db"
+  },
+  "devDependencies": {
+    "supabase": "^2.95.6"
   }
 }

@@ -1,38 +1,61 @@
 ---
-name: Bug report
-about: Create a report to help us improve
+name: Bug operacional
+about: Registrar bug real do Genius Support OS com contexto suficiente para suporte e engenharia
 title: ''
 labels: ''
 assignees: ''
 
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+## Resumo
+Descreva o problema com clareza.
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+## Domínio afetado
+- [ ] Auth
+- [ ] Tenant / contexto
+- [ ] Tickets
+- [ ] Base de conhecimento
+- [ ] Engenharia
+- [ ] Auditoria
+- [ ] IA
+- [ ] Outro
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+## Tenant / cliente afetado
+Informe tenant, cliente ou organização impactada.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+## Perfil do ator
+- [ ] Internal Admin
+- [ ] Support Agent
+- [ ] Support Manager
+- [ ] Engineering Member
+- [ ] Engineering Manager
+- [ ] Customer Contact
+- [ ] Viewer / Auditor
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+## Comportamento esperado
+O que deveria acontecer.
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+## Comportamento atual
+O que aconteceu de fato.
 
-**Additional context**
-Add any other context about the problem here.
+## Passos para reproduzir
+1. ...
+2. ...
+3. ...
+
+## Evidências
+- prints
+- logs
+- IDs
+- payloads
+- links de ticket / work item
+
+## Impacto
+- [ ] bloqueia operação
+- [ ] degrada operação
+- [ ] afeta cliente final
+- [ ] risco de permissão / RLS
+- [ ] risco de auditoria / histórico
+
+## Observações adicionais
+Inclua contexto de suporte, engenharia ou conhecimento relevante.
