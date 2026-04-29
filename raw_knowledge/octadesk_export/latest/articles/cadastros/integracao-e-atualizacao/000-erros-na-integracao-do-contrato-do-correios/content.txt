@@ -1,0 +1,32 @@
+Possíveis erros na integração do contrato do Correios
+ Nesta seção, explicamos os possíveis erros que podem ocorrer durante a integração do contrato com os Correios na Genius Returns.
+ Erro no Código Administrativo, Número do Contrato e Cartão de Postagem
+ Quando você insere os dados do contrato do Correios e clica nos botões de teste, se o Código Administrativo estiver incorreto, você verá a seguinte mensagem de erro:
+
+ “Resposta inválida ao salvar as informações”
+ Como confirmar o Código Administrativo
+ Para verificar o código administrativo correto, siga os passos abaixo:
+ Acesse o Sistema de Fatura Eletrônica dos Correios (SFE) :
+ Clique aqui para acessar o SFE
+
+ No SFE, clique na opção “Contrato” no menu principal.
+
+ Em seguida, clique em “Pesquisar” .
+
+ Na tela de pesquisa, localize o item que está circulado em vermelho na imagem abaixo e clique sobre ele:
+
+ Importante: Certifique-se de que o status do contrato esteja como “Ativo” . Caso o status não esteja ativo, a integração não funcionará corretamente.
+
+ Copie os seguintes dados encontrados:
+
+ Código Administrativo
+
+ Número do Contrato
+
+ Cartão de Postagem
+
+ Cole essas informações nos campos correspondentes na tela de configuração da Genius Returns .
+
+ Finalizando o Teste da Integração
+ Após inserir os dados corretos, clique em Testar e Testar Tracking .
+ Caso o teste não seja bem-sucedido, entre em contato com o nosso suporte via chat para assistência.

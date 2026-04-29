@@ -1,0 +1,11 @@
+Variação do Produto
+
+ Acesse a área administrativa da plataforma.
+
+ No menu, clique em Configurações > Parametrização Geral .
+
+ Localize a funcionalidade VARIAÇÃO DE PRODUTO
+
+ Configure como as variações de tamanho dos produtos serão apresentadas no processo de reversa.
+
+ Com essas configurações, você pode personalizar o processo de reversa de acordo com as necessidades do seu e-commerce, garantindo uma gestão eficiente e automatizada.

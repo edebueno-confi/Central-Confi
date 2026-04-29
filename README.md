@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Genius Support OS
 
-## Getting Started
+Plataforma interna de suporte, base de conhecimento, tickets, comunicação
+suporte-tecnologia e gestão de demandas técnicas do ecossistema Genius Return.
 
-First, run the development server:
+## Estado atual
+
+O repositório está em fase de fundação arquitetural. Não existe frontend
+implementado, nem ambiente Supabase inicializado neste estado. A prioridade
+atual é consolidar:
+
+- modelo de domínio;
+- multi-tenant desde a base;
+- permissões e RLS;
+- auditoria e rastreabilidade;
+- contratos de backend antes da UI.
+
+## Princípios
+
+- Backend é a fonte da verdade.
+- Frontend apenas renderiza e orquestra comandos.
+- Nada de dados mockados como regra de produto.
+- Permissões sérias desde o primeiro ciclo.
+- Multi-tenant obrigatório.
+- Auditoria, action logs e histórico imutável obrigatórios.
+- Dados sensíveis protegidos por padrão.
+- Documentação viva no repositório.
+
+## Estrutura canônica
+
+- `apps/web/`: futura aplicação React, iniciada somente depois dos contratos.
+- `packages/contracts/`: contratos tipados consumidos pela aplicação.
+- `packages/tooling/`: configs e utilitários compartilhados do workspace.
+- `supabase/`: blueprints, schema e futuras migrations do backend.
+- `docs/`: arquitetura, modelo de dados, fases e decisões.
+- `tests/`: estratégia de testes de banco, contratos e e2e.
+- `raw_knowledge/`: base bruta preservada da KB atual para migração posterior.
+
+## Documentação inicial
+
+- [Arquitetura](./docs/architecture.md)
+- [Estrutura do repositório](./docs/repository-structure.md)
+- [Modelo inicial de dados](./docs/data-model.md)
+- [Acesso, tenancy e auditoria](./docs/access-and-audit.md)
+- [Plano técnico por fases](./docs/implementation-phases.md)
+
+## Conhecimento legado preservado
+
+O único material legado mantido por design é a extração bruta em
+`raw_knowledge/octadesk_export/latest/`. Esse conteúdo deve ser tratado como
+fonte operacional privada para futura ingestão e curadoria.
+
+## Script preservado
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run extract:octadesk
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

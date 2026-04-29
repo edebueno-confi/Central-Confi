@@ -1,0 +1,59 @@
+MENU PARAMETRIZAÇÃO GERAL
+ No menu Parametrização Geral , o e-commerce pode configurar diversas funcionalidades essenciais, incluindo a personalização da cor principal do front-end e outras configurações detalhadas, como:
+ Funcionalidades:
+ Gerar Ticket Reverso Automaticamente
+ Ao habilitar essa funcionalidade, o código de postagem será gerado automaticamente assim que o cliente finalizar uma solicitação, sem necessidade de análise prévia da reversa.
+
+ Solicitar Envio de Fotos do(s) Produto(s)
+ Com essa funcionalidade habilitada, o cliente poderá incluir até 3 imagens ao realizar sua solicitação no front-end.
+
+ Habilitar Transportadora de Melhor Custo
+ Permite que o sistema sugira automaticamente a transportadora mais econômica para o processo de logística reversa.
+
+ Habilitar Custo Estimado da Logística Reversa
+ Exibe o custo estimado da logística reversa para o cliente, ajudando a tomar decisões informadas.
+
+ Habilitar Modo B2B
+ Permite ativar o modo de negócios para negócios (B2B), ajustando as funcionalidades conforme as necessidades específicas dessa modalidade.
+
+ Cálculo Automático do Número de Autorizações Necessárias
+ O sistema calculará automaticamente a quantidade de autorizações necessárias para completar o processo de reversa.
+
+ Concluir Processo ao Sanar Pendência Financeira
+ Com esta funcionalidade ativada, a plataforma concluirá automaticamente o processo de reversa, alterando o status de "pendente" para "concluído" assim que a pendência financeira for resolvida.
+
+ Habilitar Estorno por Item
+ Permite realizar estornos individuais por item em uma solicitação de reversa.
+
+ 1. Operações Permitidas
+ Aqui, o e-commerce pode configurar quais operações deseja permitir: Troca , Devolução ou Ambas as opções. Configure conforme a necessidade do seu negócio.
+
+ 2. Fique com o Item
+ Nessa funcionalidade, o e-commerce pode configurar regras para não necessitar de logística reversa em determinados casos de troca ou devolução, como:
+ Tipo de solicitação
+
+ Percentual de custo da logística reversa
+
+ Quantidade mensal de "Fique com o Item" por cliente
+
+ 3. Sellers Permitidos
+ Configure quais Sellers terão permissão para criar reservas pela plataforma Genius Returns . (Consulte a FAQ para aprender a configurar as permissões de Sellers).
+
+ 4. Produtos em Exceção
+ Nessa funcionalidade, você pode configurar produtos ou categorias específicas que não terão permissão para criar reversas.
+ Para bloquear produtos , informe o ID de cada SKU e pressione ENTER ou TAB .
+
+ Para bloquear categorias , informe o ID de cada categoria e pressione ENTER ou TAB .
+
+ 5. Regra para Segunda Solicitação do Mesmo Pedido ou SKU
+ Determine se o cliente poderá ou não continuar com uma segunda solicitação para o mesmo pedido ou item (SKU). Configure conforme necessário para o seu processo.
+
+ 6. Segurança
+
+ 7. Informar SKU de Troca por Texto
+ Permite configurar o envio do SKU da troca por texto, caso necessário. Habilitando ou não que o cliente ao invés de selecionar o item de troca, ele escreve ou cole o link do item que deseja trocar
+
+ 8. Variação do Produto
+ Configure como as variações de tamanho dos produtos serão tratadas no processo de reversa.
+
+ Com essas configurações, você pode personalizar o processo de reversa de acordo com as necessidades do seu e-commerce, garantindo uma gestão eficiente e automatizada.

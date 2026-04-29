@@ -1,0 +1,9 @@
+Operações
+ Para configurar os padrões de segurança da sua plataform, siga os passos abaixo:
+ Acesse a área administrativa da plataforma.
+
+ No menu, clique em Configurações > Parametrização Geral .
+
+ Localize a funcionalidade Operações .
+
+ Aqui, o e-commerce pode configurar quais operações deseja permitir: Troca , Devolução ou Ambas as opções. Configure conforme a necessidade do seu negócio.

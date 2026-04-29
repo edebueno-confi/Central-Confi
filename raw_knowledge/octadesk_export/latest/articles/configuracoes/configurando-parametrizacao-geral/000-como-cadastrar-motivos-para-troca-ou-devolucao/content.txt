@@ -1,0 +1,16 @@
+CADASTRANDO MOTIVOS PARA TROCA E DEVOLUÇÃO
+ Passo a passo para configurar os motivos de troca ou devolução:
+ Acesse o painel Admin da plataforma.
+
+ No menu à esquerda, clique em CONFIGURAÇÕES .
+
+ Selecione a opção MOTIVOS . Você será direcionado para um ambiente onde verá todos os motivos de troca ou devolução já cadastrados na sua loja.
+
+ Caso precise adicionar novos motivos , clique no botão "+" .
+
+ Ao clicar no botão "+" , o e-commerce será redirecionado para a página de cadastro de motivos, onde você deverá:
+ Inserir o nome do motivo que deseja cadastrar.
+
+ Escolher o tipo do motivo (troca ou devolução).
+
+ Dica : Organize seus motivos de forma clara e objetiva para facilitar o processo de devolução e troca para seus clientes, além de garantir que cada motivo tenha a categoria correta (troca ou devolução) para otimizar o gerenciamento interno.

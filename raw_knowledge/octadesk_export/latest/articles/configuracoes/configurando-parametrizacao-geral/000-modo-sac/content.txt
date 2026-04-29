@@ -1,0 +1,14 @@
+MODO SAC
+ O MODO SAC permite que o e-commerce crie uma reversa ou solicitação para o consumidor de forma automática, sem que ele precise fazer isso diretamente pelo front da loja.
+ Como utilizar o MODO SAC:
+ Acesse a área administrativa da plataforma .
+
+ No menu lateral, clique em "Solicitações" e localize a funcionalidade MODO SAC .
+
+ Ao clicar no MODO SAC , você será direcionado para a tela "Criar nova solicitação" .
+
+ Nessa tela, você poderá configurar a reversa ou solicitação conforme necessário.
+
+ Finalize o processo clicando em "Criar solicitação" .
+
+ Pronto! A solicitação será criada e o consumidor será notificado conforme configurado.

@@ -1,0 +1,34 @@
+Como Configurar o Prazo Logístico por Estado?
+ O que é a Tabela de Prazo Logístico?
+ A tabela de prazo logístico é uma forma eficaz de estabelecer o intervalo entre o pedido faturado e a entrega do produto. Esse prazo é essencial para garantir que o consumidor esteja dentro da regra de política de troca e/ou devolução.
+ Como Configurar o Prazo Logístico por Estado?
+ O e-commerce pode configurar o prazo logístico por estado seguindo os passos abaixo:
+ Acesse o menu Configurações na área logada do e-commerce.
+
+ Clique em Prazo Logístico .
+
+ Defina o prazo desejado para cada estado na tabela correspondente.
+
+ Os prazos definidos na tabela serão utilizados para calcular o período em que o consumidor pode solicitar trocas e devoluções sem justificativa.
+
+ Exemplo de Fluxo da Ferramenta:
+ Pedido faturado no dia 01.
+
+ Prazo para o Estado de São Paulo: 3 dias.
+
+ O prazo inicia no dia 04 .
+
+ A partir dessa data, o consumidor pode solicitar devolução/troca até o dia 11 (7 dias) pelo motivo de arrependimento.
+
+ O mesmo se aplica para cada estado, de acordo com o prazo configurado.
+
+ Importante:
+ Os prazos são calculados a partir do despacho em São Paulo e podem ser ajustados pela marca, sem uma regra fixa.
+
+ O sistema automaticamente capta a data do faturamento, adiciona o prazo da tabela e verifica o prazo dos motivos configurados previamente na Genius Returns.
+
+ Se houver o status "Pedido Entregue" na Vtex, a tabela de prazo logístico não deve ser utilizada.
+
+ Caso não haja esse status, a tabela de prazo logístico deve ser configurada para garantir a correta aplicação das regras.
+
+ Seguindo essas diretrizes, o prazo logístico será corretamente aplicado, proporcionando uma gestão eficiente das trocas e devoluções.

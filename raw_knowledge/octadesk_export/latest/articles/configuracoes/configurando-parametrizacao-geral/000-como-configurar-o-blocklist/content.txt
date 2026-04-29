@@ -1,0 +1,9 @@
+Como configurar o BlockList?
+ Acesse a área administrativa da plataforma.
+
+ No menu, clique em Configurações > Administrativo .
+
+ Localize a opção Controle de BlockList .
+
+ Como um cliente entra no BlockList?
+ Ao realizar o Rating do item , se o campo "Estado do item" para "NÃO DEVOLVIDO" , o cliente Lista de blocos .

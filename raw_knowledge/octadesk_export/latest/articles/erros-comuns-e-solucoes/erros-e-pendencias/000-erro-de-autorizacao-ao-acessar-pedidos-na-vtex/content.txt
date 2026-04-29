@@ -1,0 +1,36 @@
+Erro "Unauthorized" ao acessar pedidos na Vtex
+ O que significa o erro "Unauthorized" ao acessar um pedido na Vtex?
+ Esse erro indica que a solicitação feita para acessar os pedidos não foi autorizada. Isso geralmente ocorre devido a credenciais incorretas ou permissões insuficientes.
+
+ Quais são as possíveis causas desse erro?
+ As principais causas desse erro são:
+ Token de acesso inválido ou expirado
+
+ App Key ou App Token incorretos
+
+ Nome da conta (accountName) errado
+
+ Permissões insuficientes no usuário ou aplicação
+
+ Como corrigir esse erro?
+ Verifique o Token de Acesso: Certifique-se de que está usando um token válido e que ele não expirou.
+
+ Confirme o App Key e App Token: Esses dados precisam ser gerados corretamente na Vtex e informados na integração.
+
+ Revise o Nome da Conta: O campo accountName deve corresponder exatamente ao nome da conta na Vtex.
+
+ Cheque as Permissões: O usuário ou app utilizado deve ter permissão para leitura de pedidos. Você pode verificar isso acessando Admin → Configurações → Chaves de Aplicação e validando as permissões atribuídas.
+
+ Onde posso validar minhas credenciais?
+ Para conferir se suas credenciais estão corretas:
+ Vá até VTEX Admin → Configurações → Chaves de Aplicação e valide o App Key e App Token.
+
+ Teste a autenticação usando uma ferramenta como Postman ou cURL para confirmar se os tokens estão funcionando corretamente.
+
+ Ainda estou com problemas, o que fazer?
+ Se o erro persistir, tente:
+ Regenerar o App Key e App Token e testar novamente.
+
+ Conferir se a conta tem um ambiente sandbox ou produção, pois os tokens podem ser diferentes.
+
+ Contatar o suporte da Vtex para verificar logs e mais detalhes do erro.

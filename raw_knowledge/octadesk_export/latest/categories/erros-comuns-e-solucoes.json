@@ -1,0 +1,23 @@
+{
+  "id": "40c58580-de0b-4a80-bff1-5917bec248ea",
+  "moduleId": "00000000-0000-0000-0000-000000000000",
+  "categoryId": "9636aab8-7d1b-4e9b-b955-4e578d6bdf2e",
+  "isEnabled": true,
+  "culture": "",
+  "title": "Erros comuns e soluções",
+  "url": "erros-comuns-e-solucoes",
+  "orderId": 0,
+  "sections": [
+    {
+      "categoryId": "9636aab8-7d1b-4e9b-b955-4e578d6bdf2e",
+      "categoryTitle": "Erros comuns e soluções",
+      "categoryUrl": "erros-comuns-e-solucoes",
+      "sectionId": "6818b43a-1d86-439d-91b0-a1fcff7ffd92",
+      "sectionTitle": "Erros e pendências ",
+      "sectionUrl": "erros-e-pendencias",
+      "sectionDescription": "",
+      "articleCount": 5,
+      "outputPath": "sections/erros-comuns-e-solucoes/erros-e-pendencias.json"
+    }
+  ]
+}

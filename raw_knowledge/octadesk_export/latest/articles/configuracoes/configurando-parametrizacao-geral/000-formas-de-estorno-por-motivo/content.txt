@@ -1,0 +1,13 @@
+Configurando as Formas de Estorno por Motivo
+ Passo a passo para configurar o estorno por motivo:
+ Acesse o painel Admin da plataforma.
+
+ No menu à esquerda, clique em CONFIGURAÇÕES .
+
+ Selecione a opção AMBIENTE e, em seguida, clique em ESTORNO/VALE-COMPRA .
+
+ Localize a funcionalidade "Formas de Estorno por Motivo" .
+
+ Nesta configuração, você pode parametrizar como o sistema deve proceder quando houver concorrência entre as regras de estorno financeiro e vale-compras, em casos de devolução ou troca. Isso garante que, dependendo do motivo da solicitação, o estorno será realizado de acordo com a política do seu e-commerce, seja como estorno financeiro ou geração de vale-compra .
+
+ Dica : Ao configurar as formas de estorno por motivo, certifique-se de revisar as regras de sua política de reembolsos para garantir que a experiência do cliente seja consistente e clara, especialmente em casos de concorrência entre as opções de reembolso.

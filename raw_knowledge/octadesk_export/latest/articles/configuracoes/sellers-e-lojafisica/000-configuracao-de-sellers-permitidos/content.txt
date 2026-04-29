@@ -1,0 +1,36 @@
+O que é a funcionalidade Sellers Permitidos?
+ A funcionalidade Sellers Permitidos permite restringir e gerenciar quais Sellers estão autorizados a solicitar trocas e devoluções. Por padrão, todos os Sellers têm essa permissão, mas essa configuração pode ser alterada conforme necessidade.
+ Como definir quais Sellers podem solicitar trocas e devoluções?
+ Para configurar a permissão de Sellers, siga os passos abaixo:
+ Acesse a área administrativa da plataforma.
+
+ No menu, clique em Configurações > Ambiente > Sellers Permitidos .
+
+ Na tela de configuração, você pode:
+
+ Selecionar quais Sellers terão permissão para solicitar trocas e devoluções.
+
+ Configurar uma mensagem personalizada para os Sellers que forem impedidos de realizar solicitações.
+
+ Como funciona a restrição de Sellers?
+ A ferramenta opera com uma lista de permissão (white list) :
+ Lista vazia → Todos os Sellers estão autorizados.
+
+ Lista preenchida → Apenas os Sellers adicionados terão permissão.
+
+ Para restringir o acesso de Sellers específicos, basta adicioná-los na lista, separados por ponto e vírgula (;).
+
+ Além disso, você pode personalizar a mensagem exibida para os Sellers que não tiverem permissão para solicitar trocas e devoluções, garantindo uma comunicação clara e eficiente.
+
+ Como configurar Sellers Permitidos na plataforma Genius Returns?
+ Se o objetivo for configurar a permissão de Sellers para criação de reservas na plataforma Genius Returns , siga estes passos:
+ Acesse a área administrativa.
+
+ No menu, clique em Configurações > Parametrização Geral .
+
+ Localize a funcionalidade Sellers Permitidos .
+
+ Configure quais Sellers terão permissão para criar reservas.
+
+ Caso tenha dúvidas, consulte a FAQ específica para permissões de Sellers dentro da plataforma Genius Returns.
+ Com essa funcionalidade, você tem total controle sobre quais Sellers podem operar dentro do fluxo de trocas e devoluções, garantindo maior segurança e organização no processo. 🚀

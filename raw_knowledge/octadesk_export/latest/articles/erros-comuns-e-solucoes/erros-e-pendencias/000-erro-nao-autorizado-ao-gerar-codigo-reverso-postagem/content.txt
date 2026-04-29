@@ -1,0 +1,14 @@
+Erro "Não Autorizado" ao Gerar Código Reverso/Postagem
+
+ Esse erro ocorre quando há um problema no token ou em alguma informação do contrato dos Correios utilizado pela loja. Isso pode acontecer se o token estiver incorreto, expirado ou se houver alguma alteração no contrato.
+
+ Como corrigir o erro?
+ Acesse o menu "Cadastro" no painel da loja.
+
+ Vá até a aba "Transportadoras" .
+
+ Localize e atualize o token ou os dados do contrato dos Correios.
+
+ Salve as alterações e tente gerar o código novamente.
+
+ Caso o erro persista, verifique com os Correios se houve alguma atualização no contrato ou necessidade de um novo token.

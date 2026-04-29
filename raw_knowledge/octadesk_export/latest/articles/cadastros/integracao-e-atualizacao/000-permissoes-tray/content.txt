@@ -1,0 +1,46 @@
+Integração da Genius Returns com a Traycorp
+ 1. Quais permissões são necessárias para integrar a Genius Returns com a Traycorp?
+ Para realizar a integração da Genius Returns com a Traycorp, as seguintes permissões são essenciais:
+ Ler/Escrever Pedidos : Para acessar, atualizar e gerenciar os pedidos relacionados a trocas e devoluções.
+
+ Ler/Escrever Produtos : Para consultar e atualizar informações dos produtos, incluindo variantes, preços e estoque.
+
+ Ler/Escrever Inventário : Para ajustar automaticamente o inventário após a troca ou devolução de um produto.
+
+ Ler/Escrever Clientes : Para acessar dados dos clientes, permitindo associar corretamente as trocas e devoluções aos respectivos clientes.
+
+ Webhooks : Para receber notificações em tempo real sobre alterações no status dos pedidos, como mudanças nas trocas ou devoluções.
+
+ Relatórios de Vendas (Opcional) : Para acessar relatórios financeiros e avaliar o impacto das trocas e devoluções no desempenho da loja.
+
+ 2. Como posso realizar a integração com a Traycorp?
+ Siga estes passos para integrar a Genius Returns com a Traycorp:
+ Criação de App na Traycorp :
+
+ Acesse o painel de desenvolvedor da Traycorp e crie um aplicativo para integração com a Genius Returns.
+
+ Configuração de Permissões :
+
+ Durante a configuração do aplicativo, selecione as permissões necessárias (pedidos, produtos, clientes, inventário e webhooks).
+
+ Autenticação via API :
+
+ Utilize o token de autenticação fornecido pela Traycorp para que a Genius Returns possa acessar os dados da loja com as permissões necessárias.
+
+ Configuração de Webhooks :
+
+ Configure webhooks para ser notificado de eventos importantes, como criação de pedidos, alterações de status e trocas.
+
+ Teste da Integração :
+
+ Realize testes para garantir que a troca e devolução de produtos, bem como os ajustes de estoque, sejam processados corretamente.
+
+ 3. Quais são os benefícios dessa integração?
+ Automação de trocas e devoluções : A integração permite que os pedidos de trocas e devoluções sejam processados automaticamente, economizando tempo e reduzindo erros.
+
+ Ajustes automáticos no estoque : Após cada troca ou devolução, o estoque da Traycorp é automaticamente ajustado, evitando discrepâncias.
+
+ Melhoria na experiência do cliente : Com a automação e a comunicação em tempo real, os clientes recebem atualizações rápidas sobre o status da sua troca ou devolução.
+
+ 4. Como posso obter suporte durante o processo de integração?
+ Se tiver dúvidas ou encontrar problemas durante a integração, você pode acessar a central de ajuda e suporte da Genius Returns ou entrar em contato com o suporte técnico da Traycorp para assistência.

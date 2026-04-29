@@ -1,0 +1,35 @@
+Regras de Cadastro e configurações de Sellers( Estorno e Logística)
+ 1. Como cadastrar um novo seller?
+ Para cadastrar um novo seller, é necessário realizar o seguinte processo:
+ Identificar o número de sellers : Verifique se o e-commerce tem apenas 1 seller ou mais de 1 seller .
+
+ Se houver apenas 1 seller , o cadastro será simples, com os dados básicos do seller.
+
+ Se houver mais de 1 seller , é necessário esclarecer algumas informações adicionais.
+
+ Definir a responsabilidade financeira : Caso haja mais de 1 seller, determine se cada seller é responsável pela sua própria parte financeira (pagamentos e estornos) ou se o seller principal será o responsável por todas as transações.
+
+ Se cada seller for responsável por sua parte financeira : Será necessário informar se cada seller tem seu próprio gateway de pagamento e, se for o caso, fornecer o KEY e Token(Vtex) de cada seller. Além disso, será preciso informar se cada seller usará a Genius para pagamentos.
+
+ Informações logísticas : Caso o e-commerce tenha mais de 1 seller, será preciso esclarecer o cenário logístico:
+
+ Determine se todos os sellers retornarão para o seller principal ou se cada produto retornará ao seller de origem .
+
+ Se o produto retornar ao seller de origem , será necessário fornecer os dados de endereço de cadastro de cada seller.
+
+ Caso o seller de origem utilize um cartão postal próprio , serão necessários os dados do Correios de cada seller .
+
+ 2. O que acontece se o e-commerce esquecer de incluir as informações de estorno e dados logísticos?
+ Se o e-commerce esquecer de incluir as informações de estorno e dados logísticos de forma correta, todos os estornos e retornos logísticos serão direcionados ao seller principal . Isso ocorrerá até que o e-commerce corrija as configurações e inclua os dados necessários para cada seller.
+
+ 3. Como deve ser o cadastro de estorno para sellers responsáveis por estornos?
+ Quando um seller for responsável por estornos , o e-commerce deve incluir essas informações no cadastro de cada seller. Caso o e-commerce não faça isso no momento do cadastro, todas as solicitações de estorno serão direcionadas para o seller principal .
+
+ 4. O que acontece quando o e-commerce altera as configurações de um seller já cadastrado?
+ Se o e-commerce realizar alterações nas configurações de um seller (como mudanças nos dados de estorno ou logísticos) após o cadastro inicial , essas mudanças afetarão somente as solicitações criadas a partir dessa alteração . Ou seja, novas solicitações seguirão o fluxo correto conforme as novas configurações.
+ No entanto, solicitações anteriores à alteração (criadas antes da mudança) serão direcionadas ao seller principal , mesmo que as configurações tenham sido modificadas.
+ Exemplo : Se o cadastro de um seller for alterado no dia 10/02/2025 , as solicitações criadas após essa data seguirão para o seller correto (com as novas configurações de estorno e logística). Já as solicitações feitas até o dia 09/02/2025 serão direcionadas para o seller principal .
+
+ Observação Importante
+ É essencial que o e-commerce sempre inclua corretamente as informações de estorno e dados logísticos ao cadastrar um novo seller ou alterar as configurações de um seller existente. Caso essas informações sejam esquecidas ou configuradas incorretamente , todos os estornos e retornos logísticos serão automaticamente direcionados para o seller principal , até que as correções sejam feitas.
+ Lembre-se : As alterações só afetarão as solicitações realizadas após a modificação . As solicitações criadas antes da alteração seguirão o fluxo do seller principal, independentemente das mudanças feitas nas configurações.

@@ -1,0 +1,19 @@
+Como realizar alterações em um Vale-compra pendente?
+ Para realizar alterações em um Vale-compra pendente, siga os passos abaixo:
+ Acesse o menu "Solicitações" .
+
+ Abra a solicitação que deseja alterar.
+
+ Na aba "Ações Pendentes" , localize a seção "Vale-compra Pendente" .
+
+ Nessa seção, você poderá visualizar os seguintes botões:
+
+ "Alterar para Estorno"
+
+ "Informar Vale-compra Gerado"
+
+ "Gerar Vale-compra"
+
+ Conforme ilustrado na imagem abaixo.
+
+ Além disso, em "Vale-compra Pendente" , você também pode optar por "Informar Vale-compra Manualmente" .

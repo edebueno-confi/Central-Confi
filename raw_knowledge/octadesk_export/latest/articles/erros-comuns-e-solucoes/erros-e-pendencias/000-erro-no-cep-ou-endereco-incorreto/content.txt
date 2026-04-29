@@ -1,0 +1,31 @@
+Erro no CEP ou Endereço Incorreto
+ Este erro pode ocorrer ao abrir uma solicitação, sendo registrado na ferramenta como "Pendência de Logística Reversa" . Isso acontece quando o CEP do destinatário ou do remetente é inválido ou inexistente, exigindo a correção dos dados para que o sistema possa processar o código de postagem corretamente.
+ O que significa "Pendência de Logística Reversa"?
+ A pendência pode estar relacionada a:
+ Erro no CEP do remetente ou destinatário;
+
+ Informação incorreta no endereço , como UF ou outros dados inconsistentes.
+
+ Como corrigir o erro?
+ Verifique através do site " BUSCA CEP " do Correios se o CEP de cadastro do cliente é
+ Acesse o painel da loja e vá até o menu de solicitações.
+
+ Se o erro for no CEP ou endereço do remetente (consumidor):
+
+ Localize a solicitação do consumidor;
+
+ Clique em "Ações Pendentes" ;
+
+ Selecione "Alterar endereço" e faça a correção necessária (CEP, UF, etc.).
+
+ Se o erro for nos dados do destinatário (loja):
+
+ Acesse "Cadastro" > "Dados Cadastrais" no painel da loja;
+
+ Atualize as informações do endereço corretamente.
+
+ Após realizar as correções, retorne à solicitação na aba "Ações Pendentes" .
+
+ Clique em "Gerar e-ticket" para concluir o processo.
+
+ Exemplo de tela:

@@ -1,0 +1,42 @@
+Como Instalar o Genius Returns na Nuvemshop
+ 1. Como acessar o painel de administração da Nuvemshop?
+ Faça login no seu painel de administração da Nuvemshop.
+
+ No menu lateral, procure a seção de Aplicativos ou Marketplace de Apps para acessar os aplicativos disponíveis.
+
+ 2. Como procurar pelo aplicativo Genius Returns na Nuvemshop?
+ Na área de aplicativos da Nuvemshop, utilize a barra de pesquisa para procurar por "Genius Returns" .
+
+ Se o aplicativo estiver disponível, ele aparecerá nos resultados da pesquisa.
+
+ 3. Como instalar o Genius Returns?
+ Clique sobre o aplicativo Genius Returns para visualizar mais detalhes, como recursos e permissões necessárias.
+
+ Clique no botão "Instalar" ou "Adicionar ao Minha Loja" para iniciar o processo de instalação.
+
+ Durante a instalação, o aplicativo solicitará permissões para acessar informações de pedidos , clientes e produtos , que são necessárias para gerenciar as trocas e devoluções corretamente.
+
+ 4. Como configurar o Genius Returns após a instalação?
+ Após a instalação, você será redirecionado para a página de configuração do aplicativo.
+
+ Conecte o aplicativo ao seu painel da Nuvemshop, fornecendo as credenciais necessárias, como token de autenticação ou API Key .
+
+ Personalize as opções de devolução e troca de acordo com as regras de sua loja:
+
+ Defina os tipos de devoluções ou trocas (por exemplo, devoluções por motivo de defeito ou troca por outro produto).
+
+ Configure prazos e limites para devoluções.
+
+ Selecione os métodos de reembolso ou troca .
+
+ 5. Como testar o processo de troca e devolução?
+ Antes de permitir que seus clientes usem a funcionalidade, é recomendável testar o processo de troca e devolução:
+
+ Verifique se as solicitações de devolução estão sendo geradas corretamente.
+
+ Teste a comunicação entre o Genius Returns e a Nuvemshop para garantir que os dados dos pedidos sejam atualizados corretamente.
+
+ Certifique-se de que os clientes consigam iniciar o processo de devolução ou troca pelo site.
+
+ 6. Como ativar o Genius Returns para os meus clientes?
+ Após testar e garantir que a integração está funcionando corretamente, você pode ativar o Genius Returns para que seus clientes possam realizar trocas e devoluções diretamente pelo seu site.

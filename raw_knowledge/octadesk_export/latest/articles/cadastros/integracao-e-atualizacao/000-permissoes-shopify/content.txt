@@ -1,0 +1,36 @@
+Integração da Shopify com a Genius Returns
+ 1. Quais permissões são necessárias para integrar a Shopify com a Genius Returns?
+ Para integrar a Shopify com a Genius Returns e garantir o funcionamento adequado da plataforma de trocas e devoluções, as permissões essenciais incluem:
+ Ler/Escrever Pedidos : Necessária para acessar e gerenciar pedidos de clientes, incluindo aqueles relacionados a trocas e devoluções.
+
+ Ler/Escrever Produtos : Permite acessar e modificar informações sobre os produtos para garantir que as trocas sejam processadas corretamente.
+
+ Ler/Escrever Inventário : Acessa o inventário de produtos para ajustar o estoque após a troca de um item.
+
+ Ler/Escrever Clientes : Permite acessar dados dos clientes para personalizar o processo de troca, identificando os pedidos e produtos relacionados a cada cliente.
+
+ Ler/Escrever Configurações de Loja : Permite a Genius Returns configurar e ajustar as regras de troca e devolução conforme as definições de sua loja Shopify.
+
+ 2. Preciso de acesso a Webhooks para a integração?
+ Sim, se você deseja que a Genius Returns reaja a eventos em tempo real, como a criação de um pedido de troca ou devolução, você precisará configurar Webhooks . Alguns eventos importantes para a integração podem ser:
+ order/create : Para ser notificado quando um novo pedido for feito.
+
+ order/updated : Para monitorar atualizações em pedidos existentes, como mudanças no status da troca ou devolução.
+
+ 3. A Genius Returns precisa de permissão para acessar os relatórios de vendas?
+ Essa permissão é opcional, mas pode ser útil se você quiser monitorar o impacto financeiro das trocas e devoluções realizadas através da plataforma. Se necessário, a Genius Returns pode acessar os relatórios de vendas para avaliar como as trocas estão afetando o seu desempenho financeiro e ajustar estratégias de estoque e vendas.
+ 4. Como configurar a integração da Shopify com a Genius Returns?
+ Criação do Aplicativo : No painel de desenvolvedor do Shopify, você precisa criar um aplicativo para a integração com a Genius Returns. Este processo envolverá a escolha das permissões necessárias, como acesso a pedidos, produtos e clientes.
+
+ Autenticação via OAuth : Durante a instalação do aplicativo na loja Shopify, o proprietário da loja precisará autorizar as permissões solicitadas pela Genius Returns para garantir que o aplicativo tenha acesso aos dados necessários.
+
+ 5. O que acontece se eu não conceder todas as permissões necessárias?
+ Se você não conceder todas as permissões necessárias, a integração pode não funcionar corretamente, e a Genius Returns pode não conseguir realizar funções críticas, como a gestão de pedidos de trocas ou devoluções, o ajuste de inventário ou o acesso a dados de clientes.
+ 6. Como posso garantir a segurança dos dados durante a integração?
+ A Genius Returns e a Shopify seguem as melhores práticas de segurança, utilizando criptografia e autenticação OAuth para garantir a proteção dos dados da sua loja e dos seus clientes. É importante sempre revisar as permissões solicitadas e garantir que o aplicativo da Genius Returns seja confiável.
+ 7. Posso alterar as permissões após a integração?
+ Sim, é possível alterar as permissões de acesso após a instalação do aplicativo. Para fazer isso, basta acessar a área de administração do seu Shopify, encontrar o aplicativo Genius Returns e atualizar as permissões conforme necessário.
+ 8. A Genius Returns pode gerenciar as trocas automaticamente?
+ Sim, uma vez integrada, a Genius Returns pode automatizar a gestão de trocas e devoluções com base nas regras e condições que você configurar. Isso inclui verificar a elegibilidade para trocas, processar a devolução do produto e atualizar o inventário da loja.
+ 9. Onde posso obter ajuda se encontrar problemas na integração?
+ Se você encontrar problemas durante a integração da Shopify com a Genius Returns, você pode acessar a central de ajuda e suporte da Genius Returns ou entrar em contato com o suporte técnico da plataforma para obter assistência personalizada.

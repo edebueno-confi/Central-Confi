@@ -1,0 +1,24 @@
+COMO O CONSUMIDOR SOLICITA UMA REVERSA
+
+ A seguir, mostramos como seus clientes podem solicitar trocas e devoluções de forma simples e prática:
+
+ 1. Acesso à página de solicitação
+ Ao acessar o link do Front, o cliente verá a página inicial de boas-vindas. Nessa página, ele deverá escolher entre E-mail ou Número do Pedido para iniciar a solicitação. Após inserir uma dessas opções, o cliente deve clicar em “Localizar Pedido” , conforme mostrado na imagem abaixo:
+
+ 2. Escolha do item para troca ou devolução
+ Se o cliente optar por Número do Pedido , ele será direcionado para uma tela onde verá todos os itens presentes naquele pedido. O cliente deve selecionar apenas o item que deseja trocar ou devolver e, em seguida, clicar no botão “Continuar” .
+
+ 3. Detalhamento da solicitação
+ Na próxima tela, o cliente deverá detalhar sua solicitação . Ele pode escolher entre Trocar ou Devolver o item. Caso opte por Devolver , ele deverá selecionar o motivo da devolução, como mostrado na imagem abaixo:
+
+ Se o cliente escolher Trocar , ele poderá selecionar a variação do produto desejada, conforme a imagem abaixo:
+
+ 4. Envio de imagens
+
+ Após escolher o item a ser trocado ou devolvido, o cliente pode adicionar de 1 a 3 imagens do produto. Ao finalizar, ele deve clicar no botão “Continuar” .
+
+ 5. Confirmação do endereço
+ Na tela “Confirme seu endereço” , o cliente pode editar o endereço cadastrado clicando em “Clique aqui caso precise editá-lo” . Caso o endereço esteja correto, ele deve selecionar o endereço cadastrado. Após isso, as opções de métodos de devolução serão apresentadas, e o cliente deverá clicar em “Continuar” .
+
+ 6. Finalização da solicitação
+ Na página final “Estamos quase lá!” , o cliente verá um resumo de todas as escolhas feitas para a reversa. Se tudo estiver correto, ele pode finalizar o processo clicando em “Finalizar” . Por fim, será direcionado para uma pesquisa de satisfação.

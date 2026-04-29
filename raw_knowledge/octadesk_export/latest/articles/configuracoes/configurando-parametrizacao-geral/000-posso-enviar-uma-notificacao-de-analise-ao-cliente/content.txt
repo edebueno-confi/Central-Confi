@@ -1,0 +1,9 @@
+Posso enviar uma notificação de análise ao cliente?
+ Sim, o e-commerce pode enviar notificações sobre produtos em análise, incluindo fotos e descrições. Para isso, siga os passos abaixo:
+ Acesse o menu "Solicitações" .
+
+ Abra a solicitação que você deseja notificar.
+
+ Na aba "Ações Pendentes" , localize a opção "Enviar Notificação de Análise ao Cliente" , conforme ilustrado nas imagens abaixo.
+
+ Aqui você pode deixar um comentário, anexar uma imagem e arquivo se desejar

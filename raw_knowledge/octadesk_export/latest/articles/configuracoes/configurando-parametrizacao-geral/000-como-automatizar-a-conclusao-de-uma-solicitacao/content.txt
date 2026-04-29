@@ -1,0 +1,23 @@
+Como Automatizar a Conclusão da Solicitação
+ Para otimizar o fluxo de atendimento e garantir que as solicitações sejam concluídas automaticamente ao sanar a pendência financeira, siga o passo a passo abaixo:
+ Configurando a Automação da Conclusão
+ Acesse Configurações no menu administrativo.
+
+ Navegue até Ambiente > Parametrização Geral .
+
+ Ative a opção "Concluir processo ao sanar pendência financeira" .
+
+ Clique em Salvar para aplicar as configurações.
+
+ Como Funciona a Automação?
+ Por padrão, cada solicitação deve ter seu status alterado manualmente de Pendente para Concluído na aba Resumo da Solicitação . No entanto, esse processo pode ser automatizado com a funcionalidade citada acima.
+ Ao ativar essa configuração, sempre que uma pendência financeira for resolvida (seja pela geração do vale-compra ou pela autorização do estorno), a solicitação será automaticamente alterada para Concluída . Dessa forma, não será necessário acessar a aba Resumo das Solicitações para realizar essa alteração manualmente.
+ Impacto no SLA e na Métrica de Atendimento
+ A conclusão da solicitação impacta diretamente no SLA de atendimento . Se o status permanecer como Pendente , o tempo de atendimento será contabilizado além do necessário, impactando negativamente as métricas.
+ A contagem do SLA se inicia no momento da postagem do produto na transportadora ou nos Correios e encerra somente quando o status da solicitação for alterado para Concluído . Caso o status não seja atualizado, o dashboard pode apresentar dados distorcidos, mesmo que o processo de estorno ou vale-compra já tenha sido realizado.
+ Resumo
+ Ativar essa configuração permite que o sistema altere automaticamente o status de Pendente para Concluído assim que a pendência financeira for resolvida.
+
+ Essa automação evita a necessidade de alteração manual e melhora a eficiência do atendimento.
+
+ Garantir que o status seja atualizado corretamente evita distorções no SLA e melhora a precisão das métricas no dashboard.

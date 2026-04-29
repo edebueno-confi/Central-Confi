@@ -1,0 +1,13 @@
+Posso alterar a forma de reembolso do meu consumidor?
+ Sim, o e-commerce pode alterar manualmente a forma de reembolso de uma solicitação. Para isso, siga os passos abaixo:
+ Acesse a área administrativa da plataforma.
+
+ No menu lateral, clique em "Solicitações" .
+
+ Abra a solicitação para a qual você deseja alterar a forma de reembolso.
+
+ Na aba "Resumo da Solicitação" , localize a seção "Dados de Reembolso" .
+
+ O botão para alteração da forma de reembolso estará disponível nesta seção, conforme ilustrado na imagem abaixo.
+
+ Em seguida selecione o vale-compras que será pago(100% ou 110%), e confirme clicando em “Alterar para vale-compras”

@@ -1,0 +1,7 @@
+Produtos em Exceção
+ Nessa funcionalidade, você pode configurar produtos ou categorias específicas que não terão permissão para criar reversas.
+ Acesse a área administrativa da plataforma.
+
+ No menu, clique em Configurações > Parametrização Geral .
+
+ Localize a funcionalidade Produtos em Exceção .

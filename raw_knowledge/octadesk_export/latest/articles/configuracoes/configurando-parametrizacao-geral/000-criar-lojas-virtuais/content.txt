@@ -1,0 +1,14 @@
+MENU CONFIGURAÇÕES: COMO CRIAR LOJAS VIRTUAIS
+ Ao acessar o menu Configurações em Lojas Virtuais , o e-commerce pode criar novas lojas virtuais. Siga os passos abaixo para realizar o processo:
+ 1. Acesse o Menu de Configurações
+ Após fazer login no painel administrativo, localize o MENU no canto superior direito e clique em Configurações , conforme mostrado na imagem abaixo:
+
+ 2. Selecione a Opção "Lojas Virtuais"
+ Em seguida, clique na opção Lojas Virtuais . Você será direcionado para um ambiente onde poderá visualizar todas as lojas virtuais vinculadas ao seu e-commerce. Para adicionar uma nova loja, clique no botão "+" , conforme indicado na imagem abaixo:
+
+ 3. Adicione os Dados da Nova Loja
+ Na próxima tela, insira as informações necessárias, como os dados e o logo da nova loja virtual.
+
+ Após preencher as informações, clique em SALVAR para finalizar o processo.
+
+ Com esses simples passos, sua nova loja virtual será criada com sucesso!

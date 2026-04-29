@@ -1,0 +1,15 @@
+Posso alterar o e-mail e o endereço da solicitação?
+ Sim, o e-commerce pode alterar manualmente o e-mail e o endereço de uma solicitação. Para isso, siga os passos abaixo:
+ Acesse a área administrativa da plataforma.
+
+ No menu lateral, clique em "Solicitações" .
+
+ Abra a solicitação que você deseja alterar.
+
+ Na aba "Resumo da Solicitação" , localize as seções "Solicitante" e "Endereço" .
+
+ Os botões para alteração de e-mail e endereço estarão disponíveis nessas seções, conforme ilustrado na imagem abaixo.
+
+ Ao clicar em “Alterar e-mail” , você será direcionado a tela para preencher o novo e-mail que deve receber as notificações da solicitação, conforme imagem abaixo:
+
+ Se precisar pode clicar em “Alterar endereço”, preencher os dados atualizados e salvar

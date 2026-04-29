@@ -1,0 +1,37 @@
+{
+  "generatedAt": "2026-04-29T17:38:27.424Z",
+  "sourceKbUrl": "https://o205658-f7a.octadesk.com/kb/",
+  "subdomain": "o205658-f7a",
+  "counts": {
+    "categories": 3,
+    "sections": 4,
+    "articles": 58,
+    "assets": 129
+  },
+  "categories": [
+    {
+      "categoryId": "8b61cfdb-2dd9-4a1a-9c53-d26b3b29ffb7",
+      "title": "Configurações",
+      "url": "configuracoes",
+      "description": "Nessa categoria encontraremos tudo sobre configurações para e-commerces",
+      "sectionCount": 2,
+      "articleCount": 45
+    },
+    {
+      "categoryId": "ee55b375-d3cf-48c1-8ffa-0a375544f8b1",
+      "title": "Cadastros",
+      "url": "cadastros",
+      "description": "Nessa catergoria vamos acessar tudo relacionado a criação e cadastro de lojas,usuarios ",
+      "sectionCount": 1,
+      "articleCount": 8
+    },
+    {
+      "categoryId": "9636aab8-7d1b-4e9b-b955-4e578d6bdf2e",
+      "title": "Erros comuns e soluções",
+      "url": "erros-comuns-e-solucoes",
+      "description": "",
+      "sectionCount": 1,
+      "articleCount": 5
+    }
+  ]
+}

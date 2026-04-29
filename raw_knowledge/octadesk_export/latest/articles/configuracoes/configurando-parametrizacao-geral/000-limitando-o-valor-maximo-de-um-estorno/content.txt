@@ -1,0 +1,16 @@
+Limitando o Valor Máximo de um Estorno
+ Passo a passo para configurar o limite máximo de estorno:
+ Acesse o painel Admin da plataforma.
+
+ No menu à esquerda, clique em CONFIGURAÇÕES .
+
+ Selecione a opção AMBIENTE e, em seguida, clique em ESTORNO/VALE-COMPRA .
+
+ Localize a funcionalidade "Limite Máximo de Valor de Estorno" .
+
+ Nesta configuração, você pode determinar o limite máximo de estorno permitido, com base em um percentual sobre o valor devido na solicitação de estorno. Isso permite que você controle quanto pode ser estornado de um pedido, garantindo que o valor de reembolso não ultrapasse os limites estabelecidos.
+ Percentual : Defina o valor máximo em percentual. Por exemplo, se você definir 50%, o estorno não poderá exceder 50% do valor total devido.
+
+ Zero ou campo em branco : Caso não deseje aplicar um limite, basta deixar o campo em branco ou configurar como 0%. Nesse caso, o uso da funcionalidade será desativado.
+
+ Dica : Utilizar esse recurso é uma boa prática para evitar estornos fora do limite estabelecido e garantir maior controle sobre os reembolsos realizados na plataforma.

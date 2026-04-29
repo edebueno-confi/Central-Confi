@@ -1,0 +1,16 @@
+Posso filtrar as solicitações de reversas?
+ Sim, é possível filtrar as solicitações de reversas na plataforma. Para isso, siga os passos abaixo:
+ Acesse a área administrativa da plataforma.
+
+ No menu, clique em Solicitações .
+
+ Na página de solicitações, o e-commerce pode aplicar os seguintes filtros para personalizar a visualização:
+ Período : Filtre as solicitações por data.
+
+ Status : Selecione o status das solicitações (por exemplo, pendente, concluída, etc.).
+
+ Parâmetros : Defina filtros específicos conforme os critérios da sua operação.
+
+ Pedido na Loja : Filtre com base nas solicitações realizadas diretamente na loja física.
+
+ Filtro Avançado : Aplique filtros mais detalhados para refinar ainda mais os resultados.

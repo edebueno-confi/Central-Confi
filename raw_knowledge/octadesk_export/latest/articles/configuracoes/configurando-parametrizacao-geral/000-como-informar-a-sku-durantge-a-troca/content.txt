@@ -1,0 +1,12 @@
+COMO INFORMAR A SKU DURANTE A TROCA
+
+ Para que o consumiror envie a SKU durante sua solicitação é necessario configurar essa permissão do envio da troca por texto, caso necessário.
+ Habilitando ou não que o cliente ao invés de selecionar o item de troca, escreva ou cole o link do item que deseja trocar
+ Acesse a área administrativa da plataforma.
+
+ No menu, clique em Configurações > Parametrização Geral .
+
+ Localize a funcionalidade Informar SKU de Troca por Texto
+
+ Segue imagem abaixo
+ .

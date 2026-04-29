@@ -1,0 +1,9 @@
+Como habilitar uma regra para um motivo específico?
+ Para configurar regras aplicáveis apenas a um motivo específico, siga estas etapas:
+ Acesse Configurações > Ambiente > Motivos .
+
+ Encontre o motivo já cadastrado na lista.
+
+ Selecione a opção desejada para habilitar a ação apenas para esse motivo, conforme o exemplo abaixo.
+
+ Isso garantirá que a regra se aplique exclusivamente ao motivo selecionado.

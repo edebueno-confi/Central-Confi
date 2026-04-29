@@ -1,0 +1,7 @@
+Como reenviar os e-mails?
+ Para reenviar um e-mail, siga os passos abaixo:
+ Acesse o menu "Solicitações" .
+
+ Abra a solicitação desejada.
+
+ Na aba "Comunicação" , clique no botão "Reenviar" .

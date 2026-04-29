@@ -1,0 +1,24 @@
+{
+  "id": "ede26d78-8575-4e59-8495-d64305e905d9",
+  "moduleId": "00000000-0000-0000-0000-000000000000",
+  "categoryId": "ee55b375-d3cf-48c1-8ffa-0a375544f8b1",
+  "isEnabled": true,
+  "culture": "",
+  "title": "Cadastros",
+  "url": "cadastros",
+  "description": "Nessa catergoria vamos acessar tudo relacionado a criação e cadastro de lojas,usuarios ",
+  "orderId": 0,
+  "sections": [
+    {
+      "categoryId": "ee55b375-d3cf-48c1-8ffa-0a375544f8b1",
+      "categoryTitle": "Cadastros",
+      "categoryUrl": "cadastros",
+      "sectionId": "483011a2-6226-4258-8f77-bcfd24fb89c8",
+      "sectionTitle": "Integração e atualização",
+      "sectionUrl": "integracao-e-atualizacao",
+      "sectionDescription": "",
+      "articleCount": 8,
+      "outputPath": "sections/cadastros/integracao-e-atualizacao.json"
+    }
+  ]
+}

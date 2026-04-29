@@ -1,0 +1,45 @@
+{
+  "id": "e7091b3c-a31a-4746-b23f-8d34740cbfa3",
+  "articleId": "8c596682-75c5-4acb-9196-b3e27c56db2d",
+  "title": "Valor Manual para Estorno Automático",
+  "url": "valor-manual-para-estorno-automatico",
+  "status": 2,
+  "orderId": 0,
+  "categoryId": "8b61cfdb-2dd9-4a1a-9c53-d26b3b29ffb7",
+  "categoryTitle": "Configurações",
+  "categoryUrl": "configuracoes",
+  "sectionId": "640b0b0a-c2cc-4615-b771-43cdd1605dd6",
+  "sectionTitle": "Configuração de ambiente",
+  "sectionUrl": "configurando-parametrizacao-geral",
+  "createdBy": {
+    "id": "63a28f63-12c8-482f-abe2-71154eb92c3a",
+    "name": "Atalia",
+    "date": "2025-02-19T22:37:21.764Z"
+  },
+  "updatedBy": {
+    "id": "63a28f63-12c8-482f-abe2-71154eb92c3a",
+    "name": "Atalia",
+    "date": "2025-02-19T22:37:21.764Z"
+  },
+  "lastPublishedBy": {
+    "id": "63a28f63-12c8-482f-abe2-71154eb92c3a",
+    "name": "Atalia",
+    "date": "2025-02-19T22:37:21.764Z"
+  },
+  "permission": [],
+  "assetUrls": [
+    "https://storage.googleapis.com/octa-static-tenants/o205658-f7a/knowledgebase/2025-02-19/rcQUGqflAnHOlvhj7n8kn.com"
+  ],
+  "plainText": "Configuração do Valor Manual para Estorno Automático\n Para ajustar os padrões de segurança da sua plataforma e configurar o valor manual para estorno automático, siga as orientações abaixo:\n Acesse a área administrativa da plataforma.\n\n No menu principal, clique em Configurações > Administrativo> Valor Manual para Estorno Automático .\n\n Ao habilitar essa funcionalidade, o e-commerce poderá definir manualmente o valor do estorno, permitindo ajustes para diferentes tipos de pagamento (cartão de crédito, boleto, etc.).",
+  "contentHtml": "<span id=\"docs-internal-guid-d1ef1e14-7fff-e3c0-6d3d-28e95bcaa433\"><p dir=\"ltr\" style=\"line-height:1.38;margin-top:12pt;margin-bottom:12pt;\"><span style=\"font-size: 11pt; font-family: Arial, sans-serif; background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-alternates: normal; font-variant-position: normal; font-variant-emoji: normal; vertical-align: baseline; white-space-collapse: preserve;\">Configuração do Valor Manual para Estorno Automático</span></p><p dir=\"ltr\" style=\"line-height:1.38;margin-top:12pt;margin-bottom:12pt;\"><span style=\"font-size: 11pt; font-family: Arial, sans-serif; background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-alternates: normal; font-variant-position: normal; font-variant-emoji: normal; vertical-align: baseline; white-space-collapse: preserve;\">Para ajustar os padrões de segurança da sua plataforma e configurar o valor manual para estorno automático, siga as orientações abaixo:</span></p><ol style=\"margin-bottom: 0px; padding-inline-start: 48px;\"><li dir=\"ltr\" style=\"list-style-type: decimal; font-size: 11pt; font-family: Arial, sans-serif; background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-alternates: normal; font-variant-position: normal; font-variant-emoji: normal; vertical-align: baseline; white-space: pre;\" aria-level=\"1\"><p dir=\"ltr\" style=\"line-height:1.38;margin-top:12pt;margin-bottom:0pt;\" role=\"presentation\"><span style=\"font-size: 11pt; background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-alternates: normal; font-variant-position: normal; font-variant-emoji: normal; vertical-align: baseline; text-wrap-mode: wrap;\">Acesse a área administrativa da plataforma.</span></p></li><li dir=\"ltr\" style=\"list-style-type: decimal; font-size: 11pt; font-family: Arial, sans-serif; background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-alternates: normal; font-variant-position: normal; font-variant-emoji: normal; vertical-align: baseline; white-space: pre;\" aria-level=\"1\"><p dir=\"ltr\" style=\"line-height:1.38;margin-top:0pt;margin-bottom:0pt;\" role=\"presentation\"><span style=\"font-size: 11pt; background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-alternates: normal; font-variant-position: normal; font-variant-emoji: normal; vertical-align: baseline; text-wrap-mode: wrap;\">No menu principal, clique em </span><span style=\"font-size: 11pt; background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-alternates: normal; font-variant-position: normal; font-variant-emoji: normal; vertical-align: baseline; text-wrap-mode: wrap;\">Configurações</span><span style=\"font-size: 11pt; background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-alternates: normal; font-variant-position: normal; font-variant-emoji: normal; vertical-align: baseline; text-wrap-mode: wrap;\">&gt;</span><span style=\"font-size: 11pt; background-color: transparent; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-alternates: normal; font-variant-position: normal; font-variant-emoji: normal; vertical-align: baseline; text-wrap-mode: wrap;\">Administrativo&gt; </span><span style=\"background-color: transparent; font-size: 11pt; text-wrap-mode: wrap; font-weight: 700; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-alternates: normal; font-variant-position: normal; font-variant-emoji: normal; vertical-align: baseline;\">Valor Manual para Estorno Automático</span><span style=\"background-color: transparent; font-size: 11pt; text-wrap-mode: wrap; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-alternates: normal; font-variant-position: normal; font-variant-emoji: normal; vertical-align: baseline;\"> .</span></p></li></ol><p dir=\"ltr\" style=\"line-height:1.38;margin-top:12pt;margin-bottom:12pt;\"><span style=\"font-size: 11pt; font-family: Arial, sans-serif; background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-alternates: normal; font-variant-position: normal; font-variant-emoji: normal; vertical-align: baseline; white-space-collapse: preserve;\">Ao habilitar essa funcionalidade, o e-commerce poderá definir manualmente o valor do estorno, permitindo ajustes para diferentes tipos de pagamento (cartão de crédito, boleto, etc.).</span></p><p dir=\"ltr\" style=\"line-height:1.38;margin-top:0pt;margin-bottom:0pt;\"><span style=\"font-size: 11pt; font-family: Arial, sans-serif; background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-alternates: normal; font-variant-position: normal; font-variant-emoji: normal; vertical-align: baseline; white-space-collapse: preserve;\"><span style=\"border:none;display:inline-block;overflow:hidden;width:602px;height:209px;\"><img src=\"https://storage.googleapis.com/octa-static-tenants/o205658-f7a/knowledgebase/2025-02-19/rcQUGqflAnHOlvhj7n8kn.com\" width=\"602\" height=\"209\" style=\"margin-left:0px;margin-top:0px;\"></span></span></p><div><span style=\"font-size: 11pt; font-family: Arial, sans-serif; background-color: transparent; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-alternates: normal; font-variant-position: normal; font-variant-emoji: normal; vertical-align: baseline; white-space-collapse: preserve;\"><span style=\"border:none;display:inline-block;overflow:hidden;width:602px;height:209px;\"><br></span></span></div></span>",
+  "articleDirRelative": "articles/configuracoes/configurando-parametrizacao-geral/000-valor-manual-para-estorno-automatico",
+  "assets": [
+    {
+      "sourceUrl": "https://storage.googleapis.com/octa-static-tenants/o205658-f7a/knowledgebase/2025-02-19/rcQUGqflAnHOlvhj7n8kn.com",
+      "localPath": "assets\\octa-static-tenants\\o205658-f7a\\knowledgebase\\2025-02-19\\rcqugqflanholvhj7n8kn.com",
+      "contentType": "application/octet-stream",
+      "sizeBytes": 19470,
+      "error": null
+    }
+  ]
+}

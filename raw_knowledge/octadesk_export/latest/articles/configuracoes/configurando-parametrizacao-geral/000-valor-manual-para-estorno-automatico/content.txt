@@ -1,0 +1,7 @@
+Configuração do Valor Manual para Estorno Automático
+ Para ajustar os padrões de segurança da sua plataforma e configurar o valor manual para estorno automático, siga as orientações abaixo:
+ Acesse a área administrativa da plataforma.
+
+ No menu principal, clique em Configurações > Administrativo> Valor Manual para Estorno Automático .
+
+ Ao habilitar essa funcionalidade, o e-commerce poderá definir manualmente o valor do estorno, permitindo ajustes para diferentes tipos de pagamento (cartão de crédito, boleto, etc.).

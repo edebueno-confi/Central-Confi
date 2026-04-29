@@ -1,0 +1,20 @@
+Configurando as Formas de Estorno
+ Passo a passo para configurar as formas de estorno:
+ Acesse o painel Admin da plataforma.
+
+ No menu à esquerda, clique em CONFIGURAÇÕES .
+
+ Selecione a opção AMBIENTE e, em seguida, clique em ESTORNO/VALE-COMPRA .
+
+ Procure pela funcionalidade "Formas de Estorno" .
+
+ Nesta seção, você pode configurar as formas de estorno manual que o e-commerce irá utilizar, como por exemplo:
+ Estorno apenas via conta bancária .
+
+ Estorno via conta bancária + Pix.
+
+ Apenas PIX.
+
+ Ajuste essas opções de acordo com as necessidades do seu processo de reembolso , garantindo que as formas de estorno sejam adequadas tanto para sua operação quanto para a experiência do cliente.
+
+ Dica : Certifique-se de revisar as formas de estorno disponíveis e escolher aquelas que são mais compatíveis com os métodos de pagamento utilizados no seu e-commerce, para garantir que os reembolsos sejam realizados de maneira eficiente.

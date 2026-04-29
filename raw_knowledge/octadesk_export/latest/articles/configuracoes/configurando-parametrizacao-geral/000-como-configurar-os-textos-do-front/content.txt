@@ -1,0 +1,28 @@
+Configurando os Textos do Front
+ Passo a passo para configurar os textos visíveis para o cliente:
+ Acesse o painel Admin da plataforma.
+
+ No menu à esquerda, clique em CONFIGURAÇÕES .
+
+ Selecione a opção AMBIENTE e, em seguida, clique na aba “TEXTOS” .
+
+ Neste ambiente, você pode configurar os textos personalizados que os clientes verão durante o processo de criação de suas solicitações no front-end da plataforma. Isso inclui textos de interação em várias etapas do processo, como:
+ Texto para troca : Defina o texto que será exibido quando o cliente solicitar uma troca.
+
+ Texto para devolução : Personalize a mensagem mostrada para solicitações de devolução.
+
+ Home : Ajuste os textos visíveis na página inicial de solicitação.
+
+ Termos para estorno e vale-compras : Configure os termos que aparecerão no lugar de "estorno" e "vale-compras" (por exemplo, “reembolso” ou “crédito de loja”).
+
+ Pop-Up de estorno e vale-compras : Personalize o texto que aparece nas pop-ups de estorno e vale-compras.
+
+ Box de vale-compras do pop-up de estorno e vale-compras : Defina o texto que será mostrado no box de vale-compras dentro da pop-up de estorno e vale-compras.
+
+ Box de estorno do pop-up de estorno e vale-compras : Configure o texto do box de estorno na pop-up.
+
+ Pop-Up de estorno e vale-compras bônus : Personalize o texto exibido em pop-ups que ofereçam estorno ou vale-compras bônus.
+
+ Segue imagens abaixo
+
+ Dica : Personalizar esses textos é uma excelente maneira de alinhar a comunicação da plataforma com a identidade e as políticas do seu e-commerce, além de garantir uma experiência clara e amigável para o cliente.

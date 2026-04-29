@@ -1,0 +1,17 @@
+Pendência de Logística Reversa
+ Quando o seu consumidor solicitar a devolução de um pedido com mais de 10 itens, essa solicitação será registrada como "Pendência de Logística Reversa". Isso ocorre porque, devido ao grande volume de itens, será necessário o uso de mais de uma embalagem para o envio dos produtos.
+ O que significa "Pendência de Logística Reversa"?
+ Para pedidos com mais de 10 itens, o código de postagem só será gerado após o agente informar a quantidade de embalagens necessárias para o envio dos produtos.
+
+ Como proceder:
+ Acesse o menu de solicitações no painel da loja.
+
+ Localize a solicitação do consumidor e clique em Ações Pendentes .
+
+ Em "Ações Pendentes", você verá a Pendência de Logística Reversa .
+
+ Informe a quantidade de embalagens necessárias para o envio dos itens.
+
+ Clique em Gerar e-ticket .
+
+ Exemplo de tela:

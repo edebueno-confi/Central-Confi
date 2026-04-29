@@ -1,0 +1,11 @@
+{
+  "categoryId": "8b61cfdb-2dd9-4a1a-9c53-d26b3b29ffb7",
+  "categoryTitle": "Configurações",
+  "categoryUrl": "configuracoes",
+  "sectionId": "df539189-71a2-45e1-9b4f-abbeb45b5567",
+  "sectionTitle": "Sellers e Loja Fisica",
+  "sectionUrl": "sellers-e-lojafisica",
+  "sectionDescription": "Vamos falar aqui sobre as configurações e regras para sellers",
+  "articleCount": 4,
+  "outputPath": "sections/configuracoes/sellers-e-lojafisica.json"
+}
