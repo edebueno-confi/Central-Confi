@@ -31,20 +31,22 @@ function hashText(value) {
 }
 
 function localSupabaseBinary(args) {
-  const localBinary = join(
-    process.cwd(),
-    'node_modules',
-    'supabase',
-    'bin',
-    process.platform === 'win32' ? 'supabase.exe' : 'supabase',
-  );
+  if (process.platform === 'win32') {
+    const localBinary = join(
+      process.cwd(),
+      'node_modules',
+      'supabase',
+      'bin',
+      'supabase.exe',
+    );
 
-  if (existsSync(localBinary)) {
-    return { command: localBinary, args };
+    if (existsSync(localBinary)) {
+      return { command: localBinary, args };
+    }
   }
 
   return {
-    command: process.platform === 'win32' ? 'npx.cmd' : 'npx',
+    command: 'npx',
     args: ['supabase', ...args],
   };
 }
