@@ -62,6 +62,16 @@ Fase 4:
   - `rpc_admin_archive_knowledge_article`
 - A importação Octadesk só cria drafts locais, preserva `source_path`/`source_hash` e nunca usa HTML como corpo principal.
 
+Fase 4.2:
+- A fundação multi-brand foi materializada de forma 100% aditiva no backend.
+- O Admin Console agora possui read models administrativos novos para governança e marcas:
+  - `vw_admin_organizations_list`
+  - `vw_admin_organization_detail`
+  - `vw_admin_knowledge_spaces`
+- `knowledge_categories` e `knowledge_articles` agora aceitam `knowledge_space_id` nullable, mantendo `tenant_id` e os contratos atuais intactos.
+- Não existem ainda RPCs v2 space-aware, views públicas de help center nem mudança de comportamento no frontend.
+- As RPCs atuais de Knowledge Base continuam sendo a única superfície de escrita editorial exposta nesta fase.
+
 ## Views contratuais vigentes
 
 ### `vw_tickets_list`
@@ -120,6 +130,33 @@ Fase 4:
   - retorna linhas apenas para `platform_admin` com `profile.is_active = true`;
   - não expõe `avatar_url`, `locale`, `timezone`, `updated_at` nem metadados de autoria;
   - não depende de leitura direta do frontend em `public.profiles`;
+  - usa `security_barrier = true`.
+
+### `vw_admin_organizations_list`
+- Finalidade: lista administrativa global de organizations.
+- Retorna: identidade da organization, nomes legais e operacionais, status, timestamps, autoria resolvida e contadores agregados de tenants, memberships e knowledge spaces.
+- Regras:
+  - retorna linhas apenas para `platform_admin` com `profile.is_active = true`;
+  - não depende de leitura direta do frontend em `organizations`, `organization_memberships` ou `knowledge_spaces`;
+  - agrega contagens no backend para manter a governança multi-brand operacional sem joins no client;
+  - usa `security_barrier = true`.
+
+### `vw_admin_organization_detail`
+- Finalidade: read model detalhado de uma organization para contexto administrativo de governança.
+- Retorna: metadados completos da organization, contadores agregados e payloads `jsonb` de `tenants`, `knowledge_spaces` e `organization_memberships`.
+- Regras:
+  - retorna linhas apenas para `platform_admin` com `profile.is_active = true`;
+  - não vaza detalhe organizacional para `tenant_admin`, `tenant_manager` ou membros comuns;
+  - mantém o payload agregado no backend para evitar leitura direta do frontend nas tabelas base novas;
+  - usa `security_barrier = true`.
+
+### `vw_admin_knowledge_spaces`
+- Finalidade: lista administrativa global de knowledge spaces.
+- Retorna: identidade do space, organization, tenant dono quando houver, branding principal, domínio primário, locale, status e contadores agregados de categorias e artigos.
+- Regras:
+  - retorna linhas apenas para `platform_admin` com `profile.is_active = true`;
+  - não depende de leitura direta do frontend em `knowledge_spaces`, `knowledge_space_domains`, `brand_settings`, `knowledge_categories` ou `knowledge_articles`;
+  - preserva o eixo oficial `knowledge_space` como unidade editorial/publica sem alterar as RPCs atuais da KB;
   - usa `security_barrier = true`.
 
 ### `vw_admin_tenant_detail`
@@ -209,7 +246,7 @@ Fase 4:
 ## Auditoria das views administrativas
 
 ### Configuração atual
-- As cinco views administrativas são views PostgreSQL padrão no schema `public`.
+- As views administrativas atuais são views PostgreSQL padrão no schema `public`.
 - Elas não usam `security_invoker = true`.
 - Elas usam `security_barrier = true`.
 
@@ -225,10 +262,10 @@ Fase 4:
 ### Conclusão da auditoria
 - `platform_admin` lê globalmente a superfície administrativa aprovada.
 - Qualquer usuário autenticado lê apenas o próprio `vw_admin_auth_context`.
-- `tenant_admin` e membros comuns recebem zero linhas nas cinco views operacionais/admin.
+- `tenant_admin` e membros comuns recebem zero linhas nas views administrativas globais, incluindo a fundação multi-brand.
 - O feed de auditoria mantém contexto de tenant para eventos administrativos relevantes sem depender de lógica no frontend.
 - `authenticated` não mantém `SELECT` direto em `public.profiles`; a busca de usuários do Admin Console foi deslocada para `vw_admin_user_lookup`.
-- As suítes `supabase/tests/007_phase2_3_admin_read_models.sql`, `supabase/tests/008_phase3_1_admin_auth_context.sql` e `supabase/tests/009_phase3_2_admin_user_lookup.sql` quebram se as views forem removidas, se os grants forem alterados ou se os filtros explícitos desaparecerem.
+- As suítes `supabase/tests/007_phase2_3_admin_read_models.sql`, `supabase/tests/008_phase3_1_admin_auth_context.sql`, `supabase/tests/009_phase3_2_admin_user_lookup.sql` e `supabase/tests/011_phase4_2_multi_brand_foundation.sql` quebram se as views forem removidas, se os grants forem alterados ou se os filtros explícitos desaparecerem.
 
 ## RPCs administrativas vigentes
 
@@ -399,6 +436,9 @@ Fase 4:
   - `vw_admin_tenant_memberships`
   - `vw_admin_audit_feed`
   - `vw_admin_user_lookup`
+  - `vw_admin_organizations_list`
+  - `vw_admin_organization_detail`
+  - `vw_admin_knowledge_spaces`
   - `vw_admin_knowledge_categories`
   - `vw_admin_knowledge_articles_list`
   - `vw_admin_knowledge_article_detail`
@@ -421,12 +461,14 @@ Fase 4:
 ## Próximos contratos planejados
 - Views e RPCs de intake para engenharia.
 - Read models públicos da Knowledge Base apenas quando a Central de Ajuda pública for aberta com curadoria aprovada.
+- RPCs e read models v2 space-aware da Knowledge Base apenas depois do backfill multi-brand da Fase 4.3.
 
 ## Proibições
 - Frontend fazendo join direto em tabelas de domínio.
 - Frontend lendo `public.tickets` ou tabelas-filhas diretamente.
 - Frontend lendo `profiles` ou `user_global_roles` diretamente para resolver o gate do Admin Console.
 - Frontend lendo `tenants`, `tenant_memberships`, `tenant_contacts` ou `audit.audit_logs` diretamente para o Admin Console.
+- Frontend lendo `organizations`, `organization_memberships`, `knowledge_spaces`, `knowledge_space_domains` ou `brand_settings` diretamente.
 - Frontend lendo tabelas base de Knowledge Base (`knowledge_*`) diretamente.
 - Frontend decidindo visibilidade de nota interna.
 - Frontend usando HTML legado de Octadesk como corpo/UI de artigo.
