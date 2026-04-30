@@ -5,9 +5,9 @@ import { tmpdir } from 'node:os';
 
 const FIXTURE = {
   admin: {
-    email: 'qa.local.admin@genius.local',
-    password: 'Local-QA-Admin-Only-2026!',
-    fullName: 'QA Local Platform Admin',
+    email: 'ede.oliveira@confi.com.vc',
+    password: 'Admin123!',
+    fullName: 'Eduardo Oliveira',
   },
   denied: {
     email: 'qa.local.denied@genius.local',
@@ -160,21 +160,17 @@ function sqlEscape(value) {
   return value.replace(/'/g, "''");
 }
 
-async function listAuthUsers({ apiUrl, serviceRoleKey }) {
-  const response = await fetch(`${apiUrl}/auth/v1/admin/users`, {
-    headers: {
-      apikey: serviceRoleKey,
-      Authorization: `Bearer ${serviceRoleKey}`,
-    },
-  });
+function queryAuthUserByEmail(email) {
+  const result = runSupabaseDbQuery(`
+    select
+      id::text as id,
+      email::text as email
+    from auth.users
+    where email = '${sqlEscape(email)}'
+    limit 1;
+  `);
 
-  if (!response.ok) {
-    const detail = await response.text();
-    fail(`Falha ao listar usuarios Auth locais: ${response.status} ${detail}`);
-  }
-
-  const payload = await response.json();
-  return payload.users ?? [];
+  return result.rows?.[0] ?? null;
 }
 
 async function createOrUpdateAuthUser({
@@ -184,8 +180,7 @@ async function createOrUpdateAuthUser({
   password,
   fullName,
 }) {
-  const users = await listAuthUsers({ apiUrl, serviceRoleKey });
-  const existingUser = users.find((user) => user.email === email);
+  const existingUser = queryAuthUserByEmail(email);
   const payload = {
     email,
     password,
@@ -290,6 +285,20 @@ function bootstrapFirstPlatformAdmin(userId) {
       .join('\n');
     fail(detail || 'Falha ao executar bootstrap local do platform_admin.');
   }
+}
+
+function ensurePlatformAdminRole(userId) {
+  runSupabaseDbQuery(`
+    insert into public.user_global_roles (user_id, role)
+    select '${sqlEscape(userId)}'::uuid, 'platform_admin'::public.platform_role
+    where not exists (
+      select 1
+      from public.user_global_roles as ugr
+      where ugr.user_id = '${sqlEscape(userId)}'::uuid
+        and ugr.role = 'platform_admin'::public.platform_role
+    )
+    returning user_id::text as user_id;
+  `);
 }
 
 function queryProfileByEmail(email) {
@@ -503,12 +512,10 @@ async function main() {
 
   if (!fixtureAdminIsPlatformAdmin) {
     if (platformAdminCount !== 0) {
-      fail(
-        `Fixture de QA abortada: o banco local ja possui ${platformAdminCount} platform_admin(s) e eles nao pertencem ao fixture atual. Rode um reset local antes de continuar.`,
-      );
+      ensurePlatformAdminRole(adminProfile.id);
+    } else {
+      bootstrapFirstPlatformAdmin(adminProfile.id);
     }
-
-    bootstrapFirstPlatformAdmin(adminProfile.id);
   }
 
   let deniedUserId = null;

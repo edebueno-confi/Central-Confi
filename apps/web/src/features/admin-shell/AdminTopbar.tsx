@@ -7,6 +7,10 @@ const routeCopy: Record<string, { title: string; subtitle: string }> = {
     title: 'Tenants',
     subtitle: 'Clientes B2B, status operacional e contexto de pos-venda em uma unica superficie.',
   },
+  '/admin/knowledge': {
+    title: 'Knowledge',
+    subtitle: 'Curadoria editorial space-aware da Knowledge Base sem abrir a Central Publica.',
+  },
   '/admin/access': {
     title: 'Access',
     subtitle: 'Governanca minima de memberships para a operacao Genius.',

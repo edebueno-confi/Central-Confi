@@ -77,6 +77,11 @@ interface CategoryFormState {
   parentCategoryId: string;
 }
 
+interface ArticleActionFeedback {
+  articleId: string;
+  message: string;
+}
+
 function emptyArticleForm(): ArticleFormState {
   return {
     title: '',
@@ -200,12 +205,19 @@ export function KnowledgePage() {
   const [categoryFormSubmitting, setCategoryFormSubmitting] = useState(false);
   const [categoryFormMessage, setCategoryFormMessage] = useState<string | null>(null);
   const [articleActionSubmitting, setArticleActionSubmitting] = useState(false);
-  const [articleActionMessage, setArticleActionMessage] = useState<string | null>(null);
+  const [articleActionFeedback, setArticleActionFeedback] =
+    useState<ArticleActionFeedback | null>(null);
 
   const selectedSpace =
     spaces.find((space) => space.id === selectedSpaceId) ?? null;
   const selectedArticleSummary =
     articles.find((article) => article.id === selectedArticleId) ?? null;
+  const articleActionMessage =
+    articleActionFeedback &&
+    selectedArticleId &&
+    articleActionFeedback.articleId === selectedArticleId
+      ? articleActionFeedback.message
+      : null;
   const rootCategoryCount = categories.filter(
     (category) => category.parent_category_id === null,
   ).length;
@@ -380,7 +392,7 @@ export function KnowledgePage() {
     setCategoryForm(emptyCategoryForm());
     setArticleFormMessage(null);
     setCategoryFormMessage(null);
-    setArticleActionMessage(null);
+    setArticleActionFeedback(null);
   }, [selectedSpaceId]);
 
   useEffect(() => {
@@ -411,14 +423,14 @@ export function KnowledgePage() {
     setPanelMode('create-article');
     setArticleForm(emptyArticleForm());
     setArticleFormMessage(null);
-    setArticleActionMessage(null);
+    setArticleActionFeedback(null);
   }
 
   function openCreateCategory() {
     setPanelMode('create-category');
     setCategoryForm(emptyCategoryForm());
     setCategoryFormMessage(null);
-    setArticleActionMessage(null);
+    setArticleActionFeedback(null);
   }
 
   function openEditArticle() {
@@ -429,7 +441,7 @@ export function KnowledgePage() {
     setPanelMode('edit-article');
     setArticleForm(buildArticleForm(articleDetail));
     setArticleFormMessage(null);
-    setArticleActionMessage(null);
+    setArticleActionFeedback(null);
   }
 
   async function refreshSelectedSpace(preferredArticleId?: string | null) {
@@ -546,7 +558,10 @@ export function KnowledgePage() {
       setSelectedArticleId(recordId);
       setPanelMode('detail');
       setArticleForm(emptyArticleForm());
-      setArticleActionMessage('Draft sincronizado com sucesso.');
+      setArticleActionFeedback({
+        articleId: recordId,
+        message: 'Draft sincronizado com sucesso.',
+      });
     } catch (error) {
       const classified = classifyAdminError(
         error,
@@ -575,7 +590,7 @@ export function KnowledgePage() {
     }
 
     setArticleActionSubmitting(true);
-    setArticleActionMessage(null);
+    setArticleActionFeedback(null);
 
     try {
       await submitKnowledgeArticleForReviewV2({
@@ -585,7 +600,10 @@ export function KnowledgePage() {
 
       await refreshSelectedSpace(selectedArticleId);
       await refreshArticleDetail(selectedArticleId);
-      setArticleActionMessage('Artigo enviado para revisao com sucesso.');
+      setArticleActionFeedback({
+        articleId: selectedArticleId,
+        message: 'Artigo enviado para revisao com sucesso.',
+      });
     } catch (error) {
       const classified = classifyAdminError(
         error,
@@ -602,7 +620,10 @@ export function KnowledgePage() {
         return;
       }
 
-      setArticleActionMessage(classified.message);
+      setArticleActionFeedback({
+        articleId: selectedArticleId,
+        message: classified.message,
+      });
     } finally {
       setArticleActionSubmitting(false);
     }
@@ -614,7 +635,7 @@ export function KnowledgePage() {
     }
 
     setArticleActionSubmitting(true);
-    setArticleActionMessage(null);
+    setArticleActionFeedback(null);
 
     try {
       await publishKnowledgeArticleV2({
@@ -624,7 +645,10 @@ export function KnowledgePage() {
 
       await refreshSelectedSpace(selectedArticleId);
       await refreshArticleDetail(selectedArticleId);
-      setArticleActionMessage('Artigo publicado com sucesso.');
+      setArticleActionFeedback({
+        articleId: selectedArticleId,
+        message: 'Artigo publicado com sucesso.',
+      });
     } catch (error) {
       const classified = classifyAdminError(
         error,
@@ -641,7 +665,10 @@ export function KnowledgePage() {
         return;
       }
 
-      setArticleActionMessage(classified.message);
+      setArticleActionFeedback({
+        articleId: selectedArticleId,
+        message: classified.message,
+      });
     } finally {
       setArticleActionSubmitting(false);
     }
@@ -653,7 +680,7 @@ export function KnowledgePage() {
     }
 
     setArticleActionSubmitting(true);
-    setArticleActionMessage(null);
+    setArticleActionFeedback(null);
 
     try {
       await archiveKnowledgeArticleV2({
@@ -663,7 +690,10 @@ export function KnowledgePage() {
 
       await refreshSelectedSpace(selectedArticleId);
       await refreshArticleDetail(selectedArticleId);
-      setArticleActionMessage('Artigo arquivado com sucesso.');
+      setArticleActionFeedback({
+        articleId: selectedArticleId,
+        message: 'Artigo arquivado com sucesso.',
+      });
     } catch (error) {
       const classified = classifyAdminError(
         error,
@@ -680,7 +710,10 @@ export function KnowledgePage() {
         return;
       }
 
-      setArticleActionMessage(classified.message);
+      setArticleActionFeedback({
+        articleId: selectedArticleId,
+        message: classified.message,
+      });
     } finally {
       setArticleActionSubmitting(false);
     }
@@ -951,7 +984,7 @@ export function KnowledgePage() {
                                 setPanelMode('detail');
                                 setArticleFormMessage(null);
                                 setCategoryFormMessage(null);
-                                setArticleActionMessage(null);
+                                setArticleActionFeedback(null);
                               }}
                               type="button"
                             >
