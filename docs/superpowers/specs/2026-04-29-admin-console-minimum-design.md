@@ -1,7 +1,7 @@
 # Admin Console Minimum Design
 
 Date: 2026-04-29
-Status: Approved for implementation planning, not for coding yet
+Status: Implemented locally through Phase 3.1 hardening
 Scope: Frontend mínimo logado para `platform_admin`
 
 ## 1. Objetivo
@@ -203,57 +203,45 @@ Shape mínimo esperado:
 ### Leitura pronta hoje no backend
 
 Views administrativas oficiais:
+- `public.vw_admin_auth_context`
 - `public.vw_admin_tenants_list`
 - `public.vw_admin_tenant_detail`
 - `public.vw_admin_tenant_memberships`
 - `public.vw_admin_audit_feed`
 
-Superfícies de auth/contexto que ainda existem fora dessas views:
-- `public.profiles` com RLS
-- `public.user_global_roles` com RLS
-
 ### Observação crítica
 
 Para o Admin Console, a leitura operacional principal agora já segue a regra
-canônica de views contratuais, enquanto a escrita segue por RPCs.
+canônica de views contratuais, incluindo o gate de auth/contexto. A escrita
+segue por RPCs.
 
 ## 8. Lacunas de backend
 
-### Lacuna principal restante
+### Estado resolvido
 
-O gate de auth/profile/global roles ainda não possui um read model contratual
-dedicado equivalente às views administrativas do console.
+O gate de auth/profile/global roles foi resolvido em Fase 3.1 por
+`public.vw_admin_auth_context`.
 
-### Impacto
+### Lacuna restante
 
-`/admin/tenants`, `/admin/access` e `/admin/system` já podem consumir contratos
-de leitura formais. O ponto que ainda exige decisão arquitetural é a resolução
-de:
-- `profile` do usuário autenticado
-- roles globais do usuário autenticado
-
-### Recomendação
-
-Manter a disciplina abaixo:
-- views `vw_admin_*` para leitura operacional do console
-- RPCs `rpc_admin_*` para mutações administrativas
-- gate de auth/contexto implementado separadamente, sem usar mock e sem abrir
-  leitura ad hoc das tabelas administrativas do console
+Ainda não existe contrato explícito de busca global de usuários para apoiar:
+- seleção rica de `user_id` em memberships;
+- vínculo de contatos com usuário sem entrada manual de UUID.
 
 ### Observação
 
 Não existe mais justificativa para o frontend de `Tenants`, `Access` ou
-`System` consumir `tenants`, `tenant_memberships`, `tenant_contacts` ou
-`audit.audit_logs` diretamente.
+`System` consumir `tenants`, `tenant_memberships`, `tenant_contacts`,
+`audit.audit_logs`, `profiles` ou `user_global_roles` diretamente.
 
 ## 9. Estratégia de auth/session/profile gate
 
 ### Ordem de resolução
 
 1. validar sessão autenticada
-2. carregar `profile` do usuário autenticado
+2. carregar `vw_admin_auth_context`
 3. validar `profile.is_active = true`
-4. carregar `user_global_roles` do próprio usuário
+4. ler `roles[]` do próprio usuário autenticado
 5. verificar existência de role `platform_admin`
 6. permitir ou negar entrada no shell
 
@@ -268,8 +256,8 @@ Não existe mais justificativa para o frontend de `Tenants`, `Access` ou
 
 O primeiro frontend valida:
 - auth real
-- profile real
-- role global real
+- profile real por `vw_admin_auth_context`
+- role global real por `vw_admin_auth_context`
 
 Antes de tocar em qualquer operação de tenant.
 
@@ -346,6 +334,6 @@ O frontend deve começar por:
 - shell
 
 As telas operacionais de `Tenants`, `Access` e `System` já têm contratos
-backend suficientes para começar. O ponto que continua exigindo disciplina é o
-gate de auth/profile/role global antes de qualquer renderização de dados
-administrativos.
+backend suficientes para começar. O ponto que continua exigindo disciplina é
+manter o console restrito a views/RPCs contratuais e não abrir lookup ad hoc de
+usuários ou módulos fora do escopo aprovado.

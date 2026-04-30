@@ -41,11 +41,11 @@ Documentos históricos:
 - Nenhum dado operacional relevante deve ser perdido.
 - Documentação deve ser viva e versionada no repositório.
 
-## Estado real do repositório em 2026-04-29
+## Estado real do repositório em 2026-04-30
 
 ### Existe
 - Repositório base com `apps/`, `packages/`, `supabase/`, `tests/`, `docs/` e `raw_knowledge/`.
-- Placeholder em `apps/web/`, sem UI implementada.
+- Frontend real do Admin Console mínimo implementado em `apps/web/` com `Vite`, `React`, `TypeScript`, `Tailwind`, `React Router` e `@supabase/supabase-js`.
 - Template de ambiente versionado apenas como `.env.example`, sem valores reais.
 - Blueprint histórico em `supabase/blueprints/001_foundation.sql`, marcado como não executável.
 - Documentação estratégica oficial em `docs/`.
@@ -57,6 +57,7 @@ Documentos históricos:
 - Migration oficial de control plane e function hardening `supabase/migrations/20260429215122_phase1_2_admin_control_plane.sql`.
 - Migration oficial de ticketing core e contratos backend `supabase/migrations/20260429225342_phase2_ticketing_core_backend_contracts.sql`.
 - Migration oficial de read models administrativos `supabase/migrations/20260430024632_phase2_3_admin_read_models.sql`.
+- Migration oficial do auth read model administrativo `supabase/migrations/20260430144642_phase3_1_admin_auth_context.sql`.
 - Teste local de banco em `supabase/tests/001_phase1_identity_tenancy_rls.sql`.
 - Teste local de hardening em `supabase/tests/002_phase1_1_hardening.sql`.
 - Teste local de control plane administrativo em `supabase/tests/003_phase1_2_admin_control_plane.sql`.
@@ -64,6 +65,7 @@ Documentos históricos:
 - Teste local de ticketing core em `supabase/tests/005_phase2_ticketing_core.sql`.
 - Teste local de auditoria estrutural de views em `supabase/tests/006_phase2_1_view_security_audit.sql`.
 - Teste local de read models administrativos em `supabase/tests/007_phase2_3_admin_read_models.sql`.
+- Teste local de auth read model administrativo em `supabase/tests/008_phase3_1_admin_auth_context.sql`.
 - Seed separado em `supabase/seeds/` e desabilitado por padrão.
 - Fluxo de bootstrap seguro do primeiro `platform_admin` em `supabase/bootstrap/`.
 - Núcleo Fase 1 implementado com `profiles`, `user_global_roles`, `tenants`, `tenant_memberships`, `tenant_contacts` e `audit.audit_logs`.
@@ -75,15 +77,27 @@ Documentos históricos:
 - Núcleo operacional de tickets implementado localmente com `tickets`, `ticket_messages`, `ticket_events`, `ticket_assignments` e `ticket_attachments`.
 - Views contratuais de leitura materializadas em `vw_tickets_list`, `vw_ticket_detail` e `vw_ticket_timeline`.
 - Views contratuais administrativas materializadas em `vw_admin_tenants_list`, `vw_admin_tenant_detail`, `vw_admin_tenant_memberships` e `vw_admin_audit_feed`.
+- View contratual de auth context materializada em `vw_admin_auth_context`.
 - RPCs contratuais de escrita materializadas em `rpc_create_ticket`, `rpc_update_ticket_status`, `rpc_assign_ticket`, `rpc_add_ticket_message`, `rpc_add_internal_ticket_note`, `rpc_close_ticket` e `rpc_reopen_ticket`.
 - `authenticated` não possui `SELECT`, `INSERT`, `UPDATE` nem `DELETE` direto nas tabelas base de ticketing; o app lê via views e escreve via RPCs.
 - Pacote `packages/contracts` materializado com tipos TypeScript para views e RPCs de ticketing.
 - Auditoria estrutural das views oficializada com `security_barrier = true`, filtros explícitos por caller e teste pgTAP dedicado.
 - Admin Console mínimo agora possui read models contratuais próprios e bloqueia leitura dessas views para não-`platform_admin`.
+- O gate do Admin Console agora resolve auth/profile/roles globais apenas por `vw_admin_auth_context`.
+- O frontend do Admin Console não lê `profiles`, `user_global_roles`, `tenants`, `tenant_memberships`, `tenant_contacts` nem `audit.audit_logs` diretamente.
+- Rotas mínimas materializadas em `/login`, `/admin`, `/admin/tenants`, `/admin/access`, `/admin/system` e `/access-denied`.
+- Shell protegido materializado com `AuthBootstrap`, `AdminGate`, `AdminConsoleShell`, `AdminSidebar` e `AdminTopbar`.
+- Leitura operacional do frontend já consome apenas `vw_admin_auth_context`, `vw_admin_tenants_list`, `vw_admin_tenant_detail`, `vw_admin_tenant_memberships` e `vw_admin_audit_feed`.
+- Escrita operacional do frontend já consome apenas `rpc_admin_create_tenant`, `rpc_admin_update_tenant_status`, `rpc_admin_add_tenant_member`, `rpc_admin_update_tenant_member_role`, `rpc_admin_update_tenant_member_status`, `rpc_admin_create_tenant_contact` e `rpc_admin_update_tenant_contact`.
+- Estados obrigatórios do frontend materializados: loading, vazio, erro, acesso negado, contrato indisponível e sessão expirada.
+- Build do frontend agora usa code-splitting por rota.
 - `npm run contracts:typecheck` validado com sucesso.
 - `npm run supabase:verify` validado com sucesso.
-- Suite pgTAP atual validada com `Files=7`, `Tests=120`, `Result: PASS`.
+- `npm run web:typecheck` validado com sucesso.
+- `npm run web:build` validado com sucesso.
+- Suite pgTAP atual validada com `Files=8`, `Tests=135`, `Result: PASS`.
 - Pipeline CI para banco em `.github/workflows/supabase-db.yml`.
+- A workflow `.github/workflows/supabase-db.yml` agora valida também `web:typecheck` e `web:build`.
 - CI remota validada no GitHub pela workflow `Supabase DB`, run `25139500960`, commit `85b3495`, branch `codex/phase1-2-admin-control-plane`, conclusão `success`.
 - Runbook de deploy remoto criado em `docs/REMOTE_SUPABASE_DEPLOY_RUNBOOK.md`.
 - Deploy remoto das 4 migrations oficiais concluído com sucesso no Supabase remoto.
@@ -97,8 +111,8 @@ Documentos históricos:
 - Base bruta preservada em `raw_knowledge/octadesk_export/latest/`.
 
 ### Não existe ainda
-- Frontend React, TypeScript e Tailwind iniciado.
 - Views/read models contratuais para knowledge base e engenharia.
+- Contrato explícito de busca global de usuários para substituir entrada manual de `user_id` no Admin Console.
 
 ## Situação por fase
 
@@ -139,6 +153,15 @@ Documentos históricos:
   - `platform_admin` lê globalmente; `tenant_admin` e membros comuns recebem zero linhas.
   - A suíte `supabase/tests/007_phase2_3_admin_read_models.sql` cobre grants, acesso permitido, acesso negado e ausência de vazamento cross-tenant.
   - `supabase:verify` atual confirma `Files=7`, `Tests=120`, `Result: PASS`.
+- Fase 3: Admin Console mínimo implementado localmente.
+  - Login real, gate de `platform_admin`, shell protegido e rotas mínimas materializados em `apps/web`.
+  - `Tenants`, `Access` e `System` consomem apenas views e RPCs contratuais.
+  - O frontend aplica alinhamento institucional de marca Genius sem abrir Support Desk, Customer Portal ou IA operacional.
+- Fase 3.1: hardening frontend, auth read model e CI sync concluídos localmente.
+  - `vw_admin_auth_context` resolve o gate autenticado sem leitura direta de `profiles` e `user_global_roles` no client.
+  - `supabase/tests/008_phase3_1_admin_auth_context.sql` cobre grants, filtro por `auth.uid()`, self-only e preservação de `is_active`/roles.
+  - A workflow de CI agora valida `contracts:typecheck`, `web:typecheck`, `web:build` e `supabase:verify`.
+  - `supabase:verify` atual confirma `Files=8`, `Tests=135`, `Result: PASS`.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -153,10 +176,11 @@ Documentos históricos:
 - Não ingerir `raw_knowledge` sem classificação de sensibilidade.
 - Não permitir mutação administrativa por acesso direto às tabelas do control plane.
 - Não permitir leitura direta do app nas tabelas base de ticketing.
+- Não permitir leitura direta do app em `profiles` e `user_global_roles` para o gate do Admin Console.
 - Não permitir leitura do Admin Console fora das views `vw_admin_*`.
 
 ## Próxima prioridade
-Manter o frontend operacional bloqueado até abrir o Admin Console mínimo com
-auth/profile gate e consumo exclusivo das views `vw_admin_*` e RPCs
-administrativas existentes. A lacuna restante antes da implementação visual é
-formalizar a estratégia final de leitura do gate de `profile` e roles globais.
+Fechar a Fase 3.1 com commit, push e CI verde no GitHub. Depois disso, qualquer
+expansão do Admin Console deve continuar bloqueada aos módulos atuais até
+existirem novos contratos formais, principalmente para busca global de usuários
+e para novos domínios fora de `Tenants`, `Access` e `System`.

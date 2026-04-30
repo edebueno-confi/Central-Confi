@@ -28,6 +28,12 @@ Fase 2.3:
   - `vw_admin_audit_feed`
 - A escrita administrativa continua restrita às RPCs já materializadas na Fase 1.2.
 
+Fase 3.1:
+- O gate autenticado do Admin Console agora possui read model contratual próprio.
+- O frontend consome o contexto do usuário autenticado apenas por:
+  - `vw_admin_auth_context`
+- O frontend do Admin Console não lê mais `profiles` nem `user_global_roles` diretamente.
+
 ## Views contratuais vigentes
 
 ### `vw_tickets_list`
@@ -59,6 +65,16 @@ Fase 2.3:
   - usa `security_barrier = true`.
 
 ## Views contratuais administrativas
+
+### `vw_admin_auth_context`
+- Finalidade: read model do contexto autenticado do Admin Console.
+- Retorna: `id`, `full_name`, `email`, `avatar_url`, `is_active` e `roles` como array de `user_global_roles.role`.
+- Regras:
+  - retorna no máximo uma linha;
+  - filtra explicitamente por `auth.uid()`;
+  - não expõe contexto de outro usuário autenticado;
+  - permite ao frontend resolver sessão, profile ativo e role global sem `SELECT` direto em `profiles` e `user_global_roles`;
+  - usa `security_barrier = true`.
 
 ### `vw_admin_tenants_list`
 - Finalidade: lista global de tenants do Admin Console.
@@ -129,7 +145,7 @@ Fase 2.3:
 ## Auditoria das views administrativas
 
 ### Configuração atual
-- As quatro views administrativas são views PostgreSQL padrão no schema `public`.
+- As cinco views administrativas são views PostgreSQL padrão no schema `public`.
 - Elas não usam `security_invoker = true`.
 - Elas usam `security_barrier = true`.
 
@@ -137,15 +153,17 @@ Fase 2.3:
 - O frontend administrativo continua proibido de depender de join em tabelas base.
 - A estratégia atual replica o padrão endurecido do ticketing:
   - filtro explícito no próprio read model;
-  - `platform_admin` ativo como condição de leitura;
+  - `auth.uid()` explícito para contexto autenticado;
+  - `platform_admin` ativo como condição de leitura nas views operacionais;
   - grants concedidos na view, não como permissão semântica do frontend nas tabelas base.
 - Nenhuma policy nova foi criada para esta fase porque o isolamento do app é imposto pelas próprias views contratuais.
 
 ### Conclusão da auditoria
 - `platform_admin` lê globalmente a superfície administrativa aprovada.
+- Qualquer usuário autenticado lê apenas o próprio `vw_admin_auth_context`.
 - `tenant_admin` e membros comuns recebem zero linhas nas quatro views.
 - O feed de auditoria mantém contexto de tenant para eventos administrativos relevantes sem depender de lógica no frontend.
-- A suíte `supabase/tests/007_phase2_3_admin_read_models.sql` quebra se as views forem removidas, se os grants forem alterados ou se o filtro explícito por `platform_admin` desaparecer.
+- As suítes `supabase/tests/007_phase2_3_admin_read_models.sql` e `supabase/tests/008_phase3_1_admin_auth_context.sql` quebram se as views forem removidas, se os grants forem alterados ou se os filtros explícitos desaparecerem.
 
 ## RPCs administrativas vigentes
 
@@ -258,6 +276,7 @@ Fase 2.3:
   - `vw_ticket_detail`
   - `vw_ticket_timeline`
 - O app autenticado lê o Admin Console apenas por:
+  - `vw_admin_auth_context`
   - `vw_admin_tenants_list`
   - `vw_admin_tenant_detail`
   - `vw_admin_tenant_memberships`
@@ -272,13 +291,14 @@ Fase 2.3:
   - `rpc_reopen_ticket`
 
 ## Próximos contratos planejados
-- Contrato explícito de leitura para gate de auth/profile/global roles, se o frontend precisar eliminar leitura direta desses domínios.
 - Views e RPCs de knowledge base.
 - Views e RPCs de intake para engenharia.
+- Contrato explícito de busca global de usuários, se o Admin Console precisar substituir entrada manual de `user_id` em memberships e vínculos de contato.
 
 ## Proibições
 - Frontend fazendo join direto em tabelas de domínio.
 - Frontend lendo `public.tickets` ou tabelas-filhas diretamente.
+- Frontend lendo `profiles` ou `user_global_roles` diretamente para resolver o gate do Admin Console.
 - Frontend lendo `tenants`, `tenant_memberships`, `tenant_contacts` ou `audit.audit_logs` diretamente para o Admin Console.
 - Frontend decidindo visibilidade de nota interna.
 - Escrita direta em tabelas críticas sem RPC.

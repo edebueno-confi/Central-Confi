@@ -17,7 +17,10 @@
     "supabase:db:reset": "supabase db reset --local --yes",
     "supabase:test:db": "supabase test db --local",
     "supabase:lint:db": "supabase db lint --local",
-    "supabase:verify": "npm run supabase:db:reset && npm run supabase:test:db && npm run supabase:lint:db"
+    "supabase:verify": "npm run supabase:db:reset && npm run supabase:test:db && npm run supabase:lint:db",
+    "web:dev": "npm run dev --workspace @genius-support-os/web --",
+    "web:typecheck": "npm run typecheck --workspace @genius-support-os/web",
+    "web:build": "npm run build --workspace @genius-support-os/web"
   },
   "devDependencies": {
     "supabase": "^2.95.6",

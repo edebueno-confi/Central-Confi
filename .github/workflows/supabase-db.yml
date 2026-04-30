@@ -27,6 +27,12 @@ jobs:
       - name: Typecheck contracts
         run: npm run contracts:typecheck
 
+      - name: Typecheck frontend
+        run: npm run web:typecheck
+
+      - name: Build frontend
+        run: npm run web:build
+
       - name: Start Supabase
         run: npm run supabase:start
 
