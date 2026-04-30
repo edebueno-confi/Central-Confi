@@ -47,6 +47,21 @@ Fase 3.2:
 - `authenticated` não possui mais `SELECT` direto em `public.profiles`.
 - A tela `Access` usa nome/email -> `user_id` pela view contratual e mantém fallback manual controlado apenas quando necessário.
 
+Fase 4:
+- Knowledge Base agora possui núcleo editorial real com views internas contratuais e RPCs administrativas próprias.
+- O frontend administrativo futuro deve consumir a superfície de leitura apenas por:
+  - `vw_admin_knowledge_categories`
+  - `vw_admin_knowledge_articles_list`
+  - `vw_admin_knowledge_article_detail`
+- A escrita editorial deve passar apenas por:
+  - `rpc_admin_create_knowledge_category`
+  - `rpc_admin_create_knowledge_article_draft`
+  - `rpc_admin_update_knowledge_article_draft`
+  - `rpc_admin_submit_knowledge_article_for_review`
+  - `rpc_admin_publish_knowledge_article`
+  - `rpc_admin_archive_knowledge_article`
+- A importação Octadesk só cria drafts locais, preserva `source_path`/`source_hash` e nunca usa HTML como corpo principal.
+
 ## Views contratuais vigentes
 
 ### `vw_tickets_list`
@@ -139,6 +154,33 @@ Fase 3.2:
   - resolve contexto de tenant também para eventos da própria tabela `tenants` usando `entity_id`;
   - usa `security_barrier = true`.
 
+### `vw_admin_knowledge_categories`
+- Finalidade: lista administrativa de categorias da Knowledge Base.
+- Retorna: identidade da categoria, escopo de tenant, relação com categoria pai, visibilidade, metadados editoriais básicos e contadores agregados de artigos por status.
+- Regras:
+  - retorna linhas apenas para `platform_admin` com `profile.is_active = true`;
+  - não depende de leitura direta do frontend em `knowledge_categories` nem `knowledge_articles`;
+  - mantém contadores agregados no backend para evitar joins editoriais no client;
+  - usa `security_barrier = true`.
+
+### `vw_admin_knowledge_articles_list`
+- Finalidade: lista administrativa de artigos da Knowledge Base.
+- Retorna: identidade do artigo, tenant/categoria, `visibility`, `status`, metadados editoriais, `source_path`, `source_hash`, revisão atual e contagem de revisões.
+- Regras:
+  - retorna linhas apenas para `platform_admin` com `profile.is_active = true`;
+  - expõe apenas trilha editorial aprovada para operação administrativa;
+  - não depende de leitura direta do frontend em `knowledge_articles`, `knowledge_article_revisions` ou `knowledge_article_sources`;
+  - usa `security_barrier = true`.
+
+### `vw_admin_knowledge_article_detail`
+- Finalidade: detalhe administrativo de artigo com histórico editorial e trilha de origem.
+- Retorna: payload completo do artigo, `body_md`, `source_path`, `source_hash`, revisões agregadas e fontes agregadas em `jsonb`.
+- Regras:
+  - retorna linhas apenas para `platform_admin` com `profile.is_active = true`;
+  - preserva rastreabilidade de importação legado e versionamento editorial no backend;
+  - não expõe HTML legado como contrato de frontend;
+  - usa `security_barrier = true`.
+
 ## Auditoria das views oficiais
 
 ### Configuração atual
@@ -217,6 +259,58 @@ Fase 3.2:
 ### `rpc_admin_update_tenant_contact`
 - Escopo: `platform_admin`, `tenant_admin` e `tenant_manager` no próprio tenant
 - Retorno: `public.tenant_contacts`
+
+## RPCs de Knowledge Base vigentes
+
+### `rpc_admin_create_knowledge_category`
+- Escopo: `platform_admin`
+- Retorno: `public.knowledge_categories`
+- Regras:
+  - cria ou reconcilia categoria pelo escopo (`tenant_id`, `parent_category_id`, `slug`);
+  - valida tenant/categoria pai quando aplicável;
+  - gera auditoria.
+
+### `rpc_admin_create_knowledge_article_draft`
+- Escopo: `platform_admin`
+- Retorno: `public.knowledge_articles`
+- Regras:
+  - cria artigo sempre em `draft`;
+  - captura primeira revisão automaticamente;
+  - registra `source_path` e `source_hash` quando houver origem legada;
+  - gera auditoria e trilha de fonte.
+
+### `rpc_admin_update_knowledge_article_draft`
+- Escopo: `platform_admin`
+- Retorno: `public.knowledge_articles`
+- Regras:
+  - só permite mutação em `draft` ou `review`;
+  - bloqueia edição de artigo `published` ou `archived` fora de fluxo editorial futuro explícito;
+  - incrementa revisão, preserva trilha de origem e gera auditoria.
+
+### `rpc_admin_submit_knowledge_article_for_review`
+- Escopo: `platform_admin`
+- Retorno: `public.knowledge_articles`
+- Regras:
+  - exige artigo em `draft`;
+  - move para `review`;
+  - cria revisão auditável.
+
+### `rpc_admin_publish_knowledge_article`
+- Escopo: `platform_admin`
+- Retorno: `public.knowledge_articles`
+- Regras:
+  - exige artigo em `review`;
+  - move para `published`;
+  - cria revisão auditável;
+  - continua sem Help Center público nesta fase.
+
+### `rpc_admin_archive_knowledge_article`
+- Escopo: `platform_admin`
+- Retorno: `public.knowledge_articles`
+- Regras:
+  - bloqueia segunda tentativa de arquivamento;
+  - cria revisão auditável;
+  - preserva trilha de origem.
 
 ## RPCs de ticketing vigentes
 
@@ -304,6 +398,10 @@ Fase 3.2:
   - `vw_admin_tenant_detail`
   - `vw_admin_tenant_memberships`
   - `vw_admin_audit_feed`
+  - `vw_admin_user_lookup`
+  - `vw_admin_knowledge_categories`
+  - `vw_admin_knowledge_articles_list`
+  - `vw_admin_knowledge_article_detail`
 - O app autenticado escreve tickets apenas por:
   - `rpc_create_ticket`
   - `rpc_update_ticket_status`
@@ -312,17 +410,25 @@ Fase 3.2:
   - `rpc_add_internal_ticket_note`
   - `rpc_close_ticket`
   - `rpc_reopen_ticket`
+- O app autenticado escreve Knowledge Base apenas por:
+  - `rpc_admin_create_knowledge_category`
+  - `rpc_admin_create_knowledge_article_draft`
+  - `rpc_admin_update_knowledge_article_draft`
+  - `rpc_admin_submit_knowledge_article_for_review`
+  - `rpc_admin_publish_knowledge_article`
+  - `rpc_admin_archive_knowledge_article`
 
 ## Próximos contratos planejados
-- Views e RPCs de knowledge base.
 - Views e RPCs de intake para engenharia.
-- Contrato explícito de busca global de usuários, se o Admin Console precisar substituir entrada manual de `user_id` em memberships e vínculos de contato.
+- Read models públicos da Knowledge Base apenas quando a Central de Ajuda pública for aberta com curadoria aprovada.
 
 ## Proibições
 - Frontend fazendo join direto em tabelas de domínio.
 - Frontend lendo `public.tickets` ou tabelas-filhas diretamente.
 - Frontend lendo `profiles` ou `user_global_roles` diretamente para resolver o gate do Admin Console.
 - Frontend lendo `tenants`, `tenant_memberships`, `tenant_contacts` ou `audit.audit_logs` diretamente para o Admin Console.
+- Frontend lendo tabelas base de Knowledge Base (`knowledge_*`) diretamente.
 - Frontend decidindo visibilidade de nota interna.
+- Frontend usando HTML legado de Octadesk como corpo/UI de artigo.
 - Escrita direta em tabelas críticas sem RPC.
 - Uso do blueprint histórico como contrato executável.

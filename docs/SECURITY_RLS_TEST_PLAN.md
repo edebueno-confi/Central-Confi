@@ -36,6 +36,11 @@ Validar isolamento multi-tenant, permissões por papel e bloqueio de acesso inde
 - `profiles` deve bloquear alteração direta de `email` e `is_active`.
 - Tabelas administrativas não devem aceitar DML direto do app autenticado.
 - RPC administrativa deve ser o único caminho de mutação para `tenants`, `tenant_memberships`, `tenant_contacts` e `user_global_roles`.
+- App autenticado não faz `SELECT` direto nas tabelas base de Knowledge Base.
+- Draft de Knowledge Base não pode aparecer como conteúdo público.
+- Artigo interno de Knowledge Base deve respeitar isolamento por tenant e visibilidade.
+- Publicação de artigo de Knowledge Base deve ser bloqueada para role não autorizada.
+- `source_hash` e `source_path` precisam ser preservados na trilha editorial.
 
 ### Auditoria
 - Criar ticket gera audit log.
@@ -49,11 +54,13 @@ Validar isolamento multi-tenant, permissões por papel e bloqueio de acesso inde
 - Bootstrap do primeiro `platform_admin` deve continuar auditável via `user_global_roles`.
 - Toda RPC administrativa deve gerar `audit.audit_logs`.
 - Toda função `SECURITY DEFINER` exposta deve ter `search_path` fixo e ACL explícita.
+- Mutações editoriais de Knowledge Base devem gerar `audit.audit_logs`.
+- Revisões e fontes de Knowledge Base devem permanecer append-only.
 
 ## Critério de aprovação
 Nenhuma tela ou API operacional pode avançar sem testes mínimos de RLS passando.
 
-## Cobertura atual até a Fase 2
+## Cobertura atual até a Fase 4
 - `supabase/tests/001_phase1_identity_tenancy_rls.sql`
 - `supabase/tests/002_phase1_1_hardening.sql`
 - `supabase/tests/003_phase1_2_admin_control_plane.sql`
@@ -85,3 +92,15 @@ Validações já materializadas:
 - transição inválida de status bloqueada
 - assignment indevido bloqueado
 - auditoria gerada em create, update, status, message e eventos de ticket
+- views administrativas do Admin Console validadas sem vazamento cross-tenant
+- `vw_admin_auth_context` validada como self-only por `auth.uid()`
+- `vw_admin_user_lookup` validada sem `SELECT` direto em `public.profiles`
+- Knowledge Base validada com:
+  - `authenticated` sem `SELECT` direto em `knowledge_categories`, `knowledge_articles`, `knowledge_article_revisions` e `knowledge_article_sources`
+  - `platform_admin` lendo views administrativas de Knowledge Base
+  - `tenant_admin` e usuário comum bloqueados nas views administrativas de Knowledge Base
+  - `draft` não legível como conteúdo público
+  - `internal` publicado respeitando tenant e papel
+  - `source_hash` preservado no artigo e na trilha de origem
+  - mutações editoriais gerando auditoria
+  - publicação bloqueada para role não autorizada

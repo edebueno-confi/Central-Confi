@@ -20,6 +20,8 @@ Documentos prioritários:
 - `DATA_MODEL_STRATEGY.md`
 - `AUTH_CONTEXT_STRATEGY.md`
 - `AUDIT_LOGGING_STRATEGY.md`
+- `KNOWLEDGE_BASE_STRATEGY.md`
+- `AI_GOVERNANCE.md`
 - `ENVIRONMENT_VARIABLES.md`
 - `DEPLOYMENT_STRATEGY.md`
 - `BRANCHING_STRATEGY.md`
@@ -59,6 +61,7 @@ Documentos históricos:
 - Migration oficial de read models administrativos `supabase/migrations/20260430024632_phase2_3_admin_read_models.sql`.
 - Migration oficial do auth read model administrativo `supabase/migrations/20260430144642_phase3_1_admin_auth_context.sql`.
 - Migration oficial do user lookup administrativo `supabase/migrations/20260430172140_phase3_2_admin_user_lookup.sql`.
+- Migration oficial do núcleo de Knowledge Base e pipeline editorial interno `supabase/migrations/20260430182128_phase4_knowledge_base_core.sql`.
 - Teste local de banco em `supabase/tests/001_phase1_identity_tenancy_rls.sql`.
 - Teste local de hardening em `supabase/tests/002_phase1_1_hardening.sql`.
 - Teste local de control plane administrativo em `supabase/tests/003_phase1_2_admin_control_plane.sql`.
@@ -68,6 +71,7 @@ Documentos históricos:
 - Teste local de read models administrativos em `supabase/tests/007_phase2_3_admin_read_models.sql`.
 - Teste local de auth read model administrativo em `supabase/tests/008_phase3_1_admin_auth_context.sql`.
 - Teste local de user lookup administrativo em `supabase/tests/009_phase3_2_admin_user_lookup.sql`.
+- Teste local do núcleo de Knowledge Base em `supabase/tests/010_phase4_knowledge_base_core.sql`.
 - Seed separado em `supabase/seeds/` e desabilitado por padrão.
 - Fluxo de bootstrap seguro do primeiro `platform_admin` em `supabase/bootstrap/`.
 - Núcleo Fase 1 implementado com `profiles`, `user_global_roles`, `tenants`, `tenant_memberships`, `tenant_contacts` e `audit.audit_logs`.
@@ -81,7 +85,9 @@ Documentos históricos:
 - Views contratuais administrativas materializadas em `vw_admin_tenants_list`, `vw_admin_tenant_detail`, `vw_admin_tenant_memberships` e `vw_admin_audit_feed`.
 - View contratual de auth context materializada em `vw_admin_auth_context`.
 - View contratual de user lookup administrativo materializada em `vw_admin_user_lookup`.
+- Views contratuais administrativas de Knowledge Base materializadas em `vw_admin_knowledge_categories`, `vw_admin_knowledge_articles_list` e `vw_admin_knowledge_article_detail`.
 - RPCs contratuais de escrita materializadas em `rpc_create_ticket`, `rpc_update_ticket_status`, `rpc_assign_ticket`, `rpc_add_ticket_message`, `rpc_add_internal_ticket_note`, `rpc_close_ticket` e `rpc_reopen_ticket`.
+- RPCs contratuais administrativas de Knowledge Base materializadas em `rpc_admin_create_knowledge_category`, `rpc_admin_create_knowledge_article_draft`, `rpc_admin_update_knowledge_article_draft`, `rpc_admin_submit_knowledge_article_for_review`, `rpc_admin_publish_knowledge_article` e `rpc_admin_archive_knowledge_article`.
 - `authenticated` não possui `SELECT`, `INSERT`, `UPDATE` nem `DELETE` direto nas tabelas base de ticketing; o app lê via views e escreve via RPCs.
 - Pacote `packages/contracts` materializado com tipos TypeScript para views e RPCs de ticketing.
 - Auditoria estrutural das views oficializada com `security_barrier = true`, filtros explícitos por caller e teste pgTAP dedicado.
@@ -96,6 +102,12 @@ Documentos históricos:
 - Leitura operacional do frontend já consome apenas `vw_admin_auth_context`, `vw_admin_tenants_list`, `vw_admin_tenant_detail`, `vw_admin_tenant_memberships` e `vw_admin_audit_feed`.
 - A tela `Access` agora também consome `vw_admin_user_lookup` para resolver busca de usuários por nome/email antes das RPCs de membership.
 - Escrita operacional do frontend já consome apenas `rpc_admin_create_tenant`, `rpc_admin_update_tenant_status`, `rpc_admin_add_tenant_member`, `rpc_admin_update_tenant_member_role`, `rpc_admin_update_tenant_member_status`, `rpc_admin_create_tenant_contact` e `rpc_admin_update_tenant_contact`.
+- Núcleo de Knowledge Base materializado localmente com `knowledge_categories`, `knowledge_articles`, `knowledge_article_revisions` e `knowledge_article_sources`.
+- Knowledge Base possui versionamento editorial, trilha de origem (`source_path`, `source_hash`), auditoria de mutações e política de importação legado somente como draft.
+- O app autenticado não possui `SELECT` direto nas tabelas base de Knowledge Base; a superfície administrativa futura lê apenas por `vw_admin_knowledge_*`.
+- O pipeline legado `scripts/knowledge/import-octadesk-drafts.mjs` já inventaria a exportação Octadesk, classifica visibilidade inicial conservadora, preserva `source_path`/`source_hash` e bloqueia uso remoto.
+- A importação legado não usa HTML como corpo principal e não publica artigos automaticamente.
+- O inventário atual da base legada em `raw_knowledge/octadesk_export/latest/articles/` identificou 58 artigos, 3 categorias-raiz, 1 grupo de duplicidade por `source_hash` e múltiplos candidatos sensíveis/restritos.
 - Estados obrigatórios do frontend materializados: loading, vazio, erro, acesso negado, contrato indisponível e sessão expirada.
 - Build do frontend agora usa code-splitting por rota.
 - Fixture local de QA controlado materializado em `supabase/qa/create-local-admin-fixture.mjs`.
@@ -111,6 +123,7 @@ Documentos históricos:
 - `npm run web:typecheck` validado com sucesso.
 - `npm run web:build` validado com sucesso.
 - Suite pgTAP atual validada com `Files=8`, `Tests=135`, `Result: PASS`.
+- Suite pgTAP atual validada com `Files=10`, `Tests=177`, `Result: PASS`.
 - Pipeline CI para banco em `.github/workflows/supabase-db.yml`.
 - A workflow `.github/workflows/supabase-db.yml` agora valida também `web:typecheck` e `web:build`.
 - CI remota validada no GitHub pela workflow `Supabase DB`, run `25139500960`, commit `85b3495`, branch `codex/phase1-2-admin-control-plane`, conclusão `success`.
@@ -126,8 +139,11 @@ Documentos históricos:
 - Base bruta preservada em `raw_knowledge/octadesk_export/latest/`.
 
 ### Não existe ainda
-- Views/read models contratuais para knowledge base e engenharia.
-- Views/read models contratuais para knowledge base e engenharia.
+- Central de Ajuda pública.
+- Publicação automática de artigos legados.
+- Indexação de Knowledge Base em IA.
+- Support Desk/frontend de tickets.
+- Views/read models contratuais para engenharia.
 
 ## Situação por fase
 
@@ -185,6 +201,14 @@ Documentos históricos:
   - A tela `Access` resolve nome/email -> `user_id` pela view contratual e mantém fallback manual controlado.
   - `supabase/tests/009_phase3_2_admin_user_lookup.sql` cobre grants, `security_barrier`, acesso permitido, acesso negado e ausência de vazamento de colunas sensíveis.
   - `supabase:verify` atual confirma `Files=9`, `Tests=146`, `Result: PASS`.
+- Fase 4: Knowledge Base Core + Legacy Import Pipeline concluída localmente.
+  - Núcleo editorial materializado com categorias, artigos, revisões e fontes rastreáveis.
+  - Views contratuais administrativas de Knowledge Base materializadas para lista, detalhe e categorias.
+  - RPCs administrativas de criação, atualização, review, publicação e arquivamento materializadas.
+  - Importação legado Octadesk implementada apenas como draft, local-only e sem uso de HTML como corpo principal.
+  - Inventário legado atual registrou 58 artigos, 1 grupo de duplicidade por `source_hash` e visibilidade inicial conservadora (`internal`/`restricted`).
+  - `supabase/tests/010_phase4_knowledge_base_core.sql` cobre grants, RLS, publicação autorizada, preservação de `source_hash` e auditoria.
+  - `supabase:verify` atual confirma `Files=10`, `Tests=177`, `Result: PASS`.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -197,13 +221,16 @@ Documentos históricos:
 - Não iniciar telas de tickets antes dos contratos tipados do backend.
 - Não tratar blueprint histórico como implementação pronta.
 - Não ingerir `raw_knowledge` sem classificação de sensibilidade.
+- Não publicar automaticamente artigos legados importados.
+- Não usar HTML raspado do Octadesk como UI, layout ou corpo principal de artigo.
+- Não indexar Knowledge Base em IA antes de classificação, revisão humana e governança explícita.
 - Não permitir mutação administrativa por acesso direto às tabelas do control plane.
 - Não permitir leitura direta do app nas tabelas base de ticketing.
 - Não permitir leitura direta do app em `profiles` e `user_global_roles` para o gate do Admin Console.
 - Não permitir leitura do Admin Console fora das views `vw_admin_*`.
 
 ## Próxima prioridade
-Commitar e publicar o fechamento da Fase 3.2 com CI verde no GitHub.
-Depois disso, a próxima expansão recomendada é refinar o fluxo de memberships
-com seletores mais ricos sobre o contrato já existente, ainda sem abrir Support
-Desk, tickets no frontend ou Help Center.
+Commitar e publicar o fechamento da Fase 4 com CI verde no GitHub.
+Depois disso, a próxima expansão recomendada é abrir a camada editorial
+administrativa da Knowledge Base no Admin Console, ainda sem Help Center
+público, IA operacional, Support Desk ou tickets no frontend.
