@@ -1,3 +1,5 @@
+import { createConnection } from "node:net";
+
 const endpoints = [
   {
     label: "REST admin readiness",
@@ -8,6 +10,14 @@ const endpoints = [
     label: "Edge runtime health",
     url: "http://127.0.0.1:55321/functions/v1/_internal/health",
     method: "HEAD",
+  },
+];
+
+const sockets = [
+  {
+    label: "Postgres TCP readiness",
+    host: process.env.SUPABASE_DB_HOST ?? "127.0.0.1",
+    port: Number(process.env.SUPABASE_DB_PORT ?? 55322),
   },
 ];
 
@@ -40,6 +50,54 @@ async function probeEndpoint(endpoint) {
   }
 }
 
+async function probeSocket(socket) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (result) => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      resolve(result);
+    };
+
+    const client = createConnection(
+      {
+        host: socket.host,
+        port: socket.port,
+      },
+      () => {
+        client.end();
+        finish({
+          ...socket,
+          ok: true,
+          status: "connected",
+        });
+      },
+    );
+
+    client.on("error", (error) => {
+      client.destroy();
+      finish({
+        ...socket,
+        ok: false,
+        error:
+          error instanceof Error ? error.message : "unknown socket probe error",
+      });
+    });
+
+    client.setTimeout(intervalMs, () => {
+      client.destroy();
+      finish({
+        ...socket,
+        ok: false,
+        error: "socket timeout",
+      });
+    });
+  });
+}
+
 async function main() {
   const startedAt = Date.now();
   let attempt = 0;
@@ -47,7 +105,10 @@ async function main() {
   while (Date.now() - startedAt < timeoutMs) {
     attempt += 1;
 
-    const results = await Promise.all(endpoints.map(probeEndpoint));
+    const results = await Promise.all([
+      ...endpoints.map(probeEndpoint),
+      ...sockets.map(probeSocket),
+    ]);
     const summary = results
       .map((result) =>
         result.ok
