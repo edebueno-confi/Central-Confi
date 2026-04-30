@@ -22,6 +22,9 @@ Criar a base editorial do Genius Support OS com versionamento, trilha de origem 
   - `vw_admin_knowledge_categories`
   - `vw_admin_knowledge_articles_list`
   - `vw_admin_knowledge_article_detail`
+  - `vw_admin_knowledge_categories_v2`
+  - `vw_admin_knowledge_articles_list_v2`
+  - `vw_admin_knowledge_article_detail_v2`
 - Mutações editoriais administrativas:
   - `rpc_admin_create_knowledge_category`
   - `rpc_admin_create_knowledge_article_draft`
@@ -29,16 +32,25 @@ Criar a base editorial do Genius Support OS com versionamento, trilha de origem 
   - `rpc_admin_submit_knowledge_article_for_review`
   - `rpc_admin_publish_knowledge_article`
   - `rpc_admin_archive_knowledge_article`
+  - `rpc_admin_create_knowledge_category_v2`
+  - `rpc_admin_create_knowledge_article_draft_v2`
+  - `rpc_admin_update_knowledge_article_draft_v2`
+  - `rpc_admin_submit_knowledge_article_for_review_v2`
+  - `rpc_admin_publish_knowledge_article_v2`
+  - `rpc_admin_archive_knowledge_article_v2`
 - Pipeline legado local-only:
   - `scripts/knowledge/import-octadesk-drafts.mjs`
 
 ## Estado de transição multi-brand
 - `knowledge_spaces`, `knowledge_space_domains` e `brand_settings` existem como fundação estrutural aditiva.
+- O `knowledge_space` oficial atual é `genius` com `display_name = Genius Returns`.
+- A `organization` oficial atual é `genius-group` com `display_name = Genius Group`.
 - `knowledge_categories.knowledge_space_id` e `knowledge_articles.knowledge_space_id` existem, mas permanecem `nullable`.
 - `knowledge_categories.tenant_id` e `knowledge_articles.tenant_id` continuam vigentes para compatibilidade.
-- As RPCs atuais da KB continuam funcionando sem `knowledge_space_id` e criam conteúdo com esse campo nulo.
-- Nenhum backfill do corpus existente foi executado nesta fase.
-- O import legado Octadesk não foi alterado nesta fase e continua sem destino space-aware.
+- O corpus atual da Knowledge Base já foi associado ao `knowledge_space_id` oficial `genius`.
+- As RPCs atuais da KB continuam funcionando sem `knowledge_space_id` e ainda podem criar conteúdo com esse campo nulo.
+- As RPCs e views v2 já operam com `knowledge_space_id` explícito.
+- O import legado Octadesk agora exige destino space-aware por `--space-slug` ou `--knowledge-space-id`.
 
 ## Regras estruturais novas
 - `knowledge_spaces.slug` é único globalmente.
@@ -90,9 +102,8 @@ Metadados brutos observados em `article.json`:
   - usar `visibility = restricted`
 - Sem dúvida forte de sensibilidade:
   - usar `visibility = internal`
-- Enquanto não existir backfill multi-brand:
-  - a importação legado continua fora de `knowledge_space_id`
-  - não inferir marca/help center automaticamente a partir do legado
+- Toda importação deve receber destino explícito por `knowledge_space`.
+- Não inferir marca/help center automaticamente a partir do legado.
 
 ## Modelo editorial
 
@@ -143,10 +154,9 @@ Metadados brutos observados em `article.json`:
 7. Exigir revisão humana antes de qualquer publicação.
 
 ## Próximos passos planejados
-- Executar backfill controlado de `knowledge_space_id` no corpus atual.
-- Evoluir importação legado para destino explícito por `knowledge_space`.
-- Criar views e RPCs v2 space-aware sem quebrar os contratos atuais.
+- Migrar consumidores administrativos do frontend para a superfície v2 space-aware.
 - Abrir read models públicos apenas depois do backfill, da curadoria e da revisão de RLS.
+- Evoluir After Sale como segundo `knowledge_space` oficial apenas quando a operação estiver pronta.
 
 ## O que continua bloqueado
 - Help Center público

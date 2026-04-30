@@ -439,7 +439,7 @@ select lives_ok(
           '20000000-0000-4000-8000-000000000001'::uuid,
           '10000000-0000-4000-8000-000000000001'::uuid,
           (select id from public.tenants where slug = 'kb-tenant-a'),
-          'genius',
+          'fixture-genius',
           'Genius Help Center',
           'draft',
           true,
@@ -451,7 +451,7 @@ select lives_ok(
           '20000000-0000-4000-8000-000000000002'::uuid,
           '10000000-0000-4000-8000-000000000002'::uuid,
           (select id from public.tenants where slug = 'kb-tenant-b'),
-          'aftersale',
+          'fixture-aftersale',
           'After Sale Help Center',
           'draft',
           true,
@@ -559,8 +559,8 @@ set local request.jwt.claim.sub = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 
 select is(
   pg_temp.safe_bigint('select count(*) from public.vw_admin_organizations_list'),
-  2::bigint,
-  'platform_admin le duas organizations pela view administrativa nova'
+  3::bigint,
+  'platform_admin le tres organizations pela view administrativa nova'
 );
 
 select is(
@@ -585,28 +585,28 @@ select is(
 
 select is(
   pg_temp.safe_bigint('select count(*) from public.vw_admin_knowledge_spaces'),
-  2::bigint,
-  'platform_admin le dois knowledge_spaces pela view administrativa nova'
+  3::bigint,
+  'platform_admin le tres knowledge_spaces pela view administrativa nova'
 );
 
 select is(
   pg_temp.safe_text(
     $$select brand_name
       from public.vw_admin_knowledge_spaces
-      where slug = 'genius'$$
+      where slug = 'fixture-genius'$$
   ),
   'Genius Returns',
-  'vw_admin_knowledge_spaces resolve brand_name do space Genius'
+  'vw_admin_knowledge_spaces resolve brand_name do space fixture-genius'
 );
 
 select is(
   pg_temp.safe_text(
     $$select primary_domain_host
       from public.vw_admin_knowledge_spaces
-      where slug = 'genius'$$
+      where slug = 'fixture-genius'$$
   ),
   'help.geniusreturns.com.br',
-  'vw_admin_knowledge_spaces resolve dominio primario do space Genius'
+  'vw_admin_knowledge_spaces resolve dominio primario do space fixture-genius'
 );
 
 select lives_ok(

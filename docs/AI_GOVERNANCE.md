@@ -13,7 +13,9 @@ IA só pode responder com base em conteúdo que seja:
 
 ## Estado atual da Knowledge Base
 - A Fase 4 materializou o núcleo editorial e a trilha de origem da Knowledge Base.
-- A importação legado Octadesk é apenas `draft` e local-only.
+- A Fase 4.3 associou o corpus atual ao `knowledge_space` oficial `genius`.
+- A importação legado Octadesk continua apenas em `draft`, local-only e agora exige destino explícito por `knowledge_space`.
+- Linhas legadas criadas fora da camada v2 e ainda sem `knowledge_space_id` não devem ser tratadas como corpus elegível para IA.
 - Não existe indexação em IA nesta fase.
 - Não existe Central de Ajuda pública nesta fase.
 - Conteúdo legado ainda depende de curadoria humana antes de qualquer exposição.
@@ -46,6 +48,7 @@ IA só pode responder com base em conteúdo que seja:
 ## Requisitos técnicos futuros para IA
 - registrar prompt, contexto e fontes utilizadas
 - registrar usuário solicitante
+- respeitar `knowledge_space_id` e não misturar corpus entre marcas por padrão
 - respeitar tenant, role e visibilidade do artigo
 - bloquear conteúdo `restricted` fora do escopo autorizado
 - permitir auditoria posterior
@@ -59,7 +62,7 @@ IA só pode responder com base em conteúdo que seja:
 5. trilha de auditoria ponta a ponta
 
 ## O que continua bloqueado
-- indexação em IA na Fase 4
+- indexação em IA na Fase 4.3
 - resposta pública automática
 - uso de base legada sem reescrita/curadoria
 - mistura entre conteúdo público e playbook interno

@@ -17,9 +17,10 @@
     "supabase:db:reset": "supabase db reset --local --yes",
     "supabase:test:db": "supabase test db --local",
     "supabase:lint:db": "supabase db lint --local",
-    "supabase:verify": "npm run supabase:db:reset && npm run supabase:test:db && npm run supabase:lint:db",
+    "supabase:verify": "npm run supabase:db:reset && npm run supabase:test:db && npm run knowledge:verify:octadesk:space-aware && npm run supabase:lint:db",
     "supabase:qa:local-admin-fixture": "node supabase/qa/create-local-admin-fixture.mjs",
     "knowledge:import:octadesk:local": "node scripts/knowledge/import-octadesk-drafts.mjs --local",
+    "knowledge:verify:octadesk:space-aware": "node scripts/ci/verify-octadesk-import-space-aware.mjs",
     "web:dev": "npm run dev --workspace @genius-support-os/web --",
     "web:typecheck": "npm run typecheck --workspace @genius-support-os/web",
     "web:build": "npm run build --workspace @genius-support-os/web"

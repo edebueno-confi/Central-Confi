@@ -70,12 +70,14 @@ Responsabilidade:
 5. `knowledge_categories` e `knowledge_articles` caminham para escopo por `knowledge_space`, sem remover a compatibilidade atual com `tenant`.
 6. `knowledge_article_revisions` e `knowledge_article_sources` continuam filhos do artigo.
 
-## Estado de transição da Fase 4.2
+## Estado de transição da Fase 4.3
 - `tenants.organization_id` existe e nasce `nullable`.
-- `knowledge_categories.knowledge_space_id` existe e nasce `nullable`.
-- `knowledge_articles.knowledge_space_id` existe e nasce `nullable`.
+- `knowledge_categories.knowledge_space_id` e `knowledge_articles.knowledge_space_id` já existem e o corpus atual foi backfilled para o space oficial `genius`.
+- `organizations` agora nasce com a organization padrão `genius-group`.
+- `knowledge_spaces` agora nasce com o space padrão `genius`/`Genius Returns`.
 - `tenant_id` permanece nas entidades atuais de Knowledge Base para compatibilidade.
-- Não houve backfill de dados existentes nesta fase.
+- As RPCs antigas ainda podem criar linhas com `knowledge_space_id = null` por compatibilidade.
+- As RPCs e views v2 já operam com `knowledge_space_id` explícito.
 - Não houve remoção de constraints legadas nesta fase.
 
 ## Regras de escopo por domínio

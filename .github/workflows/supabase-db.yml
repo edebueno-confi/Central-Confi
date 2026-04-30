@@ -45,6 +45,9 @@ jobs:
       - name: Run pgTAP tests
         run: npm run supabase:test:db
 
+      - name: Verify Octadesk import space-aware compatibility
+        run: npm run knowledge:verify:octadesk:space-aware
+
       - name: Lint database schema
         run: npm run supabase:lint:db
 

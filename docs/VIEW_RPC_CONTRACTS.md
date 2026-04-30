@@ -72,6 +72,12 @@ Fase 4.2:
 - Não existem ainda RPCs v2 space-aware, views públicas de help center nem mudança de comportamento no frontend.
 - As RPCs atuais de Knowledge Base continuam sendo a única superfície de escrita editorial exposta nesta fase.
 
+Fase 4.3:
+- O corpus atual da Knowledge Base foi associado ao `knowledge_space` oficial `genius`.
+- O backend agora possui camada v2 space-aware para leitura e escrita editorial, sem quebrar a superfície legada.
+- O import Octadesk agora exige destino explícito por `knowledge_space`.
+- As views e RPCs antigas continuam disponíveis para compatibilidade e o frontend atual não foi alterado.
+
 ## Views contratuais vigentes
 
 ### `vw_tickets_list`
@@ -218,6 +224,33 @@ Fase 4.2:
   - não expõe HTML legado como contrato de frontend;
   - usa `security_barrier = true`.
 
+### `vw_admin_knowledge_categories_v2`
+- Finalidade: lista administrativa space-aware de categorias da Knowledge Base.
+- Retorna: contexto de `organization`, `knowledge_space`, tenant legado quando existir, relação com categoria pai, visibilidade e contadores editoriais por status.
+- Regras:
+  - retorna linhas apenas para `platform_admin` com `profile.is_active = true`;
+  - expõe apenas categorias com `knowledge_space_id` não nulo;
+  - não depende de leitura direta do frontend em `knowledge_categories` ou `knowledge_articles`;
+  - usa `security_barrier = true`.
+
+### `vw_admin_knowledge_articles_list_v2`
+- Finalidade: lista administrativa space-aware de artigos da Knowledge Base.
+- Retorna: contexto de `organization`, `knowledge_space`, tenant legado quando existir, categoria, visibilidade, status, trilha de origem e estatísticas de revisão.
+- Regras:
+  - retorna linhas apenas para `platform_admin` com `profile.is_active = true`;
+  - expõe apenas artigos com `knowledge_space_id` não nulo;
+  - é a lista contratual principal para a futura camada editorial multi-brand;
+  - usa `security_barrier = true`.
+
+### `vw_admin_knowledge_article_detail_v2`
+- Finalidade: detalhe administrativo space-aware de artigo.
+- Retorna: payload completo do artigo com `organization`, `knowledge_space`, tenant legado quando existir, `body_md`, revisões e fontes agregadas.
+- Regras:
+  - retorna linhas apenas para `platform_admin` com `profile.is_active = true`;
+  - expõe apenas artigos com `knowledge_space_id` não nulo;
+  - preserva rastreabilidade de backfill e importação legado por `source_path` e `source_hash`;
+  - usa `security_barrier = true`.
+
 ## Auditoria das views oficiais
 
 ### Configuração atual
@@ -265,7 +298,7 @@ Fase 4.2:
 - `tenant_admin` e membros comuns recebem zero linhas nas views administrativas globais, incluindo a fundação multi-brand.
 - O feed de auditoria mantém contexto de tenant para eventos administrativos relevantes sem depender de lógica no frontend.
 - `authenticated` não mantém `SELECT` direto em `public.profiles`; a busca de usuários do Admin Console foi deslocada para `vw_admin_user_lookup`.
-- As suítes `supabase/tests/007_phase2_3_admin_read_models.sql`, `supabase/tests/008_phase3_1_admin_auth_context.sql`, `supabase/tests/009_phase3_2_admin_user_lookup.sql` e `supabase/tests/011_phase4_2_multi_brand_foundation.sql` quebram se as views forem removidas, se os grants forem alterados ou se os filtros explícitos desaparecerem.
+- As suítes `supabase/tests/007_phase2_3_admin_read_models.sql`, `supabase/tests/008_phase3_1_admin_auth_context.sql`, `supabase/tests/009_phase3_2_admin_user_lookup.sql`, `supabase/tests/011_phase4_2_multi_brand_foundation.sql` e `supabase/tests/012_phase4_3_space_aware_compatibility.sql` quebram se as views forem removidas, se os grants forem alterados ou se os filtros explícitos desaparecerem.
 
 ## RPCs administrativas vigentes
 
@@ -348,6 +381,54 @@ Fase 4.2:
   - bloqueia segunda tentativa de arquivamento;
   - cria revisão auditável;
   - preserva trilha de origem.
+
+### `rpc_admin_create_knowledge_category_v2`
+- Escopo: `platform_admin`
+- Retorno: `public.knowledge_categories`
+- Regras:
+  - exige `knowledge_space_id` explícito;
+  - reconcilia categoria por (`knowledge_space_id`, `parent_category_id`, `slug`);
+  - preserva `tenant_id` legado quando aplicável.
+
+### `rpc_admin_create_knowledge_article_draft_v2`
+- Escopo: `platform_admin`
+- Retorno: `public.knowledge_articles`
+- Regras:
+  - exige `knowledge_space_id` explícito;
+  - cria artigo sempre em `draft`;
+  - preserva `source_path` e `source_hash`;
+  - cria revisão e trilha de fonte automaticamente.
+
+### `rpc_admin_update_knowledge_article_draft_v2`
+- Escopo: `platform_admin`
+- Retorno: `public.knowledge_articles`
+- Regras:
+  - exige `knowledge_space_id` explícito;
+  - só permite mutação em `draft` ou `review`;
+  - bloqueia mover artigo para outro space por esta RPC.
+
+### `rpc_admin_submit_knowledge_article_for_review_v2`
+- Escopo: `platform_admin`
+- Retorno: `public.knowledge_articles`
+- Regras:
+  - exige `knowledge_space_id` explícito;
+  - valida o space do artigo antes da transição para `review`.
+
+### `rpc_admin_publish_knowledge_article_v2`
+- Escopo: `platform_admin`
+- Retorno: `public.knowledge_articles`
+- Regras:
+  - exige `knowledge_space_id` explícito;
+  - valida o space do artigo antes da publicação;
+  - continua sem abrir Help Center público nesta fase.
+
+### `rpc_admin_archive_knowledge_article_v2`
+- Escopo: `platform_admin`
+- Retorno: `public.knowledge_articles`
+- Regras:
+  - exige `knowledge_space_id` explícito;
+  - valida o space do artigo antes do arquivamento;
+  - preserva a trilha editorial.
 
 ## RPCs de ticketing vigentes
 
@@ -442,6 +523,9 @@ Fase 4.2:
   - `vw_admin_knowledge_categories`
   - `vw_admin_knowledge_articles_list`
   - `vw_admin_knowledge_article_detail`
+  - `vw_admin_knowledge_categories_v2`
+  - `vw_admin_knowledge_articles_list_v2`
+  - `vw_admin_knowledge_article_detail_v2`
 - O app autenticado escreve tickets apenas por:
   - `rpc_create_ticket`
   - `rpc_update_ticket_status`
@@ -457,11 +541,17 @@ Fase 4.2:
   - `rpc_admin_submit_knowledge_article_for_review`
   - `rpc_admin_publish_knowledge_article`
   - `rpc_admin_archive_knowledge_article`
+  - `rpc_admin_create_knowledge_category_v2`
+  - `rpc_admin_create_knowledge_article_draft_v2`
+  - `rpc_admin_update_knowledge_article_draft_v2`
+  - `rpc_admin_submit_knowledge_article_for_review_v2`
+  - `rpc_admin_publish_knowledge_article_v2`
+  - `rpc_admin_archive_knowledge_article_v2`
 
 ## Próximos contratos planejados
 - Views e RPCs de intake para engenharia.
 - Read models públicos da Knowledge Base apenas quando a Central de Ajuda pública for aberta com curadoria aprovada.
-- RPCs e read models v2 space-aware da Knowledge Base apenas depois do backfill multi-brand da Fase 4.3.
+- Resolver público por domínio/`space_slug` apenas quando a Central de Ajuda pública for aberta.
 
 ## Proibições
 - Frontend fazendo join direto em tabelas de domínio.

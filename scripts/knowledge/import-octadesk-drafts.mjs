@@ -17,6 +17,8 @@ function parseArgs(argv) {
     local: false,
     limit: null,
     actorUserId: null,
+    spaceSlug: null,
+    knowledgeSpaceId: null,
     root: join(
       process.cwd(),
       'raw_knowledge',
@@ -45,6 +47,18 @@ function parseArgs(argv) {
       continue;
     }
 
+    if (value === '--space-slug') {
+      args.spaceSlug = argv[index + 1] ?? null;
+      index += 1;
+      continue;
+    }
+
+    if (value === '--knowledge-space-id') {
+      args.knowledgeSpaceId = argv[index + 1] ?? null;
+      index += 1;
+      continue;
+    }
+
     if (value === '--limit') {
       const raw = argv[index + 1] ?? '';
       args.limit = Number.parseInt(raw, 10);
@@ -62,6 +76,18 @@ function parseArgs(argv) {
   if (!args.local) {
     fail(
       'Importação Octadesk bloqueada: esta fase só permite pipeline local. Use --local.',
+    );
+  }
+
+  if (!args.spaceSlug && !args.knowledgeSpaceId) {
+    fail(
+      'Importação Octadesk bloqueada: informe --space-slug ou --knowledge-space-id para definir o destino explícito.',
+    );
+  }
+
+  if (args.spaceSlug && args.knowledgeSpaceId) {
+    fail(
+      'Importação Octadesk bloqueada: use apenas um destino explícito por vez (--space-slug ou --knowledge-space-id).',
     );
   }
 
@@ -147,6 +173,18 @@ function readStatusEnv() {
 
 function hashText(value) {
   return createHash('sha256').update(value, 'utf8').digest('hex');
+}
+
+function buildSpaceSqlExpression(args) {
+  if (args.knowledgeSpaceId) {
+    return `'${sqlEscape(args.knowledgeSpaceId)}'::uuid`;
+  }
+
+  return `(
+    select ks.id
+    from public.knowledge_spaces as ks
+    where ks.slug = '${sqlEscape(args.spaceSlug)}'
+  )`;
 }
 
 function cleanBody(rawTitle, rawText) {
@@ -325,57 +363,67 @@ function buildSummary(rows) {
   };
 }
 
-function writeSqlAndExecute(rows, actorUserId) {
+function writeSqlAndExecute(rows, actorUserId, args) {
+  const spaceSqlExpression = buildSpaceSqlExpression(args);
   const sqlChunks = [
-    'begin;',
-    "set local role authenticated;",
-    "set local request.jwt.claim.role = 'authenticated';",
-    `set local request.jwt.claim.sub = '${sqlEscape(actorUserId)}';`,
+    'do $block$',
+    'declare',
+    '  v_target_space_id uuid;',
+    '  v_root public.knowledge_categories;',
+    '  v_section public.knowledge_categories;',
+    '  v_existing record;',
+    'begin',
+    "  perform set_config('request.jwt.claim.role', 'authenticated', true);",
+    `  perform set_config('request.jwt.claim.sub', '${sqlEscape(actorUserId)}', true);`,
+    `  select ${spaceSqlExpression}`,
+    '  into v_target_space_id;',
+    '',
+    '  if v_target_space_id is null then',
+    "    raise exception 'knowledge space target not found';",
+    '  end if;',
+    "  execute 'set local role authenticated';",
   ];
 
   for (const row of rows) {
     const sectionCategorySql = row.sectionCategoryName
       ? `
-    v_section := public.rpc_admin_create_knowledge_category(
+    v_section := public.rpc_admin_create_knowledge_category_v2(
       '${sqlEscape(row.sectionCategoryName)}',
       '${sqlEscape(row.sectionCategorySlug)}',
       'Subcategoria importada do legado Octadesk.',
       'internal'::public.knowledge_visibility,
       v_root.id,
+      v_target_space_id,
       null
     );`
       : '\n    v_section := v_root;';
 
     sqlChunks.push(`
-do $block$
-declare
-  v_root public.knowledge_categories;
-  v_section public.knowledge_categories;
-  v_existing public.knowledge_articles;
-begin
-  v_root := public.rpc_admin_create_knowledge_category(
+  v_root := public.rpc_admin_create_knowledge_category_v2(
     '${sqlEscape(row.rootCategoryName)}',
     '${sqlEscape(row.rootCategorySlug)}',
     'Categoria importada do legado Octadesk.',
     'internal'::public.knowledge_visibility,
     null,
+    v_target_space_id,
     null
   );${sectionCategorySql}
 
   select *
   into v_existing
-  from public.knowledge_articles as ka
-  where ka.tenant_id is not distinct from null
+  from public.vw_admin_knowledge_article_detail_v2 as ka
+  where ka.knowledge_space_id = v_target_space_id
     and ka.slug = '${sqlEscape(row.articleSlug)}';
 
   if v_existing.id is null then
-    perform public.rpc_admin_create_knowledge_article_draft(
+    perform public.rpc_admin_create_knowledge_article_draft_v2(
       '${sqlEscape(row.article.title)}',
       '${sqlEscape(row.articleSlug)}',
       ${row.summary ? `'${sqlEscape(row.summary)}'` : 'null'},
       '${sqlEscape(row.body)}',
       v_section.id,
       '${row.initialVisibility}'::public.knowledge_visibility,
+      v_target_space_id,
       null,
       '${sqlEscape(row.sourcePath)}',
       '${sqlEscape(row.sourceHash)}'
@@ -388,8 +436,9 @@ begin
        or v_existing.visibility is distinct from '${row.initialVisibility}'::public.knowledge_visibility
        or v_existing.source_path is distinct from '${sqlEscape(row.sourcePath)}'
        or v_existing.source_hash is distinct from '${sqlEscape(row.sourceHash)}' then
-      perform public.rpc_admin_update_knowledge_article_draft(
+      perform public.rpc_admin_update_knowledge_article_draft_v2(
         v_existing.id,
+        v_target_space_id,
         '${sqlEscape(row.article.title)}',
         '${sqlEscape(row.articleSlug)}',
         ${row.summary ? `'${sqlEscape(row.summary)}'` : 'null'},
@@ -400,12 +449,10 @@ begin
         '${sqlEscape(row.sourceHash)}'
       );
     end if;
-  end if;
-end;
-$block$;`);
+  end if;`);
   }
 
-  sqlChunks.push('commit;');
+  sqlChunks.push('end;', '$block$;');
 
   const tempDir = mkdtempSync(join(tmpdir(), 'genius-octadesk-import-'));
   const sqlFile = join(tempDir, 'import.sql');
@@ -437,6 +484,8 @@ function main() {
       JSON.stringify(
         {
           mode: 'dry-run',
+          knowledge_space_slug: args.spaceSlug,
+          knowledge_space_id: args.knowledgeSpaceId,
           root: relative(process.cwd(), args.root).replace(/\\/g, '/'),
           ...summary,
         },
@@ -447,7 +496,7 @@ function main() {
     return;
   }
 
-  writeSqlAndExecute(rows, args.actorUserId);
+  writeSqlAndExecute(rows, args.actorUserId, args);
 
   console.log(
     JSON.stringify(
@@ -455,6 +504,8 @@ function main() {
         mode: 'apply',
         remote_used: false,
         actor_user_id: args.actorUserId,
+        knowledge_space_slug: args.spaceSlug,
+        knowledge_space_id: args.knowledgeSpaceId,
         imported_articles: rows.length,
         root: relative(process.cwd(), args.root).replace(/\\/g, '/'),
         restricted_articles: rows.filter((row) => row.initialVisibility === 'restricted').length,
