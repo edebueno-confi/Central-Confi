@@ -1,8 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, dirname, relative, basename } from 'node:path';
-import { tmpdir } from 'node:os';
 
 const ZERO_UUID = '00000000-0000-0000-0000-000000000000';
 
@@ -144,6 +143,12 @@ function localSupabaseBinary(args) {
     command: 'npx',
     args: ['supabase', ...args],
   };
+}
+
+function createWorkspaceTempDir(prefix) {
+  const tempRoot = join(process.cwd(), '.tmp');
+  mkdirSync(tempRoot, { recursive: true });
+  return mkdtempSync(join(tempRoot, prefix));
 }
 
 function readStatusEnv() {
@@ -452,7 +457,7 @@ function writeSqlAndExecute(rows, actorUserId, args) {
 
   sqlChunks.push('end;', '$block$;');
 
-  const tempDir = mkdtempSync(join(tmpdir(), 'genius-octadesk-import-'));
+  const tempDir = createWorkspaceTempDir('genius-octadesk-import-');
   const sqlFile = join(tempDir, 'import.sql');
   writeFileSync(sqlFile, `${sqlChunks.join('\n')}\n`, 'utf8');
 
