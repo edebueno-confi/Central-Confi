@@ -1,7 +1,7 @@
 # Admin Console Minimum Design
 
 Date: 2026-04-29
-Status: Implemented locally through Phase 3.1 hardening
+Status: Implemented locally through Phase 3.1 hardening and local QA
 Scope: Frontend mínimo logado para `platform_admin`
 
 ## 1. Objetivo
@@ -24,6 +24,10 @@ backend.
   - sem IA ativa no MVP
 - Regra de produto:
   - o Admin Console mínimo é um control plane de tenants, não um help desk
+- Hardening validado:
+  - o gate não entra mais em loop após login
+  - refresh de token não reseta o shell para loading infinito
+  - o client browser usa storage key isolada por ambiente
 
 ## 3. Fora de escopo
 
@@ -258,6 +262,9 @@ O primeiro frontend valida:
 - auth real
 - profile real por `vw_admin_auth_context`
 - role global real por `vw_admin_auth_context`
+- sem loop de renderização no `StrictMode`
+- sem chamadas de bootstrap duplicadas por mount
+- sem reset espúrio do gate em eventos equivalentes de auth
 
 Antes de tocar em qualquer operação de tenant.
 
@@ -310,6 +317,15 @@ Abrir `Access / Memberships` via:
 Abrir `System / Audit` via:
 - leitura em `vw_admin_audit_feed`
 
+### Etapa concluída localmente
+
+- login real validado com fixture local de `platform_admin`
+- `AuthBootstrap` e `AdminGate` validados com `vw_admin_auth_context`
+- `/admin/tenants` validado com `vw_admin_tenants_list` e `vw_admin_tenant_detail`
+- `/admin/access` validado com `vw_admin_tenant_memberships`
+- `/admin/system` validado com `vw_admin_audit_feed`
+- `/access-denied` validado para usuário autenticado sem role global
+
 ## 11. Riscos de UX e arquitetura
 
 ### UX
@@ -325,6 +341,7 @@ Abrir `System / Audit` via:
 - deixar a validação de `platform_admin` só no cliente
 - modelar navegação além do contrato existente
 - abrir telas de tickets antes da hora
+- manter entrada manual de `user_id` por tempo demais, sem contrato formal de busca global de usuários
 
 ## 12. Recomendação executiva
 

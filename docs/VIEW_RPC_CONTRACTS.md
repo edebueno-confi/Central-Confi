@@ -33,6 +33,12 @@ Fase 3.1:
 - O frontend consome o contexto do usuário autenticado apenas por:
   - `vw_admin_auth_context`
 - O frontend do Admin Console não lê mais `profiles` nem `user_global_roles` diretamente.
+- O client browser usa `storageKey` isolada por ambiente e o gate não volta para `idle` em refresh de token equivalente.
+- A QA local real já confirmou as superfícies:
+  - `/admin/tenants` -> `vw_admin_tenants_list` + `vw_admin_tenant_detail`
+  - `/admin/access` -> `vw_admin_tenant_memberships`
+  - `/admin/system` -> `vw_admin_audit_feed`
+  - `/access-denied` -> bloqueio sem vazamento para usuário autenticado sem `platform_admin`
 
 ## Views contratuais vigentes
 

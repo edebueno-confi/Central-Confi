@@ -1,9 +1,9 @@
 import {
   createContext,
   type ReactNode,
+  useCallback,
   useContext,
   useEffect,
-  useEffectEvent,
   useMemo,
   useRef,
   useState,
@@ -57,6 +57,49 @@ const initialGateState: GateState = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function sameGateState(left: GateState, right: GateState) {
+  return (
+    left.phase === right.phase &&
+    left.actor === right.actor &&
+    left.denialReason === right.denialReason &&
+    left.message === right.message
+  );
+}
+
+function sameUser(left: User | null, right: User | null) {
+  if (!left && !right) {
+    return true;
+  }
+
+  if (!left || !right) {
+    return false;
+  }
+
+  return (
+    left.id === right.id &&
+    left.email === right.email &&
+    left.last_sign_in_at === right.last_sign_in_at &&
+    left.updated_at === right.updated_at
+  );
+}
+
+function sameSession(left: Session | null, right: Session | null) {
+  if (!left && !right) {
+    return true;
+  }
+
+  if (!left || !right) {
+    return false;
+  }
+
+  return (
+    left.access_token === right.access_token &&
+    left.refresh_token === right.refresh_token &&
+    left.expires_at === right.expires_at &&
+    sameUser(left.user, right.user)
+  );
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const runtime = useMemo(() => readRuntimeConfig(), []);
   const [phase, setPhase] = useState<AuthPhase>(runtime.ok ? 'booting' : 'config-error');
@@ -67,12 +110,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const requestIdRef = useRef(0);
   const manualSignOutRef = useRef(false);
   const sessionRef = useRef<Session | null>(null);
+  const lastGateUserIdRef = useRef<string | null>(null);
 
-  const loadGate = useEffectEvent(async () => {
+  const setGateIfChanged = useCallback((nextGate: GateState) => {
+    setGate((currentGate) => (sameGateState(currentGate, nextGate) ? currentGate : nextGate));
+  }, []);
+
+  const applyAuthSnapshot = useCallback(
+    (nextSession: Session | null) => {
+      const previousSession = sessionRef.current;
+      const previousUserId = previousSession?.user.id ?? null;
+      const nextUserId = nextSession?.user.id ?? null;
+      const identityChanged = previousUserId !== nextUserId;
+
+      if (previousSession && !nextSession && !manualSignOutRef.current) {
+        setSessionExpired(true);
+      }
+
+      sessionRef.current = nextSession;
+
+      setSession((currentSession) =>
+        sameSession(currentSession, nextSession) ? currentSession : nextSession,
+      );
+
+      const nextUser = nextSession?.user ?? null;
+      setUser((currentUser) => (sameUser(currentUser, nextUser) ? currentUser : nextUser));
+
+      const nextPhase = nextSession ? 'authenticated' : 'anonymous';
+      setPhase((currentPhase) => (currentPhase === nextPhase ? currentPhase : nextPhase));
+
+      if (identityChanged) {
+        lastGateUserIdRef.current = null;
+        setGateIfChanged(initialGateState);
+      }
+
+      if (manualSignOutRef.current && !nextSession) {
+        manualSignOutRef.current = false;
+      }
+    },
+    [setGateIfChanged],
+  );
+
+  const loadGate = useCallback(async (force = false) => {
+    const activeUserId = sessionRef.current?.user.id ?? null;
+    if (!activeUserId) {
+      return;
+    }
+
+    if (!force && lastGateUserIdRef.current === activeUserId) {
+      return;
+    }
+
     requestIdRef.current += 1;
     const requestId = requestIdRef.current;
 
-    setGate({
+    setGateIfChanged({
       phase: 'loading',
       actor: null,
       denialReason: null,
@@ -87,7 +179,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (result.status === 'ready') {
-        setGate({
+        lastGateUserIdRef.current = activeUserId;
+        setGateIfChanged({
           phase: 'ready',
           actor: result.actor,
           denialReason: null,
@@ -96,7 +189,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      setGate({
+      lastGateUserIdRef.current = activeUserId;
+      setGateIfChanged({
         phase: 'denied',
         actor: null,
         denialReason: result.reason,
@@ -108,7 +202,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (error instanceof AppError && error.code === 'contract-unavailable') {
-        setGate({
+        setGateIfChanged({
           phase: 'contract-unavailable',
           actor: null,
           denialReason: null,
@@ -117,7 +211,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      setGate({
+      setGateIfChanged({
         phase: 'error',
         actor: null,
         denialReason: null,
@@ -127,7 +221,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             : 'Falha ao validar o contexto administrativo.',
       });
     }
-  });
+  }, [setGateIfChanged]);
 
   useEffect(() => {
     if (!runtime.ok) {
@@ -151,92 +245,101 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         if (error) {
-          setPhase('anonymous');
-          setSession(null);
-          setUser(null);
+          applyAuthSnapshot(null);
           return;
         }
 
-        const nextSession = data.session ?? null;
-        sessionRef.current = nextSession;
-        setSession(nextSession);
-        setUser(nextSession?.user ?? null);
-        setPhase(nextSession ? 'authenticated' : 'anonymous');
+        applyAuthSnapshot(data.session ?? null);
       })
       .catch(() => {
         if (unsubscribed) {
           return;
         }
 
-        setPhase('anonymous');
-        setSession(null);
-        setUser(null);
+        applyAuthSnapshot(null);
       });
 
     const {
       data: { subscription },
     } = client.auth.onAuthStateChange((_event, nextSession) => {
-      if (sessionRef.current && !nextSession && !manualSignOutRef.current) {
-        setSessionExpired(true);
-      }
-
-      sessionRef.current = nextSession;
-      setSession(nextSession);
-      setUser(nextSession?.user ?? null);
-      setPhase(nextSession ? 'authenticated' : 'anonymous');
-      setGate(initialGateState);
-
-      if (manualSignOutRef.current && !nextSession) {
-        manualSignOutRef.current = false;
-      }
+      applyAuthSnapshot(nextSession);
     });
 
     return () => {
       unsubscribed = true;
       subscription.unsubscribe();
     };
-  }, [runtime]);
+  }, [applyAuthSnapshot, runtime]);
 
   useEffect(() => {
     if (phase !== 'authenticated' || !user) {
       if (phase !== 'booting') {
-        setGate(initialGateState);
+        lastGateUserIdRef.current = null;
+        setGateIfChanged(initialGateState);
       }
       return;
     }
 
+    if (lastGateUserIdRef.current === user.id) {
+      return;
+    }
+
     void loadGate();
-  }, [phase, user, loadGate]);
+  }, [loadGate, phase, setGateIfChanged, user?.id]);
 
-  const value: AuthContextValue = {
-    phase,
-    session,
-    user,
-    runtimeConfig: runtime.ok ? runtime.config : null,
-    configError: runtime.ok
-      ? null
-      : `Variaveis ausentes: ${runtime.error.missingKeys.join(', ')}`,
-    gate,
-    sessionExpired,
-    refreshGate: async () => {
-      if (!user) {
-        return;
-      }
+  const refreshGate = useCallback(async () => {
+    if (!sessionRef.current?.user.id) {
+      return;
+    }
 
-      await loadGate();
-    },
-    signOut: async () => {
-      manualSignOutRef.current = true;
-      setSessionExpired(false);
-      await signOutAdminSession();
-    },
-    clearSessionExpired: () => {
-      setSessionExpired(false);
-    },
-    markSessionExpired: () => {
-      setSessionExpired(true);
-    },
-  };
+    lastGateUserIdRef.current = null;
+    await loadGate(true);
+  }, [loadGate]);
+
+  const signOut = useCallback(async () => {
+    manualSignOutRef.current = true;
+    setSessionExpired(false);
+    lastGateUserIdRef.current = null;
+    await signOutAdminSession();
+  }, []);
+
+  const clearSessionExpired = useCallback(() => {
+    setSessionExpired(false);
+  }, []);
+
+  const markSessionExpired = useCallback(() => {
+    setSessionExpired(true);
+  }, []);
+
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      phase,
+      session,
+      user,
+      runtimeConfig: runtime.ok ? runtime.config : null,
+      configError: runtime.ok
+        ? null
+        : `Variaveis ausentes: ${runtime.error.missingKeys.join(', ')}`,
+      gate,
+      sessionExpired,
+      refreshGate,
+      signOut,
+      clearSessionExpired,
+      markSessionExpired,
+    }),
+    [
+      clearSessionExpired,
+      gate,
+      markSessionExpired,
+      phase,
+      refreshGate,
+      runtime,
+      session,
+      sessionExpired,
+      signOut,
+      user,
+    ],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

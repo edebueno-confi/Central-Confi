@@ -23,6 +23,7 @@ export function getSupabaseBrowserClient() {
         autoRefreshToken: true,
         detectSessionInUrl: true,
         persistSession: true,
+        storageKey: `genius-support-os-${config.config.appEnv}-auth-token`,
       },
     },
   );

@@ -3,6 +3,7 @@ import {
   useDeferredValue,
   useEffect,
   useEffectEvent,
+  useRef,
   useState,
 } from 'react';
 import { Navigate } from 'react-router-dom';
@@ -83,6 +84,7 @@ function humanMembershipStatus(status: MembershipStatus) {
 
 export function AccessPage() {
   const { markSessionExpired } = useAuthContext();
+  const didBootstrapRef = useRef(false);
   const [backendDenied, setBackendDenied] = useState(false);
   const [phase, setPhase] = useState<PagePhase>('loading');
   const [pageMessage, setPageMessage] = useState<string | null>(null);
@@ -148,8 +150,13 @@ export function AccessPage() {
   });
 
   useEffect(() => {
+    if (didBootstrapRef.current) {
+      return;
+    }
+
+    didBootstrapRef.current = true;
     void loadSurface();
-  }, [loadSurface]);
+  }, []);
 
   const filteredMemberships = memberships.filter((membership) => {
     if (selectedTenantFilter !== 'all' && membership.tenant_id !== selectedTenantFilter) {

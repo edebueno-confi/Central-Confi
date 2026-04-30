@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useEffectEvent, useState } from 'react';
+import { useDeferredValue, useEffect, useEffectEvent, useRef, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import {
   listAdminAuditFeed,
@@ -35,6 +35,7 @@ type PagePhase = 'loading' | 'ready' | 'contract-unavailable' | 'error';
 
 export function SystemPage() {
   const { markSessionExpired } = useAuthContext();
+  const didBootstrapRef = useRef(false);
   const [backendDenied, setBackendDenied] = useState(false);
   const [phase, setPhase] = useState<PagePhase>('loading');
   const [pageMessage, setPageMessage] = useState<string | null>(null);
@@ -86,8 +87,13 @@ export function SystemPage() {
   });
 
   useEffect(() => {
+    if (didBootstrapRef.current) {
+      return;
+    }
+
+    didBootstrapRef.current = true;
     void loadSurface();
-  }, [loadSurface]);
+  }, []);
 
   const distinctEntities = Array.from(
     new Set(auditFeed.map((entry) => entry.entity_table)),

@@ -85,12 +85,22 @@ Documentos históricos:
 - Admin Console mínimo agora possui read models contratuais próprios e bloqueia leitura dessas views para não-`platform_admin`.
 - O gate do Admin Console agora resolve auth/profile/roles globais apenas por `vw_admin_auth_context`.
 - O frontend do Admin Console não lê `profiles`, `user_global_roles`, `tenants`, `tenant_memberships`, `tenant_contacts` nem `audit.audit_logs` diretamente.
+- O client browser do Supabase no Admin Console agora usa `storageKey` própria por ambiente para isolar sessão local e evitar contenção com tokens legados de outras execuções.
+- O fluxo de auth do frontend foi endurecido para não resetar o gate em refresh de token/snapshot equivalente e para não disparar bootstrap em loop no `StrictMode`.
 - Rotas mínimas materializadas em `/login`, `/admin`, `/admin/tenants`, `/admin/access`, `/admin/system` e `/access-denied`.
 - Shell protegido materializado com `AuthBootstrap`, `AdminGate`, `AdminConsoleShell`, `AdminSidebar` e `AdminTopbar`.
 - Leitura operacional do frontend já consome apenas `vw_admin_auth_context`, `vw_admin_tenants_list`, `vw_admin_tenant_detail`, `vw_admin_tenant_memberships` e `vw_admin_audit_feed`.
 - Escrita operacional do frontend já consome apenas `rpc_admin_create_tenant`, `rpc_admin_update_tenant_status`, `rpc_admin_add_tenant_member`, `rpc_admin_update_tenant_member_role`, `rpc_admin_update_tenant_member_status`, `rpc_admin_create_tenant_contact` e `rpc_admin_update_tenant_contact`.
 - Estados obrigatórios do frontend materializados: loading, vazio, erro, acesso negado, contrato indisponível e sessão expirada.
 - Build do frontend agora usa code-splitting por rota.
+- Fixture local de QA controlado materializado em `supabase/qa/create-local-admin-fixture.mjs`.
+- QA headless local já validou:
+  - login real com `platform_admin`;
+  - gate resolvido por `vw_admin_auth_context`;
+  - `/admin/tenants` com `vw_admin_tenants_list` e `vw_admin_tenant_detail`;
+  - `/admin/access` com `vw_admin_tenant_memberships`;
+  - `/admin/system` com `vw_admin_audit_feed`;
+  - `/access-denied` para usuário autenticado sem role global.
 - `npm run contracts:typecheck` validado com sucesso.
 - `npm run supabase:verify` validado com sucesso.
 - `npm run web:typecheck` validado com sucesso.
@@ -157,6 +167,8 @@ Documentos históricos:
   - Login real, gate de `platform_admin`, shell protegido e rotas mínimas materializados em `apps/web`.
   - `Tenants`, `Access` e `System` consomem apenas views e RPCs contratuais.
   - O frontend aplica alinhamento institucional de marca Genius sem abrir Support Desk, Customer Portal ou IA operacional.
+  - O bug crítico de login/loading foi resolvido no frontend sem alterar backend, contracts ou migrations.
+  - O Admin Console mínimo já passou por QA local real com fixture controlado e usuário autenticado sem role.
 - Fase 3.1: hardening frontend, auth read model e CI sync concluídos localmente.
   - `vw_admin_auth_context` resolve o gate autenticado sem leitura direta de `profiles` e `user_global_roles` no client.
   - `supabase/tests/008_phase3_1_admin_auth_context.sql` cobre grants, filtro por `auth.uid()`, self-only e preservação de `is_active`/roles.
@@ -180,7 +192,7 @@ Documentos históricos:
 - Não permitir leitura do Admin Console fora das views `vw_admin_*`.
 
 ## Próxima prioridade
-Fechar a Fase 3.1 com commit, push e CI verde no GitHub. Depois disso, qualquer
-expansão do Admin Console deve continuar bloqueada aos módulos atuais até
-existirem novos contratos formais, principalmente para busca global de usuários
-e para novos domínios fora de `Tenants`, `Access` e `System`.
+Commitar e publicar o fechamento da Fase 3/Fase 3.1 com CI verde no GitHub.
+Depois disso, a próxima expansão recomendada continua sendo um contrato formal
+de busca global de usuários para remover entrada manual de `user_id` no Admin
+Console, ainda sem abrir Support Desk, tickets no frontend ou Help Center.

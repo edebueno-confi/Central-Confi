@@ -3,6 +3,7 @@ import {
   useDeferredValue,
   useEffect,
   useEffectEvent,
+  useRef,
   useState,
 } from 'react';
 import { Navigate } from 'react-router-dom';
@@ -116,6 +117,7 @@ function toneForTenantStatus(status: TenantStatus) {
 
 export function TenantsPage() {
   const { markSessionExpired } = useAuthContext();
+  const didBootstrapRef = useRef(false);
   const [backendDenied, setBackendDenied] = useState(false);
   const [phase, setPhase] = useState<PagePhase>('loading');
   const [pageMessage, setPageMessage] = useState<string | null>(null);
@@ -223,8 +225,13 @@ export function TenantsPage() {
   });
 
   useEffect(() => {
+    if (didBootstrapRef.current) {
+      return;
+    }
+
+    didBootstrapRef.current = true;
     void loadTenants();
-  }, [loadTenants]);
+  }, []);
 
   useEffect(() => {
     if (!selectedTenantId) {
@@ -235,7 +242,7 @@ export function TenantsPage() {
     }
 
     void loadTenantDetail(selectedTenantId);
-  }, [loadTenantDetail, selectedTenantId]);
+  }, [selectedTenantId]);
 
   useEffect(() => {
     setEditingContactId(null);
