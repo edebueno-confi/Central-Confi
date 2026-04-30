@@ -21,6 +21,7 @@ Documentos prioritários:
 - `AUTH_CONTEXT_STRATEGY.md`
 - `AUDIT_LOGGING_STRATEGY.md`
 - `IMPLEMENTATION_PLAN.md`
+- `REMOTE_SUPABASE_DEPLOY_RUNBOOK.md`
 - `SECURITY_RLS_TEST_PLAN.md`
 - `VIEW_RPC_CONTRACTS.md`
 
@@ -55,6 +56,7 @@ Documentos históricos:
 - Teste local de control plane administrativo em `supabase/tests/003_phase1_2_admin_control_plane.sql`.
 - Teste local de auditoria estrutural de functions em `supabase/tests/004_phase1_2_function_audit.sql`.
 - Teste local de ticketing core em `supabase/tests/005_phase2_ticketing_core.sql`.
+- Teste local de auditoria estrutural de views em `supabase/tests/006_phase2_1_view_security_audit.sql`.
 - Seed separado em `supabase/seeds/` e desabilitado por padrão.
 - Fluxo de bootstrap seguro do primeiro `platform_admin` em `supabase/bootstrap/`.
 - Núcleo Fase 1 implementado com `profiles`, `user_global_roles`, `tenants`, `tenant_memberships`, `tenant_contacts` e `audit.audit_logs`.
@@ -69,8 +71,12 @@ Documentos históricos:
 - `authenticated` não possui `SELECT`, `INSERT`, `UPDATE` nem `DELETE` direto nas tabelas base de ticketing; o app lê via views e escreve via RPCs.
 - Pacote `packages/contracts` materializado com tipos TypeScript para views e RPCs de ticketing.
 - Auditoria estrutural das views oficializada com `security_barrier = true`, filtros explícitos por caller e teste pgTAP dedicado.
+- `npm run contracts:typecheck` validado com sucesso.
+- `npm run supabase:verify` validado com sucesso.
+- Suite pgTAP atual validada com `Files=6`, `Tests=93`, `Result: PASS`.
 - Pipeline CI para banco em `.github/workflows/supabase-db.yml`.
-- CI remota validada no GitHub pela workflow `Supabase DB`, run `25136285480`, branch `codex/phase1-2-admin-control-plane`, conclusão `success`.
+- CI remota validada no GitHub pela workflow `Supabase DB`, run `25139500960`, commit `85b3495`, branch `codex/phase1-2-admin-control-plane`, conclusão `success`.
+- Runbook de deploy remoto criado em `docs/REMOTE_SUPABASE_DEPLOY_RUNBOOK.md`.
 - Base bruta preservada em `raw_knowledge/octadesk_export/latest/`.
 
 ### Não existe ainda
@@ -99,11 +105,17 @@ Documentos históricos:
   - Views contratuais e RPCs de ticketing materializadas.
   - Máquina de estados, diferenciação entre mensagens públicas e notas internas e auditoria automática validadas com pgTAP.
   - Leitura direta das tabelas-base de ticketing bloqueada para `authenticated`.
+  - `supabase:verify` atual confirma `Files=6`, `Tests=93`, `Result: PASS`.
   - Ainda faltam aplicação remota controlada e qualquer consumo por frontend.
 - Fase 2.1: contratos tipados e auditoria de views concluídos localmente.
   - `packages/contracts` descreve enums, DTOs de views e payloads/responses de RPCs.
   - A estratégia de segurança das views foi auditada e documentada.
   - A CI agora também valida `contracts:typecheck`.
+  - O estado validado em CI remota mais recente está verde no commit `85b3495`.
+- Fase 2.2: documentação sincronizada e runbook remoto concluídos localmente.
+  - `README.md`, `supabase/README.md` e `docs/IMPLEMENTATION_PLAN.md` foram alinhados ao estado real.
+  - `docs/REMOTE_SUPABASE_DEPLOY_RUNBOOK.md` define pré-requisitos, secrets, validação, deploy, rollback e checklist pós-deploy.
+  - Nenhum deploy remoto foi executado nesta fase.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -120,6 +132,8 @@ Documentos históricos:
 - Não permitir leitura direta do app nas tabelas base de ticketing.
 
 ## Próxima prioridade
-Aplicar as migrations em ambiente remoto oficial com aprovação explícita,
-materializar o consumo desses contratos no backend/app server e só então abrir
-qualquer camada de frontend para tickets.
+Executar o deploy remoto controlado do banco seguindo
+`docs/REMOTE_SUPABASE_DEPLOY_RUNBOOK.md`, com aprovação explícita e sem salvar
+segredos no repositório. Só depois disso avaliar bootstrap remoto do primeiro
+`platform_admin`, consumo desses contratos no backend/app server e qualquer
+abertura de frontend para tickets.

@@ -13,6 +13,8 @@ O projeto Supabase local foi inicializado e o backend executável atual usa:
 - CI obrigatoria para reset, pgTAP e lint.
 - control plane administrativo por RPCs seguras.
 - ticketing core por views contratuais e RPCs seguras.
+- contratos tipados em `packages/contracts`.
+- runbook de deploy remoto controlado em `docs/REMOTE_SUPABASE_DEPLOY_RUNBOOK.md`.
 
 Os documentos canônicos para essa etapa são:
 
@@ -82,14 +84,36 @@ Os documentos canônicos para essa etapa são:
   - mensagens internas e publicas sao separadas por `visibility`;
   - toda mutacao gera `ticket_events` e `audit.audit_logs`.
 
+## Fase 2.1: Typed Contracts + View Security Audit
+
+- `packages/contracts` materializa enums, DTOs de views e payloads/responses de RPCs.
+- `contracts:typecheck` faz parte da validacao obrigatoria.
+- `supabase/tests/006_phase2_1_view_security_audit.sql` protege grants, filtros e visibilidade das views oficiais.
+
+## Fase 2.2: Documentation Sync + Remote Deploy Runbook
+
+- documentacao sincronizada com o estado real da Fase 2 e 2.1;
+- runbook remoto criado em `docs/REMOTE_SUPABASE_DEPLOY_RUNBOOK.md`;
+- nenhum deploy remoto executado nesta fase.
+
 ## Verificacao local atual
 
+- `npm run contracts:typecheck`
 - `npx supabase db reset --local --yes`
 - `npx supabase test db --local`
 - `npx supabase db lint --local`
 - Resultado atual:
-  - `Files=5, Tests=78, Result: PASS`
+  - `contracts:typecheck`: OK
+  - `Files=6, Tests=93, Result: PASS`
   - `No schema errors found`
+
+## CI remota atual
+
+- Workflow: `Supabase DB`
+- Branch: `codex/phase1-2-admin-control-plane`
+- Commit validado: `85b3495`
+- Run: `25139500960`
+- Conclusao: `success`
 
 ## Regras de operacao
 
@@ -99,6 +123,7 @@ Os documentos canônicos para essa etapa são:
 - Toda mudanca de tenancy e papel precisa continuar compatível com os testes pgTAP.
 - Toda mutacao administrativa do app deve usar RPC; nao usar DML direto nas tabelas administrativas.
 - O app nao deve consultar tabelas base de ticketing; usar apenas as views contratuais.
+- Deploy remoto do banco deve seguir `docs/REMOTE_SUPABASE_DEPLOY_RUNBOOK.md`.
 
 ## Estrutura esperada
 

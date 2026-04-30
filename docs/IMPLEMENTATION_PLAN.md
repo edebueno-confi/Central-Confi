@@ -1,5 +1,16 @@
 # IMPLEMENTATION_PLAN.md
 
+## Status resumido em 2026-04-29
+
+- Fase 0: concluída.
+- Fase 1: concluída localmente.
+- Fase 2: concluída localmente.
+- Fase 2.1: concluída localmente.
+- Fase 2.2: concluída localmente.
+- Pendência principal: aplicar as migrations no ambiente remoto oficial com
+  runbook controlado e, somente depois, avaliar bootstrap remoto do primeiro
+  `platform_admin`.
+
 ## Fase 0: Fundação
 
 Objetivo:
@@ -18,6 +29,9 @@ Gate de saída:
 - documentação consolidada;
 - blueprint alinhado ao produto;
 - plano de Fase 1 aprovado.
+
+Status atual:
+- concluída.
 
 ## Fase 1: Identidade e tenancy
 
@@ -83,41 +97,141 @@ Gate de saída:
 - frontend ainda bloqueado;
 - nenhum dado mockado como base de produto.
 
-## Fase 2: Tickets
-- Criar ticket.
-- Listar tickets.
-- Detalhar ticket.
-- Comentários.
-- Eventos.
-- Anexos.
-- Responsável.
-- Status controlado.
+Status atual:
+- concluída localmente e pronta para aplicação remota controlada.
+
+## Fase 2: Ticketing Core
+
+Objetivo:
+- materializar o domínio de tickets antes de qualquer frontend;
+- fechar os caminhos oficiais de leitura e escrita do app;
+- garantir histórico, auditoria e isolamento por tenant.
+
+Entregáveis obrigatórios:
+- migration oficial de ticketing core;
+- tabelas `tickets`, `ticket_messages`, `ticket_events`,
+  `ticket_assignments` e `ticket_attachments`;
+- views `vw_tickets_list`, `vw_ticket_detail` e `vw_ticket_timeline`;
+- RPCs `rpc_create_ticket`, `rpc_update_ticket_status`, `rpc_assign_ticket`,
+  `rpc_add_ticket_message`, `rpc_add_internal_ticket_note`, `rpc_close_ticket`
+  e `rpc_reopen_ticket`;
+- bloqueio de `SELECT` direto nas tabelas base para `authenticated`;
+- testes pgTAP de core de ticketing.
+
+Gate de saída:
+- schema de tickets executável por migration;
+- máquina de estados validada;
+- auditoria de eventos e mutações validada;
+- frontend ainda bloqueado.
+
+Status atual:
+- concluída localmente.
+
+## Fase 2.1: Typed Contracts + View Security Audit
+
+Objetivo:
+- materializar contratos TypeScript do backend;
+- auditar estruturalmente as views oficiais antes de qualquer consumo por app.
+
+Entregáveis obrigatórios:
+- pacote `packages/contracts` com enums, DTOs de views e payloads/responses de RPCs;
+- `contracts:typecheck` verde;
+- auditoria documental das views oficiais;
+- suíte pgTAP dedicada para grants, filtros e visibilidade.
+
+Gate de saída:
+- contratos tipados alinhados ao backend;
+- views auditadas sem vazamento cross-tenant;
+- nota interna invisível para perfil externo;
+- qualquer alteração insegura de grants quebra teste.
+
+Status atual:
+- concluída localmente.
+
+## Fase 2.2: Documentation Sync + Remote Deploy Runbook
+
+Objetivo:
+- eliminar drift documental antes de qualquer deploy remoto;
+- documentar o procedimento remoto seguro de aplicação das migrations.
+
+Entregáveis obrigatórios:
+- `README.md`, `supabase/README.md` e `docs/IMPLEMENTATION_PLAN.md` sincronizados;
+- `docs/PROJECT_STATE.md` atualizado com o estado real validado;
+- `docs/REMOTE_SUPABASE_DEPLOY_RUNBOOK.md` criado;
+- confirmação de que nenhum segredo foi salvo no repositório.
+
+Gate de saída:
+- documentação alinhada com Fase 2 e 2.1;
+- runbook remoto pronto para execução controlada futura;
+- nenhum deploy remoto executado nesta fase.
+
+Status atual:
+- concluída localmente.
+
+## Próxima etapa operacional: Deploy remoto controlado do banco
+
+Objetivo:
+- aplicar remotamente as migrations oficiais ja validadas localmente;
+- manter frontend bloqueado;
+- preparar o bootstrap remoto do primeiro `platform_admin` sem policy aberta.
+
+Pré-condições:
+- aprovacao explicita da janela remota;
+- credenciais carregadas fora do repositório;
+- `npm run contracts:typecheck` OK;
+- `npm run supabase:verify` OK;
+- uso obrigatório do runbook em `docs/REMOTE_SUPABASE_DEPLOY_RUNBOOK.md`.
+
+Saída esperada:
+- migrations remotas alinhadas ao histórico local;
+- grants e views oficiais preservados;
+- bootstrap remoto executado apenas se aprovado e necessário.
 
 ## Fase 3: Base de conhecimento interna
-- Categorias.
-- Artigos.
-- Revisões.
-- Playbooks.
-- Troubleshooting.
-- Vincular artigo ao ticket.
+
+Objetivo:
+- transformar a base oficial em domínio versionado, auditável e citável.
+
+Escopo inicial:
+- categorias;
+- artigos;
+- revisões;
+- playbooks;
+- troubleshooting;
+- vínculo artigo ↔ ticket.
 
 ## Fase 4: Portal do cliente
-- Login.
-- Abrir chamado.
-- Acompanhar status.
-- Ver histórico.
-- Enviar comentários e anexos.
+
+Objetivo:
+- expor ao cliente apenas os contratos seguros e estados autorizados.
+
+Escopo inicial:
+- login;
+- abrir chamado;
+- acompanhar status;
+- ver histórico;
+- enviar comentários e anexos.
 
 ## Fase 5: Engenharia
-- Work items.
-- Bugs.
-- Melhorias.
-- Vínculo ticket ↔ demanda técnica.
-- Devolutiva para suporte.
+
+Objetivo:
+- desacoplar suporte e engenharia sem perder rastreabilidade.
+
+Escopo inicial:
+- work items;
+- bugs;
+- melhorias;
+- vínculo ticket ↔ demanda técnica;
+- devolutiva para suporte.
 
 ## Fase 6: IA operacional
-- Busca semântica na base oficial.
-- Resumo de tickets.
-- Sugestão de artigos.
-- Detecção de duplicidade.
-- Geração assistida de bug estruturado.
+
+Objetivo:
+- habilitar IA somente sobre base oficial, auditável e versionada.
+
+Escopo inicial:
+- busca semântica na base oficial;
+- resumo de tickets;
+- sugestão de artigos;
+- detecção de duplicidade;
+- geração assistida de bug estruturado.

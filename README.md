@@ -5,15 +5,17 @@ suporte-tecnologia e gestão de demandas técnicas do ecossistema Genius Return.
 
 ## Estado atual
 
-O repositório está em Fase 1.2 concluída localmente. Não existe frontend
-implementado e a UI continua bloqueada. A fundação atual já inclui:
+O repositório está com a Fase 2 e a Fase 2.1 concluídas localmente. A Fase 2.2
+sincronizou a documentação e preparou o runbook de deploy remoto. Não existe
+frontend implementado e a UI continua bloqueada. A base atual já inclui:
 
 - Supabase inicializado oficialmente;
-- migrations reais de identidade, tenancy e hardening;
-- RLS mínima e auditoria append-only validadas com pgTAP;
+- migrations reais de identidade, tenancy, hardening e ticketing core;
+- RLS, auditoria append-only e views contratuais validadas com pgTAP;
 - bootstrap seguro do primeiro `platform_admin`;
 - control plane administrativo via RPCs seguras;
-- contratos de backend antes da UI.
+- contratos tipados de backend antes da UI;
+- runbook seguro para deploy remoto controlado do banco.
 
 ## Princípios
 
@@ -44,6 +46,7 @@ implementado e a UI continua bloqueada. A fundação atual já inclui:
 - [Estrutura do repositório](./docs/REPOSITORY_STRUCTURE.md)
 - [Estratégia de modelo de dados](./docs/DATA_MODEL_STRATEGY.md)
 - [Plano de implementação](./docs/IMPLEMENTATION_PLAN.md)
+- [Runbook de deploy remoto](./docs/REMOTE_SUPABASE_DEPLOY_RUNBOOK.md)
 - [Checklist de validação](./docs/VALIDATION_CHECKLIST.md)
 
 ## Conhecimento legado preservado
@@ -56,10 +59,20 @@ fonte operacional privada para futura ingestão e curadoria.
 
 - `apps/web/` continua apenas como placeholder.
 - `supabase/blueprints/001_foundation.sql` é histórico e não executável.
-- `supabase/migrations/` já contém as migrations oficiais da Fase 1.
-- Auth, policies de RLS, triggers, RPCs administrativas e testes de banco já foram implementados localmente.
+- `supabase/migrations/` já contém as migrations oficiais das Fases 1 e 2.
+- Auth, policies de RLS, triggers, RPCs administrativas, ticketing core e testes de banco já foram implementados localmente.
 - O app não deve fazer DML direto em `tenants`, `tenant_memberships`, `tenant_contacts` e `user_global_roles`; essas mutações passam por RPCs auditadas.
+- O app não deve ler tabelas base de ticketing diretamente; a leitura passa por `vw_tickets_list`, `vw_ticket_detail` e `vw_ticket_timeline`.
+- `packages/contracts` materializa os contratos TypeScript oficiais de ticketing.
+- Existe runbook de deploy remoto em `docs/REMOTE_SUPABASE_DEPLOY_RUNBOOK.md`, mas nenhum deploy remoto foi executado nesta fase.
 - A fonte prioritária de verdade documental está em `docs/`, com foco nos arquivos em caixa alta.
+
+## Validação atual
+
+- `npm run contracts:typecheck`: OK
+- `npm run supabase:verify`: OK
+- pgTAP: `Files=6`, `Tests=93`, `Result: PASS`
+- GitHub Actions `Supabase DB`: `success` no commit `85b3495`
 
 ## Comandos úteis
 
@@ -68,6 +81,9 @@ npm run supabase:start
 npm run supabase:verify
 npm run supabase:bootstrap:first-admin -- --local --user-id <uuid>
 ```
+
+Para deploy remoto do banco, usar exclusivamente o runbook em
+`docs/REMOTE_SUPABASE_DEPLOY_RUNBOOK.md`.
 
 ## Script preservado
 
