@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import { tmpdir } from 'node:os';
 
 const ACTOR_USER_ID = 'f0f0f0f0-f0f0-4f0f-8f0f-f0f0f0f0f0f0';
@@ -23,6 +24,10 @@ function run(command, args, options = {}) {
   }
 
   return result;
+}
+
+function hashText(value) {
+  return createHash('sha256').update(value, 'utf8').digest('hex');
 }
 
 function localSupabaseBinary(args) {
@@ -62,6 +67,52 @@ function executeSql(sql) {
   } finally {
     rmSync(tempDir, { recursive: true, force: true });
   }
+}
+
+function createOctadeskFixture() {
+  const tempRoot = mkdtempSync(join(tmpdir(), 'genius-phase4-3-octadesk-fixture-'));
+  const rootDir = join(tempRoot, 'articles');
+  const articleDir = join(rootDir, '0001-space-aware-ci');
+  const articleJsonPath = join(articleDir, 'article.json');
+  const contentPath = join(articleDir, 'content.txt');
+  mkdirSync(articleDir, { recursive: true });
+
+  const article = {
+    id: 'space-aware-ci-article',
+    articleId: 'space-aware-ci-article',
+    title: 'Space Aware CI Fixture',
+    url: 'space-aware-ci-fixture',
+    status: 'published',
+    categoryId: 'kb-category-ci',
+    categoryTitle: 'CI Imports',
+    categoryUrl: 'ci-imports',
+    sectionId: 'kb-section-ci',
+    sectionTitle: 'Verificacao Space Aware',
+    sectionUrl: 'verificacao-space-aware',
+    permission: 'public',
+    plainText: '',
+    contentHtml: '<p>Space aware fixture</p>',
+    articleDirRelative: 'articles/0001-space-aware-ci',
+    assets: [],
+  };
+
+  const content = [
+    article.title,
+    '',
+    'Este artigo existe apenas para validar a importacao Octadesk space-aware na CI.',
+    'O corpo principal permanece em markdown/texto limpo.',
+  ].join('\n');
+
+  writeFileSync(articleJsonPath, JSON.stringify(article, null, 2), 'utf8');
+  writeFileSync(contentPath, `${content}\n`, 'utf8');
+
+  return {
+    cleanupDir: tempRoot,
+    rootDir,
+    articleSlug: article.url,
+    sourcePath: relative(process.cwd(), articleDir).replace(/\\/g, '/'),
+    sourceHash: hashText(content.trim()),
+  };
 }
 
 function seedActor() {
@@ -104,10 +155,10 @@ function seedActor() {
   `);
 }
 
-function expectMissingSpaceFailure() {
+function expectMissingSpaceFailure(rootDir) {
   const result = run(
     process.execPath,
-    ['scripts/knowledge/import-octadesk-drafts.mjs', '--local', '--limit', '1'],
+    ['scripts/knowledge/import-octadesk-drafts.mjs', '--local', '--limit', '1', '--root', rootDir],
     { stdio: ['ignore', 'pipe', 'pipe'] },
   );
 
@@ -125,7 +176,7 @@ function expectMissingSpaceFailure() {
   }
 }
 
-function runSpaceAwareImport() {
+function runSpaceAwareImport(rootDir) {
   const result = run(
     process.execPath,
     [
@@ -138,6 +189,8 @@ function runSpaceAwareImport() {
       ACTOR_USER_ID,
       '--space-slug',
       'genius',
+      '--root',
+      rootDir,
     ],
     { stdio: ['ignore', 'pipe', 'pipe'] },
   );
@@ -150,7 +203,7 @@ function runSpaceAwareImport() {
   return result.stdout?.trim() ?? '';
 }
 
-function assertImportedArticleSpaceAware() {
+function assertImportedArticleSpaceAware(fixture) {
   const output = executeSql(`
     select json_build_object(
       'space_slug',
@@ -159,23 +212,23 @@ function assertImportedArticleSpaceAware() {
         from public.knowledge_articles as ka
         join public.knowledge_spaces as ks
           on ks.id = ka.knowledge_space_id
-        where ka.source_hash is not null
-        order by ka.created_at desc
+        where ka.slug = '${fixture.articleSlug}'
+          and ka.source_path = '${fixture.sourcePath}'
         limit 1
       ),
       'article_source_hash',
       (
         select ka.source_hash
         from public.knowledge_articles as ka
-        where ka.source_hash is not null
-        order by ka.created_at desc
+        where ka.slug = '${fixture.articleSlug}'
+          and ka.source_path = '${fixture.sourcePath}'
         limit 1
       ),
       'source_row_hash',
       (
         select kas.source_hash
         from public.knowledge_article_sources as kas
-        order by kas.created_at desc
+        where kas.source_path = '${fixture.sourcePath}'
         limit 1
       )
     );
@@ -198,17 +251,30 @@ function assertImportedArticleSpaceAware() {
     fail(`Artigo importado não ficou associado ao space genius: ${JSON.stringify(payload)}`);
   }
 
+  if (payload.article_source_hash !== fixture.sourceHash) {
+    fail(`source_hash inesperado para o fixture importado: ${JSON.stringify(payload)}`);
+  }
+
   if (!payload.article_source_hash || payload.article_source_hash !== payload.source_row_hash) {
     fail(`source_hash não foi preservado entre artigo e trilha de origem: ${JSON.stringify(payload)}`);
   }
 }
 
 function main() {
-  seedActor();
-  expectMissingSpaceFailure();
-  runSpaceAwareImport();
-  assertImportedArticleSpaceAware();
-  console.log('Octadesk import space-aware verificado com sucesso.');
+  const fixture = createOctadeskFixture();
+
+  try {
+    seedActor();
+    expectMissingSpaceFailure(fixture.rootDir);
+    runSpaceAwareImport(fixture.rootDir);
+    assertImportedArticleSpaceAware(fixture);
+    console.log('Octadesk import space-aware verificado com sucesso.');
+  } finally {
+    rmSync(fixture.cleanupDir, {
+      recursive: true,
+      force: true,
+    });
+  }
 }
 
 main();
