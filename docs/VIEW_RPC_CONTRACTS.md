@@ -19,6 +19,15 @@ Fase 2.1:
 - Os contratos tipados de ticketing foram materializados em `packages/contracts`.
 - A auditoria estrutural das views foi formalizada em pgTAP.
 
+Fase 2.3:
+- O Admin Console agora possui views contratuais dedicadas para leitura administrativa.
+- `platform_admin` lê a superfície administrativa global apenas por:
+  - `vw_admin_tenants_list`
+  - `vw_admin_tenant_detail`
+  - `vw_admin_tenant_memberships`
+  - `vw_admin_audit_feed`
+- A escrita administrativa continua restrita às RPCs já materializadas na Fase 1.2.
+
 ## Views contratuais vigentes
 
 ### `vw_tickets_list`
@@ -49,6 +58,49 @@ Fase 2.1:
   - timeline não depende de `SELECT` direto nas tabelas base.
   - usa `security_barrier = true`.
 
+## Views contratuais administrativas
+
+### `vw_admin_tenants_list`
+- Finalidade: lista global de tenants do Admin Console.
+- Retorna: identidade do tenant, nomes operacionais, status, região, timestamps, actor de criação/atualização, contadores agregados de memberships e contatos e resumo do contato primário.
+- Regras:
+  - retorna linhas apenas para `platform_admin` com `profile.is_active = true`;
+  - não depende de seleção direta do frontend nas tabelas `tenants`, `tenant_memberships` e `tenant_contacts`;
+  - agrega contagens no backend para manter a home de `Tenants` operacional e estável;
+  - usa `security_barrier = true`.
+
+### `vw_admin_tenant_detail`
+- Finalidade: read model detalhado de um tenant para contexto lateral ou tela dedicada.
+- Retorna: metadados completos do tenant, contadores de memberships, contadores de contatos e `contacts` agregados em `jsonb` com payload legível do contato e do usuário vinculado.
+- Regras:
+  - retorna linhas apenas para `platform_admin` com `profile.is_active = true`;
+  - não vaza detalhe administrativo para `tenant_admin`, `tenant_manager` ou membros comuns;
+  - mantém os contatos como payload contratual único para evitar join de frontend em tabelas base;
+  - usa `security_barrier = true`.
+
+### `vw_admin_tenant_memberships`
+- Finalidade: read model global de memberships por tenant.
+- Retorna: identidade do membership, tenant associado, status do tenant, `user_id`, nome, email, avatar, `is_active`, role e status do membership, além do convidante quando existir.
+- Regras:
+  - retorna linhas apenas para `platform_admin` com `profile.is_active = true`;
+  - bloqueia inclusive leitura do próprio tenant para atores que não sejam `platform_admin`;
+  - evita que o frontend faça join manual entre `tenant_memberships`, `tenants` e `profiles`;
+  - usa `security_barrier = true`.
+
+### `vw_admin_audit_feed`
+- Finalidade: feed administrativo mínimo de rastreabilidade.
+- Retorna: identidade do log, horário, ator, tenant resolvido, tabela/entidade afetada, ação, `before_state`, `after_state` e `metadata`.
+- Regras:
+  - retorna linhas apenas para `platform_admin` com `profile.is_active = true`;
+  - restringe o feed às entidades administrativas:
+    - `profiles`
+    - `user_global_roles`
+    - `tenants`
+    - `tenant_memberships`
+    - `tenant_contacts`
+  - resolve contexto de tenant também para eventos da própria tabela `tenants` usando `entity_id`;
+  - usa `security_barrier = true`.
+
 ## Auditoria das views oficiais
 
 ### Configuração atual
@@ -73,6 +125,27 @@ Fase 2.1:
 - Não foi encontrado vazamento de nota interna para perfil externo.
 - As views não dependem de grant implícito inseguro nas tabelas base.
 - Qualquer alteração futura em grants ou remoção dos filtros explícitos quebra a suíte pgTAP.
+
+## Auditoria das views administrativas
+
+### Configuração atual
+- As quatro views administrativas são views PostgreSQL padrão no schema `public`.
+- Elas não usam `security_invoker = true`.
+- Elas usam `security_barrier = true`.
+
+### Justificativa
+- O frontend administrativo continua proibido de depender de join em tabelas base.
+- A estratégia atual replica o padrão endurecido do ticketing:
+  - filtro explícito no próprio read model;
+  - `platform_admin` ativo como condição de leitura;
+  - grants concedidos na view, não como permissão semântica do frontend nas tabelas base.
+- Nenhuma policy nova foi criada para esta fase porque o isolamento do app é imposto pelas próprias views contratuais.
+
+### Conclusão da auditoria
+- `platform_admin` lê globalmente a superfície administrativa aprovada.
+- `tenant_admin` e membros comuns recebem zero linhas nas quatro views.
+- O feed de auditoria mantém contexto de tenant para eventos administrativos relevantes sem depender de lógica no frontend.
+- A suíte `supabase/tests/007_phase2_3_admin_read_models.sql` quebra se as views forem removidas, se os grants forem alterados ou se o filtro explícito por `platform_admin` desaparecer.
 
 ## RPCs administrativas vigentes
 
@@ -184,6 +257,11 @@ Fase 2.1:
   - `vw_tickets_list`
   - `vw_ticket_detail`
   - `vw_ticket_timeline`
+- O app autenticado lê o Admin Console apenas por:
+  - `vw_admin_tenants_list`
+  - `vw_admin_tenant_detail`
+  - `vw_admin_tenant_memberships`
+  - `vw_admin_audit_feed`
 - O app autenticado escreve tickets apenas por:
   - `rpc_create_ticket`
   - `rpc_update_ticket_status`
@@ -194,12 +272,14 @@ Fase 2.1:
   - `rpc_reopen_ticket`
 
 ## Próximos contratos planejados
+- Contrato explícito de leitura para gate de auth/profile/global roles, se o frontend precisar eliminar leitura direta desses domínios.
 - Views e RPCs de knowledge base.
 - Views e RPCs de intake para engenharia.
 
 ## Proibições
 - Frontend fazendo join direto em tabelas de domínio.
 - Frontend lendo `public.tickets` ou tabelas-filhas diretamente.
+- Frontend lendo `tenants`, `tenant_memberships`, `tenant_contacts` ou `audit.audit_logs` diretamente para o Admin Console.
 - Frontend decidindo visibilidade de nota interna.
 - Escrita direta em tabelas críticas sem RPC.
 - Uso do blueprint histórico como contrato executável.

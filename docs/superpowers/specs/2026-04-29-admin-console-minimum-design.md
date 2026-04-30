@@ -202,62 +202,49 @@ Shape mínimo esperado:
 
 ### Leitura pronta hoje no backend
 
-Sem views contratuais administrativas dedicadas neste momento.
+Views administrativas oficiais:
+- `public.vw_admin_tenants_list`
+- `public.vw_admin_tenant_detail`
+- `public.vw_admin_tenant_memberships`
+- `public.vw_admin_audit_feed`
 
-O que existe hoje:
+Superfícies de auth/contexto que ainda existem fora dessas views:
 - `public.profiles` com RLS
 - `public.user_global_roles` com RLS
-- `public.tenants` com RLS
-- `public.tenant_memberships` com RLS
-- `public.tenant_contacts` com RLS
-- `audit.audit_logs` com RLS
 
 ### Observação crítica
 
-Para ticketing, a regra canônica já foi formalizada como leitura por views e
-escrita por RPCs. Para o Admin Console, a escrita já segue essa regra, mas a
-leitura ainda depende de tabelas com RLS e não de read models contratuais
-dedicados.
+Para o Admin Console, a leitura operacional principal agora já segue a regra
+canônica de views contratuais, enquanto a escrita segue por RPCs.
 
 ## 8. Lacunas de backend
 
-### Lacuna principal
+### Lacuna principal restante
 
-Faltam contratos de leitura administrativos formais para frontend.
-
-Hoje não existem, por exemplo:
-- `vw_admin_tenants_list`
-- `vw_admin_tenant_detail`
-- `vw_admin_tenant_memberships`
-- `vw_admin_audit_feed`
+O gate de auth/profile/global roles ainda não possui um read model contratual
+dedicado equivalente às views administrativas do console.
 
 ### Impacto
 
-Sem esses contratos, existem dois caminhos:
-
-1. consumir tabelas-base com RLS no frontend
-2. bloquear a parte operacional do console até o backend expor read models administrativos
+`/admin/tenants`, `/admin/access` e `/admin/system` já podem consumir contratos
+de leitura formais. O ponto que ainda exige decisão arquitetural é a resolução
+de:
+- `profile` do usuário autenticado
+- roles globais do usuário autenticado
 
 ### Recomendação
 
-Preferir o caminho 2.
+Manter a disciplina abaixo:
+- views `vw_admin_*` para leitura operacional do console
+- RPCs `rpc_admin_*` para mutações administrativas
+- gate de auth/contexto implementado separadamente, sem usar mock e sem abrir
+  leitura ad hoc das tabelas administrativas do console
 
-Motivo:
-- mantém consistência com a regra canônica de leitura contratual
-- evita acoplamento prematuro do frontend ao schema base
-- reduz refactor futuro quando os read models forem formalizados
+### Observação
 
-### Exceção controlada
-
-Se for necessário abrir o shell antes dos read models, a única parte aceitável
-é:
-- login
-- sessão
-- gate de acesso
-- shell protegido
-- telas com estados reais de bloqueio ou indisponibilidade
-
-Sem inventar dados e sem simular produto.
+Não existe mais justificativa para o frontend de `Tenants`, `Access` ou
+`System` consumir `tenants`, `tenant_memberships`, `tenant_contacts` ou
+`audit.audit_logs` diretamente.
 
 ## 9. Estratégia de auth/session/profile gate
 
@@ -313,12 +300,9 @@ Implementar shell visual aprovado:
 
 ### Etapa 3
 
-Conectar Tenants somente se houver contrato de leitura aceitável.
-
-Se a lacuna persistir:
-- manter a rota funcional
-- mostrar estado real de indisponibilidade contratual
-- não inventar dados
+Conectar `Tenants` via:
+- `vw_admin_tenants_list`
+- `vw_admin_tenant_detail`
 
 ### Etapa 4
 
@@ -329,13 +313,14 @@ Conectar mutações administrativas já existentes por RPC:
 
 ### Etapa 5
 
-Abrir Access / Memberships com o mesmo critério:
-- só depois de contrato de leitura aceitável
+Abrir `Access / Memberships` via:
+- leitura em `vw_admin_tenant_memberships`
 - escrita via RPC existente
 
 ### Etapa 6
 
-Abrir System / Audit como leitura rastreável mínima
+Abrir `System / Audit` via:
+- leitura em `vw_admin_audit_feed`
 
 ## 11. Riscos de UX e arquitetura
 
@@ -360,7 +345,7 @@ O frontend deve começar por:
 - gate
 - shell
 
-E deve tratar a leitura operacional de `Tenants`, `Access` e `System` como
-dependente de contratos administrativos de leitura mais claros. As RPCs de
-escrita já existem e estão prontas para o momento em que a camada de leitura
-for formalizada.
+As telas operacionais de `Tenants`, `Access` e `System` já têm contratos
+backend suficientes para começar. O ponto que continua exigindo disciplina é o
+gate de auth/profile/role global antes de qualquer renderização de dados
+administrativos.

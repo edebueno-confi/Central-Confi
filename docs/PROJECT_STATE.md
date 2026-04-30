@@ -56,12 +56,14 @@ Documentos históricos:
 - Migration oficial de hardening `supabase/migrations/20260429212721_phase1_1_hardening.sql`.
 - Migration oficial de control plane e function hardening `supabase/migrations/20260429215122_phase1_2_admin_control_plane.sql`.
 - Migration oficial de ticketing core e contratos backend `supabase/migrations/20260429225342_phase2_ticketing_core_backend_contracts.sql`.
+- Migration oficial de read models administrativos `supabase/migrations/20260430024632_phase2_3_admin_read_models.sql`.
 - Teste local de banco em `supabase/tests/001_phase1_identity_tenancy_rls.sql`.
 - Teste local de hardening em `supabase/tests/002_phase1_1_hardening.sql`.
 - Teste local de control plane administrativo em `supabase/tests/003_phase1_2_admin_control_plane.sql`.
 - Teste local de auditoria estrutural de functions em `supabase/tests/004_phase1_2_function_audit.sql`.
 - Teste local de ticketing core em `supabase/tests/005_phase2_ticketing_core.sql`.
 - Teste local de auditoria estrutural de views em `supabase/tests/006_phase2_1_view_security_audit.sql`.
+- Teste local de read models administrativos em `supabase/tests/007_phase2_3_admin_read_models.sql`.
 - Seed separado em `supabase/seeds/` e desabilitado por padrão.
 - Fluxo de bootstrap seguro do primeiro `platform_admin` em `supabase/bootstrap/`.
 - Núcleo Fase 1 implementado com `profiles`, `user_global_roles`, `tenants`, `tenant_memberships`, `tenant_contacts` e `audit.audit_logs`.
@@ -72,13 +74,15 @@ Documentos históricos:
 - Funções auditadas com `SECURITY DEFINER` endurecido, `search_path` explícito e ACLs revisadas.
 - Núcleo operacional de tickets implementado localmente com `tickets`, `ticket_messages`, `ticket_events`, `ticket_assignments` e `ticket_attachments`.
 - Views contratuais de leitura materializadas em `vw_tickets_list`, `vw_ticket_detail` e `vw_ticket_timeline`.
+- Views contratuais administrativas materializadas em `vw_admin_tenants_list`, `vw_admin_tenant_detail`, `vw_admin_tenant_memberships` e `vw_admin_audit_feed`.
 - RPCs contratuais de escrita materializadas em `rpc_create_ticket`, `rpc_update_ticket_status`, `rpc_assign_ticket`, `rpc_add_ticket_message`, `rpc_add_internal_ticket_note`, `rpc_close_ticket` e `rpc_reopen_ticket`.
 - `authenticated` não possui `SELECT`, `INSERT`, `UPDATE` nem `DELETE` direto nas tabelas base de ticketing; o app lê via views e escreve via RPCs.
 - Pacote `packages/contracts` materializado com tipos TypeScript para views e RPCs de ticketing.
 - Auditoria estrutural das views oficializada com `security_barrier = true`, filtros explícitos por caller e teste pgTAP dedicado.
+- Admin Console mínimo agora possui read models contratuais próprios e bloqueia leitura dessas views para não-`platform_admin`.
 - `npm run contracts:typecheck` validado com sucesso.
 - `npm run supabase:verify` validado com sucesso.
-- Suite pgTAP atual validada com `Files=6`, `Tests=93`, `Result: PASS`.
+- Suite pgTAP atual validada com `Files=7`, `Tests=120`, `Result: PASS`.
 - Pipeline CI para banco em `.github/workflows/supabase-db.yml`.
 - CI remota validada no GitHub pela workflow `Supabase DB`, run `25139500960`, commit `85b3495`, branch `codex/phase1-2-admin-control-plane`, conclusão `success`.
 - Runbook de deploy remoto criado em `docs/REMOTE_SUPABASE_DEPLOY_RUNBOOK.md`.
@@ -129,6 +133,12 @@ Documentos históricos:
   - Deploy remoto das 4 migrations concluído com migration list local/remoto alinhada.
   - Primeiro `platform_admin` criado e validado no remoto.
   - Segunda tentativa de bootstrap segue bloqueada por desenho.
+- Fase 2.3: Admin Read Models concluída localmente.
+  - Views contratuais administrativas foram materializadas para `Tenants`, `Tenant Detail`, `Memberships` e `Audit Feed`.
+  - A leitura do Admin Console agora tem read models dedicados sem join manual de frontend nas tabelas administrativas.
+  - `platform_admin` lê globalmente; `tenant_admin` e membros comuns recebem zero linhas.
+  - A suíte `supabase/tests/007_phase2_3_admin_read_models.sql` cobre grants, acesso permitido, acesso negado e ausência de vazamento cross-tenant.
+  - `supabase:verify` atual confirma `Files=7`, `Tests=120`, `Result: PASS`.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -143,9 +153,10 @@ Documentos históricos:
 - Não ingerir `raw_knowledge` sem classificação de sensibilidade.
 - Não permitir mutação administrativa por acesso direto às tabelas do control plane.
 - Não permitir leitura direta do app nas tabelas base de ticketing.
+- Não permitir leitura do Admin Console fora das views `vw_admin_*`.
 
 ## Próxima prioridade
-Manter o frontend bloqueado e avançar no próximo domínio backend com o mesmo
-rigor de contratos, permissões e auditoria. A próxima abertura segura é o
-consumo controlado desses contratos por backend/app server e, só depois, a
-avaliação de superfícies de UI.
+Manter o frontend operacional bloqueado até abrir o Admin Console mínimo com
+auth/profile gate e consumo exclusivo das views `vw_admin_*` e RPCs
+administrativas existentes. A lacuna restante antes da implementação visual é
+formalizar a estratégia final de leitura do gate de `profile` e roles globais.
