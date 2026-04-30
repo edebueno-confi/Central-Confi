@@ -27,9 +27,9 @@
 - Relacionamento artigo ↔ ticket.
 
 ## Semana 4
-- Portal simples do cliente.
+- Portal simples do cliente B2B.
 - Dashboard interno de suporte.
-- Visão 360 do cliente.
+- Visão 360 do cliente B2B.
 - Relatórios básicos.
 - IA apenas consultiva e sem autonomia.
 

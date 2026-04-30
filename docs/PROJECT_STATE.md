@@ -4,10 +4,10 @@
 Genius Support OS
 
 ## Objetivo
-Construir uma plataforma interna para centralizar suporte ao cliente, base de conhecimento, tickets, comunicação entre suporte e tecnologia, gestão de bugs, melhorias, SLAs, auditoria e IA operacional.
+Construir uma plataforma interna para centralizar suporte B2B, base de conhecimento, tickets, comunicação entre suporte, CS, times técnicos e tecnologia, gestão de bugs, melhorias, SLAs, auditoria e IA operacional.
 
 ## Contexto operacional
-A empresa opera o Genius Return, SaaS de automação de logística reversa para e-commerce. A operação atual sofre com suporte descentralizado, conhecimento espalhado, ausência de histórico confiável, demandas técnicas perdidas, baixa visibilidade para clientes e dependência excessiva de pessoas específicas.
+A empresa opera o Genius Returns e o After Sale, SaaS B2B de automação de logística reversa para e-commerce. A operação atual sofre com suporte descentralizado, conhecimento espalhado, ausência de histórico confiável, demandas técnicas perdidas, baixa visibilidade para clientes B2B e dependência excessiva de pessoas específicas.
 
 ## Decisão central
 O sistema deve ser construído como SaaS profissional desde o início, mesmo sendo inicialmente interno.
@@ -38,9 +38,10 @@ Documentos históricos:
 - Frontend apenas renderiza dados e envia comandos.
 - Multi-tenant obrigatório desde o início.
 - `organization` é governança, `tenant` é operação e `knowledge_space` é marca/help center público.
+- Genius Support OS é uma plataforma de operação CX B2B técnica, não um SAC B2C.
 - Permissões, auth, RLS, auditoria e logs são fundação, não etapa posterior.
 - IA só pode responder com base oficial, versionada e citável.
-- Tickets, suporte, cliente, engenharia e conhecimento são domínios separados.
+- Tickets, suporte, cliente B2B, engenharia e conhecimento são domínios separados.
 - Nenhum dado operacional relevante deve ser perdido.
 - Documentação deve ser viva e versionada no repositório.
 
@@ -237,7 +238,7 @@ Documentos históricos:
 - Fase 4.1: revisão arquitetural multi-brand concluída e aprovada como direção oficial.
   - `organization` foi oficializado como camada de governança.
   - `tenant` foi preservado como camada operacional.
-  - `knowledge_space` foi oficializado como eixo de marca/help center público.
+  - `knowledge_space` foi oficializado como eixo de marca/documentação pública técnica.
   - A migração recomendada ficou definida como aditiva, com convivência temporária entre contratos legados e futuros contratos space-aware.
 - Fase 4.2: Multi-Brand Foundation concluída localmente.
   - Estruturas novas materializadas com `organizations`, `organization_memberships`, `knowledge_spaces`, `knowledge_space_domains` e `brand_settings`.
@@ -285,4 +286,4 @@ Documentos históricos:
 Manter a Central Pública bloqueada e preparar a próxima fase sem romper a
 separação atual entre curadoria administrativa, camada pública e IA.
 O próximo avanço recomendado é aprofundar a experiência editorial space-aware
-ou planejar a futura camada pública, ainda sem Help Center público ativo.
+ou planejar a futura camada pública, ainda sem documentação pública técnica ativa.

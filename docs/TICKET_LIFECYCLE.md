@@ -51,7 +51,7 @@ Regras:
 ### Mensagem pública
 - armazenada em `ticket_messages`
 - `visibility = customer`
-- aparece em `vw_ticket_timeline` para membros autorizados do tenant
+- aparece em `vw_ticket_timeline` para membros autorizados do tenant e representa comunicação B2B com o cliente da plataforma, não com shopper final
 - pode ser criada via `rpc_add_ticket_message`
 
 ### Nota interna
@@ -91,6 +91,7 @@ Reabertura atual:
 
 ## Restrições de acesso
 - todo ticket pertence a exatamente um tenant;
+- todo ticket representa operação B2B da plataforma, não atendimento a consumidor final da loja;
 - todo anexo pertence ao tenant e ao ticket;
 - leitura do app ocorre por views;
 - escrita do app ocorre por RPCs;

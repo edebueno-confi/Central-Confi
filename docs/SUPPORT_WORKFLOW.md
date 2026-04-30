@@ -6,7 +6,7 @@
 3. Priorização.
 4. Atribuição.
 5. Investigação.
-6. Resposta ao cliente.
+6. Resposta técnico-operacional ao cliente B2B ou time interno.
 7. Vínculo com artigo, se existir.
 8. Escalonamento para engenharia, se necessário.
 9. Devolutiva.
@@ -17,10 +17,10 @@
 - Usar macros e artigos quando aplicável.
 - Não perder contexto em canais externos.
 - Escalar para engenharia com evidência suficiente.
-- Registrar retorno técnico para o cliente.
+- Registrar retorno técnico para o cliente B2B ou stakeholder interno correto.
 
 ## Dados mínimos para escalonar
-- Cliente/tenant.
+- Cliente B2B/tenant.
 - Impacto.
 - Evidência.
 - Passos para reproduzir.
@@ -31,6 +31,7 @@
 
 ## Anti-padrões
 - Resolver por WhatsApp sem registrar.
+- Resolver por e-mail sem registrar.
 - Abrir bug sem contexto.
 - Fechar ticket sem devolutiva.
 - Usar conhecimento informal sem artigo.

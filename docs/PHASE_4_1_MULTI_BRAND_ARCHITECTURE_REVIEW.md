@@ -3,6 +3,11 @@
 ## Objetivo
 Avaliar a arquitetura atual do Genius Support OS e definir a proposta alvo para suportar multiplas centrais de ajuda publicas, com um unico ambiente administrativo, sem implementar ainda schema, frontend, Central Publica ou IA.
 
+Premissa de produto considerada nesta revisao:
+- Genius Support OS e uma plataforma de operacao CX B2B tecnica para SaaS de logistica reversa.
+- As centrais publicas futuras sao superficies tecnicas de documentacao e autoatendimento para clientes B2B e usuarios da plataforma.
+- Esta arquitetura nao foi pensada para SAC B2C nem para atender shopper final.
+
 ## Escopo desta fase
 - revisar o modelo atual e seus limites;
 - propor o modelo alvo multi-brand e multi-help-center;
@@ -27,7 +32,7 @@ O eixo novo que falta e `knowledge_space`. Ele deve virar a unidade de:
 - branding;
 - navegacao editorial;
 - segregacao de slugs de categorias e artigos;
-- governanca futura da IA por superficie publica.
+- governanca futura da IA por superficie publica tecnica.
 
 Recomendacao tecnica final:
 - introduzir `organizations` como camada de governanca;
@@ -503,6 +508,7 @@ Estado atual:
 
 Mudanca necessaria:
 - o public resolver nao pode depender de tabela base nem de condicao no frontend.
+- a camada publica futura deve servir documentacao tecnica B2B e nao fluxos de SAC ao consumidor final.
 
 Recomendacao:
 - dominio, `space_slug`, branding e navegacao devem ser resolvidos por backend/view;
@@ -616,6 +622,8 @@ Alinhamento de tickets e IA:
 
 ## Recomendacao tecnica final
 Nao recomendo evoluir a plataforma para multi-brand tentando reutilizar `tenant` como unico eixo de help center. O sistema atual usa `tenant` como unidade operacional de cliente/organizacao isolada. O eixo correto para multiplas centrais publicas e `knowledge_space`.
+
+Nesse contexto, "help center" deve ser lido como documentacao publica tecnica B2B por marca/produto, e nao como central de atendimento ao shopper final.
 
 Portanto, a arquitetura alvo deve ser:
 - `organization` para governanca;

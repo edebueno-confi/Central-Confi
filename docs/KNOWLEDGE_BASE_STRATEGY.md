@@ -1,7 +1,7 @@
 # KNOWLEDGE_BASE_STRATEGY.md
 
 ## Objetivo
-Criar a base editorial do Genius Support OS com versionamento, trilha de origem e governança suficiente para operar conteúdo interno primeiro, preparando a fundação multi-brand sem abrir Central de Ajuda pública nesta fase.
+Criar a base editorial do Genius Support OS com versionamento, trilha de origem e governança suficiente para operar conteúdo interno primeiro e preparar documentação pública técnica para clientes B2B e usuários da plataforma, sem abrir Central Pública nesta fase.
 
 ## Princípio canônico atual
 - `knowledge_space` é a unidade editorial e pública da plataforma.
@@ -104,7 +104,7 @@ Metadados brutos observados em `article.json`:
 - Sem dúvida forte de sensibilidade:
   - usar `visibility = internal`
 - Toda importação deve receber destino explícito por `knowledge_space`.
-- Não inferir marca/help center automaticamente a partir do legado.
+- Não inferir marca/documentação pública técnica automaticamente a partir do legado.
 
 ## Modelo editorial
 
@@ -122,7 +122,7 @@ Metadados brutos observados em `article.json`:
 ### Regras de status
 - `draft` é estado inicial obrigatório para importação legado.
 - `review` representa revisão humana pendente.
-- `published` existe no domínio, mas não implica Help Center público nesta fase.
+- `published` existe no domínio, mas não implica documentação pública técnica exposta nesta fase.
 - `archived` preserva histórico e rastreabilidade.
 
 ## Regras de publicação
@@ -160,7 +160,7 @@ Metadados brutos observados em `article.json`:
 - Evoluir After Sale como segundo `knowledge_space` oficial apenas quando a operação estiver pronta.
 
 ## O que continua bloqueado
-- Help Center público
+- documentação pública técnica
 - Central de Ajuda pública
 - indexação em IA
 - uso de HTML legado como frontend
