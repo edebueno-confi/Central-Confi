@@ -20,6 +20,9 @@ Documentos prioritários:
 - `DATA_MODEL_STRATEGY.md`
 - `AUTH_CONTEXT_STRATEGY.md`
 - `AUDIT_LOGGING_STRATEGY.md`
+- `ENVIRONMENT_VARIABLES.md`
+- `DEPLOYMENT_STRATEGY.md`
+- `BRANCHING_STRATEGY.md`
 - `IMPLEMENTATION_PLAN.md`
 - `REMOTE_SUPABASE_DEPLOY_RUNBOOK.md`
 - `SECURITY_RLS_TEST_PLAN.md`
@@ -43,8 +46,10 @@ Documentos históricos:
 ### Existe
 - Repositório base com `apps/`, `packages/`, `supabase/`, `tests/`, `docs/` e `raw_knowledge/`.
 - Placeholder em `apps/web/`, sem UI implementada.
+- Template de ambiente versionado apenas como `.env.example`, sem valores reais.
 - Blueprint histórico em `supabase/blueprints/001_foundation.sql`, marcado como não executável.
 - Documentação estratégica oficial em `docs/`.
+- Governança operacional de variáveis, branches e deploy documentada em `docs/ENVIRONMENT_VARIABLES.md`, `docs/DEPLOYMENT_STRATEGY.md` e `docs/BRANCHING_STRATEGY.md`.
 - Projeto Supabase inicializado via CLI com `supabase/config.toml`.
 - Portas locais do Supabase remapeadas para `55321-55327` para coexistir com outro stack local já em execução.
 - Migration oficial `supabase/migrations/20260429210127_phase1_identity_tenancy.sql`.
