@@ -78,6 +78,22 @@ Fase 4.3:
 - O import Octadesk agora exige destino explícito por `knowledge_space`.
 - As views e RPCs antigas continuam disponíveis para compatibilidade e o frontend atual não foi alterado.
 
+Fase 4.4:
+- O Admin Console agora possui a rota `/admin/knowledge` como superfície mínima de curadoria editorial.
+- O frontend dessa rota lê apenas:
+  - `vw_admin_knowledge_spaces`
+  - `vw_admin_knowledge_categories_v2`
+  - `vw_admin_knowledge_articles_list_v2`
+  - `vw_admin_knowledge_article_detail_v2`
+- O frontend dessa rota escreve apenas:
+  - `rpc_admin_create_knowledge_category_v2`
+  - `rpc_admin_create_knowledge_article_draft_v2`
+  - `rpc_admin_update_knowledge_article_draft_v2`
+  - `rpc_admin_submit_knowledge_article_for_review_v2`
+  - `rpc_admin_publish_knowledge_article_v2`
+  - `rpc_admin_archive_knowledge_article_v2`
+- Nenhuma tabela base de Knowledge Base, multi-brand ou import legado e consumida diretamente pelo frontend.
+
 ## Views contratuais vigentes
 
 ### `vw_tickets_list`

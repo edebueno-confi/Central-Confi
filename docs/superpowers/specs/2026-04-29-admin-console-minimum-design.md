@@ -1,7 +1,7 @@
 # Admin Console Minimum Design
 
 Date: 2026-04-29
-Status: Implemented locally through Phase 3.2 hardening, local QA and user lookup contract
+Status: Implemented locally through Phase 4.4, including Knowledge Base curation UI
 Scope: Frontend mínimo logado para `platform_admin`
 
 ## 1. Objetivo
@@ -61,6 +61,8 @@ backend.
   - pode nascer depois da versão com contexto lateral
 - `/admin/access`
   - memberships por tenant
+- `/admin/knowledge`
+  - curadoria minima da Knowledge Base por `knowledge_space`
 - `/admin/system`
   - estado mínimo e auditoria
 - `/access-denied`
@@ -80,6 +82,7 @@ backend.
   - compõe sidebar, topbar e content area
 - `AdminSidebar`
   - `Tenants`
+  - `Knowledge`
   - `Access`
   - `System`
 - `AdminTopbar`
@@ -185,6 +188,45 @@ Shape mínimo esperado para lookup:
 - `is_active`
 - `created_at`
 
+### `/admin/knowledge`
+
+Necessita:
+- lista de `knowledge_spaces`
+- categorias space-aware
+- lista de artigos por `knowledge_space`
+- filtros por `status` e `visibility`
+- detalhe editorial do artigo
+- criação de categoria
+- criação e edição de draft
+- envio para revisão
+- publicação
+- arquivamento
+
+Shape mínimo esperado para spaces:
+- `knowledge_space.id`
+- `knowledge_space.slug`
+- `knowledge_space.display_name`
+- `knowledge_space.status`
+- `knowledge_space.organization_display_name`
+
+Shape mínimo esperado para artigos:
+- `article.id`
+- `article.knowledge_space_id`
+- `article.category_id`
+- `article.visibility`
+- `article.status`
+- `article.title`
+- `article.slug`
+- `article.summary`
+- `article.source_path`
+- `article.source_hash`
+- `article.updated_at`
+
+Shape mínimo esperado para detalhe:
+- `article.body_md`
+- `article.revisions[]`
+- `article.sources[]`
+
 ### `/admin/system`
 
 Necessita:
@@ -212,6 +254,12 @@ Shape mínimo esperado:
 - `public.rpc_admin_update_tenant_member_status`
 - `public.rpc_admin_create_tenant_contact`
 - `public.rpc_admin_update_tenant_contact`
+- `public.rpc_admin_create_knowledge_category_v2`
+- `public.rpc_admin_create_knowledge_article_draft_v2`
+- `public.rpc_admin_update_knowledge_article_draft_v2`
+- `public.rpc_admin_submit_knowledge_article_for_review_v2`
+- `public.rpc_admin_publish_knowledge_article_v2`
+- `public.rpc_admin_archive_knowledge_article_v2`
 
 ### Leitura pronta hoje no backend
 
@@ -222,6 +270,10 @@ Views administrativas oficiais:
 - `public.vw_admin_tenant_memberships`
 - `public.vw_admin_audit_feed`
 - `public.vw_admin_user_lookup`
+- `public.vw_admin_knowledge_spaces`
+- `public.vw_admin_knowledge_categories_v2`
+- `public.vw_admin_knowledge_articles_list_v2`
+- `public.vw_admin_knowledge_article_detail_v2`
 
 ### Observação crítica
 
@@ -332,6 +384,7 @@ Abrir `System / Audit` via:
 - login real validado com fixture local de `platform_admin`
 - `AuthBootstrap` e `AdminGate` validados com `vw_admin_auth_context`
 - `/admin/tenants` validado com `vw_admin_tenants_list` e `vw_admin_tenant_detail`
+- `/admin/knowledge` validado com `vw_admin_knowledge_spaces`, `vw_admin_knowledge_categories_v2`, `vw_admin_knowledge_articles_list_v2` e `vw_admin_knowledge_article_detail_v2`
 - `/admin/access` validado com `vw_admin_tenant_memberships`
 - `/admin/system` validado com `vw_admin_audit_feed`
 - `/access-denied` validado para usuário autenticado sem role global

@@ -24,6 +24,11 @@ const TenantsPage = lazy(async () => {
   return { default: module.TenantsPage };
 });
 
+const KnowledgePage = lazy(async () => {
+  const module = await import('../features/knowledge/KnowledgePage');
+  return { default: module.KnowledgePage };
+});
+
 const AccessPage = lazy(async () => {
   const module = await import('../features/access/AccessPage');
   return { default: module.AccessPage };
@@ -78,6 +83,10 @@ export const router = createBrowserRouter([
           {
             path: 'tenants',
             element: withSuspense(<TenantsPage />),
+          },
+          {
+            path: 'knowledge',
+            element: withSuspense(<KnowledgePage />),
           },
           {
             path: 'access',

@@ -51,6 +51,7 @@ Criar a base editorial do Genius Support OS com versionamento, trilha de origem 
 - As RPCs atuais da KB continuam funcionando sem `knowledge_space_id` e ainda podem criar conteúdo com esse campo nulo.
 - As RPCs e views v2 já operam com `knowledge_space_id` explícito.
 - O import legado Octadesk agora exige destino space-aware por `--space-slug` ou `--knowledge-space-id`.
+- A curadoria administrativa mínima do frontend agora opera em `/admin/knowledge` consumindo apenas a superfície v2 space-aware.
 
 ## Regras estruturais novas
 - `knowledge_spaces.slug` é único globalmente.
@@ -154,7 +155,7 @@ Metadados brutos observados em `article.json`:
 7. Exigir revisão humana antes de qualquer publicação.
 
 ## Próximos passos planejados
-- Migrar consumidores administrativos do frontend para a superfície v2 space-aware.
+- Evoluir a curadoria administrativa space-aware sem romper os contratos atuais do Admin Console.
 - Abrir read models públicos apenas depois do backfill, da curadoria e da revisão de RLS.
 - Evoluir After Sale como segundo `knowledge_space` oficial apenas quando a operação estiver pronta.
 

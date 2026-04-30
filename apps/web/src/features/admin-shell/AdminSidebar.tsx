@@ -4,6 +4,7 @@ import { useAuthContext } from '../auth/auth-context';
 
 const navigation = [
   { label: 'Tenants', to: '/admin/tenants', shortLabel: 'TEN' },
+  { label: 'Knowledge', to: '/admin/knowledge', shortLabel: 'KB' },
   { label: 'Access', to: '/admin/access', shortLabel: 'ACC' },
   { label: 'System', to: '/admin/system', shortLabel: 'SYS' },
 ];

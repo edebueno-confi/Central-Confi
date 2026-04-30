@@ -106,10 +106,13 @@ Documentos históricos:
 - O client browser do Supabase no Admin Console agora usa `storageKey` própria por ambiente para isolar sessão local e evitar contenção com tokens legados de outras execuções.
 - O fluxo de auth do frontend foi endurecido para não resetar o gate em refresh de token/snapshot equivalente e para não disparar bootstrap em loop no `StrictMode`.
 - Rotas mínimas materializadas em `/login`, `/admin`, `/admin/tenants`, `/admin/access`, `/admin/system` e `/access-denied`.
+- Rotas mínimas materializadas em `/login`, `/admin`, `/admin/tenants`, `/admin/knowledge`, `/admin/access`, `/admin/system` e `/access-denied`.
 - Shell protegido materializado com `AuthBootstrap`, `AdminGate`, `AdminConsoleShell`, `AdminSidebar` e `AdminTopbar`.
 - Leitura operacional do frontend já consome apenas `vw_admin_auth_context`, `vw_admin_tenants_list`, `vw_admin_tenant_detail`, `vw_admin_tenant_memberships` e `vw_admin_audit_feed`.
+- A rota `/admin/knowledge` agora consome apenas `vw_admin_knowledge_spaces`, `vw_admin_knowledge_categories_v2`, `vw_admin_knowledge_articles_list_v2` e `vw_admin_knowledge_article_detail_v2`.
 - A tela `Access` agora também consome `vw_admin_user_lookup` para resolver busca de usuários por nome/email antes das RPCs de membership.
 - Escrita operacional do frontend já consome apenas `rpc_admin_create_tenant`, `rpc_admin_update_tenant_status`, `rpc_admin_add_tenant_member`, `rpc_admin_update_tenant_member_role`, `rpc_admin_update_tenant_member_status`, `rpc_admin_create_tenant_contact` e `rpc_admin_update_tenant_contact`.
+- A rota `/admin/knowledge` agora escreve apenas por `rpc_admin_create_knowledge_category_v2`, `rpc_admin_create_knowledge_article_draft_v2`, `rpc_admin_update_knowledge_article_draft_v2`, `rpc_admin_submit_knowledge_article_for_review_v2`, `rpc_admin_publish_knowledge_article_v2` e `rpc_admin_archive_knowledge_article_v2`.
 - Núcleo de Knowledge Base materializado localmente com `knowledge_categories`, `knowledge_articles`, `knowledge_article_revisions` e `knowledge_article_sources`.
 - Fundação multi-brand materializada localmente com `organizations`, `organization_memberships`, `knowledge_spaces`, `knowledge_space_domains` e `brand_settings`.
 - `tenants` agora aceita `organization_id` nullable para backfill futuro sem quebrar contratos atuais.
@@ -252,6 +255,12 @@ Documentos históricos:
   - O import legado Octadesk agora exige destino explícito por space e continua sempre em `draft`, preservando `source_path` e `source_hash`.
   - `supabase/tests/012_phase4_3_space_aware_compatibility.sql` cobre bootstrap/backfill do space padrão, filtros v2 por space e compatibilidade contínua das views/RPCs antigas.
   - `supabase:verify` atual confirma `Files=12`, `Tests=256`, `Result: PASS`.
+- Fase 4.4: Admin Knowledge Base UI Minimum concluída localmente.
+  - A rota `/admin/knowledge` e a navegação `Knowledge` foram materializadas no Admin Console.
+  - A UI administrativa mínima de curadoria agora oferece seletor de `knowledge_space`, filtros por `status` e `visibility`, lista space-aware de artigos, detalhe editorial, criação de categoria, criação/edição de draft e transições de `review`/`publish`/`archive`.
+  - A leitura do frontend dessa superfície usa apenas `vw_admin_knowledge_spaces`, `vw_admin_knowledge_categories_v2`, `vw_admin_knowledge_articles_list_v2` e `vw_admin_knowledge_article_detail_v2`.
+  - A escrita do frontend dessa superfície usa apenas as RPCs v2 space-aware da Knowledge Base.
+  - Conteúdo importado do legado continua sob curadoria humana e não ganha publicação automática pela UI.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -273,8 +282,7 @@ Documentos históricos:
 - Não permitir leitura do Admin Console fora das views `vw_admin_*`.
 
 ## Próxima prioridade
-Publicar o fechamento da Fase 4.3 com CI verde no GitHub.
-Depois disso, a próxima expansão recomendada é abrir a camada administrativa
-space-aware no frontend da Knowledge Base ou seguir para a preparação da
-camada pública, ainda sem Central Pública ativa, IA operacional ou tickets
-space-aware no produto.
+Manter a Central Pública bloqueada e preparar a próxima fase sem romper a
+separação atual entre curadoria administrativa, camada pública e IA.
+O próximo avanço recomendado é aprofundar a experiência editorial space-aware
+ou planejar a futura camada pública, ainda sem Help Center público ativo.
