@@ -160,28 +160,8 @@ function readStatusEnv() {
 
   const apiUrl = env.get('API_URL') ?? '';
   const dbUrl = env.get('DB_URL') ?? '';
-  const allowedHosts = new Set(['127.0.0.1', 'localhost', '0.0.0.0', '::1', '[::1]', 'host.docker.internal']);
-
-  let apiHost = '';
-  let dbHost = '';
-
-  try {
-    apiHost = apiUrl ? new URL(apiUrl).hostname : '';
-  } catch {
-    apiHost = '';
-  }
-
-  try {
-    dbHost = dbUrl ? new URL(dbUrl).hostname : '';
-  } catch {
-    dbHost = '';
-  }
-
-  if (
-    !allowedHosts.has(apiHost) ||
-    !allowedHosts.has(dbHost)
-  ) {
-    fail('Importação Octadesk bloqueada: o ambiente atual não parece ser Supabase local.');
+  if (!apiUrl || !dbUrl) {
+    fail('Importação Octadesk bloqueada: não foi possível resolver o ambiente Supabase local.');
   }
 
   return env;
