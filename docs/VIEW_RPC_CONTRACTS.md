@@ -40,6 +40,13 @@ Fase 3.1:
   - `/admin/system` -> `vw_admin_audit_feed`
   - `/access-denied` -> bloqueio sem vazamento para usuário autenticado sem `platform_admin`
 
+Fase 3.2:
+- O Admin Console agora possui contrato explícito de lookup global de usuários existentes para memberships.
+- O frontend administrativo consome a busca de usuários apenas por:
+  - `vw_admin_user_lookup`
+- `authenticated` não possui mais `SELECT` direto em `public.profiles`.
+- A tela `Access` usa nome/email -> `user_id` pela view contratual e mantém fallback manual controlado apenas quando necessário.
+
 ## Views contratuais vigentes
 
 ### `vw_tickets_list`
@@ -89,6 +96,15 @@ Fase 3.1:
   - retorna linhas apenas para `platform_admin` com `profile.is_active = true`;
   - não depende de seleção direta do frontend nas tabelas `tenants`, `tenant_memberships` e `tenant_contacts`;
   - agrega contagens no backend para manter a home de `Tenants` operacional e estável;
+  - usa `security_barrier = true`.
+
+### `vw_admin_user_lookup`
+- Finalidade: lookup global de usuários existentes para o fluxo administrativo de memberships.
+- Retorna: `user_id`, `full_name`, `email`, `is_active` e `created_at`.
+- Regras:
+  - retorna linhas apenas para `platform_admin` com `profile.is_active = true`;
+  - não expõe `avatar_url`, `locale`, `timezone`, `updated_at` nem metadados de autoria;
+  - não depende de leitura direta do frontend em `public.profiles`;
   - usa `security_barrier = true`.
 
 ### `vw_admin_tenant_detail`
@@ -167,9 +183,10 @@ Fase 3.1:
 ### Conclusão da auditoria
 - `platform_admin` lê globalmente a superfície administrativa aprovada.
 - Qualquer usuário autenticado lê apenas o próprio `vw_admin_auth_context`.
-- `tenant_admin` e membros comuns recebem zero linhas nas quatro views.
+- `tenant_admin` e membros comuns recebem zero linhas nas cinco views operacionais/admin.
 - O feed de auditoria mantém contexto de tenant para eventos administrativos relevantes sem depender de lógica no frontend.
-- As suítes `supabase/tests/007_phase2_3_admin_read_models.sql` e `supabase/tests/008_phase3_1_admin_auth_context.sql` quebram se as views forem removidas, se os grants forem alterados ou se os filtros explícitos desaparecerem.
+- `authenticated` não mantém `SELECT` direto em `public.profiles`; a busca de usuários do Admin Console foi deslocada para `vw_admin_user_lookup`.
+- As suítes `supabase/tests/007_phase2_3_admin_read_models.sql`, `supabase/tests/008_phase3_1_admin_auth_context.sql` e `supabase/tests/009_phase3_2_admin_user_lookup.sql` quebram se as views forem removidas, se os grants forem alterados ou se os filtros explícitos desaparecerem.
 
 ## RPCs administrativas vigentes
 

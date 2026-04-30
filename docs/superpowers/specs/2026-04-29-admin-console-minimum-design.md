@@ -1,7 +1,7 @@
 # Admin Console Minimum Design
 
 Date: 2026-04-29
-Status: Implemented locally through Phase 3.1 hardening and local QA
+Status: Implemented locally through Phase 3.2 hardening, local QA and user lookup contract
 Scope: Frontend mínimo logado para `platform_admin`
 
 ## 1. Objetivo
@@ -28,6 +28,7 @@ backend.
   - o gate não entra mais em loop após login
   - refresh de token não reseta o shell para loading infinito
   - o client browser usa storage key isolada por ambiente
+  - o lookup global de usuários agora vem de contrato próprio, sem leitura direta de `profiles`
 
 ## 3. Fora de escopo
 
@@ -158,6 +159,7 @@ Shape mínimo esperado para contatos:
 
 Necessita:
 - memberships por tenant
+- busca global de usuários existentes por nome/email
 - dados legíveis do membro
 - role
 - status
@@ -175,6 +177,13 @@ Shape mínimo esperado:
   - `profile.full_name`
   - `profile.email`
   - `profile.is_active`
+
+Shape mínimo esperado para lookup:
+- `user_id`
+- `full_name`
+- `email`
+- `is_active`
+- `created_at`
 
 ### `/admin/system`
 
@@ -212,6 +221,7 @@ Views administrativas oficiais:
 - `public.vw_admin_tenant_detail`
 - `public.vw_admin_tenant_memberships`
 - `public.vw_admin_audit_feed`
+- `public.vw_admin_user_lookup`
 
 ### Observação crítica
 
@@ -228,9 +238,9 @@ O gate de auth/profile/global roles foi resolvido em Fase 3.1 por
 
 ### Lacuna restante
 
-Ainda não existe contrato explícito de busca global de usuários para apoiar:
-- seleção rica de `user_id` em memberships;
-- vínculo de contatos com usuário sem entrada manual de UUID.
+Ainda não existe contrato explícito para:
+- busca orientada a tenant/estado de usuários além do lookup global mínimo;
+- vínculo de contatos com usuário com UX mais rica que o fallback manual controlado.
 
 ### Observação
 

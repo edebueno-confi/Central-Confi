@@ -11,10 +11,12 @@ import {
   addTenantMember,
   listAdminMemberships,
   listAdminTenants,
+  lookupAdminUsers,
   updateTenantMemberRole,
   updateTenantMemberStatus,
   type AdminTenantMembershipRow,
   type AdminTenantsListItemRow,
+  type AdminUserLookupRow,
 } from '../admin/admin-api';
 import { classifyAdminError } from '../admin/admin-errors';
 import { formatDateTime } from '../../app/format';
@@ -45,6 +47,7 @@ import {
 import { useAuthContext } from '../auth/auth-context';
 
 type PagePhase = 'loading' | 'ready' | 'contract-unavailable' | 'error';
+type LookupPhase = 'idle' | 'loading' | 'ready' | 'contract-unavailable' | 'error';
 
 interface AddMembershipFormState {
   tenantId: string;
@@ -100,6 +103,10 @@ export function AccessPage() {
   const [statusDraft, setStatusDraft] = useState<MembershipStatus>('invited');
   const [updateSubmitting, setUpdateSubmitting] = useState(false);
   const [updateMessage, setUpdateMessage] = useState<string | null>(null);
+  const [lookupQuery, setLookupQuery] = useState('');
+  const [lookupResults, setLookupResults] = useState<AdminUserLookupRow[]>([]);
+  const [lookupPhase, setLookupPhase] = useState<LookupPhase>('idle');
+  const [lookupMessage, setLookupMessage] = useState<string | null>(null);
   const deferredQuery = useDeferredValue(query);
 
   const loadSurface = useEffectEvent(async () => {
@@ -226,6 +233,10 @@ export function AccessPage() {
         ...emptyAddMembershipForm(),
         tenantId: current.tenantId,
       }));
+      setLookupQuery('');
+      setLookupResults([]);
+      setLookupPhase('idle');
+      setLookupMessage(null);
       await loadSurface();
       setSelectedMembershipId(created.id);
       setAddMessage('Membership criado com sucesso.');
@@ -287,6 +298,60 @@ export function AccessPage() {
     } finally {
       setUpdateSubmitting(false);
     }
+  }
+
+  async function handleLookupUsers() {
+    const trimmed = lookupQuery.trim();
+
+    if (!trimmed) {
+      setLookupResults([]);
+      setLookupPhase('idle');
+      setLookupMessage('Informe nome ou email para consultar usuarios existentes.');
+      return;
+    }
+
+    setLookupPhase('loading');
+    setLookupMessage(null);
+
+    try {
+      const rows = await lookupAdminUsers(trimmed);
+
+      setLookupResults(rows);
+      setLookupPhase('ready');
+      setLookupMessage(
+        rows.length === 0
+          ? 'Nenhum usuario existente bateu com essa busca.'
+          : `${rows.length} usuario(s) encontrados no contrato oficial.`,
+      );
+    } catch (error) {
+      const classified = classifyAdminError(error, 'Falha ao consultar usuarios existentes.');
+
+      if (classified.kind === 'session-expired') {
+        markSessionExpired();
+        return;
+      }
+
+      if (classified.kind === 'permission-denied') {
+        setBackendDenied(true);
+        return;
+      }
+
+      setLookupResults([]);
+      setLookupMessage(classified.message);
+      setLookupPhase(
+        classified.kind === 'contract-unavailable' ? 'contract-unavailable' : 'error',
+      );
+    }
+  }
+
+  function applyLookupSelection(user: AdminUserLookupRow) {
+    setAddForm((current) => ({
+      ...current,
+      userId: user.user_id,
+    }));
+    setLookupMessage(
+      `Usuario selecionado: ${user.full_name ?? 'Sem nome'} (${user.email ?? user.user_id}).`,
+    );
   }
 
   const totalMemberships = memberships.length;
@@ -433,12 +498,12 @@ export function AccessPage() {
         <div className="space-y-6">
           <Panel
             title="Adicionar membro"
-            description="Sem contrato para busca global de usuarios nesta fase. O fluxo usa `user_id` real aprovado e espelha a operacao institucional existente."
+            description="O lookup oficial usa `vw_admin_user_lookup` para localizar usuarios existentes por nome ou email antes de acionar as RPCs de membership."
           >
             <form className="space-y-4" onSubmit={handleAddMembership}>
-              <InlineNotice tone="warning">
-                Este MVP nao inventa lookup de usuarios. Informe o UUID real do usuario
-                existente em `auth.users` e `public.profiles`.
+              <InlineNotice tone="default">
+                A busca usa apenas o contrato administrativo aprovado. O fallback manual
+                continua disponivel quando voce ja possui o `user_id` real.
               </InlineNotice>
 
               <Field label="Tenant">
@@ -456,12 +521,114 @@ export function AccessPage() {
                   {tenants.map((tenant) => (
                     <option key={tenant.id} value={tenant.id}>
                       {tenant.display_name}
-                    </option>
-                  ))}
-                </SelectInput>
+                  </option>
+                ))}
+                  </SelectInput>
               </Field>
 
-              <Field label="User id">
+              <div className="space-y-3 rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)]/75 p-4">
+                <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+                  <Field
+                    label="Buscar usuario existente"
+                    description="Consulte por email ou nome. O backend retorna apenas user_id, nome, email, status e created_at."
+                  >
+                    <TextInput
+                      onChange={(event) => {
+                        setLookupQuery(event.target.value);
+                        if (lookupPhase !== 'idle') {
+                          setLookupPhase('idle');
+                        }
+                        if (lookupMessage) {
+                          setLookupMessage(null);
+                        }
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                          event.preventDefault();
+                          void handleLookupUsers();
+                        }
+                      }}
+                      placeholder="ex.: ede.oliveira@confi.com.vc ou Eduardo"
+                      value={lookupQuery}
+                    />
+                  </Field>
+                  <div className="flex items-end">
+                    <AppButton
+                      disabled={lookupPhase === 'loading'}
+                      onClick={() => void handleLookupUsers()}
+                      type="button"
+                    >
+                      {lookupPhase === 'loading' ? 'Buscando...' : 'Buscar usuario'}
+                    </AppButton>
+                  </div>
+                </div>
+
+                {lookupMessage ? (
+                  <InlineNotice
+                    tone={
+                      lookupPhase === 'error'
+                        ? 'critical'
+                        : lookupPhase === 'contract-unavailable'
+                          ? 'warning'
+                          : 'default'
+                    }
+                  >
+                    {lookupMessage}
+                  </InlineNotice>
+                ) : null}
+
+                {lookupPhase === 'contract-unavailable' ? (
+                  <InlineNotice tone="warning">
+                    O ambiente atual ainda nao expôs `vw_admin_user_lookup`. O fluxo
+                    continua com fallback manual controlado por `user_id`.
+                  </InlineNotice>
+                ) : null}
+
+                {lookupResults.length > 0 ? (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                      Resultados oficiais
+                    </p>
+                    <div className="grid gap-2">
+                      {lookupResults.map((user) => {
+                        const isSelected = addForm.userId === user.user_id;
+
+                        return (
+                          <button
+                            key={user.user_id}
+                            className={`rounded-[20px] border px-4 py-3 text-left transition ${
+                              isSelected
+                                ? 'border-[color:var(--color-brand-blue)] bg-[rgba(48,127,226,0.08)]'
+                                : 'border-[color:var(--color-border)] bg-white hover:border-[color:var(--color-brand-blue)]/40'
+                            }`}
+                            onClick={() => applyLookupSelection(user)}
+                            type="button"
+                          >
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div className="space-y-1">
+                                <p className="font-medium text-[color:var(--color-ink)]">
+                                  {user.full_name ?? 'Usuario sem nome'}
+                                </p>
+                                <p className="text-xs text-[color:var(--color-muted)]">
+                                  {user.email ?? user.user_id}
+                                </p>
+                              </div>
+                              <StatusPill tone={user.is_active ? 'positive' : 'critical'}>
+                                {user.is_active ? 'Ativo' : 'Inativo'}
+                              </StatusPill>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              <Field
+                label="User id selecionado"
+                description="Campo manual mantido como fallback controlado. A RPC continua recebendo apenas o UUID final aprovado."
+              >
                 <TextInput
                   onChange={(event) =>
                     setAddForm((current) => ({

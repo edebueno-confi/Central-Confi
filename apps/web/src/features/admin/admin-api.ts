@@ -9,6 +9,7 @@ import type {
   AdminTenantMembershipRow,
   AdminTenantRecordRow,
   AdminTenantsListItemRow,
+  AdminUserLookupRow,
   RpcAdminAddTenantMemberPayload,
   RpcAdminAddTenantMemberResponse,
   RpcAdminCreateTenantContactPayload,
@@ -27,6 +28,10 @@ import type {
 
 function requireClient() {
   return requireSupabaseBrowserClient();
+}
+
+function escapeLookupTerm(value: string) {
+  return value.replace(/[%_,]/g, ' ').trim();
 }
 
 export async function listAdminTenants() {
@@ -77,6 +82,28 @@ export async function listAdminMemberships() {
   }
 
   return (data ?? []) as AdminTenantMembershipRow[];
+}
+
+export async function lookupAdminUsers(rawQuery: string, limit = 8) {
+  const client = requireClient();
+  const query = escapeLookupTerm(rawQuery);
+
+  if (!query) {
+    return [] as AdminUserLookupRow[];
+  }
+
+  const { data, error } = await client
+    .from('vw_admin_user_lookup')
+    .select('*')
+    .or(`email.ilike.%${query}%,full_name.ilike.%${query}%`)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw toAppError(error, 'Falha ao buscar usuarios para memberships.');
+  }
+
+  return (data ?? []) as AdminUserLookupRow[];
 }
 
 export async function listAdminAuditFeed(limit = 120) {
@@ -200,4 +227,5 @@ export type {
   AdminTenantMembershipRow,
   AdminTenantRecordRow,
   AdminTenantsListItemRow,
+  AdminUserLookupRow,
 };

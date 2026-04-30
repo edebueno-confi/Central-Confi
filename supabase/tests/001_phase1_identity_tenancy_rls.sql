@@ -2,7 +2,7 @@ create extension if not exists pgtap with schema extensions;
 
 begin;
 
-select plan(9);
+select plan(10);
 
 insert into auth.users (
   instance_id,
@@ -168,10 +168,15 @@ select is(
   'Alice enxerga apenas o tenant vinculado'
 );
 
+select ok(
+  not has_table_privilege('authenticated', 'public.profiles', 'SELECT'),
+  'authenticated nao possui SELECT direto em public.profiles'
+);
+
 select is(
-  (select count(*)::integer from public.profiles),
+  (select count(*)::integer from public.vw_admin_auth_context),
   1,
-  'Alice enxerga apenas o proprio profile'
+  'Alice resolve apenas o proprio auth context pela view contratual'
 );
 
 select is(

@@ -58,6 +58,7 @@ Documentos históricos:
 - Migration oficial de ticketing core e contratos backend `supabase/migrations/20260429225342_phase2_ticketing_core_backend_contracts.sql`.
 - Migration oficial de read models administrativos `supabase/migrations/20260430024632_phase2_3_admin_read_models.sql`.
 - Migration oficial do auth read model administrativo `supabase/migrations/20260430144642_phase3_1_admin_auth_context.sql`.
+- Migration oficial do user lookup administrativo `supabase/migrations/20260430172140_phase3_2_admin_user_lookup.sql`.
 - Teste local de banco em `supabase/tests/001_phase1_identity_tenancy_rls.sql`.
 - Teste local de hardening em `supabase/tests/002_phase1_1_hardening.sql`.
 - Teste local de control plane administrativo em `supabase/tests/003_phase1_2_admin_control_plane.sql`.
@@ -66,6 +67,7 @@ Documentos históricos:
 - Teste local de auditoria estrutural de views em `supabase/tests/006_phase2_1_view_security_audit.sql`.
 - Teste local de read models administrativos em `supabase/tests/007_phase2_3_admin_read_models.sql`.
 - Teste local de auth read model administrativo em `supabase/tests/008_phase3_1_admin_auth_context.sql`.
+- Teste local de user lookup administrativo em `supabase/tests/009_phase3_2_admin_user_lookup.sql`.
 - Seed separado em `supabase/seeds/` e desabilitado por padrão.
 - Fluxo de bootstrap seguro do primeiro `platform_admin` em `supabase/bootstrap/`.
 - Núcleo Fase 1 implementado com `profiles`, `user_global_roles`, `tenants`, `tenant_memberships`, `tenant_contacts` e `audit.audit_logs`.
@@ -78,6 +80,7 @@ Documentos históricos:
 - Views contratuais de leitura materializadas em `vw_tickets_list`, `vw_ticket_detail` e `vw_ticket_timeline`.
 - Views contratuais administrativas materializadas em `vw_admin_tenants_list`, `vw_admin_tenant_detail`, `vw_admin_tenant_memberships` e `vw_admin_audit_feed`.
 - View contratual de auth context materializada em `vw_admin_auth_context`.
+- View contratual de user lookup administrativo materializada em `vw_admin_user_lookup`.
 - RPCs contratuais de escrita materializadas em `rpc_create_ticket`, `rpc_update_ticket_status`, `rpc_assign_ticket`, `rpc_add_ticket_message`, `rpc_add_internal_ticket_note`, `rpc_close_ticket` e `rpc_reopen_ticket`.
 - `authenticated` não possui `SELECT`, `INSERT`, `UPDATE` nem `DELETE` direto nas tabelas base de ticketing; o app lê via views e escreve via RPCs.
 - Pacote `packages/contracts` materializado com tipos TypeScript para views e RPCs de ticketing.
@@ -85,11 +88,13 @@ Documentos históricos:
 - Admin Console mínimo agora possui read models contratuais próprios e bloqueia leitura dessas views para não-`platform_admin`.
 - O gate do Admin Console agora resolve auth/profile/roles globais apenas por `vw_admin_auth_context`.
 - O frontend do Admin Console não lê `profiles`, `user_global_roles`, `tenants`, `tenant_memberships`, `tenant_contacts` nem `audit.audit_logs` diretamente.
+- `authenticated` não possui mais `SELECT` direto em `public.profiles`; o lookup global de usuários do Admin Console foi deslocado para `vw_admin_user_lookup`.
 - O client browser do Supabase no Admin Console agora usa `storageKey` própria por ambiente para isolar sessão local e evitar contenção com tokens legados de outras execuções.
 - O fluxo de auth do frontend foi endurecido para não resetar o gate em refresh de token/snapshot equivalente e para não disparar bootstrap em loop no `StrictMode`.
 - Rotas mínimas materializadas em `/login`, `/admin`, `/admin/tenants`, `/admin/access`, `/admin/system` e `/access-denied`.
 - Shell protegido materializado com `AuthBootstrap`, `AdminGate`, `AdminConsoleShell`, `AdminSidebar` e `AdminTopbar`.
 - Leitura operacional do frontend já consome apenas `vw_admin_auth_context`, `vw_admin_tenants_list`, `vw_admin_tenant_detail`, `vw_admin_tenant_memberships` e `vw_admin_audit_feed`.
+- A tela `Access` agora também consome `vw_admin_user_lookup` para resolver busca de usuários por nome/email antes das RPCs de membership.
 - Escrita operacional do frontend já consome apenas `rpc_admin_create_tenant`, `rpc_admin_update_tenant_status`, `rpc_admin_add_tenant_member`, `rpc_admin_update_tenant_member_role`, `rpc_admin_update_tenant_member_status`, `rpc_admin_create_tenant_contact` e `rpc_admin_update_tenant_contact`.
 - Estados obrigatórios do frontend materializados: loading, vazio, erro, acesso negado, contrato indisponível e sessão expirada.
 - Build do frontend agora usa code-splitting por rota.
@@ -122,7 +127,7 @@ Documentos históricos:
 
 ### Não existe ainda
 - Views/read models contratuais para knowledge base e engenharia.
-- Contrato explícito de busca global de usuários para substituir entrada manual de `user_id` no Admin Console.
+- Views/read models contratuais para knowledge base e engenharia.
 
 ## Situação por fase
 
@@ -174,6 +179,12 @@ Documentos históricos:
   - `supabase/tests/008_phase3_1_admin_auth_context.sql` cobre grants, filtro por `auth.uid()`, self-only e preservação de `is_active`/roles.
   - A workflow de CI agora valida `contracts:typecheck`, `web:typecheck`, `web:build` e `supabase:verify`.
   - `supabase:verify` atual confirma `Files=8`, `Tests=135`, `Result: PASS`.
+- Fase 3.2: Admin User Lookup Contract concluído localmente.
+  - `vw_admin_user_lookup` materializa busca global de usuários existentes com campos mínimos para memberships.
+  - `authenticated` não possui mais `SELECT` direto em `public.profiles`.
+  - A tela `Access` resolve nome/email -> `user_id` pela view contratual e mantém fallback manual controlado.
+  - `supabase/tests/009_phase3_2_admin_user_lookup.sql` cobre grants, `security_barrier`, acesso permitido, acesso negado e ausência de vazamento de colunas sensíveis.
+  - `supabase:verify` atual confirma `Files=9`, `Tests=146`, `Result: PASS`.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -192,7 +203,7 @@ Documentos históricos:
 - Não permitir leitura do Admin Console fora das views `vw_admin_*`.
 
 ## Próxima prioridade
-Commitar e publicar o fechamento da Fase 3/Fase 3.1 com CI verde no GitHub.
-Depois disso, a próxima expansão recomendada continua sendo um contrato formal
-de busca global de usuários para remover entrada manual de `user_id` no Admin
-Console, ainda sem abrir Support Desk, tickets no frontend ou Help Center.
+Commitar e publicar o fechamento da Fase 3.2 com CI verde no GitHub.
+Depois disso, a próxima expansão recomendada é refinar o fluxo de memberships
+com seletores mais ricos sobre o contrato já existente, ainda sem abrir Support
+Desk, tickets no frontend ou Help Center.

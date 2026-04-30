@@ -2,7 +2,7 @@ create extension if not exists pgtap with schema extensions;
 
 begin;
 
-select plan(13);
+select plan(12);
 
 insert into auth.users (
   instance_id,
@@ -262,23 +262,14 @@ select throws_ok(
   'tenant_manager nao faz insert direto em tenant_contacts'
 );
 
-select lives_ok(
-  $$
-    update public.profiles
-    set full_name = 'Alice Tenant Manager Hardened'
-    where id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
-  $$,
-  'usuario consegue editar apenas campo seguro do proprio profile'
-);
-
 select throws_ok(
   $$
     update public.profiles
     set email = 'alice-alterado@tenant-a.local'
     where id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
   $$,
-  'P0001',
-  'profiles.email must be changed via Supabase Auth',
+  '42501',
+  'permission denied for table profiles',
   'email sensivel nao pode ser alterado direto no profile'
 );
 
@@ -288,10 +279,18 @@ select throws_ok(
     set is_active = false
     where id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
   $$,
-  'P0001',
-  'profiles.is_active is backend-managed',
+  '42501',
+  'permission denied for table profiles',
   'status do profile nao pode ser alterado por usuario autenticado'
 );
+
+reset role;
+reset request.jwt.claim.role;
+reset request.jwt.claim.sub;
+
+set local role authenticated;
+set local request.jwt.claim.role = 'authenticated';
+set local request.jwt.claim.sub = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 
 select throws_ok(
   $$

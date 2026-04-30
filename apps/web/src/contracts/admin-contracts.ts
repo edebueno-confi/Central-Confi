@@ -145,6 +145,14 @@ export interface AdminTenantMembershipRow {
   updated_by_user_id: Uuid | null;
 }
 
+export interface AdminUserLookupRow {
+  user_id: Uuid;
+  full_name: string | null;
+  email: string | null;
+  is_active: boolean;
+  created_at: IsoTimestamp;
+}
+
 export interface AdminAuditFeedRow {
   id: Uuid;
   occurred_at: IsoTimestamp;
