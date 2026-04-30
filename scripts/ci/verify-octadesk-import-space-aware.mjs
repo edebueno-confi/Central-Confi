@@ -66,7 +66,15 @@ function executeSql(sql) {
   writeFileSync(sqlFile, `${sql}\n`, 'utf8');
 
   try {
-    const { command, args } = localSupabaseBinary(['db', 'query', '--local', '--file', sqlFile]);
+    const { command, args } = localSupabaseBinary([
+      'db',
+      'query',
+      '--local',
+      '--output',
+      'json',
+      '--file',
+      sqlFile,
+    ]);
     const result = run(command, args, { stdio: ['ignore', 'pipe', 'pipe'] });
 
     if (result.status !== 0) {
@@ -249,7 +257,11 @@ function assertImportedArticleSpaceAware(fixture) {
 
   try {
     const parsed = JSON.parse(output);
-    payload = parsed?.rows?.[0]?.json_build_object ?? parsed;
+    const firstRow = Array.isArray(parsed)
+      ? parsed[0]
+      : parsed?.rows?.[0];
+
+    payload = firstRow?.json_build_object ?? parsed;
   } catch {
     payload = null;
   }
