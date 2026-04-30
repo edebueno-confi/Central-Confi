@@ -77,13 +77,19 @@ Documentos históricos:
 - Pipeline CI para banco em `.github/workflows/supabase-db.yml`.
 - CI remota validada no GitHub pela workflow `Supabase DB`, run `25139500960`, commit `85b3495`, branch `codex/phase1-2-admin-control-plane`, conclusão `success`.
 - Runbook de deploy remoto criado em `docs/REMOTE_SUPABASE_DEPLOY_RUNBOOK.md`.
+- Deploy remoto das 4 migrations oficiais concluído com sucesso no Supabase remoto.
+- `supabase migration list` ficou alinhado entre diretório local e ambiente remoto após o push.
+- Bootstrap remoto do primeiro `platform_admin` concluído com sucesso.
+- `public.user_global_roles` validado no remoto com o `user_id` promovido e role `platform_admin`.
+- `audit.audit_logs` validado no remoto para o evento de bootstrap do `platform_admin`.
+- Segunda tentativa de bootstrap remoto bloqueada explicitamente por desenho.
+- Nenhuma seed foi executada, nenhum frontend foi criado e nenhum `service_role` foi usado durante deploy e bootstrap remotos.
+- Working tree local permaneceu limpa ao final da operação remota validada.
 - Base bruta preservada em `raw_knowledge/octadesk_export/latest/`.
 
 ### Não existe ainda
 - Frontend React, TypeScript e Tailwind iniciado.
 - Views/read models contratuais para knowledge base e engenharia.
-- Aplicação de migrations em ambiente remoto oficial.
-- Execução remota validada do bootstrap do primeiro `platform_admin`.
 
 ## Situação por fase
 
@@ -92,30 +98,32 @@ Documentos históricos:
   - Documentação oficial existe.
   - Blueprint existe.
   - Supabase oficial local foi inicializado.
-- Fase 1: concluída localmente e pronta para aplicação controlada em ambiente remoto.
+- Fase 1: concluída localmente e aplicada com sucesso no ambiente remoto oficial.
   - Identity + Tenancy materializados em migration real.
   - RLS mínima validada com pgTAP.
   - Auditoria append-only validada localmente.
   - Hardening 1.1 entregue com anti-escalation, bootstrap seguro e CI de banco.
   - Hardening 1.2 entregue com control plane administrativo via RPC, DML direto revogado para o app nas tabelas administrativas e auditoria estrutural de funções.
   - Frontend continua bloqueado.
-  - Ainda faltam aplicação remota das migrations e bootstrap remoto controlado do primeiro `platform_admin`.
-- Fase 2: ticketing core concluído localmente e ainda não aplicado no ambiente remoto.
+  - Deploy remoto concluído sem seed e sem `service_role`.
+- Fase 2: ticketing core concluído localmente e aplicado no ambiente remoto.
   - Schema de tickets materializado por migration oficial.
   - Views contratuais e RPCs de ticketing materializadas.
   - Máquina de estados, diferenciação entre mensagens públicas e notas internas e auditoria automática validadas com pgTAP.
   - Leitura direta das tabelas-base de ticketing bloqueada para `authenticated`.
   - `supabase:verify` atual confirma `Files=6`, `Tests=93`, `Result: PASS`.
-  - Ainda faltam aplicação remota controlada e qualquer consumo por frontend.
-- Fase 2.1: contratos tipados e auditoria de views concluídos localmente.
+  - Consumo por frontend continua bloqueado.
+- Fase 2.1: contratos tipados e auditoria de views concluídos no repositório.
   - `packages/contracts` descreve enums, DTOs de views e payloads/responses de RPCs.
   - A estratégia de segurança das views foi auditada e documentada.
   - A CI agora também valida `contracts:typecheck`.
   - O estado validado em CI remota mais recente está verde no commit `85b3495`.
-- Fase 2.2: documentação sincronizada e runbook remoto concluídos localmente.
+- Fase 2.2: documentação sincronizada, deploy remoto e bootstrap admin concluídos.
   - `README.md`, `supabase/README.md` e `docs/IMPLEMENTATION_PLAN.md` foram alinhados ao estado real.
   - `docs/REMOTE_SUPABASE_DEPLOY_RUNBOOK.md` define pré-requisitos, secrets, validação, deploy, rollback e checklist pós-deploy.
-  - Nenhum deploy remoto foi executado nesta fase.
+  - Deploy remoto das 4 migrations concluído com migration list local/remoto alinhada.
+  - Primeiro `platform_admin` criado e validado no remoto.
+  - Segunda tentativa de bootstrap segue bloqueada por desenho.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -132,8 +140,7 @@ Documentos históricos:
 - Não permitir leitura direta do app nas tabelas base de ticketing.
 
 ## Próxima prioridade
-Executar o deploy remoto controlado do banco seguindo
-`docs/REMOTE_SUPABASE_DEPLOY_RUNBOOK.md`, com aprovação explícita e sem salvar
-segredos no repositório. Só depois disso avaliar bootstrap remoto do primeiro
-`platform_admin`, consumo desses contratos no backend/app server e qualquer
-abertura de frontend para tickets.
+Manter o frontend bloqueado e avançar no próximo domínio backend com o mesmo
+rigor de contratos, permissões e auditoria. A próxima abertura segura é o
+consumo controlado desses contratos por backend/app server e, só depois, a
+avaliação de superfícies de UI.

@@ -4,6 +4,23 @@
 Executar a aplicacao remota controlada das migrations oficiais do Genius Support
 OS sem abrir frontend, sem usar mocks e sem salvar segredos no repositório.
 
+## Fechamento validado em 2026-04-29
+
+- `db push` remoto aplicado com sucesso para as 4 migrations oficiais:
+  - `20260429210127_phase1_identity_tenancy.sql`
+  - `20260429212721_phase1_1_hardening.sql`
+  - `20260429215122_phase1_2_admin_control_plane.sql`
+  - `20260429225342_phase2_ticketing_core_backend_contracts.sql`
+- `supabase migration list` permaneceu alinhado entre local e remoto apos o push.
+- Bootstrap remoto do primeiro `platform_admin` concluído com sucesso.
+- `public.user_global_roles` validado com o `user_id` promovido e role `platform_admin`.
+- `audit.audit_logs` validado para o `insert` correspondente em `public.user_global_roles`.
+- Segunda tentativa de bootstrap falhou explicitamente, como esperado.
+- Nenhuma seed foi executada.
+- Nenhum frontend foi criado.
+- Nenhum `service_role` foi usado.
+- Working tree local permaneceu limpa antes e depois da janela remota validada.
+
 ## Escopo deste runbook
 - aplicar remotamente as migrations oficiais ja versionadas em `supabase/migrations/`;
 - validar o estado remoto antes e depois do deploy;
@@ -158,6 +175,13 @@ $env:SUPABASE_DB_URL = 'postgresql://postgres:<senha>@<host>:5432/postgres'
 npm run supabase:bootstrap:first-admin -- --user-id $env:GENIUS_SUPPORT_OS_PLATFORM_ADMIN_USER_ID --reason "remote bootstrap"
 ```
 
+Validacoes obrigatorias apos o bootstrap:
+- existe exatamente 1 `platform_admin`;
+- `public.user_global_roles` contem o `user_id` alvo com role `platform_admin`;
+- `audit.audit_logs` registra o `insert` correspondente em `public.user_global_roles`;
+- segunda tentativa de bootstrap falha explicitamente;
+- nenhuma seed e nenhum `service_role` foram usados.
+
 ## Plano de rollback
 
 ### Regra principal
@@ -190,6 +214,8 @@ edicao manual ad hoc no schema para "desfazer no braço".
 - RPCs de ticketing existem no remoto.
 - `authenticated` continua sem `SELECT` direto nas tabelas base de ticketing.
 - Se o bootstrap foi aprovado e executado: existe exatamente um `platform_admin`.
+- Se o bootstrap foi aprovado e executado: `user_global_roles` e `audit.audit_logs` precisam refletir o bootstrap validado.
+- Se o bootstrap foi aprovado e executado: uma segunda tentativa precisa falhar explicitamente.
 - Nenhum segredo foi salvo em arquivo do repositório.
 - Frontend continua bloqueado ate a proxima aprovacao.
 

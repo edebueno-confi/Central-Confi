@@ -5,9 +5,10 @@ suporte-tecnologia e gestão de demandas técnicas do ecossistema Genius Return.
 
 ## Estado atual
 
-O repositório está com a Fase 2 e a Fase 2.1 concluídas localmente. A Fase 2.2
-sincronizou a documentação e preparou o runbook de deploy remoto. Não existe
-frontend implementado e a UI continua bloqueada. A base atual já inclui:
+O repositório está com a Fase 2 e a Fase 2.1 concluídas, a Fase 2.2
+documental consolidada e o deploy remoto do banco já encerrado com bootstrap
+do primeiro `platform_admin`. Não existe frontend implementado e a UI continua
+bloqueada. A base atual já inclui:
 
 - Supabase inicializado oficialmente;
 - migrations reais de identidade, tenancy, hardening e ticketing core;
@@ -15,7 +16,9 @@ frontend implementado e a UI continua bloqueada. A base atual já inclui:
 - bootstrap seguro do primeiro `platform_admin`;
 - control plane administrativo via RPCs seguras;
 - contratos tipados de backend antes da UI;
-- runbook seguro para deploy remoto controlado do banco.
+- runbook seguro para deploy remoto controlado do banco;
+- deploy remoto das 4 migrations concluído com migration list alinhada;
+- bootstrap remoto validado em `user_global_roles` e `audit.audit_logs`.
 
 ## Princípios
 
@@ -64,7 +67,8 @@ fonte operacional privada para futura ingestão e curadoria.
 - O app não deve fazer DML direto em `tenants`, `tenant_memberships`, `tenant_contacts` e `user_global_roles`; essas mutações passam por RPCs auditadas.
 - O app não deve ler tabelas base de ticketing diretamente; a leitura passa por `vw_tickets_list`, `vw_ticket_detail` e `vw_ticket_timeline`.
 - `packages/contracts` materializa os contratos TypeScript oficiais de ticketing.
-- Existe runbook de deploy remoto em `docs/REMOTE_SUPABASE_DEPLOY_RUNBOOK.md`, mas nenhum deploy remoto foi executado nesta fase.
+- O deploy remoto das 4 migrations foi concluído sem seed e sem `service_role`.
+- O primeiro `platform_admin` remoto foi criado com sucesso e a segunda tentativa segue bloqueada por desenho.
 - A fonte prioritária de verdade documental está em `docs/`, com foco nos arquivos em caixa alta.
 
 ## Validação atual
@@ -73,6 +77,7 @@ fonte operacional privada para futura ingestão e curadoria.
 - `npm run supabase:verify`: OK
 - pgTAP: `Files=6`, `Tests=93`, `Result: PASS`
 - GitHub Actions `Supabase DB`: `success` no commit `85b3495`
+- remoto: migrations alinhadas, `platform_admin` inicial criado, `user_global_roles` e `audit.audit_logs` validados
 
 ## Comandos úteis
 

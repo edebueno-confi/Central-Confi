@@ -94,7 +94,20 @@ Os documentos canônicos para essa etapa são:
 
 - documentacao sincronizada com o estado real da Fase 2 e 2.1;
 - runbook remoto criado em `docs/REMOTE_SUPABASE_DEPLOY_RUNBOOK.md`;
-- nenhum deploy remoto executado nesta fase.
+- deploy remoto das 4 migrations oficiais concluído com sucesso;
+- migration list local/remoto alinhada apos o push;
+- primeiro `platform_admin` criado e validado no remoto;
+- segunda tentativa de bootstrap bloqueada explicitamente;
+- nenhuma seed executada, nenhum frontend criado e nenhum `service_role` usado.
+
+## Estado remoto validado
+
+- migrations oficiais aplicadas no Supabase remoto;
+- `public.profiles`, `public.tenants`, `public.tenant_memberships`, `public.tickets`, `public.ticket_messages`, `public.ticket_events`, `public.vw_tickets_list`, `public.vw_ticket_detail`, `public.vw_ticket_timeline` e `audit.audit_logs` confirmados no remoto;
+- `public.user_global_roles` validado com o `user_id` promovido para `platform_admin`;
+- `audit.audit_logs` validado para o bootstrap do primeiro admin;
+- bootstrap do primeiro `platform_admin` permanece one-shot por desenho;
+- working tree local permaneceu limpa apos deploy e bootstrap.
 
 ## Verificacao local atual
 
@@ -124,6 +137,7 @@ Os documentos canônicos para essa etapa são:
 - Toda mutacao administrativa do app deve usar RPC; nao usar DML direto nas tabelas administrativas.
 - O app nao deve consultar tabelas base de ticketing; usar apenas as views contratuais.
 - Deploy remoto do banco deve seguir `docs/REMOTE_SUPABASE_DEPLOY_RUNBOOK.md`.
+- O bootstrap remoto do primeiro `platform_admin` deve continuar bloqueando segunda execucao.
 
 ## Estrutura esperada
 
