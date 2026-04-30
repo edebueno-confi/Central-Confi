@@ -8,6 +8,8 @@ on:
 jobs:
   verify-database:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout
@@ -28,6 +30,9 @@ jobs:
       - name: Start Supabase
         run: npm run supabase:start
 
+      - name: Wait for Supabase readiness
+        run: npm run supabase:wait:ready
+
       - name: Reset local database
         run: npm run supabase:db:reset
 
@@ -36,6 +41,23 @@ jobs:
 
       - name: Lint database schema
         run: npm run supabase:lint:db
+
+      - name: Supabase diagnostics on failure
+        if: failure()
+        run: |
+          npx supabase status || true
+          docker ps -a || true
+          for name in \
+            supabase_db_genius-support-os \
+            supabase_rest_genius-support-os \
+            supabase_edge_runtime_genius-support-os \
+            supabase_storage_genius-support-os \
+            supabase_auth_genius-support-os
+          do
+            echo "::group::$name"
+            docker logs "$name" || true
+            echo "::endgroup::"
+          done
 
       - name: Stop Supabase
         if: always()

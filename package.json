@@ -13,6 +13,7 @@
     "extract:octadesk": "node raw_knowledge/octadesk_export/export-octadesk-kb.mjs",
     "supabase:bootstrap:first-admin": "node supabase/bootstrap/bootstrap-first-platform-admin.mjs",
     "supabase:start": "supabase start",
+    "supabase:wait:ready": "node scripts/ci/wait-for-supabase-ready.mjs",
     "supabase:db:reset": "supabase db reset --local --yes",
     "supabase:test:db": "supabase test db --local",
     "supabase:lint:db": "supabase db lint --local",
