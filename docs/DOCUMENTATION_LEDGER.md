@@ -145,3 +145,33 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - cria backlog rastreavel para separar o que pode virar documentacao publica, playbook interno ou conteudo restrito
   - formaliza de onde deve sair a futura FAQ operacional baseada no corpus legado curado
+
+### Fase 5.2 - Knowledge Editorial Review Workflow
+- fase: `5.2`
+- commit: `0f5ee25`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-03`
+- resumo funcional: workflow visual de revisao editorial reforcado no Admin Console com filtro de duplicidade, destaque cauteloso por visibility e checklist artigo a artigo sem alterar contratos backend.
+- docs alterados:
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+  - `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - consumo mantido em `vw_admin_knowledge_spaces`
+  - consumo mantido em `vw_admin_knowledge_categories_v2`
+  - consumo mantido em `vw_admin_knowledge_articles_list_v2`
+  - consumo mantido em `vw_admin_knowledge_article_detail_v2`
+  - escrita mantida em `rpc_admin_update_knowledge_article_draft_v2`
+  - escrita mantida em `rpc_admin_submit_knowledge_article_for_review_v2`
+  - escrita mantida em `rpc_admin_publish_knowledge_article_v2`
+- telas afetadas:
+  - `/admin/knowledge`
+- riscos restantes:
+  - a classificacao sugerida do backlog ainda nao esta projetada nas views/RPCs v2
+  - o checklist desta fase e visual e operacional, sem persistencia propria
+  - artigos legacy continuam dependentes de revisao humana antes de qualquer publish
+- impacto na FAQ futura:
+  - melhora a trilha de revisao artigo a artigo antes de transformar conteudo curado em documentacao oficial
+  - reforca a separacao entre sinal visual de curadoria e source of truth backend
