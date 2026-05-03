@@ -178,7 +178,7 @@ Cada registro deve informar:
 
 ### Fase 5.3 - Knowledge Review Advisory Contract
 - fase: `5.3`
-- commit: `PENDING_COMMIT`
+- commit: `907458d`
 - branch: `codex/phase4-7-public-help-center-branding-contract`
 - data: `2026-05-03`
 - resumo funcional: advisory persistente de revisao editorial materializado no backend, backlog legado convertido em input versionado seguro e `/admin/knowledge` atualizado para consumir classificacao sugerida, riscos e confirmacoes humanas persistidas.
