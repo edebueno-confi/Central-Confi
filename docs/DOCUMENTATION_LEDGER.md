@@ -201,3 +201,41 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - fortalece a rastreabilidade entre backlog legado, revisao humana e documentacao oficial
   - cria trilha persistente para saber quais artigos ja foram revisados antes de virar FAQ ou help content publico
+
+### Fase 5.4 - Knowledge Review QA + First Publish Candidate Flow
+- fase: `5.4`
+- commit: `2286fa4`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-03`
+- resumo funcional: fluxo editorial completo validado localmente com import controlado, review advisory persistido, filtro por classificacao sugerida em `/admin/knowledge` e publish controlado de ate 2 artigos candidatos a publico.
+- docs alterados:
+  - `docs/PROJECT_STATE.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - consumo mantido em `vw_admin_knowledge_spaces`
+  - consumo mantido em `vw_admin_knowledge_categories_v2`
+  - consumo mantido em `vw_admin_knowledge_articles_list_v2`
+  - consumo mantido em `vw_admin_knowledge_article_detail_v2`
+  - consumo mantido em `vw_admin_knowledge_article_review_advisories`
+  - escrita mantida em `rpc_admin_update_knowledge_article_draft_v2`
+  - escrita mantida em `rpc_admin_update_knowledge_article_review_status`
+  - escrita mantida em `rpc_admin_mark_knowledge_article_reviewed`
+  - escrita mantida em `rpc_admin_submit_knowledge_article_for_review_v2`
+  - escrita mantida em `rpc_admin_publish_knowledge_article_v2`
+  - leitura publica validada em `vw_public_knowledge_articles_list`
+  - leitura publica validada em `vw_public_knowledge_article_detail`
+  - busca publica validada em `rpc_public_search_knowledge_articles`
+- telas afetadas:
+  - `/admin/knowledge`
+  - `/help/genius`
+  - `/help/genius/articles`
+  - `/help/genius/articles/:articleSlug`
+- riscos restantes:
+  - o publish desta fase foi somente local e efemero; novo `supabase:verify` limpa os artigos curados
+  - o `knowledge_space` precisa estar `active` para qualquer exposicao publica, o que segue sendo um pre-requisito operacional
+  - a navegacao autenticada artigo a artigo no browser continua menos automatizada que o restante do stack
+- impacto na FAQ futura:
+  - confirma que artigos legacy podem virar documentacao publica apenas apos revisao humana persistida e publish explicito
+  - cria os primeiros exemplos concretos de artigo curado apto a alimentar FAQ tecnica B2B no futuro
