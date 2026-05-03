@@ -239,3 +239,36 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - confirma que artigos legacy podem virar documentacao publica apenas apos revisao humana persistida e publish explicito
   - cria os primeiros exemplos concretos de artigo curado apto a alimentar FAQ tecnica B2B no futuro
+
+### Fase 5.5 - Publish Readiness Runbook + Content Operations Governance
+- fase: `5.5`
+- commit: `TBD`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-03`
+- resumo funcional: governanca operacional do publish publico formalizada com runbook de curadoria, checklist de publicacao, criterios de rollback e papeis claros de suporte, CS, engenharia/produto e plataforma.
+- docs alterados:
+  - `docs/PUBLIC_HELP_CENTER_PUBLISH_RUNBOOK.md`
+  - `docs/CONTENT_OPERATIONS_GOVERNANCE.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md`
+  - `docs/PLATFORM_FAQ_STRATEGY.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+  - `docs/README.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - governanca baseada no consumo ja existente de `vw_admin_knowledge_article_review_advisories`
+  - governanca baseada no consumo ja existente de `vw_public_knowledge_articles_list`
+  - governanca baseada no uso ja existente de `rpc_admin_publish_knowledge_article_v2`
+  - governanca baseada no uso ja existente de `rpc_admin_archive_knowledge_article_v2`
+- telas afetadas:
+  - nenhuma alteracao de frontend
+  - governanca aplicavel a `/admin/knowledge`
+  - governanca aplicavel a `/help/:spaceSlug`
+- riscos restantes:
+  - o runbook nao substitui revisao humana nem baseline remoto
+  - o publish legado continua dependente de lotes pequenos e curadoria artigo a artigo
+  - a FAQ da propria plataforma continua dependente de artigos curados adicionais
+- impacto na FAQ futura:
+  - define quando um artigo curado esta operacionalmente apto a alimentar FAQ tecnica B2B
+  - cria trilha de governanca para responder quem revisa, quem publica e como documentar cada mudanca

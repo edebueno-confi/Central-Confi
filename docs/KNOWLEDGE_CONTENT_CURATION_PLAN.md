@@ -213,3 +213,20 @@ Aplicar quando:
   - `Como reenviar um e-mail de uma solicitacao`
   - `Como configurar regra por motivo`
 - ambos foram publicados localmente apenas para QA do fluxo editorial e nao viram baseline persistente apos novo `supabase:verify`
+
+## Governanca operacional da fase 5.5
+- o publish real agora deve seguir obrigatoriamente:
+  - `docs/PUBLIC_HELP_CENTER_PUBLISH_RUNBOOK.md`
+  - `docs/CONTENT_OPERATIONS_GOVERNANCE.md`
+- o runbook define:
+  - preparo do ambiente local
+  - import controlado
+  - sync advisory
+  - revisao editorial
+  - ativacao de `knowledge_space`
+  - checklist pre e pos-publicacao
+  - rollback por `archive`
+- a governanca define:
+  - papeis de suporte, CS, engenharia/produto e `platform_admin`
+  - responsabilidade por cada etapa do fluxo `draft -> review -> published -> archived`
+  - como registrar impacto documental e alimentar a futura FAQ oficial

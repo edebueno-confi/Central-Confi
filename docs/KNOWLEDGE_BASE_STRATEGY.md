@@ -123,6 +123,8 @@ Metadados brutos observados em `article.json`:
 - Não inferir marca/documentação pública técnica automaticamente a partir do legado.
 - O plano e o relatório de curadoria desta fase ficam em:
   - `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md`
+  - `docs/PUBLIC_HELP_CENTER_PUBLISH_RUNBOOK.md`
+  - `docs/CONTENT_OPERATIONS_GOVERNANCE.md`
   - `docs/reports/KNOWLEDGE_LEGACY_INVENTORY_REPORT.md`
   - `docs/reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`
 
@@ -288,6 +290,21 @@ Metadados brutos observados em `article.json`:
   - com o space `genius` ainda em `draft`, os read models publicos bloquearam corretamente toda exposicao
   - apos ativacao operacional local do space, a Central Publica e a busca passaram a expor apenas os `2` artigos curados
 - Esse publish de fase 5.4 continua sendo validacao local controlada; ele nao altera o baseline persistente do banco apos novo `supabase:verify`.
+
+## Governanca operacional da fase 5.5
+- O fluxo seguro de publish publico agora esta formalizado em:
+  - `docs/PUBLIC_HELP_CENTER_PUBLISH_RUNBOOK.md`
+  - `docs/CONTENT_OPERATIONS_GOVERNANCE.md`
+- Regras operacionais consolidadas:
+  - nenhum artigo legado deve ser publicado em massa
+  - `knowledge_space` publico precisa estar `active`
+  - publish exige checklist editorial e checklist publico concluidos
+  - rollback operacional deve ocorrer por `archive`, mantendo rastreabilidade
+- A governanca agora separa com clareza:
+  - apoio editorial do advisory
+  - decisao humana de publish
+  - validacao operacional da Central Publica
+  - registro documental no ledger e na futura FAQ
 
 ## Próximos passos planejados
 - Evoluir a curadoria administrativa space-aware sem romper os contratos atuais do Admin Console.

@@ -32,6 +32,8 @@ Documentos prioritários:
 - `DOCUMENTATION_LEDGER.md`
 - `PLATFORM_FAQ_STRATEGY.md`
 - `KNOWLEDGE_CONTENT_CURATION_PLAN.md`
+- `PUBLIC_HELP_CENTER_PUBLISH_RUNBOOK.md`
+- `CONTENT_OPERATIONS_GOVERNANCE.md`
 - `reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`
 
 Documentos históricos:
@@ -155,6 +157,8 @@ Documentos históricos:
 - Estratégia oficial de FAQ da plataforma criada em `docs/PLATFORM_FAQ_STRATEGY.md`.
 - Ledger documental por fase criado em `docs/DOCUMENTATION_LEDGER.md`.
 - Estratégia oficial de curadoria do corpus legado criada em `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md`.
+- Runbook oficial de publicação pública criado em `docs/PUBLIC_HELP_CENTER_PUBLISH_RUNBOOK.md`.
+- Governança oficial de operações de conteúdo criada em `docs/CONTENT_OPERATIONS_GOVERNANCE.md`.
 - Relatório oficial do inventário legado criado em `docs/reports/KNOWLEDGE_LEGACY_INVENTORY_REPORT.md`.
 - Backlog versionado oficial de curadoria legado criado em `docs/reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`.
 - O inventário atual da base legada em `raw_knowledge/octadesk_export/latest/articles/` identificou 58 artigos, 3 categorias-raiz, 1 grupo de duplicidade por `source_hash` e múltiplos candidatos sensíveis/restritos.
@@ -365,6 +369,15 @@ Documentos históricos:
   - Nenhum artigo `restricted`, `internal`, `obsolete` ou `duplicate` foi publicado nesta fase.
   - A exposição pública só foi liberada após ativação operacional local do `knowledge_space` `genius`; com o space ainda em `draft`, os read models públicos continuavam bloqueando corretamente os artigos.
   - Após a ativação do space, a Central Pública e a busca passaram a listar apenas os `2` artigos publicados, mantendo drafts e conteúdos não públicos fora da superfície `/help`.
+- Fase 5.5: Publish Readiness Runbook + Content Operations Governance concluída localmente.
+  - O processo seguro de curadoria, revisão, publish, pós-publicação e rollback da Central Pública foi formalizado em `docs/PUBLIC_HELP_CENTER_PUBLISH_RUNBOOK.md`.
+  - A governança de conteúdo agora está definida em `docs/CONTENT_OPERATIONS_GOVERNANCE.md`, com papéis, responsabilidades, critérios de publish e revisão periódica.
+  - A documentação oficial agora diferencia com clareza:
+    - QA local de publish controlado
+    - baseline persistente do repositório
+    - readiness operacional do `knowledge_space`
+    - uso do `DOCUMENTATION_LEDGER.md` e da futura FAQ como trilha de rastreabilidade
+  - Nenhum artigo novo foi publicado, nenhuma mudança de produto foi aplicada e nenhum deploy remoto foi executado nesta fase.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.

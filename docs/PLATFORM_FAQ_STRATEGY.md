@@ -61,6 +61,9 @@ Definir como a futura FAQ oficial do Genius Support OS sera produzida sem chute 
 - `PROJECT_STATE.md`
 - `VIEW_RPC_CONTRACTS.md`
 - `KNOWLEDGE_BASE_STRATEGY.md`
+- `KNOWLEDGE_CONTENT_CURATION_PLAN.md`
+- `PUBLIC_HELP_CENTER_PUBLISH_RUNBOOK.md`
+- `CONTENT_OPERATIONS_GOVERNANCE.md`
 - fases e revisoes arquiteturais aprovadas
 - read models e RPCs contratuais efetivamente materializados
 - telas e rotas ja entregues e validadas
@@ -104,6 +107,7 @@ Cada entrada futura da FAQ deve registrar no minimo:
 - a Knowledge Base continua sendo o repositório editorial principal
 - uma resposta de FAQ deve preferir resumir e apontar para o artigo oficial correspondente
 - quando nao houver artigo oficial validado, a FAQ nao deve inventar o conteudo
+- o runbook de publish e a governanca de conteudo definem quando um artigo esta operacionalmente apto a virar base de FAQ
 
 ## Regra para fases futuras
 Toda nova fase aprovada deve responder explicitamente:
