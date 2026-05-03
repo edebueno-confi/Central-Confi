@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Genius Support OS">
+  <defs>
+    <linearGradient id="gso-favicon-gradient" x1="8" y1="6" x2="56" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#141f47"/>
+      <stop offset="0.58" stop-color="#307fe2"/>
+      <stop offset="1" stop-color="#74d2e7"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="url(#gso-favicon-gradient)"/>
+  <path d="M19 23.5c0-4.14 3.36-7.5 7.5-7.5H37c4.42 0 8 3.58 8 8 0 2.87-1.52 5.39-3.79 6.79A8.49 8.49 0 0 1 46 38.5c0 5.25-4.25 9.5-9.5 9.5H26.5c-4.14 0-7.5-3.36-7.5-7.5v-17Z" fill="rgba(255,255,255,0.16)"/>
+  <path d="M26.5 20h10.25a4 4 0 1 1 0 8H26.5a1.5 1.5 0 0 1-1.5-1.5v-5A1.5 1.5 0 0 1 26.5 20Zm0 12h10a4 4 0 1 1 0 8h-10a1.5 1.5 0 0 1-1.5-1.5v-5a1.5 1.5 0 0 1 1.5-1.5Z" fill="#fff"/>
+</svg>

@@ -9,6 +9,7 @@ import type {
 const SAFE_URL_PATTERN = /^(https?:\/\/|\/)[^\s]+$/i;
 const SAFE_EMAIL_PATTERN = /^[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}$/i;
 const SAFE_CSS_PATTERN = /^[#(),.%\-+\s\w/]+$/;
+const HELP_CENTER_FALLBACK_IMAGE = '/favicon.svg';
 
 const THEME_TOKEN_TO_VAR = {
   surface: '--help-surface',
@@ -32,6 +33,24 @@ const THEME_TOKEN_TO_VAR = {
 
 function isSafeUrl(value: string | null | undefined) {
   return Boolean(value && value.trim() && value.trim().length <= 2048 && SAFE_URL_PATTERN.test(value.trim()));
+}
+
+function toAbsoluteUrl(value: string | null | undefined) {
+  if (!isSafeUrl(value)) {
+    return null;
+  }
+
+  const trimmed = value!.trim();
+
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+
+  if (typeof window === 'undefined') {
+    return trimmed;
+  }
+
+  return new URL(trimmed, window.location.origin).toString();
 }
 
 function isSafeEmail(value: string | null | undefined) {
@@ -177,6 +196,37 @@ export function sanitizePublicSeoDefaults(seo: PublicHelpSeoDefaults | null | un
   } satisfies PublicHelpSeoDefaults;
 }
 
+function upsertMetaTag(attributeName: 'name' | 'property', attributeValue: string) {
+  const head = document.head;
+  let meta = head.querySelector(`meta[${attributeName}="${attributeValue}"]`);
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.setAttribute(attributeName, attributeValue);
+    head.appendChild(meta);
+  }
+
+  return meta;
+}
+
+function upsertLinkTag(rel: string) {
+  const head = document.head;
+  let link = head.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
+  if (!link) {
+    link = document.createElement('link');
+    link.setAttribute('rel', rel);
+    head.appendChild(link);
+  }
+
+  return link;
+}
+
+export function resolvePublicSeoImageUrl(
+  value: string | null | undefined,
+  fallbackValue?: string | null,
+) {
+  return toAbsoluteUrl(value) ?? toAbsoluteUrl(fallbackValue) ?? toAbsoluteUrl(HELP_CENTER_FALLBACK_IMAGE);
+}
+
 export function sanitizePublicSupportContacts(
   contacts: PublicHelpSupportContacts | null | undefined,
 ) {
@@ -193,27 +243,55 @@ export function sanitizePublicSupportContacts(
 export function useHelpCenterDocumentMeta({
   title,
   description,
+  imageUrl,
+  canonicalPath,
+  type = 'website',
 }: {
   title: string;
   description?: string | null;
+  imageUrl?: string | null;
+  canonicalPath?: string | null;
+  type?: 'website' | 'article';
 }) {
   useEffect(() => {
     document.title = title;
 
-    const head = document.head;
-    let meta = head.querySelector('meta[name="description"]');
-    if (!meta) {
-      meta = document.createElement('meta');
-      meta.setAttribute('name', 'description');
-      head.appendChild(meta);
-    }
+    const descriptionMeta = upsertMetaTag('name', 'description');
+    const ogTitleMeta = upsertMetaTag('property', 'og:title');
+    const ogDescriptionMeta = upsertMetaTag('property', 'og:description');
+    const ogTypeMeta = upsertMetaTag('property', 'og:type');
+    const ogImageMeta = upsertMetaTag('property', 'og:image');
+    const canonicalLink = upsertLinkTag('canonical');
+    const canonicalUrl =
+      typeof window !== 'undefined'
+        ? new URL(canonicalPath ?? window.location.pathname, window.location.origin).toString()
+        : canonicalPath ?? null;
+    const resolvedImageUrl = toAbsoluteUrl(imageUrl);
 
     if (description && description.trim()) {
-      meta.setAttribute('content', description.trim());
+      const normalizedDescription = description.trim();
+      descriptionMeta.setAttribute('content', normalizedDescription);
+      ogDescriptionMeta.setAttribute('content', normalizedDescription);
     } else {
-      meta.removeAttribute('content');
+      descriptionMeta.removeAttribute('content');
+      ogDescriptionMeta.removeAttribute('content');
     }
-  }, [description, title]);
+
+    ogTitleMeta.setAttribute('content', title);
+    ogTypeMeta.setAttribute('content', type);
+
+    if (resolvedImageUrl) {
+      ogImageMeta.setAttribute('content', resolvedImageUrl);
+    } else {
+      ogImageMeta.removeAttribute('content');
+    }
+
+    if (canonicalUrl) {
+      canonicalLink.setAttribute('href', canonicalUrl);
+    } else {
+      canonicalLink.removeAttribute('href');
+    }
+  }, [canonicalPath, description, imageUrl, title, type]);
 }
 
 export function buildHelpCenterSeoTitle(space: PublicKnowledgeSpaceResolverRow) {
