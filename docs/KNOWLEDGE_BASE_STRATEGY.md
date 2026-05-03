@@ -221,6 +221,22 @@ Metadados brutos observados em `article.json`:
 - A superfície `/admin/knowledge` agora exibe origem legado/manual, hash curto na listagem e `source_path`/`source_hash` no detalhe para apoiar revisão humana.
 - Nenhum artigo legado foi publicado nesta fase.
 
+## Revisao editorial da fase 5.2
+- A rota `/admin/knowledge` agora tambem oferece:
+  - filtro por origem legado/manual
+  - filtro por `status`
+  - filtro por `visibility`
+  - filtro por duplicidade de `source_hash`
+  - destaque visual para artigos `internal` e `restricted`
+  - checklist editorial visual com sinais objetivos e confirmacoes humanas obrigatorias
+- O checklist desta fase nao persiste estado proprio e nao reescreve o backend; ele apenas organiza a revisao humana a partir do contrato v2 atual.
+- A classificacao sugerida do backlog ainda nao esta projetada nas views v2 nem nas RPCs v2.
+- Proposta minima segura antes de expor essa classificacao na UI:
+  - criar um read model advisory versionado, derivado do backlog controlado
+  - manter esse advisory separado do dado editorial canonico do artigo
+  - evitar heuristica solta ou parsing de markdown no frontend
+- Nenhum artigo legado continua sendo publicado automaticamente.
+
 ## Próximos passos planejados
 - Evoluir a curadoria administrativa space-aware sem romper os contratos atuais do Admin Console.
 - Consumir a superfície pública apenas quando a UI da Central Pública for criada sobre as views endurecidas já aprovadas.

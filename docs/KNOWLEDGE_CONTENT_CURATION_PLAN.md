@@ -144,3 +144,23 @@ Aplicar quando:
 - nao reescrever o banco em lote
 - nao classificar como `public` apenas por heuristica
 - usar o relatorio de inventario desta fase como backlog editorial inicial
+
+## Workflow operacional da fase 5.2
+- a revisao artigo a artigo acontece em `/admin/knowledge`
+- o operador deve priorizar:
+  1. origem legado/manual
+  2. `visibility`
+  3. `status`
+  4. duplicidade por `source_hash`
+- a UI agora oferece checklist visual em duas camadas:
+  - sinais objetivos atuais do artigo
+  - confirmacoes humanas obrigatorias antes de `review` ou `published`
+- o checklist desta fase nao grava aprovacao persistente; ele funciona como apoio de leitura e gate operacional
+
+## Proposta minima segura para classificacao sugerida
+- a classificacao sugerida do backlog ainda nao esta no contrato backend da curadoria
+- nao usar parsing do markdown do backlog nem heuristica solta no frontend para preencher esse campo
+- caminho recomendado:
+  - projetar read model advisory versionado a partir do backlog controlado
+  - manter advisory separado do artigo canonico
+  - expor somente campos seguros de apoio editorial, nunca como source of truth publica

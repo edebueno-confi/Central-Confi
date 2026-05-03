@@ -158,6 +158,7 @@ Documentos históricos:
 - O `supabase:verify` atual mantém a KB local sem lote legado importado; o pipeline de curadoria desta fase opera sobre o corpus bruto e o dry-run do import oficial.
 - O pipeline legado `scripts/knowledge/import-octadesk-drafts.mjs` já foi validado em `dry-run` e em `apply` local controlado para o `knowledge_space` `genius`, sempre em `draft`, sem publicação automática e preservando `source_path`/`source_hash`.
 - A rota `/admin/knowledge` agora destaca origem legado/manual, hash curto na listagem e `source_path`/`source_hash` no detalhe para acelerar curadoria humana.
+- A rota `/admin/knowledge` agora também oferece filtro por duplicidade de `source_hash`, checklist editorial visual e destaque cauteloso para artigos `internal`/`restricted`.
 - Estados obrigatórios do frontend materializados: loading, vazio, erro, acesso negado, contrato indisponível e sessão expirada.
 - Build do frontend agora usa code-splitting por rota.
 - Fixture local de QA controlado materializado em `supabase/qa/create-local-admin-fixture.mjs`.
@@ -337,6 +338,12 @@ Documentos históricos:
   - A triagem operacional atual do backlog ficou em `4 public`, `34 internal`, `16 restricted`, `2 obsolete` e `2 duplicate`.
   - A rota `/admin/knowledge` agora evidencia origem legado/manual, hash curto na listagem e `source_path`/`source_hash` no detalhe do artigo para suportar revisão editorial.
   - O `supabase:verify` continua resetando o banco local e removendo esse lote aplicado; a ingestão controlada permanece operacional e local-only, não baseline persistente do repositório.
+- Fase 5.2: Knowledge Editorial Review Workflow concluída localmente.
+  - A curadoria em `/admin/knowledge` agora oferece filtro por origem, `status`, `visibility` e duplicidade por `source_hash`.
+  - A lista administrativa passou a destacar artigos `restricted` e `internal` para revisão mais cautelosa.
+  - O detalhe do artigo agora inclui checklist editorial visual, separado entre sinais objetivos atuais e confirmações humanas obrigatórias.
+  - A classificação sugerida do backlog continua fora do contrato backend atual; a proposta mínima segura ficou registrada em `docs/KNOWLEDGE_BASE_STRATEGY.md` e `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md`.
+  - Nenhum artigo legado foi publicado automaticamente e nenhuma heurística editorial nova foi promovida a source of truth do frontend.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.

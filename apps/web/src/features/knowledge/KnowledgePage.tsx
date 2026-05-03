@@ -9,6 +9,7 @@ import { Navigate } from 'react-router-dom';
 import { formatDateTime } from '../../app/format';
 import {
   AppButton,
+  cx,
   Field,
   GhostButton,
   InlineNotice,
@@ -58,6 +59,14 @@ type PanelMode = 'detail' | 'create-article' | 'edit-article' | 'create-category
 type ArticleStatusFilter = KnowledgeArticleStatus | 'all';
 type ArticleVisibilityFilter = KnowledgeVisibility | 'all';
 type ArticleOriginFilter = 'all' | 'legacy' | 'manual';
+type ArticleDuplicateFilter = 'all' | 'duplicates' | 'unique';
+type EditorialChecklistTone = 'default' | 'positive' | 'warning' | 'critical' | 'accent';
+
+interface EditorialChecklistItem {
+  label: string;
+  tone: EditorialChecklistTone;
+  description: string;
+}
 
 interface ArticleFormState {
   title: string;
@@ -180,6 +189,152 @@ function categoryDisplayName(category: AdminKnowledgeCategoryV2Row) {
     : category.name;
 }
 
+function buildSourceHashCounts(articles: AdminKnowledgeArticleListItemV2Row[]) {
+  const counts = new Map<string, number>();
+
+  for (const article of articles) {
+    if (!article.source_hash) {
+      continue;
+    }
+
+    counts.set(article.source_hash, (counts.get(article.source_hash) ?? 0) + 1);
+  }
+
+  return counts;
+}
+
+function countDuplicateHashGroups(sourceHashCounts: Map<string, number>) {
+  let total = 0;
+
+  for (const count of sourceHashCounts.values()) {
+    if (count > 1) {
+      total += 1;
+    }
+  }
+
+  return total;
+}
+
+function containsLegacyHtml(value: string) {
+  return /<[^>]+>/.test(value);
+}
+
+function buildEditorialChecklist(
+  article: AdminKnowledgeArticleDetailV2Row,
+  duplicateCount: number,
+) {
+  const titleReady = article.title.trim().length >= 8;
+  const summaryLength = article.summary?.trim().length ?? 0;
+  const summaryReady = summaryLength >= 24;
+  const bodyLength = article.body_md.trim().length;
+  const bodyHasLegacyHtml = containsLegacyHtml(article.body_md);
+  const bodyReady = bodyLength >= 80 && !bodyHasLegacyHtml;
+  const categoryReady = Boolean(article.category_id);
+  const automatedReady = titleReady && summaryReady && bodyReady && categoryReady;
+
+  const automated: EditorialChecklistItem[] = [
+    {
+      label: 'Titulo revisado',
+      tone: titleReady ? 'positive' : 'critical',
+      description: titleReady
+        ? 'Titulo com comprimento suficiente para revisao editorial.'
+        : 'Titulo ainda curto ou vazio para uma triagem segura.',
+    },
+    {
+      label: 'Resumo revisado',
+      tone: summaryReady ? 'positive' : 'warning',
+      description: summaryReady
+        ? 'Resumo presente e com densidade minima para orientar leitura.'
+        : 'Resumo ausente ou curto; vale revisar antes de promover o artigo.',
+    },
+    {
+      label: 'Markdown revisado',
+      tone: bodyReady ? 'positive' : bodyHasLegacyHtml ? 'critical' : 'warning',
+      description: bodyReady
+        ? 'Corpo principal em Markdown e sem sinal de HTML legado.'
+        : bodyHasLegacyHtml
+          ? 'Corpo ainda contem marca de HTML legado; revisar antes de avancar.'
+          : 'Corpo principal ainda curto para leitura editorial segura.',
+    },
+    {
+      label: 'Categoria correta',
+      tone: categoryReady ? 'positive' : 'critical',
+      description: categoryReady
+        ? 'Artigo ja esta vinculado a uma categoria editorial.'
+        : 'Categoria ainda nao definida; classificar antes de review.',
+    },
+  ];
+
+  const manual: EditorialChecklistItem[] = [
+    {
+      label: 'Visibility correta',
+      tone:
+        article.visibility === 'restricted'
+          ? 'critical'
+          : article.visibility === 'internal'
+            ? 'warning'
+            : 'accent',
+      description:
+        article.visibility === 'restricted'
+          ? 'Conteudo restrito exige leitura cautelosa antes de qualquer promocao.'
+          : article.visibility === 'internal'
+            ? 'Confirmar se o artigo deve permanecer interno ou evoluir para publico.'
+            : 'Confirmar se o recorte publico esta coerente com o risco real do artigo.',
+    },
+    {
+      label: 'Nenhum segredo ou API sensivel exposto',
+      tone: 'warning',
+      description:
+        'Confirmacao humana obrigatoria. O contrato atual nao classifica sensibilidade automaticamente no frontend.',
+    },
+    {
+      label: 'Pronto para review',
+      tone:
+        automatedReady && article.status === 'draft'
+          ? 'positive'
+          : article.status === 'draft'
+            ? 'warning'
+            : 'default',
+      description:
+        automatedReady && article.status === 'draft'
+          ? 'Sinais objetivos minimos completos para envio a review humana.'
+          : article.status === 'draft'
+            ? 'Ainda faltam ajustes objetivos antes do envio para review.'
+            : 'O artigo ja saiu de draft; confirmar o contexto editorial antes de repetir a acao.',
+    },
+    {
+      label: 'Pronto para publish',
+      tone:
+        automatedReady && article.status === 'review'
+          ? 'positive'
+          : article.status === 'review'
+            ? 'warning'
+            : 'default',
+      description:
+        automatedReady && article.status === 'review'
+          ? 'Sinais objetivos completos; falta apenas a aprovacao humana final.'
+          : article.status === 'review'
+            ? 'O artigo esta em review, mas ainda precisa de ajuste antes de publish.'
+            : 'A publicacao continua bloqueada ate o artigo chegar a review com revisao humana concluida.',
+    },
+  ];
+
+  if (duplicateCount > 1) {
+    manual.unshift({
+      label: 'Source hash duplicado',
+      tone: 'warning',
+      description: `Existe mais ${duplicateCount - 1} artigo no space com o mesmo source_hash. Consolidar antes de promover.`,
+    });
+  }
+
+  return {
+    automated,
+    manual,
+    automatedReady,
+    backlogClassificationAvailable: false,
+  };
+}
+
 export function KnowledgePage() {
   const { markSessionExpired } = useAuthContext();
   const didBootstrapRef = useRef(false);
@@ -200,6 +355,7 @@ export function KnowledgePage() {
   const [statusFilter, setStatusFilter] = useState<ArticleStatusFilter>('all');
   const [visibilityFilter, setVisibilityFilter] = useState<ArticleVisibilityFilter>('all');
   const [originFilter, setOriginFilter] = useState<ArticleOriginFilter>('all');
+  const [duplicateFilter, setDuplicateFilter] = useState<ArticleDuplicateFilter>('all');
   const [articleForm, setArticleForm] = useState<ArticleFormState>(emptyArticleForm);
   const [articleFormSubmitting, setArticleFormSubmitting] = useState(false);
   const [articleFormMessage, setArticleFormMessage] = useState<string | null>(null);
@@ -214,13 +370,31 @@ export function KnowledgePage() {
     spaces.find((space) => space.id === selectedSpaceId) ?? null;
   const selectedArticleSummary =
     articles.find((article) => article.id === selectedArticleId) ?? null;
+  const sourceHashCounts = buildSourceHashCounts(articles);
+  const duplicateHashGroupCount = countDuplicateHashGroups(sourceHashCounts);
   const filteredArticles = articles.filter((article) => {
     if (originFilter === 'legacy') {
-      return Boolean(article.source_path || article.source_hash);
+      if (!article.source_path && !article.source_hash) {
+        return false;
+      }
     }
 
     if (originFilter === 'manual') {
-      return !article.source_path && !article.source_hash;
+      if (article.source_path || article.source_hash) {
+        return false;
+      }
+    }
+
+    const duplicateCount = article.source_hash
+      ? sourceHashCounts.get(article.source_hash) ?? 0
+      : 0;
+
+    if (duplicateFilter === 'duplicates' && duplicateCount <= 1) {
+      return false;
+    }
+
+    if (duplicateFilter === 'unique' && duplicateCount > 1) {
+      return false;
     }
 
     return true;
@@ -246,6 +420,16 @@ export function KnowledgePage() {
   const legacyArticleCount = articles.filter(
     (article) => article.source_path || article.source_hash,
   ).length;
+  const restrictedArticleCount = articles.filter(
+    (article) => article.visibility === 'restricted',
+  ).length;
+  const selectedArticleDuplicateCount =
+    articleDetail?.source_hash
+      ? sourceHashCounts.get(articleDetail.source_hash) ?? 0
+      : 0;
+  const editorialChecklist = articleDetail
+    ? buildEditorialChecklist(articleDetail, selectedArticleDuplicateCount)
+    : null;
 
   const loadKnowledgeSpaces = useEffectEvent(
     async (preferredSpaceId?: string | null) => {
@@ -801,7 +985,7 @@ export function KnowledgePage() {
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-6">
         <MetricCard
           label="Knowledge spaces"
           value={String(spaces.length)}
@@ -827,13 +1011,18 @@ export function KnowledgePage() {
           value={String(legacyArticleCount)}
           helper="Artigos com source_path/source_hash disponiveis para curadoria."
         />
+        <MetricCard
+          label="Restritos / duplicados"
+          value={`${restrictedArticleCount}/${duplicateHashGroupCount}`}
+          helper="Primeiro numero: artigos restricted. Segundo: grupos de source_hash duplicado."
+        />
       </div>
 
       <Panel
         title="Escopo editorial"
         description="A leitura desta etapa usa apenas knowledge spaces e views v2 space-aware. Nenhuma tabela-base da Knowledge Base e acessada pelo frontend."
       >
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.85fr)_minmax(0,0.85fr)_minmax(0,0.85fr)_auto]">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.78fr)_minmax(0,0.78fr)_minmax(0,0.78fr)_minmax(0,0.78fr)_auto]">
           <Field label="Knowledge space">
             <SelectInput
               onChange={(event) => setSelectedSpaceId(event.target.value || null)}
@@ -889,6 +1078,19 @@ export function KnowledgePage() {
               <option value="all">Todas</option>
               <option value="legacy">Somente legado</option>
               <option value="manual">Somente manual</option>
+            </SelectInput>
+          </Field>
+
+          <Field label="Source hash">
+            <SelectInput
+              onChange={(event) =>
+                setDuplicateFilter(event.target.value as ArticleDuplicateFilter)
+              }
+              value={duplicateFilter}
+            >
+              <option value="all">Todos</option>
+              <option value="duplicates">Somente duplicados</option>
+              <option value="unique">Somente unicos</option>
             </SelectInput>
           </Field>
 
@@ -1005,10 +1207,21 @@ export function KnowledgePage() {
                   <tbody>
                     {filteredArticles.map((article) => {
                       const isSelected = article.id === selectedArticleId;
+                      const duplicateCount = article.source_hash
+                        ? sourceHashCounts.get(article.source_hash) ?? 0
+                        : 0;
                       return (
                         <tr
                           key={article.id}
-                          className={isSelected ? 'bg-[rgba(48,127,226,0.08)]' : 'bg-white'}
+                          className={cx(
+                            isSelected
+                              ? 'bg-[rgba(48,127,226,0.08)]'
+                              : article.visibility === 'restricted'
+                                ? 'bg-[rgba(191,45,45,0.05)]'
+                                : article.visibility === 'internal'
+                                  ? 'bg-[rgba(186,122,47,0.05)]'
+                                  : 'bg-white',
+                          )}
                         >
                           <td className="px-4 py-3">
                             <button
@@ -1031,7 +1244,17 @@ export function KnowledgePage() {
                                 {article.source_hash
                                   ? ` · hash ${article.source_hash.slice(0, 8)}`
                                   : ''}
+                                {duplicateCount > 1 ? ` · duplicado x${duplicateCount}` : ''}
                               </span>
+                              {article.visibility === 'restricted' ? (
+                                <span className="text-[0.72rem] font-medium uppercase tracking-[0.12em] text-[color:var(--color-danger-ink)]">
+                                  revisao cautelosa obrigatoria
+                                </span>
+                              ) : article.visibility === 'internal' ? (
+                                <span className="text-[0.72rem] font-medium uppercase tracking-[0.12em] text-[color:var(--color-warning-ink)]">
+                                  confirmar escopo interno antes de promover
+                                </span>
+                              ) : null}
                             </button>
                           </td>
                           <td className="px-4 py-3">
@@ -1415,6 +1638,27 @@ export function KnowledgePage() {
                 </InlineNotice>
               ) : null}
 
+              {articleDetail.visibility === 'restricted' ? (
+                <InlineNotice tone="critical">
+                  Artigo restrito. Revisar manualmente segredos, contratos tecnicos,
+                  credenciais, APIs e detalhes operacionais antes de qualquer
+                  promocao editorial.
+                </InlineNotice>
+              ) : articleDetail.visibility === 'internal' ? (
+                <InlineNotice tone="warning">
+                  Artigo interno. Confirmar se o conteudo deve permanecer restrito a
+                  operacao/CS/suporte ou se precisa de reescrita antes de evoluir.
+                </InlineNotice>
+              ) : null}
+
+              {selectedArticleDuplicateCount > 1 ? (
+                <InlineNotice tone="warning">
+                  Source hash duplicado detectado neste knowledge space. Existe mais{' '}
+                  {selectedArticleDuplicateCount - 1} artigo com a mesma origem
+                  rastreada; consolidar antes de promover.
+                </InlineNotice>
+              ) : null}
+
               {articleActionMessage ? (
                 <InlineNotice
                   tone={
@@ -1426,6 +1670,13 @@ export function KnowledgePage() {
                   {articleActionMessage}
                 </InlineNotice>
               ) : null}
+
+              <InlineNotice>
+                Classificacao sugerida do backlog ainda nao esta disponivel no
+                contrato backend desta tela. Proposta minima segura: projetar um
+                read model advisory versionado a partir do backlog controlado,
+                sem heuristica solta no frontend.
+              </InlineNotice>
 
               <div className="flex flex-wrap gap-3">
                 {(articleDetail.status === 'draft' || articleDetail.status === 'review') ? (
@@ -1496,6 +1747,76 @@ export function KnowledgePage() {
                 {articleDetail.archived_at ? (
                   <p>Arquivado: {formatDateTime(articleDetail.archived_at)}</p>
                 ) : null}
+              </div>
+
+              {editorialChecklist ? (
+                <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                  <div className="space-y-3 rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
+                    <div className="space-y-1">
+                      <h3 className="text-base font-semibold text-[color:var(--color-ink)]">
+                        Checklist editorial
+                      </h3>
+                      <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                        Sinais objetivos atuais do artigo carregado pela view v2.
+                      </p>
+                    </div>
+
+                    <div className="space-y-3">
+                      {editorialChecklist.automated.map((item) => (
+                        <div
+                          key={item.label}
+                          className="rounded-[20px] border border-[color:var(--color-border)] bg-white p-4"
+                        >
+                          <div className="flex flex-wrap items-center gap-2">
+                            <StatusPill tone={item.tone}>{item.label}</StatusPill>
+                          </div>
+                          <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
+                            {item.description}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
+                    <div className="space-y-1">
+                      <h3 className="text-base font-semibold text-[color:var(--color-ink)]">
+                        Confirmacoes humanas
+                      </h3>
+                      <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                        Itens que continuam dependentes de revisao editorial e
+                        governanca humana antes de avancar o status.
+                      </p>
+                    </div>
+
+                    <div className="space-y-3">
+                      {editorialChecklist.manual.map((item) => (
+                        <div
+                          key={item.label}
+                          className="rounded-[20px] border border-[color:var(--color-border)] bg-white p-4"
+                        >
+                          <div className="flex flex-wrap items-center gap-2">
+                            <StatusPill tone={item.tone}>{item.label}</StatusPill>
+                          </div>
+                          <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
+                            {item.description}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="space-y-2">
+                <h3 className="text-base font-semibold text-[color:var(--color-ink)]">
+                  Resumo editorial
+                </h3>
+                <div className="rounded-[24px] border border-[color:var(--color-border)] bg-white p-4">
+                  <p className="text-sm leading-6 text-[color:var(--color-ink)]">
+                    {articleDetail.summary?.trim() || 'Resumo ainda nao revisado.'}
+                  </p>
+                </div>
               </div>
 
               <div className="space-y-2">
