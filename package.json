@@ -18,7 +18,7 @@
     "supabase:db:reset": "node scripts/ci/run-supabase-db-reset.mjs",
     "supabase:test:db": "supabase test db --local",
     "supabase:lint:db": "supabase db lint --local",
-    "supabase:verify": "npm run supabase:db:reset && npm run supabase:test:db && npm run knowledge:verify:octadesk:space-aware && npm run supabase:lint:db",
+    "supabase:verify": "node scripts/ci/run-supabase-verify.mjs",
     "supabase:qa:local-admin-fixture": "node supabase/qa/create-local-admin-fixture.mjs",
     "knowledge:import:octadesk:local": "node scripts/knowledge/import-octadesk-drafts.mjs --local",
     "knowledge:verify:octadesk:space-aware": "node scripts/ci/verify-octadesk-import-space-aware.mjs",
