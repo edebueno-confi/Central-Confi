@@ -64,7 +64,7 @@ Cada registro deve informar:
 
 ### Fase 4.9.1 - Public Help Center UX Readability Polish + Documentation Ledger Strategy
 - fase: `4.9.1`
-- commit: `a registrar no commit final da fase`
+- commit: `3b76961`
 - branch: `codex/phase4-7-public-help-center-branding-contract`
 - data: `2026-05-03`
 - resumo funcional: polish visual da Central Publica para leitura B2B tecnica e criacao da estrategia oficial de FAQ/ledger documental da plataforma.
@@ -88,7 +88,6 @@ Cada registro deve informar:
   - `/help/:spaceSlug/articles/:articleSlug`
 - riscos restantes:
   - a FAQ oficial ainda nao foi escrita; so a estrategia e o ledger foram formalizados
-  - o ledger desta fase precisa receber o hash final quando houver commit da entrega
 - impacto na FAQ futura:
   - define o metodo oficial para transformar funcionalidade validada em pergunta/resposta rastreavel
   - cria trilha minima para responder por ambiente, perfil autorizado e fonte documental
