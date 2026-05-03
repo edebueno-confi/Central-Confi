@@ -242,7 +242,7 @@ Cada registro deve informar:
 
 ### Fase 5.5 - Publish Readiness Runbook + Content Operations Governance
 - fase: `5.5`
-- commit: `TBD`
+- commit: `66fccdb`
 - branch: `codex/phase4-7-public-help-center-branding-contract`
 - data: `2026-05-03`
 - resumo funcional: governanca operacional do publish publico formalizada com runbook de curadoria, checklist de publicacao, criterios de rollback e papeis claros de suporte, CS, engenharia/produto e plataforma.
