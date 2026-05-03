@@ -94,7 +94,7 @@ Cada registro deve informar:
 
 ### Fase 5.0 - Knowledge Content Curation Pipeline
 - fase: `5.0`
-- commit: `a registrar no commit final da fase`
+- commit: `4e7f0a6`
 - branch: `codex/phase4-7-public-help-center-branding-contract`
 - data: `2026-05-03`
 - resumo funcional: auditoria do corpus legado, definicao do plano editorial de curadoria e consolidacao do inventario oficial sem publicar conteudo automaticamente.
