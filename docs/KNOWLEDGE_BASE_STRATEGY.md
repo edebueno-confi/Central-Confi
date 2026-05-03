@@ -156,6 +156,8 @@ Metadados brutos observados em `article.json`:
 - A renderização do detalhe usa exclusivamente `body_md` com Markdown seguro.
 - A UI não depende de filtro no frontend para esconder conteúdo privado; o backend continua como source of truth.
 - Branding detalhado por `brand_settings` ainda não é requisito do contrato público atual; a UI usa fallback seguro baseado nos metadados públicos já expostos.
+- O resolver público agora projeta branding sanitizado mínimo de `brand_settings`, mantendo o frontend sem acesso direto à tabela base.
+- Tokens de tema, SEO e contatos públicos passam por allowlist no backend e nova validação no frontend antes de afetar CSS, links ou metadata.
 
 ## Governança de revisão
 - Todo artigo relevante deve gerar revisão em `knowledge_article_revisions`.

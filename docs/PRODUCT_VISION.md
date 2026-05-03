@@ -36,4 +36,4 @@ Criar uma plataforma interna robusta para:
 Cada solicitação B2B deve ter dono, status, histórico, contexto, prazo, vínculo com conhecimento oficial e devolutiva clara para cliente B2B e times internos.
 
 ## Resultado esperado
-Menos dependência de WhatsApp e e-mail como memória informal, menos informação perdida, mais previsibilidade operacional e base técnica para escalar suporte, CS, engenharia e documentação oficial sem escalar caos.
+Menos dependência de WhatsApp e e-mail como memória informal, menos informação perdida, mais previsibilidade operacional e base técnica para escalar suporte, CS, engenharia e documentação oficial com identidade pública segura por marca, sem escalar caos.

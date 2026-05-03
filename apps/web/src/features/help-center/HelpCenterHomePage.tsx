@@ -3,6 +3,7 @@ import { formatDateTime } from '../../app/format';
 import { EmptyState } from '../../components/states';
 import { AppButton, InlineNotice, StatusPill } from '../../components/ui';
 import type { HelpCenterSpaceContext } from './context';
+import { sanitizePublicSupportContacts } from './branding';
 
 function toneForCategoryCount(count: number) {
   if (count >= 6) {
@@ -22,6 +23,9 @@ export function HelpCenterHomePage() {
     (entry) => entry.parent_category_id === null,
   );
   const featuredArticles = context.articles.slice(0, 6);
+  const supportContacts = sanitizePublicSupportContacts(
+    context.primaryRoute.support_contacts,
+  );
 
   return (
     <>
@@ -58,6 +62,38 @@ export function HelpCenterHomePage() {
             <InlineNotice>
               Conteudo legado em HTML nao e renderizado aqui. O corpo oficial segue `body_md` com renderizacao Markdown segura.
             </InlineNotice>
+            {supportContacts.email || supportContacts.docsUrl || supportContacts.statusPageUrl ? (
+              <div className="grid gap-2 text-sm">
+                {supportContacts.email ? (
+                  <a
+                    className="font-medium text-[var(--help-link)] no-underline hover:text-[var(--help-link-hover)]"
+                    href={`mailto:${supportContacts.email}`}
+                  >
+                    {supportContacts.email}
+                  </a>
+                ) : null}
+                {supportContacts.docsUrl ? (
+                  <a
+                    className="font-medium text-[var(--help-link)] no-underline hover:text-[var(--help-link-hover)]"
+                    href={supportContacts.docsUrl}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    Abrir documentacao oficial
+                  </a>
+                ) : null}
+                {supportContacts.statusPageUrl ? (
+                  <a
+                    className="font-medium text-[var(--help-link)] no-underline hover:text-[var(--help-link-hover)]"
+                    href={supportContacts.statusPageUrl}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    Ver status da plataforma
+                  </a>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </div>
       </section>

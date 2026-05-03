@@ -11,6 +11,7 @@ import { GhostButton, InlineNotice, StatusPill } from '../../components/ui';
 import type { PublicKnowledgeArticleDetailRow } from '../../contracts/public-contracts';
 import { classifyAdminError } from '../admin/admin-errors';
 import type { HelpCenterSpaceContext } from './context';
+import { useHelpCenterDocumentMeta } from './branding';
 import { MarkdownDocument } from './markdown';
 import { getPublicKnowledgeArticle } from './public-api';
 
@@ -25,6 +26,11 @@ export function HelpCenterArticlePage() {
   const [phase, setPhase] = useState<DetailPhase>('loading');
   const [message, setMessage] = useState<string | null>(null);
   const [article, setArticle] = useState<PublicKnowledgeArticleDetailRow | null>(null);
+  const articleMetaTitle = article
+    ? `${article.title} | ${context.primaryRoute.brand_name}`
+    : `${context.primaryRoute.brand_name} | Artigo tecnico`;
+  const articleMetaDescription = article?.summary ??
+    `${context.primaryRoute.brand_name} publica documentacao tecnica B2B aprovada para leitura.`;
 
   const loadArticle = useEffectEvent(
     async (targetSpaceSlug: string, targetArticleSlug: string) => {
@@ -68,6 +74,11 @@ export function HelpCenterArticlePage() {
     setPhase('loading');
     void loadArticle(spaceSlug, articleSlug);
   }, [articleSlug, spaceSlug]);
+
+  useHelpCenterDocumentMeta({
+    title: articleMetaTitle,
+    description: articleMetaDescription,
+  });
 
   if (!spaceSlug || !articleSlug) {
     return (

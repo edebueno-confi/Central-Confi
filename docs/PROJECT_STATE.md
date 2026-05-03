@@ -137,6 +137,7 @@ Documentos históricos:
 - A Central Pública mínima agora consome apenas `vw_public_knowledge_space_resolver`, `vw_public_knowledge_navigation`, `vw_public_knowledge_articles_list` e `vw_public_knowledge_article_detail`.
 - A Central Pública mínima renderiza apenas `body_md` com Markdown seguro, sem `dangerouslySetInnerHTML` e sem depender de filtro de visibilidade no frontend.
 - A identidade visual pública usa os dados públicos do `knowledge_space` e fallback seguro quando branding detalhado não estiver projetado nos read models públicos.
+- O resolver público agora expõe branding sanitizado mínimo (`brand_name`, `logo_asset_url`, `theme_tokens`, `seo_defaults` e `support_contacts` públicos) sem abrir acesso direto a `brand_settings`.
 - O inventário atual da base legada em `raw_knowledge/octadesk_export/latest/articles/` identificou 58 artigos, 3 categorias-raiz, 1 grupo de duplicidade por `source_hash` e múltiplos candidatos sensíveis/restritos.
 - Estados obrigatórios do frontend materializados: loading, vazio, erro, acesso negado, contrato indisponível e sessão expirada.
 - Build do frontend agora usa code-splitting por rota.
@@ -288,6 +289,11 @@ Documentos históricos:
   - A UI pública cobre landing, navegação por categorias, lista de artigos, detalhe de artigo e estados de loading, vazio, erro e não encontrado.
   - O corpo do artigo é renderizado exclusivamente por `body_md` com Markdown seguro; HTML legado continua fora da superfície pública.
   - Branding público usa apenas dados já expostos pelos read models públicos, com fallback visual seguro quando `brand_settings` não estiver projetado nessa camada.
+- Fase 4.7: Public Help Center Branding Contract concluída localmente.
+  - `vw_public_knowledge_space_resolver` agora projeta branding público sanitizado mínimo a partir de `brand_settings`, sem expor JSON bruto nem contatos privados.
+  - A Central Pública passou a aplicar logo, tokens visuais públicos mínimos, metadata básica de título/descrição e contatos técnicos públicos quando disponíveis.
+  - O frontend valida URLs, tokens CSS, email e metadata antes de aplicar branding dinâmico ou renderizar links públicos.
+  - `supabase/tests/014_phase4_7_public_help_center_branding_contract.sql` cobre branding permitido, ausência de dados sensíveis e ausência de regressão dos filtros públicos.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.

@@ -114,6 +114,18 @@ Fase 4.6:
 - O frontend público não escreve em nenhuma RPC nesta fase.
 - O detalhe público renderiza apenas `body_md` com Markdown seguro; HTML legado segue fora do contrato.
 
+Fase 4.7:
+- O resolver público agora também transporta branding público sanitizado para a Central de Ajuda.
+- `anon` e `authenticated` continuam lendo branding apenas por:
+  - `vw_public_knowledge_space_resolver`
+- Campos públicos permitidos no resolver:
+  - `brand_name`
+  - `logo_asset_url`
+  - `theme_tokens` sanitizado por allowlist
+  - `seo_defaults` sanitizado por allowlist
+  - `support_contacts` sanitizado por allowlist
+- O frontend público continua sem escrever em RPCs e valida novamente os valores antes de aplicar CSS, meta tags ou links.
+
 ## Views contratuais vigentes
 
 ### `vw_tickets_list`
@@ -289,12 +301,12 @@ Fase 4.6:
 
 ### `vw_public_knowledge_space_resolver`
 - Finalidade: resolver público dos `knowledge_spaces` ativos para a futura Central de Ajuda.
-- Retorna: `knowledge_space` ativo, branding básico, locale, organization e chaves de roteamento por `space_slug` e domínio ativo quando existir.
+- Retorna: `knowledge_space` ativo, branding público sanitizado, locale, organization e chaves de roteamento por `space_slug` e domínio ativo quando existir.
 - Regras:
   - expõe apenas `knowledge_spaces` com `status = active` e `organizations` ativas;
   - gera rota fallback por slug em `/help/:space_slug`;
   - expõe domínio apenas quando `knowledge_space_domains.status = active`;
-  - não expõe `owner_tenant_id`, settings internos nem tabelas base;
+  - não expõe `owner_tenant_id`, settings internos, JSON bruto não sanitizado nem tabelas base;
   - usa `security_barrier = true`.
 
 ### `vw_public_knowledge_navigation`

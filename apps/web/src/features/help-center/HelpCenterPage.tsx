@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, Outlet, useLocation, useParams } from 'react-router-dom';
 import {
   ContractUnavailableState,
@@ -13,6 +13,14 @@ import type {
 } from '../../contracts/public-contracts';
 import { classifyAdminError } from '../admin/admin-errors';
 import type { HelpCenterSpaceContext } from './context';
+import {
+  buildHelpCenterSeoTitle,
+  buildHelpCenterTheme,
+  resolvePublicLogoUrl,
+  sanitizePublicSeoDefaults,
+  sanitizePublicSupportContacts,
+  useHelpCenterDocumentMeta,
+} from './branding';
 import {
   getPublicKnowledgeSpace,
   listPublicKnowledgeArticles,
@@ -32,6 +40,7 @@ interface HelpCenterSpaceSummary {
   canonicalPath: string;
   canonicalHost: string | null;
   routeCount: number;
+  logoAssetUrl: string | null;
 }
 
 function toneForArticleCount(count: number) {
@@ -72,6 +81,7 @@ function buildSpaceSummary(
         : `/help/${primaryRoute.knowledge_space_slug}`,
     canonicalHost: domainRoute?.route_host ?? null,
     routeCount: rows.length,
+    logoAssetUrl: resolvePublicLogoUrl(primaryRoute.logo_asset_url),
   };
 }
 
@@ -89,69 +99,17 @@ function groupSpaceSummaries(rows: PublicKnowledgeSpaceResolverRow[]) {
     .sort((left, right) => left.displayName.localeCompare(right.displayName, 'pt-BR'));
 }
 
-function buildBrandTheme(space: {
-  brandName: string;
-  knowledgeSpaceSlug: string;
-  displayName: string;
-}) {
-  const slug = space.knowledgeSpaceSlug.toLowerCase();
-
-  if (slug === 'genius') {
-    return {
-      '--help-surface': '#eef5ff',
-      '--help-surface-strong': '#ffffff',
-      '--help-panel': 'rgba(255,255,255,0.9)',
-      '--help-ink': '#223357',
-      '--help-ink-strong': '#142042',
-      '--help-muted': 'rgba(20,32,66,0.72)',
-      '--help-border': 'rgba(20,31,71,0.12)',
-      '--help-accent': '#307fe2',
-      '--help-accent-strong': '#141f47',
-      '--help-accent-soft': 'rgba(48,127,226,0.14)',
-      '--help-link': '#1f67c6',
-      '--help-link-hover': '#153d82',
-      '--help-code-surface': '#142042',
-      '--help-code-ink': '#f5f8ff',
-      '--help-hero':
-        'linear-gradient(135deg, rgba(20,31,71,0.98), rgba(48,127,226,0.94) 55%, rgba(116,210,231,0.92))',
-      '--help-orb-a': 'rgba(116,210,231,0.2)',
-      '--help-orb-b': 'rgba(225,0,152,0.14)',
-    } as CSSProperties;
-  }
-
-  const hash = Array.from(`${space.brandName}:${space.knowledgeSpaceSlug}`).reduce(
-    (total, char) => total + char.charCodeAt(0),
-    0,
-  );
-  const hue = hash % 360;
-  const secondaryHue = (hue + 42) % 360;
-
-  return {
-    '--help-surface': `hsl(${hue} 42% 97%)`,
-    '--help-surface-strong': '#ffffff',
-    '--help-panel': 'rgba(255,255,255,0.92)',
-    '--help-ink': `hsl(${hue} 28% 26%)`,
-    '--help-ink-strong': `hsl(${hue} 34% 18%)`,
-    '--help-muted': `hsl(${hue} 14% 38% / 0.84)`,
-    '--help-border': `hsl(${hue} 32% 28% / 0.12)`,
-    '--help-accent': `hsl(${secondaryHue} 70% 48%)`,
-    '--help-accent-strong': `hsl(${hue} 60% 22%)`,
-    '--help-accent-soft': `hsl(${secondaryHue} 78% 48% / 0.14)`,
-    '--help-link': `hsl(${secondaryHue} 74% 42%)`,
-    '--help-link-hover': `hsl(${secondaryHue} 82% 28%)`,
-    '--help-code-surface': `hsl(${hue} 38% 16%)`,
-    '--help-code-ink': '#f7fbff',
-    '--help-hero': `linear-gradient(135deg, hsl(${hue} 54% 20%), hsl(${secondaryHue} 72% 44%) 58%, hsl(${(secondaryHue + 28) % 360} 70% 62%))`,
-    '--help-orb-a': `hsl(${secondaryHue} 72% 58% / 0.2)`,
-    '--help-orb-b': `hsl(${(secondaryHue + 120) % 360} 68% 62% / 0.16)`,
-  } as CSSProperties;
-}
-
 export function HelpCenterPage() {
   const didLoadRef = useRef(false);
   const [phase, setPhase] = useState<LoadPhase>('loading');
   const [message, setMessage] = useState<string | null>(null);
   const [spaces, setSpaces] = useState<HelpCenterSpaceSummary[]>([]);
+
+  useHelpCenterDocumentMeta({
+    title: 'Genius Support OS | Help Center B2B',
+    description:
+      'Documentacao tecnica publica B2B para clientes e usuarios da plataforma Genius Support OS.',
+  });
 
   const loadSpaces = useEffectEvent(async () => {
     try {
@@ -282,6 +240,13 @@ export function HelpCenterPage() {
                         <p className="text-sm font-semibold">{space.brandName}</p>
                         <p className="text-xs text-white/68">{space.organizationDisplayName}</p>
                       </div>
+                      {space.logoAssetUrl ? (
+                        <img
+                          alt={`Logo ${space.brandName}`}
+                          className="h-10 w-10 rounded-2xl border border-white/12 bg-white/88 object-contain p-1.5"
+                          src={space.logoAssetUrl}
+                        />
+                      ) : null}
                       <StatusPill tone="positive">ativo</StatusPill>
                     </div>
                     <p className="mt-3 text-xs leading-5 text-white/74">
@@ -306,6 +271,13 @@ export function HelpCenterPage() {
                   <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--color-muted)]">
                     Knowledge Space
                   </p>
+                  {space.logoAssetUrl ? (
+                    <img
+                      alt={`Logo ${space.brandName}`}
+                      className="mt-4 h-14 w-14 rounded-[20px] border border-[rgba(20,31,71,0.08)] bg-[color:var(--color-surface)] object-contain p-2"
+                      src={space.logoAssetUrl}
+                    />
+                  ) : null}
                   <h2 className="mt-3 text-2xl font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
                     {space.brandName}
                   </h2>
@@ -346,7 +318,6 @@ export function HelpCenterPage() {
 export function HelpCenterSpaceLayout() {
   const location = useLocation();
   const { spaceSlug } = useParams<{ spaceSlug: string }>();
-  const didLoadRef = useRef(false);
   const [phase, setPhase] = useState<LoadPhase>('loading');
   const [message, setMessage] = useState<string | null>(null);
   const [context, setContext] = useState<HelpCenterSpaceContext | null>(null);
@@ -399,7 +370,6 @@ export function HelpCenterSpaceLayout() {
       return;
     }
 
-    didLoadRef.current = true;
     setPhase('loading');
     void loadSpace(spaceSlug);
   }, [spaceSlug]);
@@ -408,12 +378,24 @@ export function HelpCenterSpaceLayout() {
   const theme = useMemo(
     () =>
       space
-        ? buildBrandTheme({
+        ? buildHelpCenterTheme({
             brandName: space.brand_name,
             knowledgeSpaceSlug: space.knowledge_space_slug,
-            displayName: space.knowledge_space_display_name,
+            themeTokens: space.theme_tokens,
           })
         : null,
+    [space],
+  );
+  const seoDefaults = useMemo(
+    () => (space ? sanitizePublicSeoDefaults(space.seo_defaults) : null),
+    [space],
+  );
+  const supportContacts = useMemo(
+    () => (space ? sanitizePublicSupportContacts(space.support_contacts) : null),
+    [space],
+  );
+  const logoAssetUrl = useMemo(
+    () => (space ? resolvePublicLogoUrl(space.logo_asset_url) : null),
     [space],
   );
   const topCategories =
@@ -422,6 +404,18 @@ export function HelpCenterSpaceLayout() {
   const isArticlesRoute =
     location.pathname.endsWith('/articles') ||
     location.pathname.includes('/articles/');
+  const helpCenterTitle = space
+    ? buildHelpCenterSeoTitle(space)
+    : 'Help Center B2B | Genius Support OS';
+  const helpCenterDescription = space
+    ? seoDefaults?.description ??
+      `${space.brand_name} publica documentacao tecnica B2B aprovada para clientes e usuarios da plataforma.`
+    : 'Documentacao tecnica publica B2B da plataforma Genius Support OS.';
+
+  useHelpCenterDocumentMeta({
+    title: helpCenterTitle,
+    description: helpCenterDescription,
+  });
 
   if (!spaceSlug) {
     return <Navigate replace to="/help" />;
@@ -501,11 +495,19 @@ export function HelpCenterSpaceLayout() {
                 <StatusPill tone="positive">publico</StatusPill>
               </div>
               <div className="space-y-3">
-                <div className="inline-flex h-14 w-14 items-center justify-center rounded-[20px] bg-white/12 text-lg font-semibold uppercase tracking-[0.16em] text-white shadow-[0_14px_28px_rgba(20,31,71,0.18)]">
-                  {(space.brand_name || space.knowledge_space_display_name)
-                    .slice(0, 2)
-                    .toUpperCase()}
-                </div>
+                {logoAssetUrl ? (
+                  <img
+                    alt={`Logo ${space.brand_name}`}
+                    className="h-16 w-16 rounded-[22px] bg-white/14 object-contain p-2 shadow-[0_14px_28px_rgba(20,31,71,0.18)]"
+                    src={logoAssetUrl}
+                  />
+                ) : (
+                  <div className="inline-flex h-14 w-14 items-center justify-center rounded-[20px] bg-white/12 text-lg font-semibold uppercase tracking-[0.16em] text-white shadow-[0_14px_28px_rgba(20,31,71,0.18)]">
+                    {(space.brand_name || space.knowledge_space_display_name)
+                      .slice(0, 2)
+                      .toUpperCase()}
+                  </div>
+                )}
                 <div className="space-y-1.5">
                   <h1 className="text-3xl font-semibold tracking-[-0.05em] text-white">
                     {space.brand_name}
@@ -546,6 +548,56 @@ export function HelpCenterSpaceLayout() {
               </div>
             </div>
           </section>
+
+          {supportContacts && (supportContacts.email || supportContacts.docsUrl || supportContacts.statusPageUrl || supportContacts.websiteUrl) ? (
+            <section className="rounded-[30px] border border-[var(--help-border)] bg-[var(--help-panel)] p-5 shadow-[var(--shadow-panel)] backdrop-blur">
+              <div className="space-y-3">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[var(--help-muted)]">
+                  Contato tecnico
+                </p>
+                <div className="grid gap-3 text-sm">
+                  {supportContacts.email ? (
+                    <a
+                      className="rounded-[22px] border border-[var(--help-border)] bg-white/74 px-4 py-3 text-[var(--help-link)] no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-white hover:text-[var(--help-link-hover)]"
+                      href={`mailto:${supportContacts.email}`}
+                    >
+                      {supportContacts.email}
+                    </a>
+                  ) : null}
+                  {supportContacts.docsUrl ? (
+                    <a
+                      className="rounded-[22px] border border-[var(--help-border)] bg-white/74 px-4 py-3 text-[var(--help-link)] no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-white hover:text-[var(--help-link-hover)]"
+                      href={supportContacts.docsUrl}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      Documentacao oficial
+                    </a>
+                  ) : null}
+                  {supportContacts.statusPageUrl ? (
+                    <a
+                      className="rounded-[22px] border border-[var(--help-border)] bg-white/74 px-4 py-3 text-[var(--help-link)] no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-white hover:text-[var(--help-link-hover)]"
+                      href={supportContacts.statusPageUrl}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      Status da plataforma
+                    </a>
+                  ) : null}
+                  {supportContacts.websiteUrl ? (
+                    <a
+                      className="rounded-[22px] border border-[var(--help-border)] bg-white/74 px-4 py-3 text-[var(--help-link)] no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-white hover:text-[var(--help-link-hover)]"
+                      href={supportContacts.websiteUrl}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      Site institucional
+                    </a>
+                  ) : null}
+                </div>
+              </div>
+            </section>
+          ) : null}
 
           <section className="rounded-[30px] border border-[var(--help-border)] bg-[var(--help-panel)] p-5 shadow-[var(--shadow-panel)] backdrop-blur">
             <div className="space-y-2">
