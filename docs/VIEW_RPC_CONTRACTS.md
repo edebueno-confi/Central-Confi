@@ -94,6 +94,16 @@ Fase 4.4:
   - `rpc_admin_archive_knowledge_article_v2`
 - Nenhuma tabela base de Knowledge Base, multi-brand ou import legado e consumida diretamente pelo frontend.
 
+Fase 4.5:
+- A Central de Ajuda pública continua sem UI, mas agora possui contratos oficiais de leitura endurecidos.
+- `anon` e `authenticated` leem a superfície pública apenas por:
+  - `vw_public_knowledge_space_resolver`
+  - `vw_public_knowledge_navigation`
+  - `vw_public_knowledge_articles_list`
+  - `vw_public_knowledge_article_detail`
+- Essas views expõem somente `knowledge_spaces` ativos, categorias públicas e artigos `published` + `public`.
+- Nenhuma tabela base de multi-brand ou Knowledge Base fica exposta para `anon`.
+
 ## Views contratuais vigentes
 
 ### `vw_tickets_list`
@@ -265,6 +275,44 @@ Fase 4.4:
   - retorna linhas apenas para `platform_admin` com `profile.is_active = true`;
   - expõe apenas artigos com `knowledge_space_id` não nulo;
   - preserva rastreabilidade de backfill e importação legado por `source_path` e `source_hash`;
+  - usa `security_barrier = true`.
+
+### `vw_public_knowledge_space_resolver`
+- Finalidade: resolver público dos `knowledge_spaces` ativos para a futura Central de Ajuda.
+- Retorna: `knowledge_space` ativo, branding básico, locale, organization e chaves de roteamento por `space_slug` e domínio ativo quando existir.
+- Regras:
+  - expõe apenas `knowledge_spaces` com `status = active` e `organizations` ativas;
+  - gera rota fallback por slug em `/help/:space_slug`;
+  - expõe domínio apenas quando `knowledge_space_domains.status = active`;
+  - não expõe `owner_tenant_id`, settings internos nem tabelas base;
+  - usa `security_barrier = true`.
+
+### `vw_public_knowledge_navigation`
+- Finalidade: navegação pública da Knowledge Base por `knowledge_space`.
+- Retorna: categorias públicas, relação pai/filho, contadores de artigos públicos no subtree e lista resumida dos artigos públicos diretos da categoria.
+- Regras:
+  - expõe apenas categorias `public` em `knowledge_spaces` ativos;
+  - só considera artigos `published` + `public`;
+  - não retorna categorias internas nem categorias de spaces inativos;
+  - não expõe corpo do artigo, trilha de origem nem metadados editoriais internos;
+  - usa `security_barrier = true`.
+
+### `vw_public_knowledge_articles_list`
+- Finalidade: lista pública de artigos da futura Central de Ajuda.
+- Retorna: `knowledge_space`, categoria pública quando existir, título, slug, summary e timestamps públicos.
+- Regras:
+  - expõe apenas artigos `published` + `public`;
+  - bloqueia artigos em categorias não públicas, quando categorizados;
+  - não expõe `source_path`, `source_hash`, autores internos nem `tenant_id`;
+  - usa `security_barrier = true`.
+
+### `vw_public_knowledge_article_detail`
+- Finalidade: detalhe público de artigo da futura Central de Ajuda.
+- Retorna: contexto do `knowledge_space`, categoria pública quando existir, título, slug, summary, `body_md` e timestamps públicos.
+- Regras:
+  - expõe apenas artigos `published` + `public`;
+  - mantém Markdown como corpo oficial; HTML legado continua fora do contrato;
+  - não expõe rastreabilidade editorial interna nem trilha de importação legado;
   - usa `security_barrier = true`.
 
 ## Auditoria das views oficiais
@@ -542,6 +590,11 @@ Fase 4.4:
   - `vw_admin_knowledge_categories_v2`
   - `vw_admin_knowledge_articles_list_v2`
   - `vw_admin_knowledge_article_detail_v2`
+- O app público/autenticado lê a Central de Ajuda futura apenas por:
+  - `vw_public_knowledge_space_resolver`
+  - `vw_public_knowledge_navigation`
+  - `vw_public_knowledge_articles_list`
+  - `vw_public_knowledge_article_detail`
 - O app autenticado escreve tickets apenas por:
   - `rpc_create_ticket`
   - `rpc_update_ticket_status`
@@ -566,8 +619,8 @@ Fase 4.4:
 
 ## Próximos contratos planejados
 - Views e RPCs de intake para engenharia.
-- Read models públicos da Knowledge Base apenas quando a Central de Ajuda pública for aberta com curadoria aprovada.
-- Resolver público por domínio/`space_slug` apenas quando a Central de Ajuda pública for aberta.
+- UI pública da Knowledge Base consumindo apenas os read models públicos já aprovados.
+- Busca pública e roteamento frontend por domínio/`space_slug` sobre os contratos já materializados.
 
 ## Proibições
 - Frontend fazendo join direto em tabelas de domínio.
@@ -576,6 +629,7 @@ Fase 4.4:
 - Frontend lendo `tenants`, `tenant_memberships`, `tenant_contacts` ou `audit.audit_logs` diretamente para o Admin Console.
 - Frontend lendo `organizations`, `organization_memberships`, `knowledge_spaces`, `knowledge_space_domains` ou `brand_settings` diretamente.
 - Frontend lendo tabelas base de Knowledge Base (`knowledge_*`) diretamente.
+- `anon` lendo tabelas base de multi-brand ou Knowledge Base diretamente.
 - Frontend decidindo visibilidade de nota interna.
 - Frontend usando HTML legado de Octadesk como corpo/UI de artigo.
 - Escrita direta em tabelas críticas sem RPC.

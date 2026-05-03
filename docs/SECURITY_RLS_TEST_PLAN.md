@@ -39,6 +39,9 @@ Validar isolamento multi-tenant, permissões por papel e bloqueio de acesso inde
 - App autenticado não faz `SELECT` direto nas tabelas base de Knowledge Base.
 - Draft de Knowledge Base não pode aparecer como conteúdo público.
 - Artigo interno de Knowledge Base deve respeitar isolamento por tenant e visibilidade.
+- `anon` não pode ler tabelas base de multi-brand nem de Knowledge Base.
+- `anon` só pode ler views públicas aprovadas da Knowledge Base.
+- `knowledge_space` inativo não pode aparecer como documentação pública técnica.
 - Publicação de artigo de Knowledge Base deve ser bloqueada para role não autorizada.
 - `source_hash` e `source_path` precisam ser preservados na trilha editorial.
 
@@ -104,3 +107,6 @@ Validações já materializadas:
   - `source_hash` preservado no artigo e na trilha de origem
   - mutações editoriais gerando auditoria
   - publicação bloqueada para role não autorizada
+  - `anon` lendo apenas as views `vw_public_knowledge_space_resolver`, `vw_public_knowledge_navigation`, `vw_public_knowledge_articles_list` e `vw_public_knowledge_article_detail`
+  - `anon` bloqueado nas tabelas base de `organizations`, `knowledge_spaces`, `knowledge_space_domains`, `brand_settings` e `knowledge_*`
+  - `draft`, `internal`, `restricted` e conteúdo de `knowledge_space` inativo invisíveis na superfície pública

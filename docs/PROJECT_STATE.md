@@ -66,6 +66,7 @@ Documentos históricos:
 - Migration oficial do núcleo de Knowledge Base e pipeline editorial interno `supabase/migrations/20260430182128_phase4_knowledge_base_core.sql`.
 - Migration oficial da fundação multi-brand aditiva `supabase/migrations/20260430191513_phase4_2_multi_brand_foundation.sql`.
 - Migration oficial de backfill e compatibilidade space-aware `supabase/migrations/20260430194826_phase4_3_backfill_space_aware_compatibility.sql`.
+- Migration oficial dos read models públicos da Central de Ajuda `supabase/migrations/20260503004940_phase4_5_public_help_center_read_models.sql`.
 - Teste local de banco em `supabase/tests/001_phase1_identity_tenancy_rls.sql`.
 - Teste local de hardening em `supabase/tests/002_phase1_1_hardening.sql`.
 - Teste local de control plane administrativo em `supabase/tests/003_phase1_2_admin_control_plane.sql`.
@@ -78,6 +79,7 @@ Documentos históricos:
 - Teste local do núcleo de Knowledge Base em `supabase/tests/010_phase4_knowledge_base_core.sql`.
 - Teste local da fundação multi-brand em `supabase/tests/011_phase4_2_multi_brand_foundation.sql`.
 - Teste local de backfill e compatibilidade space-aware em `supabase/tests/012_phase4_3_space_aware_compatibility.sql`.
+- Teste local dos read models públicos da Central de Ajuda em `supabase/tests/013_phase4_5_public_help_center_read_models.sql`.
 - Seed separado em `supabase/seeds/` e desabilitado por padrão.
 - Fluxo de bootstrap seguro do primeiro `platform_admin` em `supabase/bootstrap/`.
 - Núcleo Fase 1 implementado com `profiles`, `user_global_roles`, `tenants`, `tenant_memberships`, `tenant_contacts` e `audit.audit_logs`.
@@ -94,6 +96,7 @@ Documentos históricos:
 - Views contratuais administrativas de Knowledge Base materializadas em `vw_admin_knowledge_categories`, `vw_admin_knowledge_articles_list` e `vw_admin_knowledge_article_detail`.
 - Views contratuais administrativas multi-brand materializadas em `vw_admin_organizations_list`, `vw_admin_organization_detail` e `vw_admin_knowledge_spaces`.
 - Views contratuais administrativas v2 space-aware materializadas em `vw_admin_knowledge_categories_v2`, `vw_admin_knowledge_articles_list_v2` e `vw_admin_knowledge_article_detail_v2`.
+- Views contratuais públicas endurecidas materializadas em `vw_public_knowledge_space_resolver`, `vw_public_knowledge_navigation`, `vw_public_knowledge_articles_list` e `vw_public_knowledge_article_detail`.
 - RPCs contratuais de escrita materializadas em `rpc_create_ticket`, `rpc_update_ticket_status`, `rpc_assign_ticket`, `rpc_add_ticket_message`, `rpc_add_internal_ticket_note`, `rpc_close_ticket` e `rpc_reopen_ticket`.
 - RPCs contratuais administrativas de Knowledge Base materializadas em `rpc_admin_create_knowledge_category`, `rpc_admin_create_knowledge_article_draft`, `rpc_admin_update_knowledge_article_draft`, `rpc_admin_submit_knowledge_article_for_review`, `rpc_admin_publish_knowledge_article` e `rpc_admin_archive_knowledge_article`.
 - RPCs contratuais administrativas v2 space-aware materializadas em `rpc_admin_create_knowledge_category_v2`, `rpc_admin_create_knowledge_article_draft_v2`, `rpc_admin_update_knowledge_article_draft_v2`, `rpc_admin_submit_knowledge_article_for_review_v2`, `rpc_admin_publish_knowledge_article_v2` e `rpc_admin_archive_knowledge_article_v2`.
@@ -122,12 +125,14 @@ Documentos históricos:
 - Knowledge Base possui versionamento editorial, trilha de origem (`source_path`, `source_hash`), auditoria de mutações e política de importação legado somente como draft.
 - O app autenticado não possui `SELECT` direto nas tabelas base de Knowledge Base; a superfície administrativa futura lê apenas por `vw_admin_knowledge_*`.
 - O app autenticado também não possui `SELECT` direto nas novas tabelas base de multi-brand; a superfície administrativa multi-brand lê apenas por `vw_admin_organizations_*` e `vw_admin_knowledge_spaces`.
+- `anon` e `authenticated` não leem tabelas base da camada pública da KB; a futura Central Pública lê apenas pelas `vw_public_knowledge_*`.
 - As RPCs atuais de Knowledge Base permanecem compatíveis e ainda podem criar conteúdo com `knowledge_space_id = null` enquanto a migração completa para a camada v2 não for concluída.
 - O corpus atual da Knowledge Base já foi associado ao `knowledge_space` oficial `genius` por backfill aditivo.
 - As RPCs e views v2 já operam por `knowledge_space_id` explícito sem alterar o frontend atual.
 - O pipeline legado `scripts/knowledge/import-octadesk-drafts.mjs` já inventaria a exportação Octadesk, classifica visibilidade inicial conservadora, preserva `source_path`/`source_hash` e bloqueia uso remoto.
 - O import legado agora exige `--space-slug` ou `--knowledge-space-id`, continua local-only e grava o conteúdo pela camada v2 space-aware.
 - A importação legado não usa HTML como corpo principal e não publica artigos automaticamente.
+- A camada pública da KB não expõe `source_path`, `source_hash`, `tenant_id`, autores internos nem HTML legado.
 - O inventário atual da base legada em `raw_knowledge/octadesk_export/latest/articles/` identificou 58 artigos, 3 categorias-raiz, 1 grupo de duplicidade por `source_hash` e múltiplos candidatos sensíveis/restritos.
 - Estados obrigatórios do frontend materializados: loading, vazio, erro, acesso negado, contrato indisponível e sessão expirada.
 - Build do frontend agora usa code-splitting por rota.
@@ -144,10 +149,12 @@ Documentos históricos:
 - `npm run knowledge:verify:octadesk:space-aware` validado com sucesso.
 - `npm run web:typecheck` validado com sucesso.
 - `npm run web:build` validado com sucesso.
+- `npm run supabase:wait:ready` agora respeita stacks locais em que `supabase_edge_runtime` esteja explicitamente parado, mantendo `REST + Postgres` como readiness obrigatória.
 - Suite pgTAP atual validada com `Files=8`, `Tests=135`, `Result: PASS`.
 - Suite pgTAP atual validada com `Files=10`, `Tests=177`, `Result: PASS`.
 - Suite pgTAP atual validada com `Files=11`, `Tests=218`, `Result: PASS`.
 - Suite pgTAP atual validada com `Files=12`, `Tests=256`, `Result: PASS`.
+- Suite pgTAP atual validada com `Files=13`, `Tests=275`, `Result: PASS`.
 - Pipeline CI para banco em `.github/workflows/supabase-db.yml`.
 - A workflow `.github/workflows/supabase-db.yml` agora valida também `web:typecheck` e `web:build`.
 - A workflow `.github/workflows/supabase-db.yml` agora valida também a compatibilidade do import Octadesk space-aware.
@@ -262,6 +269,12 @@ Documentos históricos:
   - A leitura do frontend dessa superfície usa apenas `vw_admin_knowledge_spaces`, `vw_admin_knowledge_categories_v2`, `vw_admin_knowledge_articles_list_v2` e `vw_admin_knowledge_article_detail_v2`.
   - A escrita do frontend dessa superfície usa apenas as RPCs v2 space-aware da Knowledge Base.
   - Conteúdo importado do legado continua sob curadoria humana e não ganha publicação automática pela UI.
+- Fase 4.5: Public Help Center Read Models + Routing Contract concluída localmente.
+  - A camada pública de leitura da Knowledge Base foi materializada por `vw_public_knowledge_space_resolver`, `vw_public_knowledge_navigation`, `vw_public_knowledge_articles_list` e `vw_public_knowledge_article_detail`.
+  - A superfície pública expõe apenas `knowledge_spaces` ativos e artigos `published` + `public`, sem drafts, review, archived, conteúdo internal/restricted ou spaces inativos.
+  - O resolver público já suporta `space_slug` e preparação de domínio ativo por `knowledge_space_domains`, sem abrir a UI pública.
+  - `anon` e `authenticated` recebem `SELECT` apenas nessas views públicas; tabelas base de multi-brand e `knowledge_*` continuam bloqueadas.
+  - `supabase/tests/013_phase4_5_public_help_center_read_models.sql` cobre grants, ausência de vazamento sensível, resolução por slug, filtros públicos e bloqueio de base tables para `anon`.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.

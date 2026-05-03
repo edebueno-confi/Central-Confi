@@ -1,17 +1,19 @@
 import { createConnection } from "node:net";
+import { spawn } from "node:child_process";
 
-const endpoints = [
+const baseEndpoints = [
   {
     label: "REST admin readiness",
     url: "http://127.0.0.1:55321/rest-admin/v1/ready",
     method: "HEAD",
   },
-  {
-    label: "Edge runtime health",
-    url: "http://127.0.0.1:55321/functions/v1/_internal/health",
-    method: "HEAD",
-  },
 ];
+
+const edgeRuntimeEndpoint = {
+  label: "Edge runtime health",
+  url: "http://127.0.0.1:55321/functions/v1/_internal/health",
+  method: "HEAD",
+};
 
 const sockets = [
   {
@@ -25,6 +27,59 @@ const timeoutMs = Number(process.env.SUPABASE_READY_TIMEOUT_MS ?? 60_000);
 const intervalMs = Number(process.env.SUPABASE_READY_INTERVAL_MS ?? 2_000);
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function runProcess(command, args) {
+  return new Promise((resolve) => {
+    const child = spawn(command, args, {
+      cwd: process.cwd(),
+      env: process.env,
+      shell: false,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk.toString();
+    });
+
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+
+    child.on("close", (code) => {
+      resolve({
+        code: code ?? 1,
+        stdout,
+        stderr,
+      });
+    });
+  });
+}
+
+async function shouldProbeEdgeRuntime() {
+  if (process.env.SUPABASE_READY_REQUIRE_EDGE === "1") {
+    return true;
+  }
+
+  const command =
+    process.platform === "win32"
+      ? process.env.ComSpec ?? "cmd.exe"
+      : "npx";
+  const args =
+    process.platform === "win32"
+      ? ["/d", "/s", "/c", "npx supabase status -o env"]
+      : ["supabase", "status", "-o", "env"];
+  const result = await runProcess(command, args);
+
+  if (result.code !== 0) {
+    return true;
+  }
+
+  const statusOutput = `${result.stdout}\n${result.stderr}`;
+  return !statusOutput.includes("supabase_edge_runtime_");
+}
 
 async function probeEndpoint(endpoint) {
   try {
@@ -99,6 +154,17 @@ async function probeSocket(socket) {
 }
 
 async function main() {
+  const endpoints = [...baseEndpoints];
+  const probeEdgeRuntime = await shouldProbeEdgeRuntime();
+
+  if (probeEdgeRuntime) {
+    endpoints.push(edgeRuntimeEndpoint);
+  } else {
+    console.log(
+      "[supabase-ready] edge runtime reported as stopped by supabase status; skipping edge health probe",
+    );
+  }
+
   const startedAt = Date.now();
   let attempt = 0;
 

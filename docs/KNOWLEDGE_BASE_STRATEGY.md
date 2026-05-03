@@ -25,6 +25,11 @@ Criar a base editorial do Genius Support OS com versionamento, trilha de origem 
   - `vw_admin_knowledge_categories_v2`
   - `vw_admin_knowledge_articles_list_v2`
   - `vw_admin_knowledge_article_detail_v2`
+- Read models públicos endurecidos:
+  - `vw_public_knowledge_space_resolver`
+  - `vw_public_knowledge_navigation`
+  - `vw_public_knowledge_articles_list`
+  - `vw_public_knowledge_article_detail`
 - Mutações editoriais administrativas:
   - `rpc_admin_create_knowledge_category`
   - `rpc_admin_create_knowledge_article_draft`
@@ -58,6 +63,7 @@ Criar a base editorial do Genius Support OS com versionamento, trilha de origem 
 - Cada rota pública futura deve ser resolvida por `knowledge_space`.
 - `knowledge_space_domains` reserva a combinação `(host, path_prefix)` por space.
 - A unicidade futura de categorias e artigos por space já foi preparada por índices parciais em `knowledge_space_id`, sem remover as constraints atuais por `tenant_id`.
+- A camada pública lê apenas views aprovadas e expõe somente spaces ativos com artigos `published` + `public`.
 
 ## Inventário legado atual
 Origem oficial preservada:
@@ -133,6 +139,7 @@ Metadados brutos observados em `article.json`:
 - Não promover artigo para `published` sem trilha editorial e auditoria.
 - `published` continua sendo estado editorial, não sinal de exposição pública ativa.
 - Um `knowledge_space` futuro também precisará estar ativo antes de qualquer abertura pública.
+- O contrato público de leitura já existe, mas ainda sem UI pública, busca ou roteamento ativo no frontend.
 
 ## Governança de revisão
 - Todo artigo relevante deve gerar revisão em `knowledge_article_revisions`.
@@ -156,12 +163,13 @@ Metadados brutos observados em `article.json`:
 
 ## Próximos passos planejados
 - Evoluir a curadoria administrativa space-aware sem romper os contratos atuais do Admin Console.
-- Abrir read models públicos apenas depois do backfill, da curadoria e da revisão de RLS.
+- Consumir a superfície pública apenas quando a UI da Central Pública for criada sobre as views endurecidas já aprovadas.
 - Evoluir After Sale como segundo `knowledge_space` oficial apenas quando a operação estiver pronta.
 
 ## O que continua bloqueado
 - documentação pública técnica
 - Central de Ajuda pública
+- frontend público sobre os read models públicos
 - indexação em IA
 - uso de HTML legado como frontend
 - publicação automática
