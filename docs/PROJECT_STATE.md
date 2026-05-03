@@ -31,6 +31,7 @@ Documentos prioritários:
 - `VIEW_RPC_CONTRACTS.md`
 - `DOCUMENTATION_LEDGER.md`
 - `PLATFORM_FAQ_STRATEGY.md`
+- `KNOWLEDGE_CONTENT_CURATION_PLAN.md`
 
 Documentos históricos:
 - `CLEANUP_REPORT.md`
@@ -148,7 +149,10 @@ Documentos históricos:
 - A Central Pública passou por polish de legibilidade, hierarquia visual e leitura mobile-first, mantendo a mesma superfície pública e o mesmo escopo funcional.
 - Estratégia oficial de FAQ da plataforma criada em `docs/PLATFORM_FAQ_STRATEGY.md`.
 - Ledger documental por fase criado em `docs/DOCUMENTATION_LEDGER.md`.
+- Estratégia oficial de curadoria do corpus legado criada em `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md`.
+- Relatório oficial do inventário legado criado em `docs/reports/KNOWLEDGE_LEGACY_INVENTORY_REPORT.md`.
 - O inventário atual da base legada em `raw_knowledge/octadesk_export/latest/articles/` identificou 58 artigos, 3 categorias-raiz, 1 grupo de duplicidade por `source_hash` e múltiplos candidatos sensíveis/restritos.
+- O `supabase:verify` atual mantém a KB local sem lote legado importado; o pipeline de curadoria desta fase opera sobre o corpus bruto e o dry-run do import oficial.
 - Estados obrigatórios do frontend materializados: loading, vazio, erro, acesso negado, contrato indisponível e sessão expirada.
 - Build do frontend agora usa code-splitting por rota.
 - Fixture local de QA controlado materializado em `supabase/qa/create-local-admin-fixture.mjs`.
@@ -315,6 +319,12 @@ Documentos históricos:
   - O contrato backend permaneceu intacto; a leitura continua limitada a `vw_public_knowledge_space_resolver`, `vw_public_knowledge_navigation`, `vw_public_knowledge_articles_list`, `vw_public_knowledge_article_detail` e `rpc_public_search_knowledge_articles`.
   - `docs/PLATFORM_FAQ_STRATEGY.md` formaliza como a futura FAQ da plataforma deve nascer apenas de funcionalidade implementada e validada.
   - `docs/DOCUMENTATION_LEDGER.md` formaliza o registro por fase de commit, branch, docs, superfícies e impacto na FAQ futura.
+- Fase 5.0: Knowledge Content Curation Pipeline concluída localmente.
+  - Nenhum artigo legado foi publicado, reescrito automaticamente no banco ou promovido de status nesta fase.
+  - A auditoria confirmou `58` artigos no corpus bruto legado, `1` grupo de duplicidade por `source_hash` e sinais fortes de sensibilidade em integrações, credenciais, permissões, estorno, PIX, Correios, endpoints/API e erros técnicos internos.
+  - O estado local pós-`supabase:verify` segue com `0` drafts legado importados no banco; a curadoria desta fase foi documentada a partir do corpus preservado e do dry-run do import oficial.
+  - `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md` define critérios de `public`/`internal`/`restricted`, duplicidade, obsolescência, padrão editorial e checklist humano antes de publicar.
+  - `docs/reports/KNOWLEDGE_LEGACY_INVENTORY_REPORT.md` registra o inventário, os candidatos heurísticos por visibilidade e os principais riscos editoriais.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.

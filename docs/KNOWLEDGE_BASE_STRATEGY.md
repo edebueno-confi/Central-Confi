@@ -59,6 +59,7 @@ Criar a base editorial do Genius Support OS com versionamento, trilha de origem 
 - As RPCs e views v2 já operam com `knowledge_space_id` explícito.
 - O import legado Octadesk agora exige destino space-aware por `--space-slug` ou `--knowledge-space-id`.
 - A curadoria administrativa mínima do frontend agora opera em `/admin/knowledge` consumindo apenas a superfície v2 space-aware.
+- O `supabase:verify` atual não mantém o lote legado importado no banco local; a curadoria desta fase parte do corpus bruto preservado e do dry-run oficial do import.
 
 ## Regras estruturais novas
 - `knowledge_spaces.slug` é único globalmente.
@@ -114,6 +115,9 @@ Metadados brutos observados em `article.json`:
   - usar `visibility = internal`
 - Toda importação deve receber destino explícito por `knowledge_space`.
 - Não inferir marca/documentação pública técnica automaticamente a partir do legado.
+- O plano e o relatório de curadoria desta fase ficam em:
+  - `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md`
+  - `docs/reports/KNOWLEDGE_LEGACY_INVENTORY_REPORT.md`
 
 ## Modelo editorial
 
@@ -184,6 +188,18 @@ Metadados brutos observados em `article.json`:
 5. Manter estado inicial em `draft` ou `review`.
 6. Preservar `source_path` e `source_hash`.
 7. Exigir revisão humana antes de qualquer publicação.
+
+## Curadoria editorial da fase 5.0
+- O corpus legado atual soma `58` artigos inventariados.
+- A triagem conservadora inicial apontou:
+  - `4` candidatos a `public`
+  - `35` candidatos a `internal`
+  - `19` candidatos a `restricted`
+  - `4` candidatos a `obsoleto`
+- Existe `1` grupo real de duplicidade por `source_hash`.
+- O estado atual do banco local, após `supabase:verify`, segue com `0` artigos legado importados e `0` drafts com `source_hash`.
+- O plano editorial oficial agora está documentado em `KNOWLEDGE_CONTENT_CURATION_PLAN.md`.
+- O relatório operacional de inventário agora está documentado em `reports/KNOWLEDGE_LEGACY_INVENTORY_REPORT.md`.
 
 ## Próximos passos planejados
 - Evoluir a curadoria administrativa space-aware sem romper os contratos atuais do Admin Console.

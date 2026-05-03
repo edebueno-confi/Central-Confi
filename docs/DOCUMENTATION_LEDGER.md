@@ -91,3 +91,28 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - define o metodo oficial para transformar funcionalidade validada em pergunta/resposta rastreavel
   - cria trilha minima para responder por ambiente, perfil autorizado e fonte documental
+
+### Fase 5.0 - Knowledge Content Curation Pipeline
+- fase: `5.0`
+- commit: `a registrar no commit final da fase`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-03`
+- resumo funcional: auditoria do corpus legado, definicao do plano editorial de curadoria e consolidacao do inventario oficial sem publicar conteudo automaticamente.
+- docs alterados:
+  - `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md`
+  - `docs/reports/KNOWLEDGE_LEGACY_INVENTORY_REPORT.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - uso documental do dry-run de `scripts/knowledge/import-octadesk-drafts.mjs`
+- telas afetadas:
+  - nenhuma
+- riscos restantes:
+  - a curadoria continua dependente de leitura humana artigo a artigo
+  - o banco local padrao segue sem o lote legado importado apos `supabase:verify`
+  - a classificacao desta fase e conservadora e heuristica, nao decisao editorial final
+- impacto na FAQ futura:
+  - define a regra de que conhecimento oficial so nasce de conteudo validado e curado
+  - separa o que pode virar FAQ publica do que deve permanecer interno ou restrito
