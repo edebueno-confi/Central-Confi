@@ -12,7 +12,7 @@ credenciais operacionais.
 - O usuário aprova mudanças de risco, deploys em produção e uso de segredos.
 - Nenhuma credencial real entra no repositório.
 - O único arquivo versionável de ambiente é `.env.example`.
-- Qualquer valor com prefixo `NEXT_PUBLIC_` é tratado como público por desenho.
+- Qualquer valor com prefixo `VITE_` é embutido no bundle client-side por desenho.
 
 ## Regras obrigatórias
 
@@ -46,9 +46,9 @@ credenciais operacionais.
 | `VERCEL_TOKEN` | Permitir ao Codex operar deploys e projetos no Vercel via CLI/API | Sensível | Local, GitHub Actions | Local não versionado, GitHub Secrets | Não | Reservada |
 | `VERCEL_ORG_ID` | Identificar a organização do Vercel nas automações | Interna | Local, GitHub Actions | Local não versionado, GitHub Secrets | Não | Reservada |
 | `VERCEL_PROJECT_ID` | Identificar o projeto do Genius Support OS no Vercel | Interna | Local, GitHub Actions | Local não versionado, GitHub Secrets | Não | Reservada |
-| `NEXT_PUBLIC_APP_ENV` | Informar ao app se está em Development, Preview ou Production | Pública | Development, Preview, Production | Vercel por ambiente | Sim | Reservada |
-| `NEXT_PUBLIC_SUPABASE_URL` | URL pública do projeto Supabase consumida pelo app | Pública | Development, Preview, Production | Vercel por ambiente, `.env.example` | Sim | Reservada |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave pública do Supabase para autenticação client-side | Pública | Development, Preview, Production | Vercel por ambiente, `.env.example` | Sim | Reservada |
+| `VITE_APP_ENV` | Informar ao app se está em Development, Preview ou Production | Pública | Development, Preview, Production | Shell local, Vercel por ambiente | Sim | Atual |
+| `VITE_SUPABASE_URL` | URL pública do projeto Supabase consumida pelo app Vite | Pública | Development, Preview, Production | Shell local, Vercel por ambiente, `.env.example` | Sim | Atual |
+| `VITE_SUPABASE_ANON_KEY` | Chave pública do Supabase para autenticação client-side no app Vite | Pública | Development, Preview, Production | Shell local, Vercel por ambiente, `.env.example` | Sim | Atual |
 | `APP_BASE_URL` | URL base canônica do app para redirects, callbacks e links absolutos | Interna | Development, Preview, Production | Vercel por ambiente, `.env.example` | Não | Reservada |
 | `SUPABASE_SERVICE_ROLE_KEY` | Credencial privilegiada para automações server-side excepcionais | Sensível | Somente fluxo explicitamente aprovado | GitHub Secrets ou Supabase Secrets; nunca browser | Não | Proibida por padrão |
 
@@ -82,7 +82,7 @@ credenciais operacionais.
 
 ## Convenções de nomenclatura
 
-- Variáveis públicas do app usam `NEXT_PUBLIC_*`.
+- Variáveis públicas do app web usam `VITE_*`.
 - Variáveis operacionais usam nome explícito do provedor: `SUPABASE_*`,
   `VERCEL_*`, `GITHUB_*`.
 - Evitar nomes genéricos como `TOKEN`, `SECRET` ou `URL`.
@@ -108,5 +108,5 @@ credenciais operacionais.
 - O Supabase remoto já recebeu as migrations oficiais e o primeiro
   `platform_admin`.
 - O frontend continua bloqueado nesta fase.
-- As variáveis reservadas para Vercel existem apenas como governança; ainda não
-  devem ser consumidas por código de UI.
+- O frontend Vite lê apenas `VITE_APP_ENV`, `VITE_SUPABASE_URL` e
+  `VITE_SUPABASE_ANON_KEY` no browser.

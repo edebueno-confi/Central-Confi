@@ -10,14 +10,8 @@ export interface MissingRuntimeConfig {
 
 const runtimeEnv = import.meta.env;
 
-function readEnvValue(primaryKey: string, fallbackKey?: string) {
-  return (
-    runtimeEnv[primaryKey as keyof typeof runtimeEnv] ??
-    (fallbackKey
-      ? runtimeEnv[fallbackKey as keyof typeof runtimeEnv]
-      : undefined) ??
-    ''
-  )
+function readEnvValue(key: string) {
+  return (runtimeEnv[key as keyof typeof runtimeEnv] ?? '')
     .toString()
     .trim();
 }
@@ -25,19 +19,13 @@ function readEnvValue(primaryKey: string, fallbackKey?: string) {
 export function readRuntimeConfig():
   | { ok: true; config: RuntimeConfig }
   | { ok: false; error: MissingRuntimeConfig } {
-  const appEnv = readEnvValue('NEXT_PUBLIC_APP_ENV', 'VITE_APP_ENV') || 'development';
-  const supabaseUrl = readEnvValue(
-    'NEXT_PUBLIC_SUPABASE_URL',
-    'VITE_SUPABASE_URL',
-  );
-  const supabaseAnonKey = readEnvValue(
-    'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-    'VITE_SUPABASE_ANON_KEY',
-  );
+  const appEnv = readEnvValue('VITE_APP_ENV') || 'development';
+  const supabaseUrl = readEnvValue('VITE_SUPABASE_URL');
+  const supabaseAnonKey = readEnvValue('VITE_SUPABASE_ANON_KEY');
 
   const missingKeys = [
-    !supabaseUrl ? 'NEXT_PUBLIC_SUPABASE_URL' : null,
-    !supabaseAnonKey ? 'NEXT_PUBLIC_SUPABASE_ANON_KEY' : null,
+    !supabaseUrl ? 'VITE_SUPABASE_URL' : null,
+    !supabaseAnonKey ? 'VITE_SUPABASE_ANON_KEY' : null,
   ].filter(Boolean) as string[];
 
   if (missingKeys.length > 0) {
