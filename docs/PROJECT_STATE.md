@@ -29,6 +29,8 @@ Documentos prioritários:
 - `REMOTE_SUPABASE_DEPLOY_RUNBOOK.md`
 - `SECURITY_RLS_TEST_PLAN.md`
 - `VIEW_RPC_CONTRACTS.md`
+- `DOCUMENTATION_LEDGER.md`
+- `PLATFORM_FAQ_STRATEGY.md`
 
 Documentos históricos:
 - `CLEANUP_REPORT.md`
@@ -143,6 +145,9 @@ Documentos históricos:
 - A identidade visual pública usa os dados públicos do `knowledge_space` e fallback seguro quando branding detalhado não estiver projetado nos read models públicos.
 - O resolver público agora expõe branding sanitizado mínimo (`brand_name`, `logo_asset_url`, `theme_tokens`, `seo_defaults` e `support_contacts` públicos) sem abrir acesso direto a `brand_settings`.
 - A busca pública agora expõe apenas metadados mínimos de resultado e nunca retorna `body_md` completo, `source_path`, `source_hash` ou metadados internos.
+- A Central Pública passou por polish de legibilidade, hierarquia visual e leitura mobile-first, mantendo a mesma superfície pública e o mesmo escopo funcional.
+- Estratégia oficial de FAQ da plataforma criada em `docs/PLATFORM_FAQ_STRATEGY.md`.
+- Ledger documental por fase criado em `docs/DOCUMENTATION_LEDGER.md`.
 - O inventário atual da base legada em `raw_knowledge/octadesk_export/latest/articles/` identificou 58 artigos, 3 categorias-raiz, 1 grupo de duplicidade por `source_hash` e múltiplos candidatos sensíveis/restritos.
 - Estados obrigatórios do frontend materializados: loading, vazio, erro, acesso negado, contrato indisponível e sessão expirada.
 - Build do frontend agora usa code-splitting por rota.
@@ -304,6 +309,12 @@ Documentos históricos:
   - A RPC expõe apenas resultados de artigos `published` + `public` em `knowledge_spaces` ativos, sem `body_md` completo e sem leitura do frontend em tabelas-base.
   - A Central Pública agora oferece busca simples em `/help/:spaceSlug` com estados de carregando, vazio, sem resultados e erro.
   - `supabase/tests/015_phase4_9_public_help_center_search_contract.sql` cobre grants, isolamento público, busca em space ativo, bloqueio de draft/restricted/categoria interna e comportamento controlado para query vazia/curta.
+- Fase 4.9.1: Public Help Center UX Readability Polish + Documentation Ledger Strategy concluída localmente.
+  - A Central Pública recebeu polish de leitura para parecer documentação técnica B2B e não um painel administrativo.
+  - A landing `/help`, a home do `knowledge_space`, a lista de artigos e o detalhe do artigo foram simplificados para reduzir competição visual, melhorar contraste e ficar mais confortáveis em mobile.
+  - O contrato backend permaneceu intacto; a leitura continua limitada a `vw_public_knowledge_space_resolver`, `vw_public_knowledge_navigation`, `vw_public_knowledge_articles_list`, `vw_public_knowledge_article_detail` e `rpc_public_search_knowledge_articles`.
+  - `docs/PLATFORM_FAQ_STRATEGY.md` formaliza como a futura FAQ da plataforma deve nascer apenas de funcionalidade implementada e validada.
+  - `docs/DOCUMENTATION_LEDGER.md` formaliza o registro por fase de commit, branch, docs, superfícies e impacto na FAQ futura.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.

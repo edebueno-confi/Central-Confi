@@ -162,6 +162,8 @@ Metadados brutos observados em `article.json`:
 - O resolver público agora projeta branding sanitizado mínimo de `brand_settings`, mantendo o frontend sem acesso direto à tabela base.
 - Tokens de tema, SEO e contatos públicos passam por allowlist no backend e nova validação no frontend antes de afetar CSS, links ou metadata.
 - A busca pública consulta exclusivamente `rpc_public_search_knowledge_articles`, com full-text search nativo do PostgreSQL sobre conteúdo publicado.
+- A experiência pública agora passou por polish de legibilidade e hierarquia visual para parecer documentação técnica B2B, não shell administrativo.
+- O acabamento visual continua sem alterar escopo funcional da busca nem abrir portal, ticket público, chat ou IA.
 
 ## Governança de revisão
 - Todo artigo relevante deve gerar revisão em `knowledge_article_revisions`.
@@ -187,6 +189,7 @@ Metadados brutos observados em `article.json`:
 - Evoluir a curadoria administrativa space-aware sem romper os contratos atuais do Admin Console.
 - Consumir a superfície pública apenas quando a UI da Central Pública for criada sobre as views endurecidas já aprovadas.
 - Evoluir After Sale como segundo `knowledge_space` oficial apenas quando a operação estiver pronta.
+- Usar `PLATFORM_FAQ_STRATEGY.md` e `DOCUMENTATION_LEDGER.md` como trilha oficial para transformar funcionalidades já validadas em FAQ pública ou interna.
 
 ## O que continua bloqueado
 - documentação pública técnica
@@ -213,3 +216,9 @@ Metadados brutos observados em `article.json`:
   - `updated_at`
 - A busca não usa IA, embeddings, chat nem qualquer filtro de segurança no frontend.
 - Queries vazias ou muito curtas retornam lista vazia controlada.
+
+## Estratégia de FAQ da plataforma
+- A FAQ futura do Genius Support OS não deve nascer de interpretação manual do time.
+- Cada resposta futura deve derivar de fase aprovada, documentação oficial, contratos reais e telas já validadas.
+- O ledger documental deve registrar commit, branch, docs, superfícies afetadas e impacto em FAQ por fase.
+- Enquanto não houver artigo, contrato ou tela validada, a FAQ correspondente continua bloqueada.

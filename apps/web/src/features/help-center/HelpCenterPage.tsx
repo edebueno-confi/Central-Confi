@@ -189,20 +189,20 @@ export function HelpCenterPage() {
 
   return (
     <div className="min-h-screen px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto grid max-w-6xl gap-8">
+      <div className="mx-auto grid max-w-6xl gap-6">
         <section className="relative overflow-hidden rounded-[36px] border border-[rgba(20,31,71,0.12)] bg-[linear-gradient(135deg,rgba(20,31,71,0.98),rgba(48,127,226,0.95)_54%,rgba(116,210,231,0.9))] px-6 py-8 text-white shadow-[0_28px_80px_rgba(20,31,71,0.16)] sm:px-8 sm:py-10">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(225,0,152,0.18),transparent_24%)]" />
-          <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.9fr)]">
+          <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1.8fr)_minmax(260px,0.8fr)]">
             <div className="space-y-5">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.3em] text-white/72">
                 Help Center B2B
               </p>
               <div className="space-y-3">
                 <h1 className="max-w-3xl text-4xl font-semibold tracking-[-0.06em] text-white sm:text-5xl">
-                  Documentacao tecnica oficial para operacao B2B do Genius Support OS.
+                  Documentacao tecnica clara para operar a plataforma sem depender do suporte interno.
                 </h1>
                 <p className="max-w-2xl text-sm leading-7 text-white/80 sm:text-base">
-                  Esta superficie publica entrega guias de uso, configuracao e integracao para clientes B2B e usuarios da plataforma, sem expor playbooks internos nem estados editoriais nao publicados.
+                  Guias publicados de uso, configuracao e integracao para clientes B2B e usuarios da plataforma. Nada de rascunho, playbook interno ou trilha editorial aparece aqui.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
@@ -216,17 +216,25 @@ export function HelpCenterPage() {
                   </Link>
                 ))}
               </div>
+              <div className="flex flex-wrap gap-3 text-xs text-white/76">
+                <span className="rounded-full border border-white/18 bg-white/10 px-3 py-1.5">
+                  leitura publica somente de contratos aprovados
+                </span>
+                <span className="rounded-full border border-white/18 bg-white/10 px-3 py-1.5">
+                  foco em documentacao tecnica B2B
+                </span>
+              </div>
             </div>
             <div className="grid gap-4 rounded-[30px] border border-white/14 bg-white/10 p-5 backdrop-blur">
               <div>
                 <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-white/65">
-                  Disponibilidade
+                  Disponivel agora
                 </p>
                 <p className="mt-2 text-3xl font-semibold tracking-[-0.05em]">
                   {spaces.length}
                 </p>
                 <p className="mt-2 text-sm leading-6 text-white/76">
-                  knowledge space{spaces.length > 1 ? 's' : ''} ativo{spaces.length > 1 ? 's' : ''} e publicavel{spaces.length > 1 ? 'is' : ''} neste ambiente.
+                  central{spaces.length > 1 ? 's' : ''} tecnica{spaces.length > 1 ? 's' : ''} ativa{spaces.length > 1 ? 's' : ''} para leitura publica neste ambiente.
                 </p>
               </div>
               <div className="grid gap-3">
@@ -250,7 +258,7 @@ export function HelpCenterPage() {
                       <StatusPill tone="positive">ativo</StatusPill>
                     </div>
                     <p className="mt-3 text-xs leading-5 text-white/74">
-                      Rota canonica: {space.canonicalPath}
+                      Entrada canonica: {space.canonicalPath}
                       {space.canonicalHost ? ` ou ${space.canonicalHost}` : ''}
                     </p>
                   </div>
@@ -260,11 +268,25 @@ export function HelpCenterPage() {
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <section className="rounded-[30px] border border-[rgba(20,31,71,0.12)] bg-white/88 p-5 shadow-[var(--shadow-panel)] sm:p-6">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="space-y-2">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--color-muted)]">
+                Centrais publicas
+              </p>
+              <h2 className="text-2xl font-semibold tracking-[-0.05em] text-[color:var(--color-ink)] sm:text-3xl">
+                Escolha a documentacao certa para a operacao que voce usa.
+              </h2>
+              <p className="max-w-3xl text-sm leading-7 text-[color:var(--color-muted)]">
+                Cada knowledge space publica apenas conteudo aprovado para aquela marca, com a mesma governanca administrativa no backend.
+              </p>
+            </div>
+          </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {spaces.map((space) => (
             <article
               key={space.knowledgeSpaceSlug}
-              className="rounded-[30px] border border-[rgba(20,31,71,0.12)] bg-white/92 p-6 shadow-[var(--shadow-panel)]"
+              className="rounded-[28px] border border-[rgba(20,31,71,0.12)] bg-[color:var(--color-surface)] p-6 shadow-[0_18px_44px_rgba(20,31,71,0.06)]"
             >
               <div className="flex items-center justify-between gap-4">
                 <div>
@@ -287,7 +309,7 @@ export function HelpCenterPage() {
                 </StatusPill>
               </div>
               <p className="mt-4 text-sm leading-7 text-[color:var(--color-muted)]">
-                {space.displayName} opera como central tecnica publica da plataforma, mantendo o mesmo backend e a mesma governanca multi-brand.
+                {space.displayName} publica guias de uso, configuracao e integracao para a operacao tecnica B2B da plataforma.
               </p>
               <div className="mt-5 flex flex-wrap gap-2 text-xs text-[color:var(--color-muted)]">
                 <span className="rounded-full bg-[color:var(--color-surface)] px-3 py-1">
@@ -309,6 +331,7 @@ export function HelpCenterPage() {
               </div>
             </article>
           ))}
+          </div>
         </section>
       </div>
     </div>
@@ -480,8 +503,8 @@ export function HelpCenterSpaceLayout() {
         ...theme,
       }}
     >
-      <div className="mx-auto grid min-h-screen max-w-7xl gap-8 px-4 py-6 sm:px-6 lg:grid-cols-[320px_minmax(0,1fr)] lg:px-8">
-        <aside className="grid content-start gap-5 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:py-2">
+      <div className="mx-auto grid min-h-screen max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[300px_minmax(0,1fr)] lg:px-8">
+        <aside className="grid content-start gap-4 lg:sticky lg:top-0 lg:max-h-screen lg:overflow-y-auto lg:py-2">
           <section className="relative overflow-hidden rounded-[34px] border border-[var(--help-border)] bg-[var(--help-hero)] px-6 py-7 text-white shadow-[0_28px_80px_rgba(20,31,71,0.14)]">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_28%)]" />
             <div className="relative space-y-5">
@@ -513,14 +536,14 @@ export function HelpCenterSpaceLayout() {
                     {space.brand_name}
                   </h1>
                   <p className="text-sm leading-6 text-white/76">
-                    {space.knowledge_space_display_name} publica apenas documentacao tecnica B2B aprovada para leitura.
+                    {space.knowledge_space_display_name} publica apenas documentacao tecnica aprovada para clientes B2B e usuarios da plataforma.
                   </p>
                 </div>
               </div>
               <div className="grid gap-3 rounded-[24px] border border-white/14 bg-white/10 p-4 backdrop-blur">
                 <div>
                   <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-white/62">
-                    Rota
+                    Entrada principal
                   </p>
                   <p className="mt-2 text-sm font-medium text-white">
                     /help/{space.knowledge_space_slug}
@@ -538,10 +561,10 @@ export function HelpCenterSpaceLayout() {
                 ) : (
                   <div>
                     <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-white/62">
-                      Branding
+                      Superficie
                     </p>
                     <p className="mt-2 text-sm leading-6 text-white/78">
-                      Fallback visual seguro usando os dados publicos do knowledge space.
+                      Leitura publica com branding seguro e backend ainda como source of truth.
                     </p>
                   </div>
                 )}
@@ -686,7 +709,7 @@ export function HelpCenterSpaceLayout() {
           </section>
         </aside>
 
-        <main className="grid content-start gap-6 py-2">
+        <main className="grid content-start gap-6 py-1">
           <Outlet context={context} />
         </main>
       </div>

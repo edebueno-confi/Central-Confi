@@ -116,16 +116,16 @@ export function HelpCenterHomePage() {
   return (
     <>
       <section className="rounded-[34px] border border-[var(--help-border)] bg-[var(--help-panel)] p-6 shadow-[var(--shadow-panel)] backdrop-blur sm:p-8">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.9fr)]">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(280px,0.85fr)]">
           <div className="space-y-4">
             <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-[var(--help-muted)]">
               Visao geral
             </p>
             <h2 className="text-4xl font-semibold tracking-[-0.06em] text-[var(--help-ink-strong)]">
-              Guias publicos para operacao tecnica B2B.
+              Encontre rapido a orientacao certa para operar a plataforma.
             </h2>
             <p className="max-w-3xl text-base leading-8 text-[var(--help-muted)]">
-              Esta central concentra apenas conteudo publicado e aprovado para clientes B2B e usuarios da plataforma. Nenhum rascunho, artigo restrito ou playbook interno entra nesta camada.
+              Esta central concentra somente conteudo publicado e aprovado. O objetivo aqui e reduzir friccao de uso, configuracao e integracao sem expor conteudo interno.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link to={`/help/${context.primaryRoute.knowledge_space_slug}/articles`}>
@@ -136,19 +136,19 @@ export function HelpCenterHomePage() {
               </StatusPill>
             </div>
             <form
-              className="grid gap-3 rounded-[28px] border border-[var(--help-border)] bg-white/78 p-4 shadow-[0_18px_42px_rgba(20,31,71,0.06)] sm:grid-cols-[minmax(0,1fr)_auto]"
+              className="grid gap-3 rounded-[28px] border border-[var(--help-border)] bg-white/82 p-4 shadow-[0_18px_42px_rgba(20,31,71,0.06)] sm:grid-cols-[minmax(0,1fr)_auto]"
               onSubmit={handleSearchSubmit}
             >
               <label className="grid gap-2" htmlFor="help-center-search">
                 <span className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[var(--help-muted)]">
-                  Busca publica
+                  Buscar artigo
                 </span>
                 <input
                   id="help-center-search"
                   autoComplete="off"
                   className="h-12 rounded-[20px] border border-[var(--help-border)] bg-[var(--help-surface)] px-4 text-sm text-[var(--help-ink-strong)] outline-none transition placeholder:text-[var(--help-muted)] focus:border-[var(--help-accent)] focus:ring-2 focus:ring-[color:var(--help-accent-soft)]"
                   onChange={(event) => setSearchInput(event.target.value)}
-                  placeholder="Buscar artigos por titulo, resumo ou conteudo publicado"
+                  placeholder="Ex.: integracao, configuracao, transportadora"
                   type="search"
                   value={searchInput}
                 />
@@ -166,14 +166,14 @@ export function HelpCenterHomePage() {
           <div className="grid gap-4 rounded-[30px] border border-[var(--help-border)] bg-white/74 p-5">
             <div>
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[var(--help-muted)]">
-                Contrato publico
+                Como esta camada funciona
               </p>
               <p className="mt-3 text-sm leading-7 text-[var(--help-ink)]">
-                A leitura desta tela sai apenas de `vw_public_knowledge_*`. O backend continua como source of truth para filtragem de status, visibilidade e activity do knowledge space.
+                A leitura desta tela sai somente dos read models publicos aprovados. O backend continua como source of truth para status, visibilidade e activity do knowledge space.
               </p>
             </div>
             <InlineNotice>
-              Conteudo legado em HTML nao e renderizado aqui. O corpo oficial segue `body_md` com renderizacao Markdown segura.
+              O artigo publico sempre nasce de `body_md` com Markdown seguro. HTML legado continua fora da experiencia de leitura.
             </InlineNotice>
             {supportContacts.email || supportContacts.docsUrl || supportContacts.statusPageUrl ? (
               <div className="grid gap-2 text-sm">
@@ -215,13 +215,13 @@ export function HelpCenterHomePage() {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="space-y-2">
             <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[var(--help-muted)]">
-              Busca publica
+              Resultado da busca
             </p>
             <h3 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--help-ink-strong)]">
               Procurar artigos publicados
             </h3>
             <p className="max-w-3xl text-sm leading-7 text-[var(--help-muted)]">
-              A busca usa apenas `rpc_public_search_knowledge_articles`, sem IA, sem embeddings e sem qualquer acesso do frontend a tabelas-base.
+              A busca usa apenas `rpc_public_search_knowledge_articles`, sem IA, sem embeddings e sem acesso do frontend a tabelas-base.
             </p>
           </div>
           {activeQuery ? (
@@ -234,7 +234,7 @@ export function HelpCenterHomePage() {
         <div className="mt-5">
           {searchPhase === 'idle' ? (
             <div className="rounded-[24px] border border-dashed border-[var(--help-border)] bg-white/56 px-5 py-5 text-sm leading-7 text-[var(--help-muted)]">
-              Digite ao menos 2 caracteres para buscar artigos tecnicos publicados neste knowledge space.
+              Digite pelo menos 2 caracteres para procurar configuracoes, fluxos e integracoes publicadas neste space.
             </div>
           ) : null}
 
@@ -267,12 +267,12 @@ export function HelpCenterHomePage() {
           {searchPhase === 'empty' ? (
             activeQuery.length < 2 ? (
               <div className="rounded-[24px] border border-dashed border-[var(--help-border)] bg-white/56 px-5 py-5 text-sm leading-7 text-[var(--help-muted)]">
-                Use pelo menos 2 caracteres para evitar consultas vazias e manter a busca publica objetiva.
+                Use pelo menos 2 caracteres para manter a busca publica objetiva e legivel.
               </div>
             ) : (
               <EmptyState
                 title="Nenhum artigo encontrado"
-                description="Nenhum artigo publicado e publico corresponde a esta consulta neste knowledge space."
+                description="Nenhum artigo publicado corresponde a esta consulta neste knowledge space. Tente um termo mais direto ou navegue pelas categorias abaixo."
               />
             )
           ) : null}
@@ -299,7 +299,7 @@ export function HelpCenterHomePage() {
                         {article.summary ?? 'Artigo tecnico B2B publicado sem resumo adicional.'}
                       </p>
                     </div>
-                    <div className="text-right text-xs leading-5 text-[var(--help-muted)]">
+                    <div className="text-left text-xs leading-5 text-[var(--help-muted)] sm:text-right">
                       {article.rank_score ? (
                         <p className="font-medium text-[var(--help-ink)]">
                           score {article.rank_score.toFixed(2)}
@@ -315,7 +315,19 @@ export function HelpCenterHomePage() {
         </div>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-2">
+      <section className="rounded-[30px] border border-[var(--help-border)] bg-[var(--help-panel)] p-6 shadow-[var(--shadow-panel)] backdrop-blur sm:p-8">
+        <div className="space-y-2">
+          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[var(--help-muted)]">
+            Navegar por categoria
+          </p>
+          <h3 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--help-ink-strong)]">
+            Acesse os temas principais sem depender da busca.
+          </h3>
+          <p className="max-w-3xl text-sm leading-7 text-[var(--help-muted)]">
+            As categorias abaixo organizam apenas artigos publicos e publicados deste knowledge space.
+          </p>
+        </div>
+        <div className="mt-5 grid gap-4 xl:grid-cols-2">
         {rootCategories.length === 0 ? (
           <div className="xl:col-span-2">
             <EmptyState
@@ -327,7 +339,7 @@ export function HelpCenterHomePage() {
           rootCategories.map((category) => (
             <article
               key={category.category_id}
-              className="rounded-[30px] border border-[var(--help-border)] bg-[var(--help-panel)] p-6 shadow-[var(--shadow-panel)] backdrop-blur"
+              className="rounded-[28px] border border-[var(--help-border)] bg-white/78 p-6 shadow-[0_18px_44px_rgba(20,31,71,0.05)]"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-2">
@@ -351,7 +363,7 @@ export function HelpCenterHomePage() {
                   {category.articles.map((article) => (
                     <Link
                       key={article.id}
-                      className="rounded-[22px] border border-[var(--help-border)] bg-white/78 px-4 py-3 no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-white"
+                      className="rounded-[22px] border border-[var(--help-border)] bg-[var(--help-surface)] px-4 py-3 no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-white"
                       to={`/help/${context.primaryRoute.knowledge_space_slug}/articles/${article.slug}`}
                     >
                       <p className="text-sm font-semibold text-[var(--help-ink-strong)]">
@@ -371,6 +383,7 @@ export function HelpCenterHomePage() {
             </article>
           ))
         )}
+        </div>
       </section>
 
       <section className="rounded-[30px] border border-[var(--help-border)] bg-[var(--help-panel)] p-6 shadow-[var(--shadow-panel)] backdrop-blur">

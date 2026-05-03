@@ -14,6 +14,8 @@ Fonte oficial da documentação do Genius Support OS.
 - [PRODUCT_VISION.md](./PRODUCT_VISION.md)
 - [ROADMAP.md](./ROADMAP.md)
 - [MVP_30_DAYS.md](./MVP_30_DAYS.md)
+- [DOCUMENTATION_LEDGER.md](./DOCUMENTATION_LEDGER.md)
+- [PLATFORM_FAQ_STRATEGY.md](./PLATFORM_FAQ_STRATEGY.md)
 
 ## Arquitetura e backend
 
@@ -35,6 +37,11 @@ Fonte oficial da documentação do Genius Support OS.
 - [TICKET_LIFECYCLE.md](./TICKET_LIFECYCLE.md)
 - [ENGINEERING_WORKFLOW.md](./ENGINEERING_WORKFLOW.md)
 - [KNOWLEDGE_BASE_STRATEGY.md](./KNOWLEDGE_BASE_STRATEGY.md)
+
+## Governança documental
+
+- [DOCUMENTATION_LEDGER.md](./DOCUMENTATION_LEDGER.md)
+- [PLATFORM_FAQ_STRATEGY.md](./PLATFORM_FAQ_STRATEGY.md)
 
 ## Planejamento e execução
 

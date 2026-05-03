@@ -194,12 +194,14 @@ export function HelpCenterArticlePage() {
         </div>
       </section>
 
-      <section className="rounded-[34px] border border-[var(--help-border)] bg-[var(--help-panel)] p-6 shadow-[var(--shadow-panel)] backdrop-blur sm:p-8">
-        <MarkdownDocument source={article.body_md} />
+      <section className="rounded-[34px] border border-[var(--help-border)] bg-white/84 p-6 shadow-[0_22px_48px_rgba(20,31,71,0.06)] backdrop-blur sm:p-8 lg:p-10">
+        <div className="mx-auto max-w-4xl">
+          <MarkdownDocument source={article.body_md} />
+        </div>
       </section>
 
       <InlineNotice>
-        Esta camada publica exibe somente `body_md` aprovado. Conteudo interno, trilha de importacao legado e metadados editoriais nao sao expostos nesta superficie.
+        Esta camada publica exibe somente `body_md` aprovado. Conteudo interno, trilha de importacao legado e metadados editoriais continuam fora desta superficie.
       </InlineNotice>
 
       {relatedArticles.length > 0 ? (
@@ -213,7 +215,7 @@ export function HelpCenterArticlePage() {
                 Mais artigos relacionados
               </h3>
             </div>
-            <div className="grid gap-3">
+            <div className="grid gap-3 md:grid-cols-2">
               {relatedArticles.map((entry) => (
                 <Link
                   key={entry.id}

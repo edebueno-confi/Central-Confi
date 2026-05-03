@@ -193,7 +193,7 @@ export function MarkdownDocument({ source }: { source: string }) {
   const blocks = parseMarkdown(source);
 
   return (
-    <div className="space-y-5 text-[color:var(--help-ink)]">
+    <div className="space-y-6 text-[color:var(--help-ink)]">
       {blocks.map((block, index) => {
         const key = `${block.type}-${index}`;
 
@@ -210,10 +210,10 @@ export function MarkdownDocument({ source }: { source: string }) {
           const Tag = `h${block.level ?? 2}` as const;
           const className =
             block.level === 1
-              ? 'text-3xl font-semibold tracking-[-0.05em] text-[color:var(--help-ink-strong)]'
+              ? 'scroll-mt-24 text-3xl font-semibold tracking-[-0.05em] text-[color:var(--help-ink-strong)] sm:text-[2.1rem]'
               : block.level === 2
-                ? 'text-2xl font-semibold tracking-[-0.04em] text-[color:var(--help-ink-strong)]'
-                : 'text-xl font-semibold tracking-[-0.03em] text-[color:var(--help-ink-strong)]';
+                ? 'scroll-mt-24 text-2xl font-semibold tracking-[-0.04em] text-[color:var(--help-ink-strong)] sm:text-[1.75rem]'
+                : 'scroll-mt-24 text-xl font-semibold tracking-[-0.03em] text-[color:var(--help-ink-strong)] sm:text-[1.3rem]';
 
           return (
             <Tag key={key} className={className}>
@@ -224,7 +224,10 @@ export function MarkdownDocument({ source }: { source: string }) {
 
         if (block.type === 'paragraph') {
           return (
-            <p key={key} className="text-base leading-8 text-[color:var(--help-ink)]">
+            <p
+              key={key}
+              className="max-w-[72ch] text-[1.02rem] leading-8 text-[color:var(--help-ink)] sm:text-[1.06rem] sm:leading-9"
+            >
               {renderInline(block.text ?? '')}
             </p>
           );
@@ -234,7 +237,7 @@ export function MarkdownDocument({ source }: { source: string }) {
           return (
             <blockquote
               key={key}
-              className="rounded-[24px] border border-[rgba(20,31,71,0.12)] bg-[rgba(48,127,226,0.06)] px-5 py-4 text-base leading-7 text-[color:var(--help-ink)]"
+              className="max-w-[72ch] rounded-[24px] border border-[rgba(20,31,71,0.12)] bg-[rgba(48,127,226,0.06)] px-5 py-4 text-base leading-8 text-[color:var(--help-ink)]"
             >
               {block.lines?.map((line, lineIndex) => (
                 <p key={`${key}-${lineIndex}`}>{renderInline(line)}</p>
@@ -247,7 +250,7 @@ export function MarkdownDocument({ source }: { source: string }) {
           return (
             <pre
               key={key}
-              className="overflow-x-auto rounded-[24px] bg-[color:var(--help-code-surface)] px-5 py-4 text-sm leading-7 text-[color:var(--help-code-ink)]"
+              className="max-w-full overflow-x-auto rounded-[24px] bg-[color:var(--help-code-surface)] px-5 py-4 text-sm leading-7 text-[color:var(--help-code-ink)]"
             >
               <code>{block.lines?.join('\n') ?? ''}</code>
             </pre>
@@ -256,7 +259,10 @@ export function MarkdownDocument({ source }: { source: string }) {
 
         if (block.type === 'list') {
           return (
-            <ul key={key} className="grid gap-3 pl-6 text-base leading-7 text-[color:var(--help-ink)]">
+            <ul
+              key={key}
+              className="grid max-w-[72ch] gap-3 pl-6 text-[1.02rem] leading-8 text-[color:var(--help-ink)]"
+            >
               {block.items?.map((item, itemIndex) => (
                 <li key={`${key}-${itemIndex}`} className="list-disc">
                   {renderInline(item)}

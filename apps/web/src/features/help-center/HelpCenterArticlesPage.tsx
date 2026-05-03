@@ -14,6 +14,9 @@ function buildCategoryMap(navigation: PublicKnowledgeNavigationRow[]) {
 export function HelpCenterArticlesPage() {
   const context = useOutletContext<HelpCenterSpaceContext>();
   const categoryMap = buildCategoryMap(context.navigation);
+  const featuredCategories = context.navigation
+    .filter((entry) => entry.parent_category_id === null)
+    .slice(0, 4);
 
   if (context.articles.length === 0) {
     return (
@@ -35,22 +38,34 @@ export function HelpCenterArticlesPage() {
             Base publicada de {context.primaryRoute.brand_name}
           </h2>
           <p className="max-w-3xl text-sm leading-7 text-[var(--help-muted)]">
-            Lista integral dos artigos tecnicos publicos aprovados para este knowledge space.
+            Lista integral dos artigos tecnicos publicos aprovados para este knowledge space, organizada para leitura rapida em desktop e mobile.
           </p>
         </div>
         <StatusPill tone="positive">
           {context.articles.length} publicado{context.articles.length === 1 ? '' : 's'}
         </StatusPill>
       </div>
-      <div className="mt-6 grid gap-4">
+      {featuredCategories.length > 0 ? (
+        <div className="mt-6 flex flex-wrap gap-2">
+          {featuredCategories.map((category) => (
+            <span
+              key={category.category_id}
+              className="rounded-full border border-[var(--help-border)] bg-white/74 px-3 py-1.5 text-xs text-[var(--help-muted)]"
+            >
+              {category.category_name}
+            </span>
+          ))}
+        </div>
+      ) : null}
+      <div className="mt-6 grid gap-3">
         {context.articles.map((article) => (
           <Link
             key={article.id}
-            className="rounded-[26px] border border-[var(--help-border)] bg-white/80 px-5 py-5 no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-white"
+            className="rounded-[26px] border border-[var(--help-border)] bg-white/82 px-5 py-5 no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-white"
             to={`/help/${context.primaryRoute.knowledge_space_slug}/articles/${article.slug}`}
           >
             <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="space-y-2">
+              <div className="min-w-0 space-y-2">
                 <div className="flex flex-wrap gap-2">
                   {article.category_id ? (
                     <StatusPill tone="accent">
@@ -67,7 +82,7 @@ export function HelpCenterArticlesPage() {
                   {article.summary ?? 'Artigo tecnico publico sem resumo adicional.'}
                 </p>
               </div>
-              <div className="text-right text-xs leading-5 text-[var(--help-muted)]">
+              <div className="text-left text-xs leading-5 text-[var(--help-muted)] sm:text-right">
                 <p>Publicado</p>
                 <p className="mt-1 font-medium text-[var(--help-ink)]">
                   {article.published_at
