@@ -237,6 +237,36 @@ Metadados brutos observados em `article.json`:
   - evitar heuristica solta ou parsing de markdown no frontend
 - Nenhum artigo legado continua sendo publicado automaticamente.
 
+## Advisory persistente da fase 5.3
+- A curadoria editorial agora possui uma camada advisory persistente em `knowledge_article_review_advisories`, separada do artigo canonico.
+- O backlog versionado passa a gerar tambem `docs/reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.json` como entrada segura para backfill advisory.
+- O sync local controlado dessa camada acontece por `scripts/knowledge/sync-review-advisories.mjs` e pelo comando `npm run knowledge:review:advisories:local`.
+- O advisory persiste apenas sinais de apoio editorial:
+  - `suggested_visibility`
+  - `suggested_classification`
+  - `classification_reason`
+  - `duplicate_group_key`
+  - `risk_flags`
+  - `review_status`
+  - `human_confirmations`
+  - `review_notes`
+- O advisory nao publica artigo, nao altera `body_md`, nao muda `status` nem `visibility` automaticamente.
+- A rota `/admin/knowledge` agora consome `vw_admin_knowledge_article_review_advisories` para:
+  - mostrar classificacao sugerida vinda do backend
+  - exibir flags de risco
+  - destacar grupos duplicados por `duplicate_group_key`
+  - persistir `review_status` e confirmacoes humanas
+- No ambiente validado desta fase:
+  - `58` artigos legado importados localmente receberam advisory
+  - `58` advisories ficaram em `pending`
+  - distribuicao atual: `4 public`, `34 internal`, `16 restricted`, `2 obsolete`, `2 duplicate`
+  - `1` grupo de duplicidade ficou materializado
+- O checklist visual da fase 5.2 continua existindo, mas agora ficou claramente separado entre:
+  - sinais objetivos do artigo atual
+  - sinais advisory vindos do backend
+  - confirmacoes humanas persistidas
+- Nenhuma heuristica de backlog foi promovida a source of truth publica; o advisory segue como apoio editorial autenticado.
+
 ## Próximos passos planejados
 - Evoluir a curadoria administrativa space-aware sem romper os contratos atuais do Admin Console.
 - Consumir a superfície pública apenas quando a UI da Central Pública for criada sobre as views endurecidas já aprovadas.

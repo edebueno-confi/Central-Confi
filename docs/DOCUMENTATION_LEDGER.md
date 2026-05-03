@@ -175,3 +175,29 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - melhora a trilha de revisao artigo a artigo antes de transformar conteudo curado em documentacao oficial
   - reforca a separacao entre sinal visual de curadoria e source of truth backend
+
+### Fase 5.3 - Knowledge Review Advisory Contract
+- fase: `5.3`
+- commit: `PENDING_COMMIT`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-03`
+- resumo funcional: advisory persistente de revisao editorial materializado no backend, backlog legado convertido em input versionado seguro e `/admin/knowledge` atualizado para consumir classificacao sugerida, riscos e confirmacoes humanas persistidas.
+- docs alterados:
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - `vw_admin_knowledge_article_review_advisories`
+  - `rpc_admin_update_knowledge_article_review_status`
+  - `rpc_admin_mark_knowledge_article_reviewed`
+- telas afetadas:
+  - `/admin/knowledge`
+- riscos restantes:
+  - o advisory continua sendo apoio editorial e nao substitui decisao humana de publish
+  - o lote local de drafts/advisories segue operacional e nao persiste apos `supabase:verify`
+  - a navegacao visual autenticada artigo a artigo ainda pode ser repetida manualmente se for exigida evidencia UX mais forte
+- impacto na FAQ futura:
+  - fortalece a rastreabilidade entre backlog legado, revisao humana e documentacao oficial
+  - cria trilha persistente para saber quais artigos ja foram revisados antes de virar FAQ ou help content publico

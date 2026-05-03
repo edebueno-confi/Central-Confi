@@ -22,6 +22,7 @@
     "supabase:qa:local-admin-fixture": "node supabase/qa/create-local-admin-fixture.mjs",
     "knowledge:curation:backlog": "node scripts/knowledge/generate-curation-backlog.mjs",
     "knowledge:import:octadesk:local": "node scripts/knowledge/import-octadesk-drafts.mjs --local",
+    "knowledge:review:advisories:local": "node scripts/knowledge/sync-review-advisories.mjs --local",
     "knowledge:verify:octadesk:space-aware": "node scripts/ci/verify-octadesk-import-space-aware.mjs",
     "web:dev": "node scripts/dev/run-web-dev.mjs",
     "web:typecheck": "npm run typecheck --workspace @genius-support-os/web",

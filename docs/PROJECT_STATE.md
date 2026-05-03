@@ -72,6 +72,7 @@ Documentos históricos:
 - Migration oficial de backfill e compatibilidade space-aware `supabase/migrations/20260430194826_phase4_3_backfill_space_aware_compatibility.sql`.
 - Migration oficial dos read models públicos da Central de Ajuda `supabase/migrations/20260503004940_phase4_5_public_help_center_read_models.sql`.
 - Migration oficial do contrato de busca pública da Central de Ajuda `supabase/migrations/20260503170246_phase4_9_public_help_center_search_contract.sql`.
+- Migration oficial do advisory persistente de revisão editorial da Knowledge Base `supabase/migrations/20260503204209_phase5_3_knowledge_review_advisory_contract.sql`.
 - Teste local de banco em `supabase/tests/001_phase1_identity_tenancy_rls.sql`.
 - Teste local de hardening em `supabase/tests/002_phase1_1_hardening.sql`.
 - Teste local de control plane administrativo em `supabase/tests/003_phase1_2_admin_control_plane.sql`.
@@ -87,6 +88,7 @@ Documentos históricos:
 - Teste local dos read models públicos da Central de Ajuda em `supabase/tests/013_phase4_5_public_help_center_read_models.sql`.
 - Teste local do branding público da Central de Ajuda em `supabase/tests/014_phase4_7_public_help_center_branding_contract.sql`.
 - Teste local do contrato de busca pública da Central de Ajuda em `supabase/tests/015_phase4_9_public_help_center_search_contract.sql`.
+- Teste local do advisory persistente de revisão editorial em `supabase/tests/016_phase5_3_knowledge_review_advisory_contract.sql`.
 - Seed separado em `supabase/seeds/` e desabilitado por padrão.
 - Fluxo de bootstrap seguro do primeiro `platform_admin` em `supabase/bootstrap/`.
 - Núcleo Fase 1 implementado com `profiles`, `user_global_roles`, `tenants`, `tenant_memberships`, `tenant_contacts` e `audit.audit_logs`.
@@ -103,10 +105,12 @@ Documentos históricos:
 - Views contratuais administrativas de Knowledge Base materializadas em `vw_admin_knowledge_categories`, `vw_admin_knowledge_articles_list` e `vw_admin_knowledge_article_detail`.
 - Views contratuais administrativas multi-brand materializadas em `vw_admin_organizations_list`, `vw_admin_organization_detail` e `vw_admin_knowledge_spaces`.
 - Views contratuais administrativas v2 space-aware materializadas em `vw_admin_knowledge_categories_v2`, `vw_admin_knowledge_articles_list_v2` e `vw_admin_knowledge_article_detail_v2`.
+- View contratual administrativa advisory materializada em `vw_admin_knowledge_article_review_advisories`.
 - Views contratuais públicas endurecidas materializadas em `vw_public_knowledge_space_resolver`, `vw_public_knowledge_navigation`, `vw_public_knowledge_articles_list` e `vw_public_knowledge_article_detail`.
 - RPCs contratuais de escrita materializadas em `rpc_create_ticket`, `rpc_update_ticket_status`, `rpc_assign_ticket`, `rpc_add_ticket_message`, `rpc_add_internal_ticket_note`, `rpc_close_ticket` e `rpc_reopen_ticket`.
 - RPCs contratuais administrativas de Knowledge Base materializadas em `rpc_admin_create_knowledge_category`, `rpc_admin_create_knowledge_article_draft`, `rpc_admin_update_knowledge_article_draft`, `rpc_admin_submit_knowledge_article_for_review`, `rpc_admin_publish_knowledge_article` e `rpc_admin_archive_knowledge_article`.
 - RPCs contratuais administrativas v2 space-aware materializadas em `rpc_admin_create_knowledge_category_v2`, `rpc_admin_create_knowledge_article_draft_v2`, `rpc_admin_update_knowledge_article_draft_v2`, `rpc_admin_submit_knowledge_article_for_review_v2`, `rpc_admin_publish_knowledge_article_v2` e `rpc_admin_archive_knowledge_article_v2`.
+- RPCs contratuais advisory materializadas em `rpc_admin_update_knowledge_article_review_status` e `rpc_admin_mark_knowledge_article_reviewed`.
 - `authenticated` não possui `SELECT`, `INSERT`, `UPDATE` nem `DELETE` direto nas tabelas base de ticketing; o app lê via views e escreve via RPCs.
 - Pacote `packages/contracts` materializado com tipos TypeScript para views e RPCs de ticketing.
 - Auditoria estrutural das views oficializada com `security_barrier = true`, filtros explícitos por caller e teste pgTAP dedicado.
@@ -344,6 +348,13 @@ Documentos históricos:
   - O detalhe do artigo agora inclui checklist editorial visual, separado entre sinais objetivos atuais e confirmações humanas obrigatórias.
   - A classificação sugerida do backlog continua fora do contrato backend atual; a proposta mínima segura ficou registrada em `docs/KNOWLEDGE_BASE_STRATEGY.md` e `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md`.
   - Nenhum artigo legado foi publicado automaticamente e nenhuma heurística editorial nova foi promovida a source of truth do frontend.
+- Fase 5.3: Knowledge Review Advisory Contract concluída localmente.
+  - A camada `knowledge_article_review_advisories` agora materializa apoio editorial persistente, separado do artigo canônico e sem qualquer mutação automática de `status`, `visibility` ou `body_md`.
+  - O backlog versionado da curadoria agora gera também `docs/reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.json` como insumo seguro para backfill advisory.
+  - O sync local controlado via `npm run knowledge:review:advisories:local` associou `58` advisories aos `58` drafts legado importados no `knowledge_space` `genius`, com `0` revisões humanas sobrescritas.
+  - A distribuição advisory validada ficou em `4 public`, `34 internal`, `16 restricted`, `2 obsolete`, `2 duplicate`, com `1` grupo de duplicidade persistido.
+  - A rota `/admin/knowledge` agora lê `vw_admin_knowledge_article_review_advisories`, mostra classificação sugerida, `risk_flags`, duplicidade persistida e grava `review_status`/confirmações humanas por RPC.
+  - `supabase/tests/016_phase5_3_knowledge_review_advisory_contract.sql` cobre grants, view, RPCs, persistência humana e ausência de mutação editorial automática.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.

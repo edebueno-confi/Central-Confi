@@ -247,6 +247,27 @@ export const KNOWLEDGE_ARTICLE_STATUSES = [
 ] as const;
 export type KnowledgeArticleStatus = (typeof KNOWLEDGE_ARTICLE_STATUSES)[number];
 
+export const KNOWLEDGE_ADVISORY_CLASSIFICATIONS = [
+  'public',
+  'internal',
+  'restricted',
+  'obsolete',
+  'duplicate',
+] as const;
+export type KnowledgeAdvisoryClassification =
+  (typeof KNOWLEDGE_ADVISORY_CLASSIFICATIONS)[number];
+
+export const KNOWLEDGE_ARTICLE_REVIEW_STATUSES = [
+  'pending',
+  'in_review',
+  'needs_changes',
+  'ready_for_review',
+  'ready_for_publish',
+  'reviewed',
+] as const;
+export type KnowledgeArticleReviewStatus =
+  (typeof KNOWLEDGE_ARTICLE_REVIEW_STATUSES)[number];
+
 export const KNOWLEDGE_SPACE_STATUSES = ['draft', 'active', 'archived'] as const;
 export type KnowledgeSpaceStatus = (typeof KNOWLEDGE_SPACE_STATUSES)[number];
 
@@ -452,6 +473,58 @@ export interface AdminKnowledgeArticleDetailV2Row {
   sources: AdminKnowledgeArticleSourceRow[];
 }
 
+export interface KnowledgeReviewHumanConfirmations {
+  title_reviewed?: boolean;
+  summary_reviewed?: boolean;
+  body_reviewed?: boolean;
+  category_reviewed?: boolean;
+  visibility_reviewed?: boolean;
+  no_sensitive_data_exposed?: boolean;
+  ready_for_review?: boolean;
+  ready_for_publish?: boolean;
+}
+
+export interface AdminKnowledgeArticleReviewAdvisoryRecordRow {
+  id: Uuid;
+  article_id: Uuid;
+  source_hash: string | null;
+  suggested_visibility: KnowledgeVisibility;
+  suggested_classification: KnowledgeAdvisoryClassification;
+  classification_reason: string;
+  duplicate_group_key: string | null;
+  risk_flags: JsonValue;
+  human_confirmations: JsonValue;
+  review_status: KnowledgeArticleReviewStatus;
+  review_notes: string | null;
+  reviewed_by_user_id: Uuid | null;
+  reviewed_at: IsoTimestamp | null;
+  created_at: IsoTimestamp;
+  updated_at: IsoTimestamp;
+  created_by_user_id: Uuid | null;
+  updated_by_user_id: Uuid | null;
+}
+
+export interface AdminKnowledgeArticleReviewAdvisoryRow
+  extends AdminKnowledgeArticleReviewAdvisoryRecordRow {
+  knowledge_space_id: Uuid;
+  knowledge_space_slug: string;
+  knowledge_space_display_name: string;
+  source_path: string | null;
+  article_visibility: KnowledgeVisibility;
+  article_status: KnowledgeArticleStatus;
+  article_title: string;
+  article_slug: string;
+  article_summary: string | null;
+  article_updated_at: IsoTimestamp;
+  category_id: Uuid | null;
+  category_name: string | null;
+  category_slug: string | null;
+  duplicate_group_article_count: number;
+  reviewed_by_full_name: string | null;
+  created_by_full_name: string | null;
+  updated_by_full_name: string | null;
+}
+
 export interface RpcAdminCreateKnowledgeCategoryV2Payload {
   p_name: string;
   p_slug: string;
@@ -508,3 +581,22 @@ export type RpcAdminPublishKnowledgeArticleV2Response =
   AdminKnowledgeArticleRecordRow;
 export type RpcAdminArchiveKnowledgeArticleV2Response =
   AdminKnowledgeArticleRecordRow;
+
+export interface RpcAdminUpdateKnowledgeArticleReviewStatusPayload {
+  p_article_id: Uuid;
+  p_review_status: KnowledgeArticleReviewStatus;
+  p_human_confirmations?: KnowledgeReviewHumanConfirmations | null;
+  p_review_notes?: string | null;
+}
+
+export type RpcAdminUpdateKnowledgeArticleReviewStatusResponse =
+  AdminKnowledgeArticleReviewAdvisoryRecordRow;
+
+export interface RpcAdminMarkKnowledgeArticleReviewedPayload {
+  p_article_id: Uuid;
+  p_human_confirmations?: KnowledgeReviewHumanConfirmations | null;
+  p_review_notes?: string | null;
+}
+
+export type RpcAdminMarkKnowledgeArticleReviewedResponse =
+  AdminKnowledgeArticleReviewAdvisoryRecordRow;

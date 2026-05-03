@@ -164,3 +164,29 @@ Aplicar quando:
   - projetar read model advisory versionado a partir do backlog controlado
   - manter advisory separado do artigo canonico
   - expor somente campos seguros de apoio editorial, nunca como source of truth publica
+
+## Contrato advisory da fase 5.3
+- o caminho recomendado da fase 5.2 foi materializado
+- a camada persistente agora existe em `knowledge_article_review_advisories`
+- a origem versionada do advisory fica em:
+  - `docs/reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`
+  - `docs/reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.json`
+- o sync controlado local acontece por:
+  - `npm run knowledge:curation:backlog`
+  - `npm run knowledge:review:advisories:local -- --space-slug genius`
+- regras do advisory:
+  - advisory e apoio editorial, nao decisao automatica
+  - nenhuma linha muda `body_md`, `status` ou `visibility` do artigo por efeito colateral
+  - revisao humana existente nao deve ser sobrescrita pelo sync do backlog
+  - a camada nao e exposta em views publicas
+- persistencia humana agora disponivel:
+  - `review_status`
+  - `review_notes`
+  - `human_confirmations`
+  - `reviewed_by_user_id`
+  - `reviewed_at`
+- checklist editorial passa a operar em tres trilhas:
+  1. sinais objetivos do artigo atual
+  2. sinais advisory derivados do backlog
+  3. confirmacoes humanas persistidas
+- o publish continua dependendo de decisao humana explicita e separada do advisory

@@ -4,6 +4,7 @@ import type {
   AdminAuditFeedRow,
   AdminKnowledgeArticleDetailV2Row,
   AdminKnowledgeArticleListItemV2Row,
+  AdminKnowledgeArticleReviewAdvisoryRow,
   AdminKnowledgeCategoryRecordRow,
   AdminKnowledgeCategoryV2Row,
   AdminKnowledgeSpaceRow,
@@ -15,7 +16,10 @@ import type {
   AdminTenantRecordRow,
   AdminTenantsListItemRow,
   AdminUserLookupRow,
+  KnowledgeAdvisoryClassification,
   KnowledgeArticleStatus,
+  KnowledgeArticleReviewStatus,
+  KnowledgeReviewHumanConfirmations,
   KnowledgeVisibility,
   RpcAdminAddTenantMemberPayload,
   RpcAdminAddTenantMemberResponse,
@@ -29,8 +33,12 @@ import type {
   RpcAdminCreateTenantContactResponse,
   RpcAdminCreateTenantPayload,
   RpcAdminCreateTenantResponse,
+  RpcAdminMarkKnowledgeArticleReviewedPayload,
+  RpcAdminMarkKnowledgeArticleReviewedResponse,
   RpcAdminPublishKnowledgeArticleV2Response,
   RpcAdminSubmitKnowledgeArticleForReviewV2Response,
+  RpcAdminUpdateKnowledgeArticleReviewStatusPayload,
+  RpcAdminUpdateKnowledgeArticleReviewStatusResponse,
   RpcAdminUpdateKnowledgeArticleDraftV2Payload,
   RpcAdminUpdateKnowledgeArticleDraftV2Response,
   RpcAdminUpdateTenantContactPayload,
@@ -232,6 +240,26 @@ export async function getAdminKnowledgeArticleDetailV2(articleId: string) {
   } satisfies AdminKnowledgeArticleDetailV2Row;
 }
 
+export async function listAdminKnowledgeArticleReviewAdvisories(
+  knowledgeSpaceId: string,
+) {
+  const client = requireClient();
+  const { data, error } = await client
+    .from('vw_admin_knowledge_article_review_advisories')
+    .select('*')
+    .eq('knowledge_space_id', knowledgeSpaceId)
+    .order('updated_at', { ascending: false });
+
+  if (error) {
+    throw toAppError(
+      error,
+      'Falha ao carregar advisories editoriais da Knowledge Base.',
+    );
+  }
+
+  return (data ?? []) as AdminKnowledgeArticleReviewAdvisoryRow[];
+}
+
 export async function createTenant(payload: RpcAdminCreateTenantPayload) {
   const client = requireClient();
   const { data, error } = await client.rpc('rpc_admin_create_tenant', payload);
@@ -428,10 +456,43 @@ export async function archiveKnowledgeArticleV2(
   return data as RpcAdminArchiveKnowledgeArticleV2Response;
 }
 
+export async function updateKnowledgeArticleReviewStatus(
+  payload: RpcAdminUpdateKnowledgeArticleReviewStatusPayload,
+) {
+  const client = requireClient();
+  const { data, error } = await client.rpc(
+    'rpc_admin_update_knowledge_article_review_status',
+    payload,
+  );
+
+  if (error) {
+    throw toAppError(error, 'Falha ao atualizar o status da revisao editorial.');
+  }
+
+  return data as RpcAdminUpdateKnowledgeArticleReviewStatusResponse;
+}
+
+export async function markKnowledgeArticleReviewed(
+  payload: RpcAdminMarkKnowledgeArticleReviewedPayload,
+) {
+  const client = requireClient();
+  const { data, error } = await client.rpc(
+    'rpc_admin_mark_knowledge_article_reviewed',
+    payload,
+  );
+
+  if (error) {
+    throw toAppError(error, 'Falha ao marcar a revisao editorial como concluida.');
+  }
+
+  return data as RpcAdminMarkKnowledgeArticleReviewedResponse;
+}
+
 export type {
   AdminAuditFeedRow,
   AdminKnowledgeArticleDetailV2Row,
   AdminKnowledgeArticleListItemV2Row,
+  AdminKnowledgeArticleReviewAdvisoryRow,
   AdminKnowledgeCategoryRecordRow,
   AdminKnowledgeCategoryV2Row,
   AdminKnowledgeSpaceRow,
@@ -443,6 +504,9 @@ export type {
   AdminTenantRecordRow,
   AdminTenantsListItemRow,
   AdminUserLookupRow,
+  KnowledgeAdvisoryClassification,
   KnowledgeArticleStatus,
+  KnowledgeArticleReviewStatus,
+  KnowledgeReviewHumanConfirmations,
   KnowledgeVisibility,
 };

@@ -144,12 +144,21 @@ function classifyRow(row) {
             ? 'revalidar com operacao e considerar arquivamento editorial'
             : 'consolidar com artigo canonico e arquivar duplicado';
 
+  const suggestedVisibility =
+    suggested === 'public'
+      ? 'public'
+      : suggested === 'internal' || suggested === 'obsolete'
+        ? 'internal'
+        : 'restricted';
+
   return {
     ...row,
+    suggestedVisibility,
     suggestedClassification: suggested,
     classificationReason: reasons.join('; '),
     reviewStatus: 'pending',
     recommendedAction: action,
+    duplicateGroupKey: row.duplicateCount > 1 ? row.sourceHash : null,
   };
 }
 
@@ -255,6 +264,10 @@ function main() {
   );
   const reportsRoot = join(process.cwd(), 'docs', 'reports');
   const backlogPath = join(reportsRoot, 'KNOWLEDGE_LEGACY_CURATION_BACKLOG.md');
+  const backlogJsonPath = join(
+    reportsRoot,
+    'KNOWLEDGE_LEGACY_CURATION_BACKLOG.json',
+  );
   const tempRoot = join(process.cwd(), '.tmp');
   const auditPath = join(tempRoot, 'knowledge-curation-audit.json');
 
@@ -264,6 +277,35 @@ function main() {
   const rows = buildRows(root);
 
   writeBacklog(rows, backlogPath);
+  writeFileSync(
+    backlogJsonPath,
+    `${JSON.stringify(
+      {
+        generatedAt: new Date().toISOString(),
+        total: rows.length,
+        rows: rows.map((row) => ({
+          sourcePath: row.sourcePath,
+          sourceHash: row.sourceHash,
+          title: row.title,
+          rootCategory: row.rootCategory,
+          sectionCategory: row.sectionCategory,
+          summary: row.summary,
+          articleUrl: row.articleUrl,
+          suggestedVisibility: row.suggestedVisibility,
+          suggestedClassification: row.suggestedClassification,
+          classificationReason: row.classificationReason,
+          riskFlags: row.flags,
+          duplicateGroupKey: row.duplicateGroupKey,
+          duplicateCount: row.duplicateCount,
+          reviewStatus: row.reviewStatus,
+          recommendedAction: row.recommendedAction,
+        })),
+      },
+      null,
+      2,
+    )}\n`,
+    'utf8',
+  );
   writeFileSync(
     auditPath,
     `${JSON.stringify(
@@ -280,6 +322,7 @@ function main() {
 
   const summary = {
     backlogPath: relative(process.cwd(), backlogPath).replace(/\\/g, '/'),
+    backlogJsonPath: relative(process.cwd(), backlogJsonPath).replace(/\\/g, '/'),
     auditPath: relative(process.cwd(), auditPath).replace(/\\/g, '/'),
     total: rows.length,
     public: rows.filter((row) => row.suggestedClassification === 'public').length,

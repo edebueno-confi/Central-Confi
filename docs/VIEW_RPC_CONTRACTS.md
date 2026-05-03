@@ -133,6 +133,15 @@ Fase 4.9:
 - A RPC pública retorna apenas metadados mínimos de resultado (`article_id`, `title`, `slug`, `summary`, `category_name`, `rank_score`, `updated_at`) e nunca expõe `body_md` completo.
 - A busca continua sem IA, embeddings, chat, portal B2B ou abertura pública de ticket.
 
+Fase 5.3:
+- A curadoria editorial agora possui contrato backend advisory persistente e separado do artigo canonico.
+- O backlog legado passa a alimentar `knowledge_article_review_advisories` por `source_hash` e `source_path`, sem alterar `body_md`, `status` ou `visibility` automaticamente.
+- O Admin Console autenticado le apenas `vw_admin_knowledge_article_review_advisories` para sinais de apoio editorial persistidos.
+- A escrita administrativa dessa camada acontece apenas por:
+  - `rpc_admin_update_knowledge_article_review_status`
+  - `rpc_admin_mark_knowledge_article_reviewed`
+- O advisory continua sendo apoio de revisao humana, nunca decisao automatica de publish.
+
 ## Views contratuais vigentes
 
 ### `vw_tickets_list`
@@ -304,6 +313,16 @@ Fase 4.9:
   - retorna linhas apenas para `platform_admin` com `profile.is_active = true`;
   - expõe apenas artigos com `knowledge_space_id` não nulo;
   - preserva rastreabilidade de backfill e importação legado por `source_path` e `source_hash`;
+  - usa `security_barrier = true`.
+
+### `vw_admin_knowledge_article_review_advisories`
+- Finalidade: read model administrativo persistente de apoio editorial para revisao da Knowledge Base.
+- Retorna: artigo, `knowledge_space`, trilha de origem (`source_path`, `source_hash`), `suggested_visibility`, `suggested_classification`, `classification_reason`, `duplicate_group_key`, `duplicate_group_article_count`, `risk_flags`, `human_confirmations`, `review_status`, `review_notes` e trilha de autoria/revisao.
+- Regras:
+  - retorna linhas apenas para `platform_admin` com `profile.is_active = true`;
+  - expõe apenas advisories associados a artigos da KB administrativa;
+  - não altera nem substitui o dado editorial canonico de `knowledge_articles`;
+  - não fica exposta para `anon` nem para surfaces publicas;
   - usa `security_barrier = true`.
 
 ### `vw_public_knowledge_space_resolver`
@@ -541,6 +560,25 @@ Fase 4.9:
   - valida o space do artigo antes do arquivamento;
   - preserva a trilha editorial.
 
+### `rpc_admin_update_knowledge_article_review_status`
+- Escopo: `platform_admin`
+- Retorno: linha de `public.knowledge_article_review_advisories`
+- Regras:
+  - atualiza apenas o advisory persistente do artigo;
+  - aceita `review_status`, `human_confirmations` e `review_notes`;
+  - valida `human_confirmations` como objeto JSON;
+  - não altera `status`, `visibility` nem `body_md` do artigo;
+  - gera trilha de auditoria obrigatoria.
+
+### `rpc_admin_mark_knowledge_article_reviewed`
+- Escopo: `platform_admin`
+- Retorno: linha de `public.knowledge_article_review_advisories`
+- Regras:
+  - marca o advisory como `reviewed` e persiste `reviewed_by_user_id`/`reviewed_at`;
+  - aceita `human_confirmations` e `review_notes`;
+  - não publica artigo nem promove mudanca automatica em `knowledge_articles`;
+  - gera trilha de auditoria obrigatoria.
+
 ## RPCs de ticketing vigentes
 
 ### `rpc_create_ticket`
@@ -637,6 +675,7 @@ Fase 4.9:
   - `vw_admin_knowledge_categories_v2`
   - `vw_admin_knowledge_articles_list_v2`
   - `vw_admin_knowledge_article_detail_v2`
+  - `vw_admin_knowledge_article_review_advisories`
 - O app público/autenticado lê a Central de Ajuda futura apenas por:
   - `vw_public_knowledge_space_resolver`
   - `vw_public_knowledge_navigation`
@@ -665,6 +704,8 @@ Fase 4.9:
   - `rpc_admin_submit_knowledge_article_for_review_v2`
   - `rpc_admin_publish_knowledge_article_v2`
   - `rpc_admin_archive_knowledge_article_v2`
+  - `rpc_admin_update_knowledge_article_review_status`
+  - `rpc_admin_mark_knowledge_article_reviewed`
 
 ## Próximos contratos planejados
 - Views e RPCs de intake para engenharia.

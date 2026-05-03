@@ -32,22 +32,31 @@ import {
   createKnowledgeArticleDraftV2,
   createKnowledgeCategoryV2,
   getAdminKnowledgeArticleDetailV2,
+  listAdminKnowledgeArticleReviewAdvisories,
   listAdminKnowledgeArticlesV2,
   listAdminKnowledgeCategoriesV2,
   listAdminKnowledgeSpaces,
+  markKnowledgeArticleReviewed,
   publishKnowledgeArticleV2,
   submitKnowledgeArticleForReviewV2,
+  updateKnowledgeArticleReviewStatus,
   updateKnowledgeArticleDraftV2,
+  type AdminKnowledgeArticleReviewAdvisoryRow,
   type AdminKnowledgeArticleDetailV2Row,
   type AdminKnowledgeArticleListItemV2Row,
   type AdminKnowledgeCategoryV2Row,
   type AdminKnowledgeSpaceRow,
+  type KnowledgeAdvisoryClassification,
   type KnowledgeArticleStatus,
+  type KnowledgeArticleReviewStatus,
+  type KnowledgeReviewHumanConfirmations,
   type KnowledgeVisibility,
 } from '../admin/admin-api';
 import { classifyAdminError } from '../admin/admin-errors';
 import {
+  KNOWLEDGE_ADVISORY_CLASSIFICATIONS,
   KNOWLEDGE_ARTICLE_STATUSES,
+  KNOWLEDGE_ARTICLE_REVIEW_STATUSES,
   KNOWLEDGE_VISIBILITIES,
 } from '../../contracts/admin-contracts';
 import { useAuthContext } from '../auth/auth-context';
@@ -66,6 +75,12 @@ interface EditorialChecklistItem {
   label: string;
   tone: EditorialChecklistTone;
   description: string;
+}
+
+interface HumanConfirmationDefinition {
+  key: keyof KnowledgeReviewHumanConfirmations;
+  label: string;
+  help: string;
 }
 
 interface ArticleFormState {
@@ -92,6 +107,49 @@ interface ArticleActionFeedback {
   message: string;
 }
 
+const HUMAN_CONFIRMATION_FIELDS: HumanConfirmationDefinition[] = [
+  {
+    key: 'title_reviewed',
+    label: 'Titulo revisado',
+    help: 'Confirma que o titulo editorial foi validado por um revisor humano.',
+  },
+  {
+    key: 'summary_reviewed',
+    label: 'Resumo revisado',
+    help: 'Confirma que o resumo ja esta claro para suporte/CS/cliente B2B.',
+  },
+  {
+    key: 'body_reviewed',
+    label: 'Conteudo em Markdown revisado',
+    help: 'Confirma que o corpo principal foi revisado em Markdown seguro.',
+  },
+  {
+    key: 'category_reviewed',
+    label: 'Categoria correta',
+    help: 'Confirma que a categoria atual representa bem o artigo.',
+  },
+  {
+    key: 'visibility_reviewed',
+    label: 'Visibility correta',
+    help: 'Confirma que o escopo public/internal/restricted foi validado manualmente.',
+  },
+  {
+    key: 'no_sensitive_data_exposed',
+    label: 'Nenhum segredo ou API sensivel exposto',
+    help: 'Confirma revisao humana de segredos, credenciais, integracoes e dados internos.',
+  },
+  {
+    key: 'ready_for_review',
+    label: 'Pronto para review',
+    help: 'Confirma que o artigo pode sair de draft e entrar em review editorial.',
+  },
+  {
+    key: 'ready_for_publish',
+    label: 'Pronto para publish',
+    help: 'Confirma que o artigo ja esta pronto para publicacao humana quando o status permitir.',
+  },
+];
+
 function emptyArticleForm(): ArticleFormState {
   return {
     title: '',
@@ -113,6 +171,29 @@ function emptyCategoryForm(): CategoryFormState {
     visibility: 'internal',
     parentCategoryId: '',
   };
+}
+
+function emptyHumanConfirmations(): KnowledgeReviewHumanConfirmations {
+  return {};
+}
+
+function normalizeHumanConfirmations(
+  value: unknown,
+): KnowledgeReviewHumanConfirmations {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return emptyHumanConfirmations();
+  }
+
+  const record = value as Record<string, unknown>;
+  const result: KnowledgeReviewHumanConfirmations = {};
+
+  for (const field of HUMAN_CONFIRMATION_FIELDS) {
+    if (typeof record[field.key] === 'boolean') {
+      result[field.key] = record[field.key] as boolean;
+    }
+  }
+
+  return result;
 }
 
 function buildArticleForm(detail: AdminKnowledgeArticleDetailV2Row): ArticleFormState {
@@ -171,6 +252,44 @@ function toneForArticleStatus(status: KnowledgeArticleStatus) {
   return 'default' as const;
 }
 
+function toneForReviewStatus(status: KnowledgeArticleReviewStatus) {
+  if (status === 'reviewed') {
+    return 'positive' as const;
+  }
+
+  if (status === 'ready_for_publish' || status === 'ready_for_review') {
+    return 'accent' as const;
+  }
+
+  if (status === 'needs_changes') {
+    return 'critical' as const;
+  }
+
+  if (status === 'in_review') {
+    return 'warning' as const;
+  }
+
+  return 'default' as const;
+}
+
+function toneForAdvisoryClassification(
+  classification: KnowledgeAdvisoryClassification,
+) {
+  if (classification === 'public') {
+    return 'positive' as const;
+  }
+
+  if (classification === 'internal') {
+    return 'accent' as const;
+  }
+
+  if (classification === 'obsolete' || classification === 'duplicate') {
+    return 'warning' as const;
+  }
+
+  return 'critical' as const;
+}
+
 function toneForVisibility(visibility: KnowledgeVisibility) {
   if (visibility === 'public') {
     return 'positive' as const;
@@ -217,6 +336,30 @@ function countDuplicateHashGroups(sourceHashCounts: Map<string, number>) {
 
 function containsLegacyHtml(value: string) {
   return /<[^>]+>/.test(value);
+}
+
+function normalizeRiskFlags(value: unknown) {
+  if (!Array.isArray(value)) {
+    return [] as string[];
+  }
+
+  return value.filter((item): item is string => typeof item === 'string');
+}
+
+function buildPersistedHumanChecklist(
+  confirmations: KnowledgeReviewHumanConfirmations,
+): EditorialChecklistItem[] {
+  return HUMAN_CONFIRMATION_FIELDS.map((field) => {
+    const checked = confirmations[field.key] === true;
+
+    return {
+      label: field.label,
+      tone: checked ? 'positive' : 'warning',
+      description: checked
+        ? 'Confirmacao humana persistida para este item.'
+        : field.help,
+    } satisfies EditorialChecklistItem;
+  });
 }
 
 function buildEditorialChecklist(
@@ -347,6 +490,7 @@ export function KnowledgePage() {
   const [contentMessage, setContentMessage] = useState<string | null>(null);
   const [categories, setCategories] = useState<AdminKnowledgeCategoryV2Row[]>([]);
   const [articles, setArticles] = useState<AdminKnowledgeArticleListItemV2Row[]>([]);
+  const [advisories, setAdvisories] = useState<AdminKnowledgeArticleReviewAdvisoryRow[]>([]);
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [detailPhase, setDetailPhase] = useState<DetailPhase>('idle');
   const [detailMessage, setDetailMessage] = useState<string | null>(null);
@@ -365,11 +509,21 @@ export function KnowledgePage() {
   const [articleActionSubmitting, setArticleActionSubmitting] = useState(false);
   const [articleActionFeedback, setArticleActionFeedback] =
     useState<ArticleActionFeedback | null>(null);
+  const [reviewStatusDraft, setReviewStatusDraft] =
+    useState<KnowledgeArticleReviewStatus>('pending');
+  const [reviewNotesDraft, setReviewNotesDraft] = useState('');
+  const [humanConfirmationsDraft, setHumanConfirmationsDraft] =
+    useState<KnowledgeReviewHumanConfirmations>(emptyHumanConfirmations);
+  const [reviewAdvisorySubmitting, setReviewAdvisorySubmitting] = useState(false);
+  const [reviewAdvisoryMessage, setReviewAdvisoryMessage] = useState<string | null>(null);
 
   const selectedSpace =
     spaces.find((space) => space.id === selectedSpaceId) ?? null;
   const selectedArticleSummary =
     articles.find((article) => article.id === selectedArticleId) ?? null;
+  const advisoryMap = new Map(advisories.map((advisory) => [advisory.article_id, advisory]));
+  const selectedAdvisory =
+    selectedArticleId ? advisoryMap.get(selectedArticleId) ?? null : null;
   const sourceHashCounts = buildSourceHashCounts(articles);
   const duplicateHashGroupCount = countDuplicateHashGroups(sourceHashCounts);
   const filteredArticles = articles.filter((article) => {
@@ -385,9 +539,9 @@ export function KnowledgePage() {
       }
     }
 
-    const duplicateCount = article.source_hash
-      ? sourceHashCounts.get(article.source_hash) ?? 0
-      : 0;
+    const duplicateCount =
+      advisoryMap.get(article.id)?.duplicate_group_article_count ??
+      (article.source_hash ? sourceHashCounts.get(article.source_hash) ?? 0 : 0);
 
     if (duplicateFilter === 'duplicates' && duplicateCount <= 1) {
       return false;
@@ -417,6 +571,9 @@ export function KnowledgePage() {
   const publishedArticleCount = articles.filter(
     (article) => article.status === 'published',
   ).length;
+  const reviewedAdvisoryCount = advisories.filter(
+    (advisory) => advisory.review_status === 'reviewed',
+  ).length;
   const legacyArticleCount = articles.filter(
     (article) => article.source_path || article.source_hash,
   ).length;
@@ -424,12 +581,15 @@ export function KnowledgePage() {
     (article) => article.visibility === 'restricted',
   ).length;
   const selectedArticleDuplicateCount =
-    articleDetail?.source_hash
+    selectedAdvisory?.duplicate_group_article_count ??
+    (articleDetail?.source_hash
       ? sourceHashCounts.get(articleDetail.source_hash) ?? 0
-      : 0;
+      : 0);
   const editorialChecklist = articleDetail
     ? buildEditorialChecklist(articleDetail, selectedArticleDuplicateCount)
     : null;
+  const persistedHumanChecklist = buildPersistedHumanChecklist(humanConfirmationsDraft);
+  const advisoryRiskFlags = normalizeRiskFlags(selectedAdvisory?.risk_flags);
 
   const loadKnowledgeSpaces = useEffectEvent(
     async (preferredSpaceId?: string | null) => {
@@ -481,17 +641,19 @@ export function KnowledgePage() {
       setContentMessage(null);
 
       try {
-        const [categoriesData, articlesData] = await Promise.all([
+        const [categoriesData, articlesData, advisoriesData] = await Promise.all([
           listAdminKnowledgeCategoriesV2(knowledgeSpaceId),
           listAdminKnowledgeArticlesV2({
             knowledgeSpaceId,
             status: statusFilter,
             visibility: visibilityFilter,
           }),
+          listAdminKnowledgeArticleReviewAdvisories(knowledgeSpaceId),
         ]);
 
         setCategories(categoriesData);
         setArticles(articlesData);
+        setAdvisories(advisoriesData);
         setContentPhase('ready');
         setContentMessage(null);
         setBackendDenied(false);
@@ -521,6 +683,7 @@ export function KnowledgePage() {
 
         setCategories([]);
         setArticles([]);
+        setAdvisories([]);
         setSelectedArticleId(null);
         setContentMessage(classified.message);
         setContentPhase(
@@ -593,12 +756,17 @@ export function KnowledgePage() {
     setArticleFormMessage(null);
     setCategoryFormMessage(null);
     setArticleActionFeedback(null);
+    setReviewAdvisoryMessage(null);
+    setReviewStatusDraft('pending');
+    setReviewNotesDraft('');
+    setHumanConfirmationsDraft(emptyHumanConfirmations());
   }, [selectedSpaceId]);
 
   useEffect(() => {
     if (!selectedSpaceId) {
       setCategories([]);
       setArticles([]);
+      setAdvisories([]);
       setSelectedArticleId(null);
       setContentPhase('idle');
       setContentMessage(null);
@@ -618,6 +786,15 @@ export function KnowledgePage() {
 
     void loadArticleDetail(selectedArticleId);
   }, [selectedArticleId]);
+
+  useEffect(() => {
+    setReviewAdvisoryMessage(null);
+    setReviewStatusDraft(selectedAdvisory?.review_status ?? 'pending');
+    setReviewNotesDraft(selectedAdvisory?.review_notes ?? '');
+    setHumanConfirmationsDraft(
+      normalizeHumanConfirmations(selectedAdvisory?.human_confirmations),
+    );
+  }, [selectedAdvisory?.id]);
 
   function openCreateArticle() {
     setPanelMode('create-article');
@@ -659,6 +836,95 @@ export function KnowledgePage() {
     }
 
     await loadArticleDetail(targetArticleId);
+  }
+
+  function updateHumanConfirmation(
+    key: keyof KnowledgeReviewHumanConfirmations,
+    checked: boolean,
+  ) {
+    setHumanConfirmationsDraft((current) => ({
+      ...current,
+      [key]: checked,
+    }));
+  }
+
+  async function handleSaveReviewAdvisoryStatus() {
+    if (!selectedArticleId) {
+      return;
+    }
+
+    setReviewAdvisorySubmitting(true);
+    setReviewAdvisoryMessage(null);
+
+    try {
+      await updateKnowledgeArticleReviewStatus({
+        p_article_id: selectedArticleId,
+        p_review_status: reviewStatusDraft,
+        p_human_confirmations: humanConfirmationsDraft,
+        p_review_notes: reviewNotesDraft,
+      });
+
+      await refreshSelectedSpace(selectedArticleId);
+      setReviewAdvisoryMessage('Status editorial persistido com sucesso.');
+    } catch (error) {
+      const classified = classifyAdminError(
+        error,
+        'Falha ao persistir a revisao editorial.',
+      );
+
+      if (classified.kind === 'session-expired') {
+        markSessionExpired();
+        return;
+      }
+
+      if (classified.kind === 'permission-denied') {
+        setBackendDenied(true);
+        return;
+      }
+
+      setReviewAdvisoryMessage(classified.message);
+    } finally {
+      setReviewAdvisorySubmitting(false);
+    }
+  }
+
+  async function handleMarkReviewAdvisoryReviewed() {
+    if (!selectedArticleId) {
+      return;
+    }
+
+    setReviewAdvisorySubmitting(true);
+    setReviewAdvisoryMessage(null);
+
+    try {
+      await markKnowledgeArticleReviewed({
+        p_article_id: selectedArticleId,
+        p_human_confirmations: humanConfirmationsDraft,
+        p_review_notes: reviewNotesDraft,
+      });
+
+      await refreshSelectedSpace(selectedArticleId);
+      setReviewAdvisoryMessage('Revisao editorial marcada como concluida.');
+    } catch (error) {
+      const classified = classifyAdminError(
+        error,
+        'Falha ao concluir a revisao editorial.',
+      );
+
+      if (classified.kind === 'session-expired') {
+        markSessionExpired();
+        return;
+      }
+
+      if (classified.kind === 'permission-denied') {
+        setBackendDenied(true);
+        return;
+      }
+
+      setReviewAdvisoryMessage(classified.message);
+    } finally {
+      setReviewAdvisorySubmitting(false);
+    }
   }
 
   async function handleCreateCategory(event: FormEvent<HTMLFormElement>) {
@@ -985,7 +1251,7 @@ export function KnowledgePage() {
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-6">
+      <div className="grid gap-4 md:grid-cols-7">
         <MetricCard
           label="Knowledge spaces"
           value={String(spaces.length)}
@@ -1012,15 +1278,20 @@ export function KnowledgePage() {
           helper="Artigos com source_path/source_hash disponiveis para curadoria."
         />
         <MetricCard
+          label="Advisories revisados"
+          value={`${reviewedAdvisoryCount}/${advisories.length}`}
+          helper="Revisoes persistidas no contrato de advisory editorial."
+        />
+        <MetricCard
           label="Restritos / duplicados"
           value={`${restrictedArticleCount}/${duplicateHashGroupCount}`}
-          helper="Primeiro numero: artigos restricted. Segundo: grupos de source_hash duplicado."
+          helper="Primeiro numero: artigos restricted. Segundo: grupos duplicados no advisory."
         />
       </div>
 
       <Panel
         title="Escopo editorial"
-        description="A leitura desta etapa usa apenas knowledge spaces e views v2 space-aware. Nenhuma tabela-base da Knowledge Base e acessada pelo frontend."
+        description="A leitura desta etapa usa apenas knowledge spaces, views v2 space-aware e o advisory contratual de revisao editorial. Nenhuma tabela-base da Knowledge Base e acessada pelo frontend."
       >
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.78fr)_minmax(0,0.78fr)_minmax(0,0.78fr)_minmax(0,0.78fr)_auto]">
           <Field label="Knowledge space">
@@ -1207,9 +1478,12 @@ export function KnowledgePage() {
                   <tbody>
                     {filteredArticles.map((article) => {
                       const isSelected = article.id === selectedArticleId;
-                      const duplicateCount = article.source_hash
-                        ? sourceHashCounts.get(article.source_hash) ?? 0
-                        : 0;
+                      const articleAdvisory = advisoryMap.get(article.id);
+                      const duplicateCount =
+                        articleAdvisory?.duplicate_group_article_count ??
+                        (article.source_hash
+                          ? sourceHashCounts.get(article.source_hash) ?? 0
+                          : 0);
                       return (
                         <tr
                           key={article.id}
@@ -1246,6 +1520,22 @@ export function KnowledgePage() {
                                   : ''}
                                 {duplicateCount > 1 ? ` · duplicado x${duplicateCount}` : ''}
                               </span>
+                              {articleAdvisory ? (
+                                <div className="flex flex-wrap gap-2">
+                                  <StatusPill
+                                    tone={toneForAdvisoryClassification(
+                                      articleAdvisory.suggested_classification,
+                                    )}
+                                  >
+                                    {articleAdvisory.suggested_classification}
+                                  </StatusPill>
+                                  <StatusPill
+                                    tone={toneForReviewStatus(articleAdvisory.review_status)}
+                                  >
+                                    {articleAdvisory.review_status}
+                                  </StatusPill>
+                                </div>
+                              ) : null}
                               {article.visibility === 'restricted' ? (
                                 <span className="text-[0.72rem] font-medium uppercase tracking-[0.12em] text-[color:var(--color-danger-ink)]">
                                   revisao cautelosa obrigatoria
@@ -1616,6 +1906,22 @@ export function KnowledgePage() {
                   <StatusPill tone={toneForVisibility(articleDetail.visibility)}>
                     {articleDetail.visibility}
                   </StatusPill>
+                  {selectedAdvisory ? (
+                    <>
+                      <StatusPill
+                        tone={toneForAdvisoryClassification(
+                          selectedAdvisory.suggested_classification,
+                        )}
+                      >
+                        {selectedAdvisory.suggested_classification}
+                      </StatusPill>
+                      <StatusPill
+                        tone={toneForReviewStatus(selectedAdvisory.review_status)}
+                      >
+                        {selectedAdvisory.review_status}
+                      </StatusPill>
+                    </>
+                  ) : null}
                   {articleDetail.category_name ? (
                     <StatusPill>{articleDetail.category_name}</StatusPill>
                   ) : null}
@@ -1671,12 +1977,65 @@ export function KnowledgePage() {
                 </InlineNotice>
               ) : null}
 
-              <InlineNotice>
-                Classificacao sugerida do backlog ainda nao esta disponivel no
-                contrato backend desta tela. Proposta minima segura: projetar um
-                read model advisory versionado a partir do backlog controlado,
-                sem heuristica solta no frontend.
-              </InlineNotice>
+              {reviewAdvisoryMessage ? (
+                <InlineNotice
+                  tone={
+                    reviewAdvisoryMessage.includes('sucesso') ||
+                    reviewAdvisoryMessage.includes('concluida')
+                      ? 'warning'
+                      : 'critical'
+                  }
+                >
+                  {reviewAdvisoryMessage}
+                </InlineNotice>
+              ) : null}
+
+              {selectedAdvisory ? (
+                <div className="rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusPill
+                      tone={toneForAdvisoryClassification(
+                        selectedAdvisory.suggested_classification,
+                      )}
+                    >
+                      {selectedAdvisory.suggested_classification}
+                    </StatusPill>
+                    <StatusPill tone={toneForVisibility(selectedAdvisory.suggested_visibility)}>
+                      sugere {selectedAdvisory.suggested_visibility}
+                    </StatusPill>
+                    <StatusPill tone={toneForReviewStatus(selectedAdvisory.review_status)}>
+                      revisao {selectedAdvisory.review_status}
+                    </StatusPill>
+                    {selectedAdvisory.duplicate_group_key ? (
+                      <StatusPill tone="warning">
+                        grupo duplicado x{selectedAdvisory.duplicate_group_article_count}
+                      </StatusPill>
+                    ) : null}
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-[color:var(--color-muted)]">
+                    {selectedAdvisory.classification_reason}
+                  </p>
+                  {advisoryRiskFlags.length > 0 ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {advisoryRiskFlags.map((flag) => (
+                        <StatusPill key={flag} tone="critical">
+                          {flag}
+                        </StatusPill>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-sm leading-6 text-[color:var(--color-muted)]">
+                      Sem risk flags automáticos no backlog controlado.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <InlineNotice>
+                  Este artigo ainda nao possui advisory persistido. Rode o sync de
+                  backlog controlado para materializar classificacao sugerida,
+                  duplicidade editorial e status humano persistente.
+                </InlineNotice>
+              )}
 
               <div className="flex flex-wrap gap-3">
                 {(articleDetail.status === 'draft' || articleDetail.status === 'review') ? (
@@ -1735,6 +2094,23 @@ export function KnowledgePage() {
                 {articleDetail.source_hash ? (
                   <p>Source hash: {articleDetail.source_hash}</p>
                 ) : null}
+                {selectedAdvisory ? (
+                  <>
+                    <p>Review status persistido: {selectedAdvisory.review_status}</p>
+                    <p>
+                      Classificacao sugerida: {selectedAdvisory.suggested_classification}
+                    </p>
+                    <p>
+                      Visibility sugerida: {selectedAdvisory.suggested_visibility}
+                    </p>
+                    {selectedAdvisory.reviewed_at ? (
+                      <p>
+                        Revisado por {selectedAdvisory.reviewed_by_full_name ?? 'usuario interno'} em{' '}
+                        {formatDateTime(selectedAdvisory.reviewed_at)}
+                      </p>
+                    ) : null}
+                  </>
+                ) : null}
                 {articleDetail.submitted_for_review_at ? (
                   <p>
                     Enviado para revisao:{' '}
@@ -1750,11 +2126,11 @@ export function KnowledgePage() {
               </div>
 
               {editorialChecklist ? (
-                <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                <div className="grid gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,0.95fr)_minmax(0,1.1fr)]">
                   <div className="space-y-3 rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
                     <div className="space-y-1">
                       <h3 className="text-base font-semibold text-[color:var(--color-ink)]">
-                        Checklist editorial
+                        Sinais do artigo atual
                       </h3>
                       <p className="text-sm leading-6 text-[color:var(--color-muted)]">
                         Sinais objetivos atuais do artigo carregado pela view v2.
@@ -1781,28 +2157,137 @@ export function KnowledgePage() {
                   <div className="space-y-3 rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
                     <div className="space-y-1">
                       <h3 className="text-base font-semibold text-[color:var(--color-ink)]">
-                        Confirmacoes humanas
+                        Sinais do backlog
                       </h3>
                       <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                        Itens que continuam dependentes de revisao editorial e
-                        governanca humana antes de avancar o status.
+                        Advisory persistente vindo do backend. Serve como apoio de
+                        curadoria, nao como decisao automatica.
+                      </p>
+                    </div>
+
+                    {selectedAdvisory ? (
+                      <div className="space-y-3">
+                        <div
+                          className="rounded-[20px] border border-[color:var(--color-border)] bg-white p-4"
+                        >
+                          <div className="flex flex-wrap gap-2">
+                            <StatusPill
+                              tone={toneForAdvisoryClassification(
+                                selectedAdvisory.suggested_classification,
+                              )}
+                            >
+                              {selectedAdvisory.suggested_classification}
+                            </StatusPill>
+                            <StatusPill tone={toneForVisibility(selectedAdvisory.suggested_visibility)}>
+                              {selectedAdvisory.suggested_visibility}
+                            </StatusPill>
+                            {selectedAdvisory.duplicate_group_key ? (
+                              <StatusPill tone="warning">
+                                duplicado x{selectedAdvisory.duplicate_group_article_count}
+                              </StatusPill>
+                            ) : null}
+                          </div>
+                          <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
+                            {selectedAdvisory.classification_reason}
+                          </p>
+                          {advisoryRiskFlags.length > 0 ? (
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {advisoryRiskFlags.map((flag) => (
+                                <StatusPill key={flag} tone="critical">
+                                  {flag}
+                                </StatusPill>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    ) : (
+                      <EmptyState
+                        title="Sem advisory persistido"
+                        description="A materializacao do backlog ainda nao gerou um advisory para este artigo."
+                      />
+                    )}
+                  </div>
+
+                  <div className="space-y-3 rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
+                    <div className="space-y-1">
+                      <h3 className="text-base font-semibold text-[color:var(--color-ink)]">
+                        Confirmacoes humanas persistidas
+                      </h3>
+                      <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                        Checklist salvo no advisory. Nao altera artigo, visibility nem publish automaticamente.
                       </p>
                     </div>
 
                     <div className="space-y-3">
-                      {editorialChecklist.manual.map((item) => (
-                        <div
-                          key={item.label}
-                          className="rounded-[20px] border border-[color:var(--color-border)] bg-white p-4"
-                        >
-                          <div className="flex flex-wrap items-center gap-2">
-                            <StatusPill tone={item.tone}>{item.label}</StatusPill>
-                          </div>
-                          <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
-                            {item.description}
-                          </p>
-                        </div>
-                      ))}
+                      {persistedHumanChecklist.map((item, index) => {
+                        const field = HUMAN_CONFIRMATION_FIELDS[index];
+                        const checked = humanConfirmationsDraft[field.key] === true;
+
+                        return (
+                          <label
+                            key={field.key}
+                            className="flex gap-3 rounded-[20px] border border-[color:var(--color-border)] bg-white p-4"
+                          >
+                            <input
+                              checked={checked}
+                              className="mt-1 h-4 w-4 rounded border-[color:var(--color-border)]"
+                              onChange={(event) =>
+                                updateHumanConfirmation(field.key, event.target.checked)
+                              }
+                              type="checkbox"
+                            />
+                            <div className="space-y-2">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <StatusPill tone={item.tone}>{item.label}</StatusPill>
+                              </div>
+                              <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                                {item.description}
+                              </p>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+
+                    <Field label="Status da revisao editorial">
+                      <SelectInput
+                        onChange={(event) =>
+                          setReviewStatusDraft(
+                            event.target.value as KnowledgeArticleReviewStatus,
+                          )
+                        }
+                        value={reviewStatusDraft}
+                      >
+                        {KNOWLEDGE_ARTICLE_REVIEW_STATUSES.map((status) => (
+                          <option key={status} value={status}>
+                            {status}
+                          </option>
+                        ))}
+                      </SelectInput>
+                    </Field>
+
+                    <Field label="Notas de revisao">
+                      <TextareaInput
+                        onChange={(event) => setReviewNotesDraft(event.target.value)}
+                        placeholder="Observacoes curtas da revisao humana."
+                        value={reviewNotesDraft}
+                      />
+                    </Field>
+
+                    <div className="flex flex-wrap gap-3">
+                      <GhostButton
+                        disabled={!selectedAdvisory || reviewAdvisorySubmitting}
+                        onClick={() => void handleSaveReviewAdvisoryStatus()}
+                      >
+                        {reviewAdvisorySubmitting ? 'Salvando...' : 'Salvar revisao'}
+                      </GhostButton>
+                      <AppButton
+                        disabled={!selectedAdvisory || reviewAdvisorySubmitting}
+                        onClick={() => void handleMarkReviewAdvisoryReviewed()}
+                      >
+                        {reviewAdvisorySubmitting ? 'Marcando...' : 'Marcar revisado'}
+                      </AppButton>
                     </div>
                   </div>
                 </div>
