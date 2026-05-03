@@ -32,6 +32,7 @@ Documentos prioritários:
 - `DOCUMENTATION_LEDGER.md`
 - `PLATFORM_FAQ_STRATEGY.md`
 - `KNOWLEDGE_CONTENT_CURATION_PLAN.md`
+- `reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`
 
 Documentos históricos:
 - `CLEANUP_REPORT.md`
@@ -151,8 +152,12 @@ Documentos históricos:
 - Ledger documental por fase criado em `docs/DOCUMENTATION_LEDGER.md`.
 - Estratégia oficial de curadoria do corpus legado criada em `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md`.
 - Relatório oficial do inventário legado criado em `docs/reports/KNOWLEDGE_LEGACY_INVENTORY_REPORT.md`.
+- Backlog versionado oficial de curadoria legado criado em `docs/reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`.
 - O inventário atual da base legada em `raw_knowledge/octadesk_export/latest/articles/` identificou 58 artigos, 3 categorias-raiz, 1 grupo de duplicidade por `source_hash` e múltiplos candidatos sensíveis/restritos.
+- O script `scripts/knowledge/generate-curation-backlog.mjs` agora materializa esse backlog versionado a partir do corpus bruto preservado.
 - O `supabase:verify` atual mantém a KB local sem lote legado importado; o pipeline de curadoria desta fase opera sobre o corpus bruto e o dry-run do import oficial.
+- O pipeline legado `scripts/knowledge/import-octadesk-drafts.mjs` já foi validado em `dry-run` e em `apply` local controlado para o `knowledge_space` `genius`, sempre em `draft`, sem publicação automática e preservando `source_path`/`source_hash`.
+- A rota `/admin/knowledge` agora destaca origem legado/manual, hash curto na listagem e `source_path`/`source_hash` no detalhe para acelerar curadoria humana.
 - Estados obrigatórios do frontend materializados: loading, vazio, erro, acesso negado, contrato indisponível e sessão expirada.
 - Build do frontend agora usa code-splitting por rota.
 - Fixture local de QA controlado materializado em `supabase/qa/create-local-admin-fixture.mjs`.
@@ -174,7 +179,7 @@ Documentos históricos:
 - Suite pgTAP atual validada com `Files=11`, `Tests=218`, `Result: PASS`.
 - Suite pgTAP atual validada com `Files=12`, `Tests=256`, `Result: PASS`.
 - Suite pgTAP atual validada com `Files=13`, `Tests=275`, `Result: PASS`.
-- Suite pgTAP atual validada com `Files=15`, `Tests=307`, `Result: PASS`.
+- Suite pgTAP atual validada com `Files=15`, `Tests=304`, `Result: PASS`.
 - Pipeline CI para banco em `.github/workflows/supabase-db.yml`.
 - A workflow `.github/workflows/supabase-db.yml` agora valida também `web:typecheck` e `web:build`.
 - A workflow `.github/workflows/supabase-db.yml` agora valida também a compatibilidade do import Octadesk space-aware.
@@ -325,6 +330,13 @@ Documentos históricos:
   - O estado local pós-`supabase:verify` segue com `0` drafts legado importados no banco; a curadoria desta fase foi documentada a partir do corpus preservado e do dry-run do import oficial.
   - `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md` define critérios de `public`/`internal`/`restricted`, duplicidade, obsolescência, padrão editorial e checklist humano antes de publicar.
   - `docs/reports/KNOWLEDGE_LEGACY_INVENTORY_REPORT.md` registra o inventário, os candidatos heurísticos por visibilidade e os principais riscos editoriais.
+- Fase 5.1: Legacy Knowledge Import Backlog + Controlled Draft Ingestion concluída localmente.
+  - O backlog versionado dos `58` artigos foi materializado em `docs/reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`.
+  - O import legado foi validado em `dry-run` e em `apply` local controlado no `knowledge_space` `genius`, sem qualquer publicação automática.
+  - O `apply` local gerou `58` drafts legado preservando `source_path`/`source_hash`; no ambiente validado isso resultou em `59` drafts totais no space por já existir `1` artigo local anterior.
+  - A triagem operacional atual do backlog ficou em `4 public`, `34 internal`, `16 restricted`, `2 obsolete` e `2 duplicate`.
+  - A rota `/admin/knowledge` agora evidencia origem legado/manual, hash curto na listagem e `source_path`/`source_hash` no detalhe do artigo para suportar revisão editorial.
+  - O `supabase:verify` continua resetando o banco local e removendo esse lote aplicado; a ingestão controlada permanece operacional e local-only, não baseline persistente do repositório.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.

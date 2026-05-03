@@ -116,3 +116,32 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - define a regra de que conhecimento oficial so nasce de conteudo validado e curado
   - separa o que pode virar FAQ publica do que deve permanecer interno ou restrito
+
+### Fase 5.1 - Legacy Knowledge Import Backlog + Controlled Draft Ingestion
+- fase: `5.1`
+- commit: `PENDING_COMMIT`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-03`
+- resumo funcional: backlog versionado de curadoria legado criado, import Octadesk validado em dry-run e apply local controlado, e `/admin/knowledge` ajustado para evidenciar origem e hash do legado.
+- docs alterados:
+  - `docs/reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - consumo mantido em `vw_admin_knowledge_spaces`
+  - consumo mantido em `vw_admin_knowledge_categories_v2`
+  - consumo mantido em `vw_admin_knowledge_articles_list_v2`
+  - consumo mantido em `vw_admin_knowledge_article_detail_v2`
+  - uso operacional mantido em `rpc_admin_create_knowledge_article_draft_v2`
+  - uso operacional mantido em `rpc_admin_update_knowledge_article_draft_v2`
+- telas afetadas:
+  - `/admin/knowledge`
+- riscos restantes:
+  - o lote legado aplicado localmente nao persiste apos `supabase:verify`
+  - a classificacao do backlog continua heuristica e depende de revisao humana artigo a artigo
+  - todos os artigos legado continuam em `draft`, sem publicacao automatica
+- impacto na FAQ futura:
+  - cria backlog rastreavel para separar o que pode virar documentacao publica, playbook interno ou conteudo restrito
+  - formaliza de onde deve sair a futura FAQ operacional baseada no corpus legado curado

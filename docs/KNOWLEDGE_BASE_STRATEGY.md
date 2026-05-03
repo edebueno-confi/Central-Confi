@@ -47,6 +47,7 @@ Criar a base editorial do Genius Support OS com versionamento, trilha de origem 
   - `rpc_admin_archive_knowledge_article_v2`
 - Pipeline legado local-only:
   - `scripts/knowledge/import-octadesk-drafts.mjs`
+  - `scripts/knowledge/generate-curation-backlog.mjs`
 
 ## Estado de transição multi-brand
 - `knowledge_spaces`, `knowledge_space_domains` e `brand_settings` existem como fundação estrutural aditiva.
@@ -60,6 +61,7 @@ Criar a base editorial do Genius Support OS com versionamento, trilha de origem 
 - O import legado Octadesk agora exige destino space-aware por `--space-slug` ou `--knowledge-space-id`.
 - A curadoria administrativa mínima do frontend agora opera em `/admin/knowledge` consumindo apenas a superfície v2 space-aware.
 - O `supabase:verify` atual não mantém o lote legado importado no banco local; a curadoria desta fase parte do corpus bruto preservado e do dry-run oficial do import.
+- A curadoria operacional agora também conta com backlog versionado em `docs/reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md` e com apply local controlado para popular drafts no Admin Console quando necessário.
 
 ## Regras estruturais novas
 - `knowledge_spaces.slug` é único globalmente.
@@ -114,10 +116,15 @@ Metadados brutos observados em `article.json`:
 - Sem dúvida forte de sensibilidade:
   - usar `visibility = internal`
 - Toda importação deve receber destino explícito por `knowledge_space`.
+- O fluxo oficial de validação do import é:
+  - `npm run knowledge:import:octadesk:local -- --space-slug genius`
+  - `npm run knowledge:import:octadesk:local -- --space-slug genius --apply --actor-user-id <uuid>`
+- O `apply` local continua proibido fora do ambiente local controlado e nunca promove artigos para `review` ou `published`.
 - Não inferir marca/documentação pública técnica automaticamente a partir do legado.
 - O plano e o relatório de curadoria desta fase ficam em:
   - `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md`
   - `docs/reports/KNOWLEDGE_LEGACY_INVENTORY_REPORT.md`
+  - `docs/reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`
 
 ## Modelo editorial
 
@@ -200,6 +207,19 @@ Metadados brutos observados em `article.json`:
 - O estado atual do banco local, após `supabase:verify`, segue com `0` artigos legado importados e `0` drafts com `source_hash`.
 - O plano editorial oficial agora está documentado em `KNOWLEDGE_CONTENT_CURATION_PLAN.md`.
 - O relatório operacional de inventário agora está documentado em `reports/KNOWLEDGE_LEGACY_INVENTORY_REPORT.md`.
+
+## Curadoria operacional da fase 5.1
+- O backlog versionado oficial agora está documentado em `reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`.
+- A classificação operacional atual do backlog ficou em:
+  - `4` sugeridos como `public`
+  - `34` sugeridos como `internal`
+  - `16` sugeridos como `restricted`
+  - `2` sugeridos como `obsolete`
+  - `2` sugeridos como `duplicate`
+- O import legado foi validado em `dry-run` e em `apply` local controlado no `knowledge_space` `genius`.
+- O `apply` local gerou `58` drafts legado; como o ambiente validado já possuía `1` artigo adicional no mesmo space, o total observado na UI administrativa ficou em `59` drafts.
+- A superfície `/admin/knowledge` agora exibe origem legado/manual, hash curto na listagem e `source_path`/`source_hash` no detalhe para apoiar revisão humana.
+- Nenhum artigo legado foi publicado nesta fase.
 
 ## Próximos passos planejados
 - Evoluir a curadoria administrativa space-aware sem romper os contratos atuais do Admin Console.

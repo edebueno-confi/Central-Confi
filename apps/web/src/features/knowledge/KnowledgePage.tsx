@@ -57,6 +57,7 @@ type DetailPhase = 'idle' | 'loading' | 'ready' | 'contract-unavailable' | 'erro
 type PanelMode = 'detail' | 'create-article' | 'edit-article' | 'create-category';
 type ArticleStatusFilter = KnowledgeArticleStatus | 'all';
 type ArticleVisibilityFilter = KnowledgeVisibility | 'all';
+type ArticleOriginFilter = 'all' | 'legacy' | 'manual';
 
 interface ArticleFormState {
   title: string;
@@ -198,6 +199,7 @@ export function KnowledgePage() {
   const [panelMode, setPanelMode] = useState<PanelMode>('detail');
   const [statusFilter, setStatusFilter] = useState<ArticleStatusFilter>('all');
   const [visibilityFilter, setVisibilityFilter] = useState<ArticleVisibilityFilter>('all');
+  const [originFilter, setOriginFilter] = useState<ArticleOriginFilter>('all');
   const [articleForm, setArticleForm] = useState<ArticleFormState>(emptyArticleForm);
   const [articleFormSubmitting, setArticleFormSubmitting] = useState(false);
   const [articleFormMessage, setArticleFormMessage] = useState<string | null>(null);
@@ -212,6 +214,17 @@ export function KnowledgePage() {
     spaces.find((space) => space.id === selectedSpaceId) ?? null;
   const selectedArticleSummary =
     articles.find((article) => article.id === selectedArticleId) ?? null;
+  const filteredArticles = articles.filter((article) => {
+    if (originFilter === 'legacy') {
+      return Boolean(article.source_path || article.source_hash);
+    }
+
+    if (originFilter === 'manual') {
+      return !article.source_path && !article.source_hash;
+    }
+
+    return true;
+  });
   const articleActionMessage =
     articleActionFeedback &&
     selectedArticleId &&
@@ -229,6 +242,9 @@ export function KnowledgePage() {
   ).length;
   const publishedArticleCount = articles.filter(
     (article) => article.status === 'published',
+  ).length;
+  const legacyArticleCount = articles.filter(
+    (article) => article.source_path || article.source_hash,
   ).length;
 
   const loadKnowledgeSpaces = useEffectEvent(
@@ -785,7 +801,7 @@ export function KnowledgePage() {
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5">
         <MetricCard
           label="Knowledge spaces"
           value={String(spaces.length)}
@@ -806,13 +822,18 @@ export function KnowledgePage() {
           value={`${reviewArticleCount}/${publishedArticleCount}`}
           helper="Revisao humana continua obrigatoria antes da publicacao."
         />
+        <MetricCard
+          label="Legado no space"
+          value={String(legacyArticleCount)}
+          helper="Artigos com source_path/source_hash disponiveis para curadoria."
+        />
       </div>
 
       <Panel
         title="Escopo editorial"
         description="A leitura desta etapa usa apenas knowledge spaces e views v2 space-aware. Nenhuma tabela-base da Knowledge Base e acessada pelo frontend."
       >
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.85fr)_minmax(0,0.85fr)_minmax(0,0.85fr)_auto]">
           <Field label="Knowledge space">
             <SelectInput
               onChange={(event) => setSelectedSpaceId(event.target.value || null)}
@@ -855,6 +876,19 @@ export function KnowledgePage() {
                   {visibility}
                 </option>
               ))}
+            </SelectInput>
+          </Field>
+
+          <Field label="Origem">
+            <SelectInput
+              onChange={(event) =>
+                setOriginFilter(event.target.value as ArticleOriginFilter)
+              }
+              value={originFilter}
+            >
+              <option value="all">Todas</option>
+              <option value="legacy">Somente legado</option>
+              <option value="manual">Somente manual</option>
             </SelectInput>
           </Field>
 
@@ -945,7 +979,7 @@ export function KnowledgePage() {
                 </AppButton>
               }
             />
-          ) : articles.length === 0 ? (
+          ) : filteredArticles.length === 0 ? (
             <EmptyState
               title="Nenhum artigo encontrado"
               description="Nao existem artigos para o knowledge space e filtros selecionados."
@@ -969,7 +1003,7 @@ export function KnowledgePage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {articles.map((article) => {
+                    {filteredArticles.map((article) => {
                       const isSelected = article.id === selectedArticleId;
                       return (
                         <tr
@@ -993,7 +1027,10 @@ export function KnowledgePage() {
                               </span>
                               <span className="text-xs text-[color:var(--color-muted)]">
                                 {article.slug}
-                                {article.source_path ? ' · importado do legado' : ''}
+                                {article.source_path ? ' · importado do legado' : ' · manual'}
+                                {article.source_hash
+                                  ? ` · hash ${article.source_hash.slice(0, 8)}`
+                                  : ''}
                               </span>
                             </button>
                           </td>
@@ -1428,13 +1465,25 @@ export function KnowledgePage() {
                 ) : null}
               </div>
 
-                <div className="rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 text-sm leading-6 text-[color:var(--color-muted)]">
+              <div className="rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 text-sm leading-6 text-[color:var(--color-muted)]">
                 <p>Knowledge space: {articleDetail.knowledge_space_display_name}</p>
                 <p>Organization: {articleDetail.organization_display_name}</p>
                 <p>Revisoes: {articleDetail.revisions.length}</p>
                 <p>Revision atual: {articleDetail.current_revision_number}</p>
                 <p>Criado: {formatDateTime(articleDetail.created_at)}</p>
                 <p>Atualizado: {formatDateTime(articleDetail.updated_at)}</p>
+                <p>
+                  Origem:{' '}
+                  {articleDetail.source_path || articleDetail.source_hash
+                    ? 'importado do legado'
+                    : 'manual'}
+                </p>
+                {articleDetail.source_path ? (
+                  <p>Source path: {articleDetail.source_path}</p>
+                ) : null}
+                {articleDetail.source_hash ? (
+                  <p>Source hash: {articleDetail.source_hash}</p>
+                ) : null}
                 {articleDetail.submitted_for_review_at ? (
                   <p>
                     Enviado para revisao:{' '}
