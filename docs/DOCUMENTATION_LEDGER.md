@@ -119,7 +119,7 @@ Cada registro deve informar:
 
 ### Fase 5.1 - Legacy Knowledge Import Backlog + Controlled Draft Ingestion
 - fase: `5.1`
-- commit: `PENDING_COMMIT`
+- commit: `d3239ec`
 - branch: `codex/phase4-7-public-help-center-branding-contract`
 - data: `2026-05-03`
 - resumo funcional: backlog versionado de curadoria legado criado, import Octadesk validado em dry-run e apply local controlado, e `/admin/knowledge` ajustado para evidenciar origem e hash do legado.
