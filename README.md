@@ -84,8 +84,20 @@ fonte operacional privada para futura ingestão e curadoria.
 ```bash
 npm run supabase:start
 npm run supabase:verify
+npm run web:dev
 npm run supabase:bootstrap:first-admin -- --local --user-id <uuid>
 ```
+
+Para subir o frontend local, criar antes `apps/web/.env.local` com:
+
+```env
+VITE_APP_ENV=local
+VITE_SUPABASE_URL=http://127.0.0.1:55321
+VITE_SUPABASE_ANON_KEY=<anon-key-local-ou-do-ambiente>
+APP_BASE_URL=http://127.0.0.1:4173
+```
+
+O comando `npm run web:dev` valida essas chaves antes de abrir o Vite.
 
 Para deploy remoto do banco, usar exclusivamente o runbook em
 `docs/REMOTE_SUPABASE_DEPLOY_RUNBOOK.md`.

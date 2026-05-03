@@ -59,6 +59,11 @@ credenciais operacionais.
 - Usar apenas shell atual, secret manager ou cofre aprovado.
 - Não salvar segredos em arquivos dentro do repositório.
 - Limpar variáveis sensíveis ao fim de operações críticas quando aplicável.
+- Para o frontend Vite local, o ponto oficial de configuração é
+  `apps/web/.env.local`.
+- O comando oficial `npm run web:dev` parte da raiz, mas valida as chaves
+  públicas dentro de `apps/web/.env.local` ou no shell atual antes de subir o
+  Vite.
 
 ### Vercel
 
@@ -110,3 +115,5 @@ credenciais operacionais.
 - O frontend continua bloqueado nesta fase.
 - O frontend Vite lê apenas `VITE_APP_ENV`, `VITE_SUPABASE_URL` e
   `VITE_SUPABASE_ANON_KEY` no browser.
+- A execução local do frontend usa `npm run web:dev` a partir da raiz e exige
+  `apps/web/.env.local` quando essas variáveis não estiverem exportadas no shell.
