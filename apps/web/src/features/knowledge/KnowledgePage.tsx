@@ -69,6 +69,7 @@ type ArticleStatusFilter = KnowledgeArticleStatus | 'all';
 type ArticleVisibilityFilter = KnowledgeVisibility | 'all';
 type ArticleOriginFilter = 'all' | 'legacy' | 'manual';
 type ArticleDuplicateFilter = 'all' | 'duplicates' | 'unique';
+type ArticleClassificationFilter = KnowledgeAdvisoryClassification | 'all' | 'without-advisory';
 type EditorialChecklistTone = 'default' | 'positive' | 'warning' | 'critical' | 'accent';
 
 interface EditorialChecklistItem {
@@ -500,6 +501,8 @@ export function KnowledgePage() {
   const [visibilityFilter, setVisibilityFilter] = useState<ArticleVisibilityFilter>('all');
   const [originFilter, setOriginFilter] = useState<ArticleOriginFilter>('all');
   const [duplicateFilter, setDuplicateFilter] = useState<ArticleDuplicateFilter>('all');
+  const [classificationFilter, setClassificationFilter] =
+    useState<ArticleClassificationFilter>('all');
   const [articleForm, setArticleForm] = useState<ArticleFormState>(emptyArticleForm);
   const [articleFormSubmitting, setArticleFormSubmitting] = useState(false);
   const [articleFormMessage, setArticleFormMessage] = useState<string | null>(null);
@@ -527,6 +530,8 @@ export function KnowledgePage() {
   const sourceHashCounts = buildSourceHashCounts(articles);
   const duplicateHashGroupCount = countDuplicateHashGroups(sourceHashCounts);
   const filteredArticles = articles.filter((article) => {
+    const articleAdvisory = advisoryMap.get(article.id);
+
     if (originFilter === 'legacy') {
       if (!article.source_path && !article.source_hash) {
         return false;
@@ -539,8 +544,18 @@ export function KnowledgePage() {
       }
     }
 
+    if (classificationFilter === 'without-advisory') {
+      if (articleAdvisory) {
+        return false;
+      }
+    } else if (classificationFilter !== 'all') {
+      if (articleAdvisory?.suggested_classification !== classificationFilter) {
+        return false;
+      }
+    }
+
     const duplicateCount =
-      advisoryMap.get(article.id)?.duplicate_group_article_count ??
+      articleAdvisory?.duplicate_group_article_count ??
       (article.source_hash ? sourceHashCounts.get(article.source_hash) ?? 0 : 0);
 
     if (duplicateFilter === 'duplicates' && duplicateCount <= 1) {
@@ -1362,6 +1377,25 @@ export function KnowledgePage() {
               <option value="all">Todos</option>
               <option value="duplicates">Somente duplicados</option>
               <option value="unique">Somente unicos</option>
+            </SelectInput>
+          </Field>
+
+          <Field label="Classificacao sugerida">
+            <SelectInput
+              onChange={(event) =>
+                setClassificationFilter(
+                  event.target.value as ArticleClassificationFilter,
+                )
+              }
+              value={classificationFilter}
+            >
+              <option value="all">Todas</option>
+              {KNOWLEDGE_ADVISORY_CLASSIFICATIONS.map((classification) => (
+                <option key={classification} value={classification}>
+                  {classification}
+                </option>
+              ))}
+              <option value="without-advisory">Sem advisory</option>
             </SelectInput>
           </Field>
 

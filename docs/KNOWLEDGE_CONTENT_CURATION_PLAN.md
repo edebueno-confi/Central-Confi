@@ -190,3 +190,26 @@ Aplicar quando:
   2. sinais advisory derivados do backlog
   3. confirmacoes humanas persistidas
 - o publish continua dependendo de decisao humana explicita e separada do advisory
+
+## Validacao editorial controlada da fase 5.4
+- a primeira publicacao de legado foi validada apenas com candidatos marcados como `suggested_classification = public`
+- limite operacional da fase:
+  - publicar no maximo `2` artigos
+  - nunca publicar `duplicate`, `obsolete`, `internal` ou `restricted`
+- pre-condicoes obrigatorias antes de publish:
+  - `knowledge_space` ativo na camada publica
+  - categoria final apropriada para `visibility = public`
+  - confirmacoes humanas persistidas no advisory
+  - `review_status` coerente com a leitura humana concluida
+- evidencias minimas esperadas para cada candidato:
+  1. titulo revisado
+  2. resumo revisado
+  3. corpo reescrito em Markdown seguro
+  4. categoria revisada
+  5. `visibility` revisada
+  6. ausencia de segredo, endpoint sensivel, credencial, PIX, estorno, Correios ou permissao critica
+  7. confirmacao de que a Central Publica expoe apenas o artigo publicado
+- resultado controlado validado nesta fase:
+  - `Como reenviar um e-mail de uma solicitacao`
+  - `Como configurar regra por motivo`
+- ambos foram publicados localmente apenas para QA do fluxo editorial e nao viram baseline persistente apos novo `supabase:verify`

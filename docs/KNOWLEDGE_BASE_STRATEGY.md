@@ -267,6 +267,28 @@ Metadados brutos observados em `article.json`:
   - confirmacoes humanas persistidas
 - Nenhuma heuristica de backlog foi promovida a source of truth publica; o advisory segue como apoio editorial autenticado.
 
+## QA editorial da fase 5.4
+- O fluxo editorial completo foi validado localmente com:
+  - `supabase db reset`
+  - fixture `platform_admin`
+  - import controlado de `58` drafts legado
+  - sync advisory dos `58` artigos no `knowledge_space` `genius`
+- A superficie `/admin/knowledge` agora tambem oferece filtro por `suggested_classification`, permitindo revisar apenas candidatos `public` vindos do advisory persistente.
+- Nesta fase, apenas `2` artigos candidatos foram levados ate publish controlado:
+  - `Como reenviar um e-mail de uma solicitacao`
+  - `Como configurar regra por motivo`
+- Ambos passaram por:
+  1. revisao humana simulada de titulo, resumo, corpo em Markdown e categoria
+  2. confirmacao persistida no advisory
+  3. promote para `review`
+  4. publish explicito e individual
+- Nenhum artigo `restricted`, `internal`, `obsolete` ou `duplicate` foi publicado.
+- A validacao tambem confirmou um pre-requisito operacional da camada publica:
+  - artigos `published` + `public` so aparecem na Central Publica quando o `knowledge_space` estiver `active`
+  - com o space `genius` ainda em `draft`, os read models publicos bloquearam corretamente toda exposicao
+  - apos ativacao operacional local do space, a Central Publica e a busca passaram a expor apenas os `2` artigos curados
+- Esse publish de fase 5.4 continua sendo validacao local controlada; ele nao altera o baseline persistente do banco apos novo `supabase:verify`.
+
 ## Próximos passos planejados
 - Evoluir a curadoria administrativa space-aware sem romper os contratos atuais do Admin Console.
 - Consumir a superfície pública apenas quando a UI da Central Pública for criada sobre as views endurecidas já aprovadas.
@@ -274,14 +296,12 @@ Metadados brutos observados em `article.json`:
 - Usar `PLATFORM_FAQ_STRATEGY.md` e `DOCUMENTATION_LEDGER.md` como trilha oficial para transformar funcionalidades já validadas em FAQ pública ou interna.
 
 ## O que continua bloqueado
-- documentação pública técnica
-- frontend público sobre os read models públicos
+- publicacao automatica ou em massa do legado
 - indexação em IA
 - chat ou widget
 - portal B2B do cliente
 - abertura pública de ticket
 - uso de HTML legado como frontend
-- publicação automática
 - mistura entre KB pública e playbooks internos
 
 ## Busca pública mínima

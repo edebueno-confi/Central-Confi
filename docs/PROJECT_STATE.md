@@ -185,6 +185,7 @@ Documentos históricos:
 - Suite pgTAP atual validada com `Files=12`, `Tests=256`, `Result: PASS`.
 - Suite pgTAP atual validada com `Files=13`, `Tests=275`, `Result: PASS`.
 - Suite pgTAP atual validada com `Files=15`, `Tests=304`, `Result: PASS`.
+- Suite pgTAP atual validada com `Files=16`, `Tests=322`, `Result: PASS`.
 - Pipeline CI para banco em `.github/workflows/supabase-db.yml`.
 - A workflow `.github/workflows/supabase-db.yml` agora valida também `web:typecheck` e `web:build`.
 - A workflow `.github/workflows/supabase-db.yml` agora valida também a compatibilidade do import Octadesk space-aware.
@@ -355,6 +356,15 @@ Documentos históricos:
   - A distribuição advisory validada ficou em `4 public`, `34 internal`, `16 restricted`, `2 obsolete`, `2 duplicate`, com `1` grupo de duplicidade persistido.
   - A rota `/admin/knowledge` agora lê `vw_admin_knowledge_article_review_advisories`, mostra classificação sugerida, `risk_flags`, duplicidade persistida e grava `review_status`/confirmações humanas por RPC.
   - `supabase/tests/016_phase5_3_knowledge_review_advisory_contract.sql` cobre grants, view, RPCs, persistência humana e ausência de mutação editorial automática.
+- Fase 5.4: Knowledge Review QA + First Publish Candidate Flow concluída localmente.
+  - O ambiente local foi reidratado com reset, fixture `platform_admin`, import legado controlado de `58` drafts e sync advisory dos `58` artigos no `knowledge_space` `genius`.
+  - A rota `/admin/knowledge` agora também oferece filtro por `suggested_classification`, permitindo isolar candidatos `public` sem depender de heurística solta no frontend.
+  - Dois candidatos `public` foram revisados manualmente, reescritos em Markdown seguro, marcados como revisados no advisory, promovidos para `review` e publicados de forma controlada:
+    - `Como reenviar um e-mail de uma solicitacao`
+    - `Como configurar regra por motivo`
+  - Nenhum artigo `restricted`, `internal`, `obsolete` ou `duplicate` foi publicado nesta fase.
+  - A exposição pública só foi liberada após ativação operacional local do `knowledge_space` `genius`; com o space ainda em `draft`, os read models públicos continuavam bloqueando corretamente os artigos.
+  - Após a ativação do space, a Central Pública e a busca passaram a listar apenas os `2` artigos publicados, mantendo drafts e conteúdos não públicos fora da superfície `/help`.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
