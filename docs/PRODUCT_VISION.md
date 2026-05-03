@@ -11,6 +11,7 @@ Criar uma plataforma interna robusta para:
 - organizar chamados;
 - estruturar base de conhecimento;
 - dar visibilidade para clientes B2B e times internos;
+- publicar documentacao tecnica oficial B2B quando aprovada pela governanca editorial;
 - conectar suporte e engenharia;
 - registrar comunicação técnico-operacional entre suporte, CS e produto;
 - registrar decisões e histórico;

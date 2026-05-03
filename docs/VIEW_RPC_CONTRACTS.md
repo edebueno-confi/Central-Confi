@@ -104,6 +104,16 @@ Fase 4.5:
 - Essas views expõem somente `knowledge_spaces` ativos, categorias públicas e artigos `published` + `public`.
 - Nenhuma tabela base de multi-brand ou Knowledge Base fica exposta para `anon`.
 
+Fase 4.6:
+- A Central de Ajuda pública mínima agora existe como UI de leitura em `/help` e rotas filhas por `spaceSlug`.
+- O frontend público lê apenas:
+  - `vw_public_knowledge_space_resolver`
+  - `vw_public_knowledge_navigation`
+  - `vw_public_knowledge_articles_list`
+  - `vw_public_knowledge_article_detail`
+- O frontend público não escreve em nenhuma RPC nesta fase.
+- O detalhe público renderiza apenas `body_md` com Markdown seguro; HTML legado segue fora do contrato.
+
 ## Views contratuais vigentes
 
 ### `vw_tickets_list`
@@ -619,8 +629,8 @@ Fase 4.5:
 
 ## Próximos contratos planejados
 - Views e RPCs de intake para engenharia.
-- UI pública da Knowledge Base consumindo apenas os read models públicos já aprovados.
 - Busca pública e roteamento frontend por domínio/`space_slug` sobre os contratos já materializados.
+- Branding público projetado explicitamente por read model quando `brand_settings` precisar sair do fallback seguro atual.
 
 ## Proibições
 - Frontend fazendo join direto em tabelas de domínio.

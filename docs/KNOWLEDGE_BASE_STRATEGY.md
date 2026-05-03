@@ -140,6 +140,22 @@ Metadados brutos observados em `article.json`:
 - `published` continua sendo estado editorial, não sinal de exposição pública ativa.
 - Um `knowledge_space` futuro também precisará estar ativo antes de qualquer abertura pública.
 - O contrato público de leitura já existe, mas ainda sem UI pública, busca ou roteamento ativo no frontend.
+- O contrato público de leitura agora possui UI mínima em `/help`, mas continua sem busca, IA, chat, widget, portal B2B ou abertura pública de ticket.
+
+## Superfície pública mínima
+- Rotas ativas:
+  - `/help`
+  - `/help/:spaceSlug`
+  - `/help/:spaceSlug/articles`
+  - `/help/:spaceSlug/articles/:articleSlug`
+- A leitura pública consome apenas:
+  - `vw_public_knowledge_space_resolver`
+  - `vw_public_knowledge_navigation`
+  - `vw_public_knowledge_articles_list`
+  - `vw_public_knowledge_article_detail`
+- A renderização do detalhe usa exclusivamente `body_md` com Markdown seguro.
+- A UI não depende de filtro no frontend para esconder conteúdo privado; o backend continua como source of truth.
+- Branding detalhado por `brand_settings` ainda não é requisito do contrato público atual; a UI usa fallback seguro baseado nos metadados públicos já expostos.
 
 ## Governança de revisão
 - Todo artigo relevante deve gerar revisão em `knowledge_article_revisions`.
@@ -168,9 +184,12 @@ Metadados brutos observados em `article.json`:
 
 ## O que continua bloqueado
 - documentação pública técnica
-- Central de Ajuda pública
 - frontend público sobre os read models públicos
 - indexação em IA
+- busca pública
+- chat ou widget
+- portal B2B do cliente
+- abertura pública de ticket
 - uso de HTML legado como frontend
 - publicação automática
 - mistura entre KB pública e playbooks internos

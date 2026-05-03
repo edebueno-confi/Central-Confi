@@ -111,6 +111,7 @@ Documentos históricos:
 - O fluxo de auth do frontend foi endurecido para não resetar o gate em refresh de token/snapshot equivalente e para não disparar bootstrap em loop no `StrictMode`.
 - Rotas mínimas materializadas em `/login`, `/admin`, `/admin/tenants`, `/admin/access`, `/admin/system` e `/access-denied`.
 - Rotas mínimas materializadas em `/login`, `/admin`, `/admin/tenants`, `/admin/knowledge`, `/admin/access`, `/admin/system` e `/access-denied`.
+- Rotas públicas mínimas materializadas em `/help`, `/help/:spaceSlug`, `/help/:spaceSlug/articles` e `/help/:spaceSlug/articles/:articleSlug`.
 - Shell protegido materializado com `AuthBootstrap`, `AdminGate`, `AdminConsoleShell`, `AdminSidebar` e `AdminTopbar`.
 - Leitura operacional do frontend já consome apenas `vw_admin_auth_context`, `vw_admin_tenants_list`, `vw_admin_tenant_detail`, `vw_admin_tenant_memberships` e `vw_admin_audit_feed`.
 - A rota `/admin/knowledge` agora consome apenas `vw_admin_knowledge_spaces`, `vw_admin_knowledge_categories_v2`, `vw_admin_knowledge_articles_list_v2` e `vw_admin_knowledge_article_detail_v2`.
@@ -133,6 +134,9 @@ Documentos históricos:
 - O import legado agora exige `--space-slug` ou `--knowledge-space-id`, continua local-only e grava o conteúdo pela camada v2 space-aware.
 - A importação legado não usa HTML como corpo principal e não publica artigos automaticamente.
 - A camada pública da KB não expõe `source_path`, `source_hash`, `tenant_id`, autores internos nem HTML legado.
+- A Central Pública mínima agora consome apenas `vw_public_knowledge_space_resolver`, `vw_public_knowledge_navigation`, `vw_public_knowledge_articles_list` e `vw_public_knowledge_article_detail`.
+- A Central Pública mínima renderiza apenas `body_md` com Markdown seguro, sem `dangerouslySetInnerHTML` e sem depender de filtro de visibilidade no frontend.
+- A identidade visual pública usa os dados públicos do `knowledge_space` e fallback seguro quando branding detalhado não estiver projetado nos read models públicos.
 - O inventário atual da base legada em `raw_knowledge/octadesk_export/latest/articles/` identificou 58 artigos, 3 categorias-raiz, 1 grupo de duplicidade por `source_hash` e múltiplos candidatos sensíveis/restritos.
 - Estados obrigatórios do frontend materializados: loading, vazio, erro, acesso negado, contrato indisponível e sessão expirada.
 - Build do frontend agora usa code-splitting por rota.
@@ -171,12 +175,15 @@ Documentos históricos:
 - Base bruta preservada em `raw_knowledge/octadesk_export/latest/`.
 
 ### Não existe ainda
-- Central de Ajuda pública.
 - Publicação automática de artigos legados.
 - Indexação de Knowledge Base em IA.
 - After Sale como segundo `knowledge_space` oficial.
 - Support Desk/frontend de tickets.
 - Views/read models contratuais para engenharia.
+- Busca pública na Central de Ajuda.
+- Portal B2B do cliente.
+- Abertura pública de ticket.
+- Chat, widget ou IA na Central Pública.
 
 ## Situação por fase
 
@@ -275,6 +282,12 @@ Documentos históricos:
   - O resolver público já suporta `space_slug` e preparação de domínio ativo por `knowledge_space_domains`, sem abrir a UI pública.
   - `anon` e `authenticated` recebem `SELECT` apenas nessas views públicas; tabelas base de multi-brand e `knowledge_*` continuam bloqueadas.
   - `supabase/tests/013_phase4_5_public_help_center_read_models.sql` cobre grants, ausência de vazamento sensível, resolução por slug, filtros públicos e bloqueio de base tables para `anon`.
+- Fase 4.6: Public Help Center UI Minimum concluída localmente.
+  - A Central Pública mínima de leitura foi materializada em `/help`, `/help/:spaceSlug`, `/help/:spaceSlug/articles` e `/help/:spaceSlug/articles/:articleSlug`.
+  - O frontend público consome apenas `vw_public_knowledge_space_resolver`, `vw_public_knowledge_navigation`, `vw_public_knowledge_articles_list` e `vw_public_knowledge_article_detail`.
+  - A UI pública cobre landing, navegação por categorias, lista de artigos, detalhe de artigo e estados de loading, vazio, erro e não encontrado.
+  - O corpo do artigo é renderizado exclusivamente por `body_md` com Markdown seguro; HTML legado continua fora da superfície pública.
+  - Branding público usa apenas dados já expostos pelos read models públicos, com fallback visual seguro quando `brand_settings` não estiver projetado nessa camada.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -296,7 +309,8 @@ Documentos históricos:
 - Não permitir leitura do Admin Console fora das views `vw_admin_*`.
 
 ## Próxima prioridade
-Manter a Central Pública bloqueada e preparar a próxima fase sem romper a
-separação atual entre curadoria administrativa, camada pública e IA.
-O próximo avanço recomendado é aprofundar a experiência editorial space-aware
-ou planejar a futura camada pública, ainda sem documentação pública técnica ativa.
+Manter a Central Pública mínima restrita a leitura e preparar as próximas
+camadas sem romper a separação entre curadoria administrativa, leitura pública
+e IA. O próximo avanço recomendado é aprofundar a experiência pública com
+busca, roteamento por domínio e governança editorial adicional, sem abrir chat,
+portal B2B ou automações antes do contrato certo.

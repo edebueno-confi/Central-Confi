@@ -29,6 +29,31 @@ const KnowledgePage = lazy(async () => {
   return { default: module.KnowledgePage };
 });
 
+const HelpCenterPage = lazy(async () => {
+  const module = await import('../features/help-center/HelpCenterPage');
+  return { default: module.HelpCenterPage };
+});
+
+const HelpCenterSpaceLayout = lazy(async () => {
+  const module = await import('../features/help-center/HelpCenterPage');
+  return { default: module.HelpCenterSpaceLayout };
+});
+
+const HelpCenterHomePage = lazy(async () => {
+  const module = await import('../features/help-center/HelpCenterHomePage');
+  return { default: module.HelpCenterHomePage };
+});
+
+const HelpCenterArticlesPage = lazy(async () => {
+  const module = await import('../features/help-center/HelpCenterArticlesPage');
+  return { default: module.HelpCenterArticlesPage };
+});
+
+const HelpCenterArticlePage = lazy(async () => {
+  const module = await import('../features/help-center/HelpCenterArticlePage');
+  return { default: module.HelpCenterArticlePage };
+});
+
 const AccessPage = lazy(async () => {
   const module = await import('../features/access/AccessPage');
   return { default: module.AccessPage };
@@ -65,6 +90,28 @@ export const router = createBrowserRouter([
       {
         path: '/login',
         element: withSuspense(<LoginPage />),
+      },
+      {
+        path: '/help',
+        element: withSuspense(<HelpCenterPage />),
+      },
+      {
+        path: '/help/:spaceSlug',
+        element: withSuspense(<HelpCenterSpaceLayout />),
+        children: [
+          {
+            index: true,
+            element: withSuspense(<HelpCenterHomePage />),
+          },
+          {
+            path: 'articles',
+            element: withSuspense(<HelpCenterArticlesPage />),
+          },
+          {
+            path: 'articles/:articleSlug',
+            element: withSuspense(<HelpCenterArticlePage />),
+          },
+        ],
       },
       {
         path: '/access-denied',
