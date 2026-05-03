@@ -67,6 +67,7 @@ Documentos históricos:
 - Migration oficial da fundação multi-brand aditiva `supabase/migrations/20260430191513_phase4_2_multi_brand_foundation.sql`.
 - Migration oficial de backfill e compatibilidade space-aware `supabase/migrations/20260430194826_phase4_3_backfill_space_aware_compatibility.sql`.
 - Migration oficial dos read models públicos da Central de Ajuda `supabase/migrations/20260503004940_phase4_5_public_help_center_read_models.sql`.
+- Migration oficial do contrato de busca pública da Central de Ajuda `supabase/migrations/20260503170246_phase4_9_public_help_center_search_contract.sql`.
 - Teste local de banco em `supabase/tests/001_phase1_identity_tenancy_rls.sql`.
 - Teste local de hardening em `supabase/tests/002_phase1_1_hardening.sql`.
 - Teste local de control plane administrativo em `supabase/tests/003_phase1_2_admin_control_plane.sql`.
@@ -80,6 +81,8 @@ Documentos históricos:
 - Teste local da fundação multi-brand em `supabase/tests/011_phase4_2_multi_brand_foundation.sql`.
 - Teste local de backfill e compatibilidade space-aware em `supabase/tests/012_phase4_3_space_aware_compatibility.sql`.
 - Teste local dos read models públicos da Central de Ajuda em `supabase/tests/013_phase4_5_public_help_center_read_models.sql`.
+- Teste local do branding público da Central de Ajuda em `supabase/tests/014_phase4_7_public_help_center_branding_contract.sql`.
+- Teste local do contrato de busca pública da Central de Ajuda em `supabase/tests/015_phase4_9_public_help_center_search_contract.sql`.
 - Seed separado em `supabase/seeds/` e desabilitado por padrão.
 - Fluxo de bootstrap seguro do primeiro `platform_admin` em `supabase/bootstrap/`.
 - Núcleo Fase 1 implementado com `profiles`, `user_global_roles`, `tenants`, `tenant_memberships`, `tenant_contacts` e `audit.audit_logs`.
@@ -135,9 +138,11 @@ Documentos históricos:
 - A importação legado não usa HTML como corpo principal e não publica artigos automaticamente.
 - A camada pública da KB não expõe `source_path`, `source_hash`, `tenant_id`, autores internos nem HTML legado.
 - A Central Pública mínima agora consome apenas `vw_public_knowledge_space_resolver`, `vw_public_knowledge_navigation`, `vw_public_knowledge_articles_list` e `vw_public_knowledge_article_detail`.
+- A Central Pública mínima agora também consulta `rpc_public_search_knowledge_articles` para busca textual simples por `knowledge_space`.
 - A Central Pública mínima renderiza apenas `body_md` com Markdown seguro, sem `dangerouslySetInnerHTML` e sem depender de filtro de visibilidade no frontend.
 - A identidade visual pública usa os dados públicos do `knowledge_space` e fallback seguro quando branding detalhado não estiver projetado nos read models públicos.
 - O resolver público agora expõe branding sanitizado mínimo (`brand_name`, `logo_asset_url`, `theme_tokens`, `seo_defaults` e `support_contacts` públicos) sem abrir acesso direto a `brand_settings`.
+- A busca pública agora expõe apenas metadados mínimos de resultado e nunca retorna `body_md` completo, `source_path`, `source_hash` ou metadados internos.
 - O inventário atual da base legada em `raw_knowledge/octadesk_export/latest/articles/` identificou 58 artigos, 3 categorias-raiz, 1 grupo de duplicidade por `source_hash` e múltiplos candidatos sensíveis/restritos.
 - Estados obrigatórios do frontend materializados: loading, vazio, erro, acesso negado, contrato indisponível e sessão expirada.
 - Build do frontend agora usa code-splitting por rota.
@@ -160,6 +165,7 @@ Documentos históricos:
 - Suite pgTAP atual validada com `Files=11`, `Tests=218`, `Result: PASS`.
 - Suite pgTAP atual validada com `Files=12`, `Tests=256`, `Result: PASS`.
 - Suite pgTAP atual validada com `Files=13`, `Tests=275`, `Result: PASS`.
+- Suite pgTAP atual validada com `Files=15`, `Tests=307`, `Result: PASS`.
 - Pipeline CI para banco em `.github/workflows/supabase-db.yml`.
 - A workflow `.github/workflows/supabase-db.yml` agora valida também `web:typecheck` e `web:build`.
 - A workflow `.github/workflows/supabase-db.yml` agora valida também a compatibilidade do import Octadesk space-aware.
@@ -181,7 +187,6 @@ Documentos históricos:
 - After Sale como segundo `knowledge_space` oficial.
 - Support Desk/frontend de tickets.
 - Views/read models contratuais para engenharia.
-- Busca pública na Central de Ajuda.
 - Portal B2B do cliente.
 - Abertura pública de ticket.
 - Chat, widget ou IA na Central Pública.
@@ -294,6 +299,11 @@ Documentos históricos:
   - A Central Pública passou a aplicar logo, tokens visuais públicos mínimos, metadata básica de título/descrição e contatos técnicos públicos quando disponíveis.
   - O frontend valida URLs, tokens CSS, email e metadata antes de aplicar branding dinâmico ou renderizar links públicos.
   - `supabase/tests/014_phase4_7_public_help_center_branding_contract.sql` cobre branding permitido, ausência de dados sensíveis e ausência de regressão dos filtros públicos.
+- Fase 4.9: Public Help Center Search Contract concluída localmente.
+  - A busca pública textual mínima foi materializada por `rpc_public_search_knowledge_articles`.
+  - A RPC expõe apenas resultados de artigos `published` + `public` em `knowledge_spaces` ativos, sem `body_md` completo e sem leitura do frontend em tabelas-base.
+  - A Central Pública agora oferece busca simples em `/help/:spaceSlug` com estados de carregando, vazio, sem resultados e erro.
+  - `supabase/tests/015_phase4_9_public_help_center_search_contract.sql` cobre grants, isolamento público, busca em space ativo, bloqueio de draft/restricted/categoria interna e comportamento controlado para query vazia/curta.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -317,6 +327,6 @@ Documentos históricos:
 ## Próxima prioridade
 Manter a Central Pública mínima restrita a leitura e preparar as próximas
 camadas sem romper a separação entre curadoria administrativa, leitura pública
-e IA. O próximo avanço recomendado é aprofundar a experiência pública com
-busca, roteamento por domínio e governança editorial adicional, sem abrir chat,
-portal B2B ou automações antes do contrato certo.
+e IA. O próximo avanço recomendado é aprofundar roteamento por domínio,
+governança editorial adicional e observabilidade da camada pública, sem abrir
+chat, portal B2B ou automações antes do contrato certo.

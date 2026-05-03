@@ -111,3 +111,13 @@ export interface PublicKnowledgeArticleDetailRow {
   published_at: IsoTimestamp | null;
   updated_at: IsoTimestamp;
 }
+
+export interface PublicKnowledgeSearchArticleRow {
+  article_id: Uuid;
+  title: string;
+  slug: string;
+  summary: string | null;
+  category_name: string | null;
+  rank_score: number | null;
+  updated_at: IsoTimestamp;
+}

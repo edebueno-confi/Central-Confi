@@ -4,6 +4,7 @@ import type {
   PublicKnowledgeArticleDetailRow,
   PublicKnowledgeArticleListRow,
   PublicKnowledgeNavigationRow,
+  PublicKnowledgeSearchArticleRow,
   PublicKnowledgeSpaceResolverRow,
 } from '../../contracts/public-contracts';
 
@@ -96,4 +97,26 @@ export async function getPublicKnowledgeArticle(
   }
 
   return (data ?? null) as PublicKnowledgeArticleDetailRow | null;
+}
+
+export async function searchPublicKnowledgeArticles(
+  spaceSlug: string,
+  query: string,
+  limit = 10,
+) {
+  const client = requireClient();
+  const { data, error } = await client.rpc(
+    'rpc_public_search_knowledge_articles',
+    {
+      p_space_slug: spaceSlug,
+      p_query: query,
+      p_limit: limit,
+    },
+  );
+
+  if (error) {
+    throw toAppError(error, 'Falha ao buscar artigos publicos.');
+  }
+
+  return (data ?? []) as PublicKnowledgeSearchArticleRow[];
 }

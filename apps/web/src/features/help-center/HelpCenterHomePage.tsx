@@ -1,9 +1,20 @@
-import { Link, useOutletContext } from 'react-router-dom';
+import { FormEvent, useEffect, useEffectEvent, useState } from 'react';
+import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
 import { formatDateTime } from '../../app/format';
-import { EmptyState } from '../../components/states';
-import { AppButton, InlineNotice, StatusPill } from '../../components/ui';
+import {
+  ContractUnavailableState,
+  EmptyState,
+  ErrorState,
+  LoadingState,
+} from '../../components/states';
+import { AppButton, GhostButton, InlineNotice, StatusPill } from '../../components/ui';
+import type { PublicKnowledgeSearchArticleRow } from '../../contracts/public-contracts';
+import { classifyAdminError } from '../admin/admin-errors';
 import type { HelpCenterSpaceContext } from './context';
 import { sanitizePublicSupportContacts } from './branding';
+import { searchPublicKnowledgeArticles } from './public-api';
+
+type SearchPhase = 'idle' | 'loading' | 'ready' | 'empty' | 'contract-unavailable' | 'error';
 
 function toneForCategoryCount(count: number) {
   if (count >= 6) {
@@ -19,6 +30,7 @@ function toneForCategoryCount(count: number) {
 
 export function HelpCenterHomePage() {
   const context = useOutletContext<HelpCenterSpaceContext>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const rootCategories = context.navigation.filter(
     (entry) => entry.parent_category_id === null,
   );
@@ -26,6 +38,80 @@ export function HelpCenterHomePage() {
   const supportContacts = sanitizePublicSupportContacts(
     context.primaryRoute.support_contacts,
   );
+  const [searchInput, setSearchInput] = useState(searchParams.get('q') ?? '');
+  const [searchPhase, setSearchPhase] = useState<SearchPhase>('idle');
+  const [searchMessage, setSearchMessage] = useState<string | null>(null);
+  const [searchResults, setSearchResults] = useState<PublicKnowledgeSearchArticleRow[]>([]);
+  const activeQuery = (searchParams.get('q') ?? '').trim();
+
+  const loadSearch = useEffectEvent(async (query: string) => {
+    try {
+      const results = await searchPublicKnowledgeArticles(
+        context.primaryRoute.knowledge_space_slug,
+        query,
+        10,
+      );
+      setSearchResults(results);
+      setSearchMessage(null);
+      setSearchPhase(results.length === 0 ? 'empty' : 'ready');
+    } catch (error) {
+      const classified = classifyAdminError(
+        error,
+        'Nao foi possivel executar a busca publica da Central de Ajuda.',
+      );
+      setSearchResults([]);
+      setSearchMessage(classified.message);
+      setSearchPhase(
+        classified.kind === 'contract-unavailable'
+          ? 'contract-unavailable'
+          : 'error',
+      );
+    }
+  });
+
+  useEffect(() => {
+    setSearchInput(searchParams.get('q') ?? '');
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (!activeQuery) {
+      setSearchResults([]);
+      setSearchMessage(null);
+      setSearchPhase('idle');
+      return;
+    }
+
+    if (activeQuery.length < 2) {
+      setSearchResults([]);
+      setSearchMessage(null);
+      setSearchPhase('empty');
+      return;
+    }
+
+    setSearchPhase('loading');
+    void loadSearch(activeQuery);
+  }, [activeQuery, context.primaryRoute.knowledge_space_slug]);
+
+  function handleSearchSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const nextQuery = searchInput.trim();
+    const nextParams = new URLSearchParams(searchParams);
+
+    if (!nextQuery) {
+      nextParams.delete('q');
+    } else {
+      nextParams.set('q', nextQuery);
+    }
+
+    setSearchParams(nextParams, { replace: nextQuery === activeQuery });
+  }
+
+  function clearSearch() {
+    setSearchInput('');
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('q');
+    setSearchParams(nextParams, { replace: true });
+  }
 
   return (
     <>
@@ -49,6 +135,33 @@ export function HelpCenterHomePage() {
                 {context.articles.length} artigo{context.articles.length === 1 ? '' : 's'} publicado{context.articles.length === 1 ? '' : 's'}
               </StatusPill>
             </div>
+            <form
+              className="grid gap-3 rounded-[28px] border border-[var(--help-border)] bg-white/78 p-4 shadow-[0_18px_42px_rgba(20,31,71,0.06)] sm:grid-cols-[minmax(0,1fr)_auto]"
+              onSubmit={handleSearchSubmit}
+            >
+              <label className="grid gap-2" htmlFor="help-center-search">
+                <span className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[var(--help-muted)]">
+                  Busca publica
+                </span>
+                <input
+                  id="help-center-search"
+                  autoComplete="off"
+                  className="h-12 rounded-[20px] border border-[var(--help-border)] bg-[var(--help-surface)] px-4 text-sm text-[var(--help-ink-strong)] outline-none transition placeholder:text-[var(--help-muted)] focus:border-[var(--help-accent)] focus:ring-2 focus:ring-[color:var(--help-accent-soft)]"
+                  onChange={(event) => setSearchInput(event.target.value)}
+                  placeholder="Buscar artigos por titulo, resumo ou conteudo publicado"
+                  type="search"
+                  value={searchInput}
+                />
+              </label>
+              <div className="flex flex-wrap items-end gap-3">
+                <AppButton type="submit">Buscar</AppButton>
+                {(searchInput || activeQuery) ? (
+                  <GhostButton onClick={clearSearch} type="button">
+                    Limpar
+                  </GhostButton>
+                ) : null}
+              </div>
+            </form>
           </div>
           <div className="grid gap-4 rounded-[30px] border border-[var(--help-border)] bg-white/74 p-5">
             <div>
@@ -95,6 +208,110 @@ export function HelpCenterHomePage() {
               </div>
             ) : null}
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-[30px] border border-[var(--help-border)] bg-[var(--help-panel)] p-6 shadow-[var(--shadow-panel)] backdrop-blur sm:p-8">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="space-y-2">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[var(--help-muted)]">
+              Busca publica
+            </p>
+            <h3 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--help-ink-strong)]">
+              Procurar artigos publicados
+            </h3>
+            <p className="max-w-3xl text-sm leading-7 text-[var(--help-muted)]">
+              A busca usa apenas `rpc_public_search_knowledge_articles`, sem IA, sem embeddings e sem qualquer acesso do frontend a tabelas-base.
+            </p>
+          </div>
+          {activeQuery ? (
+            <StatusPill tone={searchPhase === 'ready' ? 'positive' : 'default'}>
+              consulta: {activeQuery}
+            </StatusPill>
+          ) : null}
+        </div>
+
+        <div className="mt-5">
+          {searchPhase === 'idle' ? (
+            <div className="rounded-[24px] border border-dashed border-[var(--help-border)] bg-white/56 px-5 py-5 text-sm leading-7 text-[var(--help-muted)]">
+              Digite ao menos 2 caracteres para buscar artigos tecnicos publicados neste knowledge space.
+            </div>
+          ) : null}
+
+          {searchPhase === 'loading' ? (
+            <LoadingState
+              title="Buscando artigos publicados"
+              description="A RPC publica esta consultando apenas conteudo publicado e visivel para este knowledge space."
+            />
+          ) : null}
+
+          {searchPhase === 'contract-unavailable' ? (
+            <ContractUnavailableState contractName="RPC publica de busca da Knowledge Base" />
+          ) : null}
+
+          {searchPhase === 'error' ? (
+            <ErrorState
+              title="Falha ao executar a busca"
+              description={
+                searchMessage ??
+                'A camada publica nao conseguiu consultar os artigos publicados neste ambiente.'
+              }
+              action={
+                <GhostButton onClick={() => void loadSearch(activeQuery)}>
+                  Tentar novamente
+                </GhostButton>
+              }
+            />
+          ) : null}
+
+          {searchPhase === 'empty' ? (
+            activeQuery.length < 2 ? (
+              <div className="rounded-[24px] border border-dashed border-[var(--help-border)] bg-white/56 px-5 py-5 text-sm leading-7 text-[var(--help-muted)]">
+                Use pelo menos 2 caracteres para evitar consultas vazias e manter a busca publica objetiva.
+              </div>
+            ) : (
+              <EmptyState
+                title="Nenhum artigo encontrado"
+                description="Nenhum artigo publicado e publico corresponde a esta consulta neste knowledge space."
+              />
+            )
+          ) : null}
+
+          {searchPhase === 'ready' ? (
+            <div className="grid gap-3">
+              {searchResults.map((article) => (
+                <Link
+                  key={article.article_id}
+                  className="rounded-[24px] border border-[var(--help-border)] bg-white/80 px-5 py-4 no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-white"
+                  to={`/help/${context.primaryRoute.knowledge_space_slug}/articles/${article.slug}`}
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap gap-2">
+                        <StatusPill tone="accent">
+                          {article.category_name ?? 'Artigo publico'}
+                        </StatusPill>
+                      </div>
+                      <h4 className="text-lg font-semibold tracking-[-0.03em] text-[var(--help-ink-strong)]">
+                        {article.title}
+                      </h4>
+                      <p className="max-w-3xl text-sm leading-7 text-[var(--help-muted)]">
+                        {article.summary ?? 'Artigo tecnico B2B publicado sem resumo adicional.'}
+                      </p>
+                    </div>
+                    <div className="text-right text-xs leading-5 text-[var(--help-muted)]">
+                      {article.rank_score ? (
+                        <p className="font-medium text-[var(--help-ink)]">
+                          score {article.rank_score.toFixed(2)}
+                        </p>
+                      ) : null}
+                      <p className="mt-1">Atualizado em {formatDateTime(article.updated_at)}</p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : null}
         </div>
       </section>
 

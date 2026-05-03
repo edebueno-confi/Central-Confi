@@ -30,6 +30,8 @@ Criar a base editorial do Genius Support OS com versionamento, trilha de origem 
   - `vw_public_knowledge_navigation`
   - `vw_public_knowledge_articles_list`
   - `vw_public_knowledge_article_detail`
+- Busca pública textual mínima:
+  - `rpc_public_search_knowledge_articles`
 - Mutações editoriais administrativas:
   - `rpc_admin_create_knowledge_category`
   - `rpc_admin_create_knowledge_article_draft`
@@ -64,6 +66,7 @@ Criar a base editorial do Genius Support OS com versionamento, trilha de origem 
 - `knowledge_space_domains` reserva a combinação `(host, path_prefix)` por space.
 - A unicidade futura de categorias e artigos por space já foi preparada por índices parciais em `knowledge_space_id`, sem remover as constraints atuais por `tenant_id`.
 - A camada pública lê apenas views aprovadas e expõe somente spaces ativos com artigos `published` + `public`.
+- A busca pública lê apenas o recorte `published` + `public` em spaces ativos e retorna somente metadados mínimos de resultado.
 
 ## Inventário legado atual
 Origem oficial preservada:
@@ -140,7 +143,7 @@ Metadados brutos observados em `article.json`:
 - `published` continua sendo estado editorial, não sinal de exposição pública ativa.
 - Um `knowledge_space` futuro também precisará estar ativo antes de qualquer abertura pública.
 - O contrato público de leitura já existe, mas ainda sem UI pública, busca ou roteamento ativo no frontend.
-- O contrato público de leitura agora possui UI mínima em `/help`, mas continua sem busca, IA, chat, widget, portal B2B ou abertura pública de ticket.
+- O contrato público de leitura agora possui UI mínima em `/help` e busca textual simples, mas continua sem IA, chat, widget, portal B2B ou abertura pública de ticket.
 
 ## Superfície pública mínima
 - Rotas ativas:
@@ -158,6 +161,7 @@ Metadados brutos observados em `article.json`:
 - Branding detalhado por `brand_settings` ainda não é requisito do contrato público atual; a UI usa fallback seguro baseado nos metadados públicos já expostos.
 - O resolver público agora projeta branding sanitizado mínimo de `brand_settings`, mantendo o frontend sem acesso direto à tabela base.
 - Tokens de tema, SEO e contatos públicos passam por allowlist no backend e nova validação no frontend antes de afetar CSS, links ou metadata.
+- A busca pública consulta exclusivamente `rpc_public_search_knowledge_articles`, com full-text search nativo do PostgreSQL sobre conteúdo publicado.
 
 ## Governança de revisão
 - Todo artigo relevante deve gerar revisão em `knowledge_article_revisions`.
@@ -188,10 +192,24 @@ Metadados brutos observados em `article.json`:
 - documentação pública técnica
 - frontend público sobre os read models públicos
 - indexação em IA
-- busca pública
 - chat ou widget
 - portal B2B do cliente
 - abertura pública de ticket
 - uso de HTML legado como frontend
 - publicação automática
 - mistura entre KB pública e playbooks internos
+
+## Busca pública mínima
+- A Central Pública agora possui busca textual simples em `/help/:spaceSlug`.
+- O frontend consulta apenas `rpc_public_search_knowledge_articles`.
+- A RPC busca por `title`, `summary` e `body_md` usando full-text search nativo do PostgreSQL.
+- O retorno expõe somente:
+  - `article_id`
+  - `title`
+  - `slug`
+  - `summary`
+  - `category_name`
+  - `rank_score`
+  - `updated_at`
+- A busca não usa IA, embeddings, chat nem qualquer filtro de segurança no frontend.
+- Queries vazias ou muito curtas retornam lista vazia controlada.

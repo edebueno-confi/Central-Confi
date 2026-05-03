@@ -126,6 +126,13 @@ Fase 4.7:
   - `support_contacts` sanitizado por allowlist
 - O frontend público continua sem escrever em RPCs e valida novamente os valores antes de aplicar CSS, meta tags ou links.
 
+Fase 4.9:
+- A Central Pública agora possui contrato oficial de busca textual simples.
+- O frontend público consulta busca apenas por:
+  - `rpc_public_search_knowledge_articles`
+- A RPC pública retorna apenas metadados mínimos de resultado (`article_id`, `title`, `slug`, `summary`, `category_name`, `rank_score`, `updated_at`) e nunca expõe `body_md` completo.
+- A busca continua sem IA, embeddings, chat, portal B2B ou abertura pública de ticket.
+
 ## Views contratuais vigentes
 
 ### `vw_tickets_list`
@@ -336,6 +343,24 @@ Fase 4.7:
   - mantém Markdown como corpo oficial; HTML legado continua fora do contrato;
   - não expõe rastreabilidade editorial interna nem trilha de importação legado;
   - usa `security_barrier = true`.
+
+## RPC pública vigente
+
+### `rpc_public_search_knowledge_articles`
+- Finalidade: busca textual simples da Central de Ajuda pública por `knowledge_space`.
+- Entrada:
+  - `p_space_slug`
+  - `p_query`
+  - `p_limit` com default `10`
+- Retorna: `article_id`, `title`, `slug`, `summary`, `category_name`, `rank_score` e `updated_at`.
+- Regras:
+  - considera apenas `knowledge_spaces` ativos em `organizations` ativas;
+  - considera apenas artigos `published` + `public`;
+  - bloqueia artigos em categoria não pública, quando categorizados;
+  - não expõe `body_md`, `source_path`, `source_hash`, `tenant_id` nem metadados editoriais internos;
+  - usa busca textual simples em PostgreSQL com `websearch_to_tsquery('portuguese', ...)`;
+  - query vazia ou curta retorna lista vazia controlada;
+  - `p_limit` é limitado no backend para evitar abuso.
 
 ## Auditoria das views oficiais
 
@@ -617,6 +642,8 @@ Fase 4.7:
   - `vw_public_knowledge_navigation`
   - `vw_public_knowledge_articles_list`
   - `vw_public_knowledge_article_detail`
+- O app público/autenticado consulta busca da Central de Ajuda apenas por:
+  - `rpc_public_search_knowledge_articles`
 - O app autenticado escreve tickets apenas por:
   - `rpc_create_ticket`
   - `rpc_update_ticket_status`
@@ -641,7 +668,7 @@ Fase 4.7:
 
 ## Próximos contratos planejados
 - Views e RPCs de intake para engenharia.
-- Busca pública e roteamento frontend por domínio/`space_slug` sobre os contratos já materializados.
+- Roteamento frontend por domínio/`space_slug` sobre os contratos já materializados.
 - Branding público projetado explicitamente por read model quando `brand_settings` precisar sair do fallback seguro atual.
 
 ## Proibições
