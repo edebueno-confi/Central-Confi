@@ -66,6 +66,17 @@
 - eventos recentes relevantes
 - sem metricas pesadas, SLA executavel ou funil comercial
 
+## Proxima camada de contexto do cliente
+- o Support Workspace ja validou a necessidade de um perfil operacional mais rico do cliente B2B
+- esse dominio fica especificado em `CUSTOMER_ACCOUNT_PROFILE_SPEC.md`
+- o suporte precisa consultar, antes da resposta:
+  - produto ativo
+  - plano e modulos relevantes
+  - stack operacional principal
+  - customizacoes e alertas
+  - contatos por finalidade
+- esse contexto deve apoiar a tratativa sem transformar a tela em CRM generico
+
 ## Superficie minima ja implementada
 - `/support` redireciona para a fila oficial `/support/queue`
 - `/support/queue` e `/support/tickets` usam a fila dominante de tickets do workspace

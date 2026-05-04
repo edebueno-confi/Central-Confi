@@ -157,6 +157,11 @@ O que deve existir futuramente:
 - sinais de volume ou recorrencia
 - contatos relevantes do tenant
 
+Desdobramento aprovado em especificacao:
+- o perfil operacional completo do cliente passa a ser tratado como dominio proprio em `CUSTOMER_ACCOUNT_PROFILE_SPEC.md`
+- suporte nao deve depender apenas de `tenant` + contatos + tickets recentes; precisa enxergar produto ativo, plano resumido, stack, customizacoes e alertas operacionais
+- esse perfil nao deve virar CRM generico nem ser despejado inteiro no ticket
+
 ### 4. Assignments
 Lacuna:
 - o contrato ja suporta atribuicao, mas a UX de fila precisa decidir claramente:
@@ -228,6 +233,7 @@ Uso esperado:
 - visao 360 do cliente B2B
 - historico de tickets
 - contexto do tenant para atendimento tecnico-operacional
+- ponto natural de leitura aprofundada do futuro Customer Account Profile
 
 ### `/support/queue`
 - recorte operacional prioritario
