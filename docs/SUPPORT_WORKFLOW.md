@@ -42,6 +42,7 @@
 - o detalhe do ticket deve concentrar timeline, composer, atribuicao e acoes de status
 - o contexto do cliente B2B deve existir como visao 360 enxuta, sem virar CRM generico
 - escalonamento para engenharia continua parte do fluxo, mas sem transformar suporte em board tecnico completo nesta fase
+- timeline e customer context nao podem carregar historico infinito na primeira tela; a operacao deve partir de recortes recentes e controlados
 
 ## Authz atual do workspace
 - a superficie de suporte interna agora esta contratada em read models proprios:
@@ -49,6 +50,9 @@
   - `vw_support_ticket_detail`
   - `vw_support_ticket_timeline`
   - `vw_support_customer_360`
+  - `vw_support_ticket_timeline_recent`
+  - `vw_support_customer_recent_tickets`
+  - `vw_support_customer_recent_events`
 - `platform_admin` pode ler a operacao completa
 - `support_agent` e `support_manager` leem apenas os tenants em que possuem membership ativo
 - membros comuns do tenant continuam fora do workspace
@@ -70,8 +74,10 @@
 - a leitura dessa superficie ocorre apenas por:
   - `vw_support_tickets_queue`
   - `vw_support_ticket_detail`
-  - `vw_support_ticket_timeline`
+  - `vw_support_ticket_timeline_recent`
   - `vw_support_customer_360`
+  - `vw_support_customer_recent_tickets`
+  - `vw_support_customer_recent_events`
   - `vw_support_assignable_agents`
 - a escrita continua apenas por:
   - `rpc_update_ticket_status`
@@ -114,6 +120,16 @@
 - o seletor de agente lista apenas operadores ativos e atribuiveis dentro do mesmo tenant permitido
 - `Atribuir a mim` e `Desatribuir` continuam usando apenas `rpc_assign_ticket`
 - o `user_id` tecnico permanece recolhido como fallback excepcional, nunca como caminho principal da operacao
+
+## Guardrails de volume da fase 6.4
+- a timeline principal do ticket passa a operar por `vw_support_ticket_timeline_recent`
+- a tela inicial do ticket mostra apenas a janela recente com `recent_limit`, `total_available_count` e `has_more`
+- o customer context passa a separar resumo e listas recentes:
+  - `vw_support_customer_360` para tenant e preview de contatos
+  - `vw_support_customer_recent_tickets` para tickets recentes
+  - `vw_support_customer_recent_events` para eventos recentes
+- a UI nao deve simular paginacao carregando tudo por baixo
+- enquanto nao existir RPC paginavel dedicada, a leitura operacional fica explicitamente limitada ao recorte recente
 
 ## Fora de escopo do workspace
 - atendimento a shopper final

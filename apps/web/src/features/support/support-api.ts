@@ -17,9 +17,12 @@ import type {
   RpcUpdateTicketStatusResponse,
   SupportAssignableAgent,
   SupportCustomer360,
+  SupportCustomerRecentEventsWindow,
+  SupportCustomerRecentTicketsWindow,
   SupportTicketDetail,
   SupportTicketQueueItem,
   SupportTicketTimelineItem,
+  SupportTicketTimelineRecentWindow,
   TicketPriority,
   TicketSeverity,
   TicketStatus,
@@ -219,6 +222,14 @@ function mapAssignableAgent(row: Record<string, unknown>): SupportAssignableAgen
   };
 }
 
+function mapRecentWindowMeta(row: Record<string, unknown> | null | undefined) {
+  return {
+    totalAvailableCount: Number(row?.total_available_count ?? 0),
+    recentLimit: Number(row?.recent_limit ?? 0),
+    hasMore: Boolean(row?.has_more),
+  };
+}
+
 interface ListSupportTicketsQueueOptions {
   status?: TicketStatus | 'all';
   priority?: TicketPriority | 'all';
@@ -282,10 +293,12 @@ export async function getSupportTicketDetail(ticketId: Uuid) {
   return data ? mapTicketDetail(data as Record<string, unknown>) : null;
 }
 
-export async function listSupportTicketTimeline(ticketId: Uuid) {
+export async function getSupportTicketTimelineRecent(
+  ticketId: Uuid,
+): Promise<SupportTicketTimelineRecentWindow> {
   const client = requireClient();
   const { data, error } = await client
-    .from('vw_support_ticket_timeline')
+    .from('vw_support_ticket_timeline_recent')
     .select('*')
     .eq('ticket_id', ticketId)
     .order('occurred_at', { ascending: true });
@@ -294,14 +307,21 @@ export async function listSupportTicketTimeline(ticketId: Uuid) {
     throw toAppError(error, 'Falha ao carregar a timeline do ticket.');
   }
 
-  return (data ?? []).map((row) => mapTimelineItem(row as Record<string, unknown>));
+  const rows = (data ?? []) as Record<string, unknown>[];
+
+  return {
+    ...mapRecentWindowMeta(rows[0]),
+    entries: rows.map((row) => mapTimelineItem(row)),
+  };
 }
 
 export async function listSupportCustomers360() {
   const client = requireClient();
   const { data, error } = await client
     .from('vw_support_customer_360')
-    .select('*')
+    .select(
+      'tenant_id, tenant_slug, tenant_display_name, tenant_legal_name, tenant_status, tenant_created_at, tenant_updated_at, active_contacts_count, total_ticket_count, open_ticket_count, ticket_status_counts',
+    )
     .order('tenant_display_name', { ascending: true });
 
   if (error) {
@@ -315,7 +335,9 @@ export async function getSupportCustomer360(tenantId: Uuid) {
   const client = requireClient();
   const { data, error } = await client
     .from('vw_support_customer_360')
-    .select('*')
+    .select(
+      'tenant_id, tenant_slug, tenant_display_name, tenant_legal_name, tenant_status, tenant_created_at, tenant_updated_at, active_contacts_count, total_ticket_count, open_ticket_count, ticket_status_counts, active_contacts',
+    )
     .eq('tenant_id', tenantId)
     .maybeSingle();
 
@@ -324,6 +346,50 @@ export async function getSupportCustomer360(tenantId: Uuid) {
   }
 
   return data ? mapCustomer360(data as Record<string, unknown>) : null;
+}
+
+export async function getSupportCustomerRecentTickets(
+  tenantId: Uuid,
+): Promise<SupportCustomerRecentTicketsWindow> {
+  const client = requireClient();
+  const { data, error } = await client
+    .from('vw_support_customer_recent_tickets')
+    .select('*')
+    .eq('tenant_id', tenantId)
+    .order('updated_at', { ascending: false });
+
+  if (error) {
+    throw toAppError(error, 'Falha ao carregar os tickets recentes do cliente.');
+  }
+
+  const rows = (data ?? []) as Record<string, unknown>[];
+
+  return {
+    ...mapRecentWindowMeta(rows[0]),
+    tickets: rows.map((row) => mapRecentTicket(row)),
+  };
+}
+
+export async function getSupportCustomerRecentEvents(
+  tenantId: Uuid,
+): Promise<SupportCustomerRecentEventsWindow> {
+  const client = requireClient();
+  const { data, error } = await client
+    .from('vw_support_customer_recent_events')
+    .select('*')
+    .eq('tenant_id', tenantId)
+    .order('occurred_at', { ascending: false });
+
+  if (error) {
+    throw toAppError(error, 'Falha ao carregar os eventos recentes do cliente.');
+  }
+
+  const rows = (data ?? []) as Record<string, unknown>[];
+
+  return {
+    ...mapRecentWindowMeta(rows[0]),
+    events: rows.map((row) => mapRecentEvent(row)),
+  };
 }
 
 export async function listSupportAssignableAgents(tenantId: Uuid) {

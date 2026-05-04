@@ -39,10 +39,12 @@ import {
   assignTicket,
   closeTicket,
   getSupportCustomer360,
+  getSupportCustomerRecentEvents,
+  getSupportCustomerRecentTickets,
   getSupportTicketDetail,
+  getSupportTicketTimelineRecent,
   listSupportAssignableAgents,
   listSupportCustomers360,
-  listSupportTicketTimeline,
   listSupportTicketsQueue,
   reopenTicket,
   updateTicketStatus,
@@ -54,11 +56,14 @@ import {
   type SupportAssignableAgent,
   type SupportCustomer360,
   type SupportCustomer360Contact,
+  type SupportCustomerRecentEventsWindow,
+  type SupportCustomerRecentTicketsWindow,
   type SupportCustomer360RecentEvent,
   type SupportCustomer360RecentTicket,
   type SupportTicketDetail,
   type SupportTicketQueueItem,
   type SupportTicketTimelineItem,
+  type SupportTicketTimelineRecentWindow,
   type TicketPriority,
   type TicketSeverity,
   type TicketStatus,
@@ -179,6 +184,33 @@ function emptyFilters(): QueueFilters {
   };
 }
 
+function emptyTimelineWindow(): SupportTicketTimelineRecentWindow {
+  return {
+    entries: [],
+    totalAvailableCount: 0,
+    recentLimit: 25,
+    hasMore: false,
+  };
+}
+
+function emptyCustomerRecentTicketsWindow(): SupportCustomerRecentTicketsWindow {
+  return {
+    tickets: [],
+    totalAvailableCount: 0,
+    recentLimit: 6,
+    hasMore: false,
+  };
+}
+
+function emptyCustomerRecentEventsWindow(): SupportCustomerRecentEventsWindow {
+  return {
+    events: [],
+    totalAvailableCount: 0,
+    recentLimit: 8,
+    hasMore: false,
+  };
+}
+
 function buildStatusChoices(currentStatus: TicketStatus) {
   return TICKET_STATUSES.filter(
     (status): status is TicketStatusUpdateTarget =>
@@ -258,10 +290,12 @@ function TimelineEntry({
 }
 
 function SupportTimeline({
-  entries,
+  window,
 }: {
-  entries: SupportTicketTimelineItem[];
+  window: SupportTicketTimelineRecentWindow;
 }) {
+  const entries = window.entries;
+
   if (entries.length === 0) {
     return (
       <EmptyState
@@ -273,6 +307,10 @@ function SupportTimeline({
 
   return (
     <div className="space-y-3">
+      <div className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 text-sm leading-6 text-[color:var(--color-muted)]">
+        Mostrando {entries.length} de {window.totalAvailableCount} registros recentes.
+        {window.hasMore ? ' O historico completo fica fora da primeira carga operacional desta tela.' : ''}
+      </div>
       {entries.map((entry) => (
         <TimelineEntry key={entry.timelineEntryId} entry={entry} />
       ))}
@@ -620,9 +658,13 @@ function SupportQueueToolbar({
 
 function SupportCustomerRail({
   customer,
+  recentTicketsWindow,
+  recentEventsWindow,
   compact = false,
 }: {
   customer: SupportCustomer360 | null;
+  recentTicketsWindow: SupportCustomerRecentTicketsWindow;
+  recentEventsWindow: SupportCustomerRecentEventsWindow;
   compact?: boolean;
 }) {
   if (!customer) {
@@ -635,8 +677,8 @@ function SupportCustomerRail({
   }
 
   const contacts = customer.activeContacts.slice(0, compact ? 2 : 4);
-  const recentTickets = customer.recentTickets.slice(0, compact ? 3 : 5);
-  const recentEvents = customer.recentEvents.slice(0, compact ? 2 : 4);
+  const recentTickets = recentTicketsWindow.tickets.slice(0, compact ? 3 : recentTicketsWindow.tickets.length);
+  const recentEvents = recentEventsWindow.events.slice(0, compact ? 2 : recentEventsWindow.events.length);
 
   return (
     <div className="space-y-3">
@@ -683,6 +725,9 @@ function SupportCustomerRail({
 
       <div className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4">
         <h4 className="text-sm font-semibold text-[color:var(--color-ink)]">Tickets recentes</h4>
+        <p className="mt-1 text-xs leading-5 text-[color:var(--color-muted)]">
+          Mostrando {recentTickets.length} de {recentTicketsWindow.totalAvailableCount} tickets recentes.
+        </p>
         <div className="mt-3 space-y-2">
           {recentTickets.length === 0 ? (
             <p className="text-sm text-[color:var(--color-muted)]">
@@ -699,6 +744,9 @@ function SupportCustomerRail({
           <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
             Eventos recentes
           </summary>
+          <p className="mt-2 text-xs leading-5 text-[color:var(--color-muted)]">
+            Mostrando {recentEvents.length} de {recentEventsWindow.totalAvailableCount} registros recentes.
+          </p>
           <div className="mt-3 space-y-2">
             {recentEvents.length === 0 ? (
               <p className="text-sm text-[color:var(--color-muted)]">
@@ -794,8 +842,14 @@ function SupportWorkspaceView({
   const [detailPhase, setDetailPhase] = useState<DetailPhase>('idle');
   const [detailMessage, setDetailMessage] = useState<string | null>(null);
   const [ticketDetail, setTicketDetail] = useState<SupportTicketDetail | null>(null);
-  const [timeline, setTimeline] = useState<SupportTicketTimelineItem[]>([]);
+  const [timelineWindow, setTimelineWindow] = useState<SupportTicketTimelineRecentWindow>(
+    emptyTimelineWindow(),
+  );
   const [customer, setCustomer] = useState<SupportCustomer360 | null>(null);
+  const [customerRecentTickets, setCustomerRecentTickets] =
+    useState<SupportCustomerRecentTicketsWindow>(emptyCustomerRecentTicketsWindow());
+  const [customerRecentEvents, setCustomerRecentEvents] =
+    useState<SupportCustomerRecentEventsWindow>(emptyCustomerRecentEventsWindow());
   const [assignableAgents, setAssignableAgents] = useState<SupportAssignableAgent[]>([]);
   const [agentsPhase, setAgentsPhase] = useState<AgentsPhase>('idle');
   const [agentsMessage, setAgentsMessage] = useState<string | null>(null);
@@ -859,26 +913,34 @@ function SupportWorkspaceView({
     setAgentsMessage(null);
 
     try {
-      const [detail, timelineRows] = await Promise.all([
+      const [detail, timelineRecent] = await Promise.all([
         getSupportTicketDetail(ticketId),
-        listSupportTicketTimeline(ticketId),
+        getSupportTicketTimelineRecent(ticketId),
       ]);
 
       setBackendDenied(false);
 
       if (!detail) {
         setTicketDetail(null);
-        setTimeline([]);
+        setTimelineWindow(emptyTimelineWindow());
         setCustomer(null);
+        setCustomerRecentTickets(emptyCustomerRecentTicketsWindow());
+        setCustomerRecentEvents(emptyCustomerRecentEventsWindow());
         setDetailPhase('error');
         setDetailMessage('O backend nao retornou detalhe para o ticket selecionado.');
         return;
       }
 
-      const customerRow = await getSupportCustomer360(detail.tenantId);
+      const [customerRow, recentTicketsWindow, recentEventsWindow] = await Promise.all([
+        getSupportCustomer360(detail.tenantId),
+        getSupportCustomerRecentTickets(detail.tenantId),
+        getSupportCustomerRecentEvents(detail.tenantId),
+      ]);
       setTicketDetail(detail);
-      setTimeline(timelineRows);
+      setTimelineWindow(timelineRecent);
       setCustomer(customerRow);
+      setCustomerRecentTickets(recentTicketsWindow);
+      setCustomerRecentEvents(recentEventsWindow);
       setDetailPhase('ready');
       setStatusDraft(buildStatusChoices(detail.status)[0] ?? 'triage');
       setAssignDraft(detail.assignedToUserId ?? '');
@@ -922,8 +984,10 @@ function SupportWorkspaceView({
       }
 
       setTicketDetail(null);
-      setTimeline([]);
+      setTimelineWindow(emptyTimelineWindow());
       setCustomer(null);
+      setCustomerRecentTickets(emptyCustomerRecentTicketsWindow());
+      setCustomerRecentEvents(emptyCustomerRecentEventsWindow());
       setAssignableAgents([]);
       setAgentsPhase('idle');
       setDetailMessage(classified.message);
@@ -957,8 +1021,10 @@ function SupportWorkspaceView({
     if (!selectedTicketId) {
       setDetailPhase('idle');
       setTicketDetail(null);
-      setTimeline([]);
+      setTimelineWindow(emptyTimelineWindow());
       setCustomer(null);
+      setCustomerRecentTickets(emptyCustomerRecentTicketsWindow());
+      setCustomerRecentEvents(emptyCustomerRecentEventsWindow());
       setAssignableAgents([]);
       setAgentsPhase('idle');
       setAgentsMessage(null);
@@ -1349,7 +1415,7 @@ function SupportWorkspaceView({
           description="O frontend esta resolvendo detalhe, timeline e contexto do cliente."
         />
       ) : detailPhase === 'contract-unavailable' ? (
-        <ContractUnavailableState contractName="vw_support_ticket_detail / vw_support_ticket_timeline / vw_support_customer_360" />
+        <ContractUnavailableState contractName="vw_support_ticket_detail / vw_support_ticket_timeline_recent / vw_support_customer_360" />
       ) : detailPhase === 'error' || !ticketDetail || !selectedTicketSummary ? (
         <ErrorState
           description={detailMessage ?? 'O painel operacional do ticket nao ficou disponivel.'}
@@ -1472,7 +1538,7 @@ function SupportWorkspaceView({
                 title="Timeline operacional"
                 description="Leitura cronologica da tratativa com mensagens publicas, notas internas e eventos de sistema."
               >
-                <SupportTimeline entries={timeline} />
+                <SupportTimeline window={timelineWindow} />
               </Panel>
             </div>
 
@@ -1659,7 +1725,12 @@ function SupportWorkspaceView({
                     ) : null}
                   </div>
 
-                  <SupportCustomerRail compact customer={customer} />
+                  <SupportCustomerRail
+                    compact
+                    customer={customer}
+                    recentEventsWindow={customerRecentEvents}
+                    recentTicketsWindow={customerRecentTickets}
+                  />
                 </div>
               </Panel>
             </aside>
@@ -1693,25 +1764,35 @@ export function SupportCustomerPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [customer, setCustomer] = useState<SupportCustomer360 | null>(null);
   const [customers, setCustomers] = useState<SupportCustomer360[]>([]);
+  const [recentTicketsWindow, setRecentTicketsWindow] =
+    useState<SupportCustomerRecentTicketsWindow>(emptyCustomerRecentTicketsWindow());
+  const [recentEventsWindow, setRecentEventsWindow] =
+    useState<SupportCustomerRecentEventsWindow>(emptyCustomerRecentEventsWindow());
 
   const loadCustomer = useEffectEvent(async () => {
     if (!tenantId) {
       setCustomer(null);
       setCustomers([]);
+      setRecentTicketsWindow(emptyCustomerRecentTicketsWindow());
+      setRecentEventsWindow(emptyCustomerRecentEventsWindow());
       setPhase('error');
       setMessage('Tenant ausente na rota do customer 360.');
       return;
     }
 
     try {
-      const [detail, rows] = await Promise.all([
+      const [detail, rows, recentTickets, recentEvents] = await Promise.all([
         getSupportCustomer360(tenantId),
         listSupportCustomers360(),
+        getSupportCustomerRecentTickets(tenantId),
+        getSupportCustomerRecentEvents(tenantId),
       ]);
 
       setBackendDenied(false);
       setCustomer(detail);
       setCustomers(rows);
+      setRecentTicketsWindow(recentTickets);
+      setRecentEventsWindow(recentEvents);
       setMessage(null);
       setPhase('ready');
     } catch (error) {
@@ -1732,6 +1813,8 @@ export function SupportCustomerPage() {
 
       setCustomer(null);
       setCustomers([]);
+      setRecentTicketsWindow(emptyCustomerRecentTicketsWindow());
+      setRecentEventsWindow(emptyCustomerRecentEventsWindow());
       setMessage(classified.message);
       setPhase(
         classified.kind === 'contract-unavailable' ? 'contract-unavailable' : 'error',
@@ -1761,7 +1844,7 @@ export function SupportCustomerPage() {
   }
 
   if (phase === 'contract-unavailable') {
-    return <ContractUnavailableState contractName="vw_support_customer_360" />;
+    return <ContractUnavailableState contractName="vw_support_customer_360 / vw_support_customer_recent_tickets / vw_support_customer_recent_events" />;
   }
 
   if (phase === 'error') {
@@ -1796,21 +1879,29 @@ export function SupportCustomerPage() {
             title="Resumo operacional do tenant"
             description="Contexto suficiente para entender o cliente atendido sem transformar a superficie em CRM."
           >
-            <SupportCustomerRail compact customer={customer} />
+            <SupportCustomerRail
+              compact
+              customer={customer}
+              recentEventsWindow={recentEventsWindow}
+              recentTicketsWindow={recentTicketsWindow}
+            />
           </Panel>
 
           <Panel
             title="Eventos recentes do tenant"
             description="Ultimos movimentos relevantes para reentrar rapidamente no contexto do atendimento."
           >
-            {customer.recentEvents.length === 0 ? (
+            <div className="mb-3 text-xs leading-5 text-[color:var(--color-muted)]">
+              Mostrando {recentEventsWindow.events.length} de {recentEventsWindow.totalAvailableCount} registros recentes.
+            </div>
+            {recentEventsWindow.events.length === 0 ? (
               <EmptyState
                 title="Sem eventos recentes"
                 description="O backend nao retornou eventos recentes para este tenant."
               />
             ) : (
               <div className="space-y-2">
-                {customer.recentEvents.map((event) => (
+                {recentEventsWindow.events.map((event) => (
                   <SupportRecentEventCard
                     event={event}
                     key={`${event.ticketId}-${event.occurredAt}-${event.eventType}`}

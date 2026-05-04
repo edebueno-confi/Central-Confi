@@ -173,6 +173,17 @@ Fase 6.3:
   - exige membership ativo no tenant quando aplicavel;
   - nao expande acesso cross-tenant nem abre `SELECT` direto nas tabelas base.
 
+Fase 6.4:
+- O Support Workspace agora possui guardrails contratuais de volume para timeline e customer context.
+- O frontend de suporte passa a ler tambem:
+  - `vw_support_ticket_timeline_recent`
+  - `vw_support_customer_recent_tickets`
+  - `vw_support_customer_recent_events`
+- Regras:
+  - a timeline inicial do ticket carrega apenas a janela recente com `recent_limit`, `total_available_count` e `has_more`;
+  - o customer context operacional passa a consumir recortes recentes separados para tickets e eventos;
+  - a primeira tela deixa de depender de historico infinito ou arrays longas no payload principal.
+
 ## Views contratuais vigentes
 
 ### `vw_tickets_list`
@@ -383,13 +394,39 @@ Fase 6.3:
   - timeline segue sem depender de `SELECT` direto nas tabelas base;
   - usa `security_barrier = true`.
 
+### `vw_support_ticket_timeline_recent`
+- Finalidade: janela recente da timeline do ticket para a primeira carga operacional.
+- Retorna: o mesmo shape da timeline de suporte, acrescido de `recent_rank`, `total_available_count`, `recent_limit` e `has_more`.
+- Regras:
+  - limita a primeira carga a 25 registros mais recentes por ticket;
+  - preserva a separacao entre resposta publica, nota interna e eventos de sistema;
+  - nao expande acesso cross-tenant;
+  - usa `security_barrier = true`.
+
 ### `vw_support_customer_360`
 - Finalidade: read model minimo de visao 360 do cliente B2B para suporte interno.
-- Retorna: tenant, contatos ativos, tickets recentes, contagem de tickets por status e eventos recentes relevantes.
+- Retorna: tenant, preview resumido de contatos ativos, tickets recentes, contagem de tickets por status e eventos recentes relevantes.
 - Regras:
   - expõe apenas tenants acessiveis ao workspace de suporte;
   - nao inclui SLA, metricas complexas, CRM generico nem vazamento cross-tenant;
-  - agrega contatos e historico operacional no backend para evitar joins do frontend em tabelas base;
+  - agrega contagens e preview resumido no backend para evitar joins do frontend em tabelas base;
+  - usa `security_barrier = true`.
+
+### `vw_support_customer_recent_tickets`
+- Finalidade: recorte operacional dos tickets recentes do tenant.
+- Retorna: ticket, status, prioridade, severidade, responsavel, `updated_at` e metadados de janela (`recent_rank`, `total_available_count`, `recent_limit`, `has_more`).
+- Regras:
+  - limita a primeira carga a 6 tickets por tenant;
+  - nao expande acesso cross-tenant;
+  - usa `security_barrier = true`.
+
+### `vw_support_customer_recent_events`
+- Finalidade: recorte operacional dos eventos e mensagens recentes do tenant.
+- Retorna: `ticket_id`, `ticket_title`, `event_type`, `visibility`, `occurred_at`, ator resolvido, resumo textual e metadados de janela (`recent_rank`, `total_available_count`, `recent_limit`, `has_more`).
+- Regras:
+  - limita a primeira carga a 8 registros recentes por tenant;
+  - preserva notas internas apenas para roles autorizadas pelo workspace;
+  - nao expande acesso cross-tenant;
   - usa `security_barrier = true`.
 
 ### `vw_support_assignable_agents`
@@ -740,7 +777,10 @@ Fase 6.3:
   - `vw_support_tickets_queue`
   - `vw_support_ticket_detail`
   - `vw_support_ticket_timeline`
+  - `vw_support_ticket_timeline_recent`
   - `vw_support_customer_360`
+  - `vw_support_customer_recent_tickets`
+  - `vw_support_customer_recent_events`
   - `vw_support_assignable_agents`
 - O app autenticado lê o Admin Console apenas por:
   - `vw_admin_auth_context`
@@ -802,8 +842,10 @@ Fase 6.3:
 ### Leitura consumida pelo frontend
 - `vw_support_tickets_queue`
 - `vw_support_ticket_detail`
-- `vw_support_ticket_timeline`
+- `vw_support_ticket_timeline_recent`
 - `vw_support_customer_360`
+- `vw_support_customer_recent_tickets`
+- `vw_support_customer_recent_events`
 
 ### Escrita consumida pelo frontend
 - `rpc_update_ticket_status`

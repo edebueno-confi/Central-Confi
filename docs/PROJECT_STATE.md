@@ -114,7 +114,7 @@ Documentos históricos:
 - Views contratuais administrativas v2 space-aware materializadas em `vw_admin_knowledge_categories_v2`, `vw_admin_knowledge_articles_list_v2` e `vw_admin_knowledge_article_detail_v2`.
 - View contratual administrativa advisory materializada em `vw_admin_knowledge_article_review_advisories`.
 - Views contratuais públicas endurecidas materializadas em `vw_public_knowledge_space_resolver`, `vw_public_knowledge_navigation`, `vw_public_knowledge_articles_list` e `vw_public_knowledge_article_detail`.
-- Views contratuais do Support Workspace materializadas em `vw_support_tickets_queue`, `vw_support_ticket_detail`, `vw_support_ticket_timeline` e `vw_support_customer_360`.
+- Views contratuais do Support Workspace materializadas em `vw_support_tickets_queue`, `vw_support_ticket_detail`, `vw_support_ticket_timeline`, `vw_support_ticket_timeline_recent`, `vw_support_customer_360`, `vw_support_customer_recent_tickets` e `vw_support_customer_recent_events`.
 - Diretório contratual de agentes atribuíveis do Support Workspace materializado em `vw_support_assignable_agents`.
 - RPCs contratuais de escrita materializadas em `rpc_create_ticket`, `rpc_update_ticket_status`, `rpc_assign_ticket`, `rpc_add_ticket_message`, `rpc_add_internal_ticket_note`, `rpc_close_ticket` e `rpc_reopen_ticket`.
 - RPCs contratuais administrativas de Knowledge Base materializadas em `rpc_admin_create_knowledge_category`, `rpc_admin_create_knowledge_article_draft`, `rpc_admin_update_knowledge_article_draft`, `rpc_admin_submit_knowledge_article_for_review`, `rpc_admin_publish_knowledge_article` e `rpc_admin_archive_knowledge_article`.
@@ -201,6 +201,7 @@ Documentos históricos:
 - Suite pgTAP atual validada com `Files=15`, `Tests=304`, `Result: PASS`.
 - Suite pgTAP atual validada com `Files=16`, `Tests=322`, `Result: PASS`.
 - Suite pgTAP atual validada com `Files=17`, `Tests=339`, `Result: PASS`.
+- Suite pgTAP atual validada com `Files=19`, `Tests=358`, `Result: PASS`.
 - Pipeline CI para banco em `.github/workflows/supabase-db.yml`.
 - A workflow `.github/workflows/supabase-db.yml` agora valida também `web:typecheck` e `web:build`.
 - A workflow `.github/workflows/supabase-db.yml` agora valida também a compatibilidade do import Octadesk space-aware.
@@ -430,6 +431,11 @@ Documentos históricos:
   - O diretório lista apenas `platform_admin`, `support_agent` e `support_manager` ativos, sempre respeitando tenant, membership ativo e bloqueio cross-tenant.
   - O Support Workspace substituiu o fluxo principal de digitação manual de `user_id` por seletor operacional de agente, com `Atribuir a mim` e `Desatribuir`.
   - O `user_id` técnico permaneceu apenas como fallback recolhido para exceções operacionais.
+- Fase 6.4: Support Timeline Volume Guard + Customer Context Pagination concluída localmente.
+  - A camada de suporte passou a expor recortes recentes dedicados para timeline e customer context por `vw_support_ticket_timeline_recent`, `vw_support_customer_recent_tickets` e `vw_support_customer_recent_events`.
+  - A timeline inicial do ticket agora carrega apenas a janela recente com `recent_limit`, `total_available_count` e `has_more`, evitando primeira carga infinita.
+  - O customer context passou a separar resumo do tenant e preview de contatos em `vw_support_customer_360` dos recortes recentes operacionais de tickets e eventos.
+  - O frontend do workspace passou a consumir esses recortes recentes explicitamente, sem simular paginação carregando o histórico completo por trás.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -452,7 +458,8 @@ Documentos históricos:
 
 ## Próxima prioridade
 Evoluir o Support Workspace com vínculos operacionais entre tickets, Knowledge
-Base e backlog de engenharia, além de recortes/paginação para timeline e
-customer context quando houver volume real, preservando a simplificação
-estrutural do cockpit operacional e evitando regressão para layouts genéricos,
+Base e backlog de engenharia, além de paginação explícita sob demanda para
+timeline e customer context quando o recorte recente já não for suficiente,
+preservando a simplificação estrutural do cockpit operacional e evitando
+regressão para layouts genéricos,
 densos ou administrativos por conveniência.

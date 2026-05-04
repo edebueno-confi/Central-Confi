@@ -74,6 +74,7 @@ const FIXTURE = {
         'Recebemos o caso e estamos validando a trilha operacional da conciliacao.',
       internalNote:
         'Validar lote de conciliacao, janela de sincronizacao e discrepancias por tenant.',
+      extraTimelineEntries: 18,
     },
     {
       tenantSlug: 'support-qa-a',
@@ -89,6 +90,96 @@ const FIXTURE = {
         'Registramos o incidente e escalamos a validacao tecnica do endpoint informado.',
       internalNote:
         'Conferir timeout, retries e eventuais bloqueios no endpoint do tenant.',
+    },
+    {
+      tenantSlug: 'support-qa-a',
+      title: 'QA Support | Etiqueta sem baixa automatica',
+      description:
+        'Equipe operacional relata que etiquetas expedidas nao estao baixando automaticamente no tenant.',
+      priority: 'high',
+      severity: 'medium',
+      source: 'email',
+      assignee: 'support-manager-a',
+      status: 'triage',
+      publicMessage:
+        'Iniciamos a triagem do fluxo logistico e vamos retornar com o proximo passo.',
+      internalNote:
+        'Cruzar webhook da transportadora com o reconciliador interno antes de responder.',
+    },
+    {
+      tenantSlug: 'support-qa-a',
+      title: 'QA Support | Painel de SLA interno desalinhado',
+      description:
+        'CS percebeu divergencia entre a fila interna e a expectativa contratual do cliente.',
+      priority: 'normal',
+      severity: 'low',
+      source: 'internal',
+      assignee: null,
+      status: 'waiting_customer',
+      publicMessage:
+        'Pedimos confirmacao do horario de corte aplicado pelo cliente para revisar a fila.',
+      internalNote:
+        'Nao tratar como SLA de produto ainda; so validar entendimento operacional.',
+    },
+    {
+      tenantSlug: 'support-qa-a',
+      title: 'QA Support | Reenvio de coleta sem tracking',
+      description:
+        'Operacao informou reenvio sem numero de rastreio disponivel para o tenant.',
+      priority: 'normal',
+      severity: 'medium',
+      source: 'phone',
+      assignee: 'support-agent-a',
+      status: 'waiting_support',
+      publicMessage:
+        'Estamos consolidando a trilha do reenvio para responder com status unico.',
+      internalNote:
+        'Buscar correlacao entre coleta original e ordem de reenvio no tenant.',
+    },
+    {
+      tenantSlug: 'support-qa-a',
+      title: 'QA Support | Divergencia na regra de expedicao',
+      description:
+        'Fluxo de expedicao apresentou comportamento diferente do combinado no rollout do cliente.',
+      priority: 'urgent',
+      severity: 'high',
+      source: 'portal',
+      assignee: 'support-manager-a',
+      status: 'in_progress',
+      publicMessage:
+        'Caso priorizado pelo suporte. Estamos revisando a regra operacional aplicada.',
+      internalNote:
+        'Comparar tenant settings atuais com a baseline de implantacao aprovada.',
+    },
+    {
+      tenantSlug: 'support-qa-a',
+      title: 'QA Support | Ajuste de motivo pendente em homologacao',
+      description:
+        'Mudanca de motivo ainda pendente de aprovacao final do cliente em homologacao.',
+      priority: 'low',
+      severity: 'low',
+      source: 'internal',
+      assignee: null,
+      status: 'new',
+      publicMessage:
+        'Ticket aberto para acompanhar a aprovacao final antes de aplicar a configuracao.',
+      internalNote:
+        'Sem acao tecnica agora. Aguardar sinal de CS.',
+    },
+    {
+      tenantSlug: 'support-qa-b',
+      title: 'QA Support | Divergencia de tracking em tenant B',
+      description:
+        'Tenant B reportou divergencia pontual entre tracking externo e status refletido no app.',
+      priority: 'high',
+      severity: 'medium',
+      source: 'api',
+      assignee: 'support-agent-b',
+      status: 'triage',
+      publicMessage:
+        'Estamos verificando a divergencia do evento de tracking informado.',
+      internalNote:
+        'Conferir payload do tenant B e cronologia dos eventos recebidos.',
     },
     {
       tenantSlug: 'support-qa-b',
@@ -560,7 +651,24 @@ function ensureContact(adminUserId, tenantId, contact) {
   return contactId;
 }
 
+function queryExistingSupportTicket(tenantId, title) {
+  const result = runSupabaseDbQuery(`
+    select id::text as id
+    from public.tickets
+    where tenant_id = '${sqlEscape(tenantId)}'::uuid
+      and title = '${sqlEscape(title)}'
+    limit 1;
+  `);
+
+  return result.rows?.[0]?.id ?? null;
+}
+
 function createSupportTicket({ actorUserId, tenantId, contactId, ticket }) {
+  const existingTicketId = queryExistingSupportTicket(tenantId, ticket.title);
+  if (existingTicketId) {
+    return existingTicketId;
+  }
+
   const assignedUserId = ticket.assignee ? ticket.assignee : null;
 
   const created = runSupabaseDbQuery(`
@@ -771,14 +879,64 @@ function createSupportTicket({ actorUserId, tenantId, contactId, ticket }) {
     `);
   }
 
+  const extraTimelineEntries = Number(ticket.extraTimelineEntries ?? 0);
+  for (let index = 1; index <= extraTimelineEntries; index += 1) {
+    const visibility = index % 3 === 0 ? 'internal' : 'customer';
+    const body =
+      visibility === 'internal'
+        ? `Nota interna extra ${index} para validar continuidade operacional do ticket.`
+        : `Atualizacao publica extra ${index} para manter o cliente alinhado sobre a tratativa.`;
+
+    const extraMessage = runSupabaseDbQuery(`
+      insert into public.ticket_messages (
+        tenant_id,
+        ticket_id,
+        visibility,
+        body,
+        created_by_user_id,
+        metadata
+      )
+      values (
+        '${sqlEscape(tenantId)}'::uuid,
+        '${sqlEscape(ticketId)}'::uuid,
+        '${visibility}'::public.message_visibility,
+        '${sqlEscape(body)}',
+        '${sqlEscape(actorUserId)}'::uuid,
+        jsonb_build_object('fixture_extra_index', ${index})
+      )
+      returning id::text as id;
+    `);
+
+    const extraMessageId = extraMessage.rows?.[0]?.id;
+    if (extraMessageId) {
+      runSupabaseDbQuery(`
+        insert into public.ticket_events (
+          tenant_id,
+          ticket_id,
+          event_type,
+          visibility,
+          actor_user_id,
+          message_id,
+          metadata
+        )
+        values (
+          '${sqlEscape(tenantId)}'::uuid,
+          '${sqlEscape(ticketId)}'::uuid,
+          ${visibility === 'internal' ? "'internal_note_added'::public.ticket_event_type" : "'message_added'::public.ticket_event_type"},
+          '${visibility}'::public.message_visibility,
+          '${sqlEscape(actorUserId)}'::uuid,
+          '${sqlEscape(extraMessageId)}'::uuid,
+          jsonb_build_object('fixture_extra_index', ${index})
+        );
+      `);
+    }
+  }
+
   return ticketId;
 }
 
 function clearFixtureTickets() {
-  runSupabaseDbQuery(`
-    delete from public.tickets
-    where title like 'QA Support | %';
-  `);
+  return null;
 }
 
 async function main() {

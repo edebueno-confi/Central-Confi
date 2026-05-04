@@ -342,6 +342,24 @@ export interface SupportCustomer360 {
   recentEvents: SupportCustomer360RecentEvent[];
 }
 
+export interface SupportRecentWindowMeta {
+  totalAvailableCount: number;
+  recentLimit: number;
+  hasMore: boolean;
+}
+
+export interface SupportTicketTimelineRecentWindow extends SupportRecentWindowMeta {
+  entries: SupportTicketTimelineItem[];
+}
+
+export interface SupportCustomerRecentTicketsWindow extends SupportRecentWindowMeta {
+  tickets: SupportCustomer360RecentTicket[];
+}
+
+export interface SupportCustomerRecentEventsWindow extends SupportRecentWindowMeta {
+  events: SupportCustomer360RecentEvent[];
+}
+
 export interface SupportAssignableAgent {
   userId: Uuid;
   fullName: string;

@@ -49,6 +49,14 @@ O Support Workspace deve cobrir:
 - `vw_tickets_list`
 - `vw_ticket_detail`
 - `vw_ticket_timeline`
+- `vw_support_tickets_queue`
+- `vw_support_ticket_detail`
+- `vw_support_ticket_timeline`
+- `vw_support_ticket_timeline_recent`
+- `vw_support_customer_360`
+- `vw_support_customer_recent_tickets`
+- `vw_support_customer_recent_events`
+- `vw_support_assignable_agents`
 
 ### RPCs ja materializadas
 - `rpc_create_ticket`
@@ -289,6 +297,15 @@ Uso esperado:
 - a timeline deve parecer trilha cronologica continua, nao pilha de cards equivalentes
 - `/support/customers/:tenantId` deve servir retorno rapido para a tratativa, com tickets recentes, contatos e eventos em estrutura compacta
 - qualquer informacao que nao ajude a responder, priorizar, atribuir ou continuar a operacao deve ser rebaixada ou recolhida
+
+## Guardrails de volume da fase 6.4
+- a timeline operacional nao deve carregar historico infinito na primeira abertura do ticket
+- o recorte inicial do ticket passa a depender de `vw_support_ticket_timeline_recent`
+- o customer context deixa de depender de listas longas agregadas no mesmo payload e passa a separar:
+  - `vw_support_customer_360` para resumo do tenant e preview de contatos
+  - `vw_support_customer_recent_tickets` para tickets recentes do tenant
+  - `vw_support_customer_recent_events` para eventos recentes do tenant
+- a UX deve explicitar que a tela trabalha com janelas recentes, e nao com historico total, ate existir RPC paginavel dedicada
 
 ## Relacao com a Knowledge Base
 No curto prazo:
