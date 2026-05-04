@@ -28,9 +28,9 @@ export function HelpCenterArticlePage() {
   const [article, setArticle] = useState<PublicKnowledgeArticleDetailRow | null>(null);
   const articleMetaTitle = article
     ? `${article.title} | ${context.primaryRoute.brand_name}`
-    : `${context.primaryRoute.brand_name} | Artigo tecnico`;
+    : `${context.primaryRoute.brand_name} | Artigo`;
   const articleMetaDescription = article?.summary ??
-    `${context.primaryRoute.brand_name} publica documentacao tecnica B2B aprovada para leitura.`;
+    `${context.primaryRoute.brand_name} publica guias aprovados para consulta B2B.`;
 
   const loadArticle = useEffectEvent(
     async (targetSpaceSlug: string, targetArticleSlug: string) => {
@@ -84,7 +84,7 @@ export function HelpCenterArticlePage() {
     return (
       <EmptyState
         title="Artigo nao encontrado"
-        description="A rota publica solicitada esta incompleta para resolver este artigo."
+        description="A rota informada nao tem os dados necessarios para abrir este artigo."
       />
     );
   }
@@ -92,15 +92,15 @@ export function HelpCenterArticlePage() {
   if (phase === 'loading') {
     return (
       <LoadingState
-        title="Carregando artigo tecnico"
-        description="O frontend esta resolvendo o detalhe publico do artigo aprovado para leitura."
+        title="Carregando artigo"
+        description="Estamos preparando o conteudo publicado para leitura."
       />
     );
   }
 
   if (phase === 'contract-unavailable') {
     return (
-      <ContractUnavailableState contractName="detalhe publico de artigo da Knowledge Base" />
+      <ContractUnavailableState contractName="leitura publica do artigo" />
     );
   }
 
@@ -110,7 +110,7 @@ export function HelpCenterArticlePage() {
         title="Falha ao carregar o artigo"
         description={
           message ??
-          'A superficie publica nao conseguiu carregar este artigo neste ambiente.'
+          'Nao foi possivel carregar este artigo neste ambiente.'
         }
         action={
           <GhostButton onClick={() => void loadArticle(spaceSlug, articleSlug)}>
@@ -125,7 +125,7 @@ export function HelpCenterArticlePage() {
     return (
       <EmptyState
         title="Artigo nao encontrado"
-        description="O artigo solicitado nao existe, nao esta publicado ou nao e publico neste knowledge space."
+        description="O artigo solicitado nao existe, ainda nao foi publicado ou nao esta disponivel nesta central."
         action={
           <Link to={`/help/${spaceSlug}/articles`}>
             <GhostButton>Voltar para a lista de artigos</GhostButton>
@@ -178,7 +178,7 @@ export function HelpCenterArticlePage() {
               {article.title}
             </h2>
             <p className="max-w-3xl text-base leading-8 text-[var(--help-muted)]">
-              {article.summary ?? 'Artigo tecnico aprovado para leitura publica.'}
+              {article.summary ?? 'Artigo publicado para consulta.'}
             </p>
           </div>
           <div className="flex flex-wrap gap-6 text-sm text-[var(--help-muted)]">
@@ -201,7 +201,7 @@ export function HelpCenterArticlePage() {
       </section>
 
       <InlineNotice>
-        Esta camada publica exibe somente `body_md` aprovado. Conteudo interno, trilha de importacao legado e metadados editoriais continuam fora desta superficie.
+        Esta pagina mostra somente o conteudo aprovado para leitura publica. Observacoes internas e detalhes editoriais continuam fora desta area.
       </InlineNotice>
 
       {relatedArticles.length > 0 ? (
@@ -226,7 +226,7 @@ export function HelpCenterArticlePage() {
                     {entry.title}
                   </p>
                   <p className="mt-1 text-sm leading-6 text-[var(--help-muted)]">
-                    {entry.summary ?? 'Artigo tecnico publico.'}
+                    {entry.summary ?? 'Artigo publicado para consulta.'}
                   </p>
                 </Link>
               ))}

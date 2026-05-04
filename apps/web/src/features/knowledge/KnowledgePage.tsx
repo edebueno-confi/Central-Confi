@@ -130,7 +130,7 @@ const HUMAN_CONFIRMATION_FIELDS: HumanConfirmationDefinition[] = [
   },
   {
     key: 'visibility_reviewed',
-    label: 'Visibility correta',
+    label: 'Visibilidade correta',
     help: 'Confirma que o escopo public/internal/restricted foi validado manualmente.',
   },
   {
@@ -410,7 +410,7 @@ function buildEditorialChecklist(
 
   const manual: EditorialChecklistItem[] = [
     {
-      label: 'Visibility correta',
+      label: 'Visibilidade correta',
       tone:
         article.visibility === 'restricted'
           ? 'critical'
@@ -428,7 +428,7 @@ function buildEditorialChecklist(
       label: 'Nenhum segredo ou API sensivel exposto',
       tone: 'warning',
       description:
-        'Confirmacao humana obrigatoria. O contrato atual nao classifica sensibilidade automaticamente no frontend.',
+        'Confirmacao humana obrigatoria para garantir que nenhum dado sensivel apareca no artigo.',
     },
     {
       label: 'Pronto para review',
@@ -464,9 +464,9 @@ function buildEditorialChecklist(
 
   if (duplicateCount > 1) {
     manual.unshift({
-      label: 'Source hash duplicado',
+      label: 'Possivel duplicidade de origem',
       tone: 'warning',
-      description: `Existe mais ${duplicateCount - 1} artigo no space com o mesmo source_hash. Consolidar antes de promover.`,
+      description: `Existe mais ${duplicateCount - 1} artigo nesta central com a mesma origem rastreada. Consolidar antes de promover.`,
     });
   }
 
@@ -1199,16 +1199,16 @@ export function KnowledgePage() {
   }
 
   if (pagePhase === 'contract-unavailable') {
-    return <ContractUnavailableState contractName="vw_admin_knowledge_spaces" />;
+    return <ContractUnavailableState contractName="lista de centrais editoriais" />;
   }
 
   if (pagePhase === 'error') {
     return (
-      <ErrorState
-        description={
-          pageMessage ??
-          'O Admin Console nao conseguiu materializar a leitura dos knowledge spaces.'
-        }
+        <ErrorState
+          description={
+            pageMessage ??
+            'Nao foi possivel carregar as centrais editoriais neste ambiente.'
+          }
         action={<AppButton onClick={() => void loadKnowledgeSpaces()}>Tentar novamente</AppButton>}
       />
     );
@@ -1219,11 +1219,11 @@ export function KnowledgePage() {
       <div className="space-y-6">
         <PageHeader
           title="Knowledge"
-          description="Superficie administrativa minima para curadoria editorial da Knowledge Base, ainda sem Help Center publico."
+          description="Curadoria editorial das centrais internas, com foco em revisar conteudo, classificar risco e publicar com seguranca."
         />
         <EmptyState
-          title="Nenhum knowledge space disponivel"
-          description="A governanca multi-brand ainda nao expôs um knowledge space utilizavel neste ambiente."
+          title="Nenhuma central editorial disponivel"
+          description="Ainda nao existe uma central pronta para curadoria neste ambiente."
         />
       </div>
     );
@@ -1233,7 +1233,7 @@ export function KnowledgePage() {
     <div className="space-y-6">
       <PageHeader
         title="Knowledge"
-        description="Curadoria editorial space-aware da Knowledge Base com foco em revisar artigo, advisory e checklist sem poluir a tela."
+        description="Curadoria editorial com foco em revisar o artigo certo, decidir o proximo passo e publicar com seguranca."
         action={
           <div className="flex flex-wrap gap-2">
             <GhostButton
@@ -1276,7 +1276,7 @@ export function KnowledgePage() {
         </div>
 
         <div className="grid gap-4 xl:grid-cols-3 2xl:grid-cols-6">
-          <Field label="Knowledge space">
+          <Field label="Central">
             <SelectInput
               onChange={(event) => setSelectedSpaceId(event.target.value || null)}
               value={selectedSpaceId ?? ''}
@@ -1305,7 +1305,7 @@ export function KnowledgePage() {
             </SelectInput>
           </Field>
 
-          <Field label="Filtro por visibility">
+          <Field label="Visibilidade">
             <SelectInput
               onChange={(event) =>
                 setVisibilityFilter(event.target.value as ArticleVisibilityFilter)
@@ -1334,7 +1334,7 @@ export function KnowledgePage() {
             </SelectInput>
           </Field>
 
-          <Field label="Source hash">
+          <Field label="Duplicidade de origem">
             <SelectInput
               onChange={(event) =>
                 setDuplicateFilter(event.target.value as ArticleDuplicateFilter)
@@ -1395,10 +1395,10 @@ export function KnowledgePage() {
                   {selectedSpace.display_name}
                 </h2>
                 <p className="text-sm text-[color:var(--color-muted)]">
-                  slug {selectedSpace.slug}
-                  {selectedSpace.brand_name ? ` · marca ${selectedSpace.brand_name}` : ''}
+                  {selectedSpace.brand_name ? `${selectedSpace.brand_name} · ` : ''}
+                  locale {selectedSpace.default_locale}
                   {selectedSpace.primary_domain_host
-                    ? ` · dominio ${selectedSpace.primary_domain_host}${selectedSpace.primary_domain_path_prefix ?? ''}`
+                    ? ` · dominio publicado ${selectedSpace.primary_domain_host}${selectedSpace.primary_domain_path_prefix ?? ''}`
                     : ''}
                 </p>
               </div>
@@ -1406,12 +1406,12 @@ export function KnowledgePage() {
 
             <div className="space-y-3">
               <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                Esta superficie continua interna. Publicar um artigo aqui nao abre a Central Publica automaticamente.
+                Esta area continua interna. Publicar um artigo aqui nao libera a leitura publica sem o fluxo editorial completo.
               </p>
               <p className="text-sm leading-6 text-[color:var(--color-muted)]">
                 {selectedSpace.owner_tenant_id
-                  ? `Compatibilidade legada ativa pelo tenant dono ${selectedSpace.owner_tenant_display_name ?? selectedSpace.owner_tenant_slug}.`
-                  : 'Este knowledge space ainda opera sem owner_tenant_id oficial.'}
+                  ? `Central vinculada a ${selectedSpace.owner_tenant_display_name ?? selectedSpace.owner_tenant_slug} para compatibilidade do legado.`
+                  : 'Esta central ainda nao tem um cliente dono vinculado para a compatibilidade do legado.'}
               </p>
             </div>
           </div>
@@ -1425,21 +1425,21 @@ export function KnowledgePage() {
         >
           {contentPhase === 'idle' ? (
             <EmptyState
-              title="Selecione um knowledge space"
-              description="A lista editorial depende de um knowledge space ativo no seletor."
+              title="Selecione uma central"
+              description="Escolha uma central no topo para abrir a lista editorial."
             />
           ) : contentPhase === 'loading' ? (
             <LoadingState
               title="Carregando artigos"
-              description="O frontend esta aguardando as views v2 de artigos e categorias."
+              description="Estamos preparando artigos, categorias e sinais editoriais desta central."
             />
           ) : contentPhase === 'contract-unavailable' ? (
-            <ContractUnavailableState contractName="vw_admin_knowledge_categories_v2 / vw_admin_knowledge_articles_list_v2" />
+            <ContractUnavailableState contractName="lista editorial de artigos e categorias" />
           ) : contentPhase === 'error' ? (
             <ErrorState
               description={
                 contentMessage ??
-                'A camada editorial da Knowledge Base nao respondeu como esperado.'
+                'Nao foi possivel carregar os artigos desta central.'
               }
               action={
                 <AppButton onClick={() => selectedSpaceId && void refreshSelectedSpace()}>
@@ -1450,7 +1450,7 @@ export function KnowledgePage() {
           ) : filteredArticles.length === 0 ? (
             <EmptyState
               title="Nenhum artigo encontrado"
-              description="Nao existem artigos para o knowledge space e filtros selecionados."
+              description="Nao existem artigos para esta central com os filtros escolhidos."
               action={
                 <AppButton onClick={openCreateArticle}>
                   Criar o primeiro draft
@@ -1523,12 +1523,12 @@ export function KnowledgePage() {
           }
           description={
             panelMode === 'create-category'
-              ? 'Criacao minima de categoria pela RPC v2 space-aware.'
+              ? 'Nova categoria para organizar a navegacao editorial desta central.'
               : panelMode === 'create-article'
-                ? 'Novo draft editorial pela RPC v2 space-aware.'
+                ? 'Novo rascunho editorial para revisao segura antes da publicacao.'
                 : panelMode === 'edit-article'
-                  ? 'Edicao de artigo ainda em draft/review sem tocar tabelas-base.'
-                  : 'Leitura detalhada do artigo apenas pela view v2 de detalhe.'
+                  ? 'Edicao do rascunho sem tirar o foco da revisao editorial.'
+                  : 'Revisao detalhada do artigo, com advisory e checklist sem poluir a leitura principal.'
           }
         >
           {panelMode === 'create-category' ? (
@@ -1585,7 +1585,7 @@ export function KnowledgePage() {
                 </SelectInput>
               </Field>
 
-              <Field label="Visibility">
+              <Field label="Visibilidade">
                 <SelectInput
                   onChange={(event) =>
                     setCategoryForm((current) => ({
@@ -1709,7 +1709,7 @@ export function KnowledgePage() {
                 </SelectInput>
               </Field>
 
-              <Field label="Visibility">
+              <Field label="Visibilidade">
                 <SelectInput
                   onChange={(event) =>
                     setArticleForm((current) => ({
@@ -1727,7 +1727,7 @@ export function KnowledgePage() {
                 </SelectInput>
               </Field>
 
-              <Field label="Body (Markdown/texto limpo)">
+              <Field label="Conteudo principal">
                 <TextareaInput
                   onChange={(event) =>
                     setArticleForm((current) => ({
@@ -1741,34 +1741,41 @@ export function KnowledgePage() {
                 />
               </Field>
 
-              <Field
-                label="Source path"
-                description="Opcional para curadoria manual. O import legado continua preenchendo isso automaticamente."
-              >
-                <TextInput
-                  onChange={(event) =>
-                    setArticleForm((current) => ({
-                      ...current,
-                      sourcePath: event.target.value,
-                    }))
-                  }
-                  placeholder="raw_knowledge/octadesk_export/latest/articles/..."
-                  value={articleForm.sourcePath}
-                />
-              </Field>
+              <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                  Detalhes tecnicos da origem
+                </summary>
+                <div className="mt-4 space-y-4">
+                  <Field
+                    label="Caminho de origem"
+                    description="Opcional para curadoria manual. A importacao legada continua preenchendo isso automaticamente."
+                  >
+                    <TextInput
+                      onChange={(event) =>
+                        setArticleForm((current) => ({
+                          ...current,
+                          sourcePath: event.target.value,
+                        }))
+                      }
+                      placeholder="raw_knowledge/octadesk_export/latest/articles/..."
+                      value={articleForm.sourcePath}
+                    />
+                  </Field>
 
-              <Field label="Source hash">
-                <TextInput
-                  onChange={(event) =>
-                    setArticleForm((current) => ({
-                      ...current,
-                      sourceHash: event.target.value,
-                    }))
-                  }
-                  placeholder="sha256..."
-                  value={articleForm.sourceHash}
-                />
-              </Field>
+                  <Field label="Hash de origem">
+                    <TextInput
+                      onChange={(event) =>
+                        setArticleForm((current) => ({
+                          ...current,
+                          sourceHash: event.target.value,
+                        }))
+                      }
+                      placeholder="sha256..."
+                      value={articleForm.sourceHash}
+                    />
+                  </Field>
+                </div>
+              </details>
 
               {articleForm.sourcePath || articleForm.sourceHash ? (
                 <InlineNotice tone="warning">
@@ -1814,15 +1821,15 @@ export function KnowledgePage() {
           ) : detailPhase === 'loading' ? (
             <LoadingState
               title="Carregando detalhe do artigo"
-              description="O frontend esta aguardando vw_admin_knowledge_article_detail_v2."
+              description="Estamos preparando a revisao detalhada deste artigo."
             />
           ) : detailPhase === 'contract-unavailable' ? (
-            <ContractUnavailableState contractName="vw_admin_knowledge_article_detail_v2" />
+            <ContractUnavailableState contractName="detalhe editorial do artigo" />
           ) : detailPhase === 'error' || !articleDetail || !selectedArticleSummary ? (
             <ErrorState
               description={
                 detailMessage ??
-                'O detalhe do artigo nao ficou disponivel nesta superficie.'
+                'Nao foi possivel abrir o detalhe deste artigo.'
               }
               action={
                 <AppButton
@@ -1863,8 +1870,8 @@ export function KnowledgePage() {
 
               {articleDetail.visibility === 'restricted' ? (
                 <InlineNotice tone="critical">
-                  Artigo restrito. Revisar manualmente segredos, contratos tecnicos,
-                  credenciais, APIs e detalhes operacionais antes de qualquer
+                  Artigo restrito. Revisar manualmente segredos, credenciais,
+                  integracoes e detalhes operacionais antes de qualquer
                   promocao editorial.
                 </InlineNotice>
               ) : articleDetail.visibility === 'internal' ? (
@@ -1876,7 +1883,7 @@ export function KnowledgePage() {
 
               {selectedArticleDuplicateCount > 1 ? (
                 <InlineNotice tone="warning">
-                  Source hash duplicado detectado neste knowledge space. Existe mais{' '}
+                  Possivel duplicidade de origem detectada nesta central. Existe mais{' '}
                   {selectedArticleDuplicateCount - 1} artigo com a mesma origem
                   rastreada; consolidar antes de promover.
                 </InlineNotice>
@@ -1947,10 +1954,10 @@ export function KnowledgePage() {
 
               <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4 text-sm text-[color:var(--color-muted)]">
                 <div className="flex flex-wrap gap-x-4 gap-y-1">
-                  <span>Space: {articleDetail.knowledge_space_display_name}</span>
+                  <span>Central: {articleDetail.knowledge_space_display_name}</span>
                   <span>Revisoes: {articleDetail.revisions.length}</span>
                   <span>Atualizado: {formatDateTime(articleDetail.updated_at)}</span>
-                  {selectedAdvisory ? <span>Review status: {selectedAdvisory.review_status}</span> : null}
+                  {selectedAdvisory ? <span>Status da revisao: {selectedAdvisory.review_status}</span> : null}
                 </div>
               </div>
 
@@ -1994,7 +2001,7 @@ export function KnowledgePage() {
                         </>
                       ) : (
                         <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                          Este artigo ainda nao possui advisory persistido.
+                          Este artigo ainda nao recebeu um advisory salvo.
                         </p>
                       )}
                     </div>
@@ -2091,15 +2098,15 @@ export function KnowledgePage() {
 
                   <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
                     <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                      Bloco tecnico de origem
+                      Detalhes tecnicos da origem
                     </summary>
                     <div className="mt-3 space-y-2 text-sm leading-6 text-[color:var(--color-muted)]">
                       <p>
                         Origem:{' '}
                         {articleDetail.source_path || articleDetail.source_hash ? 'importado do legado' : 'manual'}
                       </p>
-                      {articleDetail.source_path ? <p>Source path: {articleDetail.source_path}</p> : null}
-                      {articleDetail.source_hash ? <p>Source hash: {articleDetail.source_hash}</p> : null}
+                      {articleDetail.source_path ? <p>Caminho: {articleDetail.source_path}</p> : null}
+                      {articleDetail.source_hash ? <p>Hash: {articleDetail.source_hash}</p> : null}
                     </div>
                   </details>
                 </div>
@@ -2122,7 +2129,7 @@ export function KnowledgePage() {
                 </h3>
                 <div className="rounded-[24px] border border-[color:var(--color-border)] bg-white p-4">
                   <pre className="whitespace-pre-wrap text-sm leading-6 text-[color:var(--color-ink)]">
-                    {articleDetail.body_md || 'Sem body_md cadastrado.'}
+                    {articleDetail.body_md || 'Sem conteudo principal cadastrado.'}
                   </pre>
                 </div>
               </div>
@@ -2150,7 +2157,7 @@ export function KnowledgePage() {
                           {source.source_path}
                         </p>
                         <p className="mt-1 text-xs text-[color:var(--color-muted)]">
-                          hash {source.source_hash}
+                          origem {source.source_hash}
                         </p>
                       </div>
                     ))
@@ -2164,10 +2171,10 @@ export function KnowledgePage() {
                 </summary>
                 <div className="mt-3 space-y-3">
                   {articleDetail.revisions.length === 0 ? (
-                    <EmptyState
-                      title="Sem revisoes agregadas"
-                      description="O backend nao retornou historico de revisoes para este artigo."
-                    />
+                      <EmptyState
+                        title="Sem revisoes agregadas"
+                        description="Ainda nao existe historico recente de revisoes para este artigo."
+                      />
                   ) : (
                     articleDetail.revisions.slice(0, 4).map((revision) => (
                       <div

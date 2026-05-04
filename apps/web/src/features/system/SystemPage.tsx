@@ -22,11 +22,12 @@ import {
 } from '../../components/states';
 import {
   AppButton,
-  MetricCard,
   PageHeader,
   Panel,
   SelectInput,
   StatusPill,
+  SummaryStrip,
+  SummaryStripItem,
   TextInput,
 } from '../../components/ui';
 import { useAuthContext } from '../auth/auth-context';
@@ -135,16 +136,16 @@ export function SystemPage() {
   }
 
   if (phase === 'contract-unavailable') {
-    return <ContractUnavailableState contractName="vw_admin_audit_feed" />;
+    return <ContractUnavailableState contractName="feed administrativo" />;
   }
 
   if (phase === 'error') {
     return (
-      <ErrorState
-        description={
-          pageMessage ??
-          'O Admin Console nao conseguiu materializar o feed oficial de auditoria.'
-        }
+        <ErrorState
+          description={
+            pageMessage ??
+            'Nao foi possivel carregar o feed administrativo desta area.'
+          }
         action={<AppButton onClick={() => void loadSurface()}>Tentar novamente</AppButton>}
       />
     );
@@ -154,19 +155,19 @@ export function SystemPage() {
     <div className="space-y-6">
       <PageHeader
         title="System"
-        description="Estado minimo do backbone operacional Genius e rastreabilidade administrativa oficial. Sem dashboard executivo e sem joins fora das views aprovadas."
+        description="Acompanhe os principais registros administrativos e abra detalhes de auditoria apenas quando precisar investigar uma mudanca."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard helper="Superficie ativa do SaaS." label="Tenants ativos" value={String(activeTenants)} />
-        <MetricCard helper="Memberships em operacao." label="Memberships ativos" value={String(activeMemberships)} />
-        <MetricCard helper="Eventos carregados do feed oficial." label="Eventos" value={String(auditFeed.length)} />
-        <MetricCard helper={latestEventAt ? formatDateTime(latestEventAt) : 'Sem eventos'} label="Ultimo evento" value={latestEventAt ? 'Online' : 'Vazio'} />
-      </div>
+      <SummaryStrip>
+        <SummaryStripItem helper="clientes em operacao" label="Tenants ativos" tone="positive" value={String(activeTenants)} />
+        <SummaryStripItem helper="acessos operando" label="Memberships ativas" value={String(activeMemberships)} />
+        <SummaryStripItem helper="janela atual" label="Eventos carregados" value={String(auditFeed.length)} />
+        <SummaryStripItem helper={latestEventAt ? formatDateTime(latestEventAt) : 'sem atividade recente'} label="Ultima atividade" value={latestEventAt ? 'recente' : 'vazia'} />
+      </SummaryStrip>
 
       <Panel
         title="Feed administrativo"
-        description="Feed oficial de auditoria para entidades administrativas aprovadas no backbone da operacao."
+        description="Linha do tempo administrativa para entender quem mudou o que e quando."
         actions={
           <>
             <SelectInput
@@ -182,7 +183,7 @@ export function SystemPage() {
             </SelectInput>
             <TextInput
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Buscar por ator, tenant, tabela ou entity_id"
+              placeholder="Buscar por pessoa, cliente, acao ou area"
               value={query}
             />
             <AppButton onClick={() => void loadSurface()}>Recarregar</AppButton>
@@ -210,7 +211,7 @@ export function SystemPage() {
                   <div className="space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
                       <StatusPill>{humanizeToken(entry.action)}</StatusPill>
-                      <StatusPill>{entry.entity_table}</StatusPill>
+                      <StatusPill>{humanizeToken(entry.entity_table)}</StatusPill>
                       {entry.tenant_display_name ? (
                         <StatusPill tone="accent">{entry.tenant_display_name}</StatusPill>
                       ) : null}
@@ -230,31 +231,38 @@ export function SystemPage() {
                   </p>
                 </div>
 
-                <div className="mt-4 grid gap-3 lg:grid-cols-2">
-                  <div className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm leading-6 text-[color:var(--color-muted)]">
-                    <p>Schema: {entry.entity_schema}</p>
-                    <p>Tabela: {entry.entity_table}</p>
-                    <p>Entity id: {entry.entity_id ?? '—'}</p>
-                  </div>
-
-                  <div className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm leading-6 text-[color:var(--color-muted)]">
-                    <p>Tenant: {entry.tenant_display_name ?? 'Global'}</p>
-                    <p>Slug: {entry.tenant_slug ?? '—'}</p>
-                    <p>Metadata: {stringifyJsonPreview(entry.metadata)}</p>
-                  </div>
+                <div className="mt-4 flex flex-wrap gap-2 text-sm text-[color:var(--color-muted)]">
+                  <span className="rounded-full border border-[color:var(--color-border)] bg-white px-3 py-1.5">
+                    Area: {humanizeToken(entry.entity_table)}
+                  </span>
+                  <span className="rounded-full border border-[color:var(--color-border)] bg-white px-3 py-1.5">
+                    Escopo: {entry.tenant_display_name ?? 'Global'}
+                  </span>
                 </div>
 
                 <details className="mt-4 rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm text-[color:var(--color-ink)]">
                   <summary className="cursor-pointer font-medium">
-                    Before / after state
+                    Auditoria e detalhes tecnicos
                   </summary>
-                  <div className="mt-3 grid gap-3 lg:grid-cols-2">
-                    <pre className="overflow-x-auto rounded-2xl bg-[color:var(--color-surface)] p-3 text-xs leading-6 text-[color:var(--color-muted)]">
-                      {stringifyJsonPreview(entry.before_state)}
-                    </pre>
-                    <pre className="overflow-x-auto rounded-2xl bg-[color:var(--color-surface)] p-3 text-xs leading-6 text-[color:var(--color-muted)]">
-                      {stringifyJsonPreview(entry.after_state)}
-                    </pre>
+                  <div className="mt-3 space-y-3">
+                    <div className="grid gap-3 lg:grid-cols-2">
+                      <div className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 text-sm leading-6 text-[color:var(--color-muted)]">
+                        <p>Origem interna: {entry.entity_schema}.{entry.entity_table}</p>
+                        <p>Registro: {entry.entity_id ?? '—'}</p>
+                      </div>
+                      <div className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 text-sm leading-6 text-[color:var(--color-muted)]">
+                        <p>Slug do cliente: {entry.tenant_slug ?? '—'}</p>
+                        <p>Metadata resumida: {stringifyJsonPreview(entry.metadata)}</p>
+                      </div>
+                    </div>
+                    <div className="grid gap-3 lg:grid-cols-2">
+                      <pre className="overflow-x-auto rounded-2xl bg-[color:var(--color-surface)] p-3 text-xs leading-6 text-[color:var(--color-muted)]">
+                        {stringifyJsonPreview(entry.before_state)}
+                      </pre>
+                      <pre className="overflow-x-auto rounded-2xl bg-[color:var(--color-surface)] p-3 text-xs leading-6 text-[color:var(--color-muted)]">
+                        {stringifyJsonPreview(entry.after_state)}
+                      </pre>
+                    </div>
                   </div>
                 </details>
               </article>

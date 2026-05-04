@@ -31,11 +31,12 @@ import {
   Field,
   GhostButton,
   InlineNotice,
-  MetricCard,
   PageHeader,
   Panel,
   SelectInput,
   StatusPill,
+  SummaryStrip,
+  SummaryStripItem,
   TextInput,
 } from '../../components/ui';
 import {
@@ -321,7 +322,7 @@ export function AccessPage() {
       setLookupMessage(
         rows.length === 0
           ? 'Nenhum usuario existente bateu com essa busca.'
-          : `${rows.length} usuario(s) encontrados no contrato oficial.`,
+          : `${rows.length} usuario(s) encontrado(s).`,
       );
     } catch (error) {
       const classified = classifyAdminError(error, 'Falha ao consultar usuarios existentes.');
@@ -350,7 +351,7 @@ export function AccessPage() {
       userId: user.user_id,
     }));
     setLookupMessage(
-      `Usuario selecionado: ${user.full_name ?? 'Sem nome'} (${user.email ?? user.user_id}).`,
+      `Usuario selecionado: ${user.full_name ?? 'Sem nome'}${user.email ? ` (${user.email})` : ''}.`,
     );
   }
 
@@ -368,16 +369,16 @@ export function AccessPage() {
   }
 
   if (phase === 'contract-unavailable') {
-    return <ContractUnavailableState contractName="vw_admin_tenant_memberships" />;
+    return <ContractUnavailableState contractName="lista de acessos por cliente" />;
   }
 
   if (phase === 'error') {
     return (
-      <ErrorState
-        description={
-          pageMessage ??
-          'O Admin Console nao conseguiu materializar a leitura oficial de memberships.'
-        }
+        <ErrorState
+          description={
+            pageMessage ??
+            'Nao foi possivel carregar os acessos desta area.'
+          }
         action={<AppButton onClick={() => void loadSurface()}>Tentar novamente</AppButton>}
       />
     );
@@ -385,30 +386,30 @@ export function AccessPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Access"
-        description="Governanca minima de memberships para quem opera tenants no ecossistema Genius. A leitura vem da view global oficial e as mutacoes continuam restritas as RPCs administrativas aprovadas."
-      />
+        <PageHeader
+          title="Access"
+          description="Gerencie quem entra em cada cliente operacional, com foco em convite, funcao e continuidade segura de acesso."
+        />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard helper="Leitura oficial da view global." label="Memberships" value={String(totalMemberships)} />
-        <MetricCard helper="Usuarios ativos em tenants." label="Ativos" value={String(activeMemberships)} />
-        <MetricCard helper="Convites pendentes." label="Convidados" value={String(invitedMemberships)} />
-        <MetricCard helper="Acessos revogados." label="Revogados" value={String(revokedMemberships)} />
-      </div>
+      <SummaryStrip>
+        <SummaryStripItem helper="base atual" label="Acessos" value={String(totalMemberships)} />
+        <SummaryStripItem helper="operando hoje" label="Ativos" tone="positive" value={String(activeMemberships)} />
+        <SummaryStripItem helper="aguardando aceite" label="Convidados" tone="warning" value={String(invitedMemberships)} />
+        <SummaryStripItem helper="fora de operacao" label="Revogados" tone="critical" value={String(revokedMemberships)} />
+      </SummaryStrip>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(420px,0.92fr)] 2xl:grid-cols-[minmax(0,1.14fr)_minmax(500px,0.86fr)]">
         <div className="space-y-6">
           <Panel
-            title="Memberships por tenant"
-            description="A listagem ja chega com tenant, profile e metadata resolvidos no backend, sem join manual no frontend."
+            title="Acessos por cliente"
+            description="Lista principal para localizar quem esta com acesso, em qual cliente e em qual funcao."
             actions={
               <>
                 <SelectInput
                   onChange={(event) => setSelectedTenantFilter(event.target.value)}
                   value={selectedTenantFilter}
                 >
-                  <option value="all">Todos os tenants</option>
+                    <option value="all">Todos os clientes</option>
                   {tenants.map((tenant) => (
                     <option key={tenant.id} value={tenant.id}>
                       {tenant.display_name}
@@ -417,7 +418,7 @@ export function AccessPage() {
                 </SelectInput>
                 <TextInput
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Buscar por tenant, email, role ou user id"
+                  placeholder="Buscar por cliente, nome, email ou funcao"
                   value={query}
                 />
                 <GhostButton onClick={() => void loadSurface()}>Recarregar</GhostButton>
@@ -427,7 +428,7 @@ export function AccessPage() {
             {memberships.length === 0 ? (
               <EmptyState
                 title="Nenhum membership administrativo"
-                description="O backend ainda nao retornou memberships nesta view."
+                description="Ainda nao existe acesso operacional visivel nesta area."
               />
             ) : filteredMemberships.length === 0 ? (
               <EmptyState
@@ -441,7 +442,7 @@ export function AccessPage() {
                     <thead className="bg-[color:var(--color-surface)] text-[color:var(--color-muted)]">
                       <tr>
                         <th className="px-4 py-3 font-medium">Membro</th>
-                        <th className="px-4 py-3 font-medium">Tenant</th>
+                        <th className="px-4 py-3 font-medium">Cliente</th>
                         <th className="px-4 py-3 font-medium">Role</th>
                         <th className="px-4 py-3 font-medium">Status</th>
                         <th className="px-4 py-3 font-medium">Atualizado</th>
@@ -497,16 +498,15 @@ export function AccessPage() {
 
         <div className="space-y-6">
           <Panel
-            title="Adicionar membro"
-            description="O lookup oficial usa `vw_admin_user_lookup` para localizar usuarios existentes por nome ou email antes de acionar as RPCs de membership."
+            title="Adicionar acesso"
+            description="Convide ou vincule uma pessoa a um cliente operacional sem tirar o foco da operacao."
           >
             <form className="space-y-4" onSubmit={handleAddMembership}>
               <InlineNotice tone="default">
-                A busca usa apenas o contrato administrativo aprovado. O fallback manual
-                continua disponivel quando voce ja possui o `user_id` real.
+                Procure primeiro por nome ou email. A entrada manual continua disponivel apenas como excecao.
               </InlineNotice>
 
-              <Field label="Tenant">
+              <Field label="Cliente">
                 <SelectInput
                   onChange={(event) =>
                     setAddForm((current) => ({
@@ -517,7 +517,7 @@ export function AccessPage() {
                   required
                   value={addForm.tenantId}
                 >
-                  <option value="">Selecione um tenant</option>
+                  <option value="">Selecione um cliente</option>
                   {tenants.map((tenant) => (
                     <option key={tenant.id} value={tenant.id}>
                       {tenant.display_name}
@@ -530,7 +530,7 @@ export function AccessPage() {
                 <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
                   <Field
                     label="Buscar usuario existente"
-                    description="Consulte por email ou nome. O backend retorna apenas user_id, nome, email, status e created_at."
+                    description="Consulte por nome ou email para preencher rapidamente o responsavel."
                   >
                     <TextInput
                       onChange={(event) => {
@@ -579,8 +579,7 @@ export function AccessPage() {
 
                 {lookupPhase === 'contract-unavailable' ? (
                   <InlineNotice tone="warning">
-                    O ambiente atual ainda nao expôs `vw_admin_user_lookup`. O fluxo
-                    continua com fallback manual controlado por `user_id`.
+                    A busca de usuarios ficou indisponivel neste ambiente. Use a entrada manual apenas se precisar concluir o acesso agora.
                   </InlineNotice>
                 ) : null}
 
@@ -625,22 +624,29 @@ export function AccessPage() {
                 ) : null}
               </div>
 
-              <Field
-                label="User id selecionado"
-                description="Campo manual mantido como fallback controlado. A RPC continua recebendo apenas o UUID final aprovado."
-              >
-                <TextInput
-                  onChange={(event) =>
-                    setAddForm((current) => ({
-                      ...current,
-                      userId: event.target.value,
-                    }))
-                  }
-                  placeholder="00000000-0000-0000-0000-000000000000"
-                  required
-                  value={addForm.userId}
-                />
-              </Field>
+              <details className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                  Informacoes avancadas
+                </summary>
+                <div className="mt-3">
+                  <Field
+                    label="Identificador manual"
+                    description="Use este campo apenas quando a pessoa nao aparecer na busca e voce ja souber o identificador interno correto."
+                  >
+                    <TextInput
+                      onChange={(event) =>
+                        setAddForm((current) => ({
+                          ...current,
+                          userId: event.target.value,
+                        }))
+                      }
+                      placeholder="Cole o identificador interno, se necessario"
+                      required
+                      value={addForm.userId}
+                    />
+                  </Field>
+                </div>
+              </details>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Role">
@@ -694,7 +700,7 @@ export function AccessPage() {
 
           <Panel
             title="Membership selecionado"
-            description="Role e status continuam sendo alterados somente pelas RPCs aprovadas para a operacao Genius."
+            description="Ajuste a funcao e o estado do acesso sem perder o contexto do membro selecionado."
           >
             {!selectedMembership ? (
               <EmptyState
@@ -721,7 +727,7 @@ export function AccessPage() {
                       {selectedMembership.user_full_name ?? 'Usuario sem nome'}
                     </h3>
                     <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                      {selectedMembership.user_email ?? selectedMembership.user_id}
+                      {selectedMembership.user_email ?? 'Email nao informado'}
                     </p>
                     <p className="text-xs text-[color:var(--color-muted)]">
                       Tenant: {selectedMembership.tenant_display_name}

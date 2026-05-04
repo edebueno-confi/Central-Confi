@@ -183,6 +183,12 @@
 - `/support/customers/:tenantId` continua apoiando a tratativa, mas com stack, tickets, contatos e eventos em leitura curta
 - a referencia visual transversal dessa camada fica em `INTERNAL_WORKSPACE_DESIGN_SYSTEM.md`
 
+## Enforcements da fase 6.11
+- o Support Workspace passa a obedecer tambem ao gate documental de `INTERNAL_UI_ACCEPTANCE_CHECKLIST.md`
+- linguagem tecnica, nomes de contrato e detalhes de implementacao nao devem aparecer no fluxo principal do atendimento
+- a fila, o ticket e o contexto do cliente devem continuar guiados pela operacao real, nunca por reaproveitamento visual do Admin Console
+- o backlog de refinamento da experiencia fica rastreado em `UI_REFACTOR_BACKLOG.md`
+
 ## Fora de escopo do workspace
 - atendimento a shopper final
 - omnichannel B2C

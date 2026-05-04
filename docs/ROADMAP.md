@@ -5,6 +5,7 @@
 - Tickets internos.
 - Base de conhecimento interna.
 - Spec do Support Workspace interno B2B.
+- Contrato forte de UI interna e enforcement operacional por dominio.
 - Portal simples do cliente B2B.
 
 ## Médio prazo

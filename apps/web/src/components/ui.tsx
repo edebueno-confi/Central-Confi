@@ -166,6 +166,64 @@ export function MetricCard({
   );
 }
 
+export function SummaryStrip({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <section
+      className={cx(
+        'rounded-[24px] border border-[color:var(--color-border)] bg-white/92 px-4 py-4 shadow-[var(--shadow-panel)]',
+        className,
+      )}
+    >
+      <div className="flex flex-wrap gap-3">{children}</div>
+    </section>
+  );
+}
+
+export function SummaryStripItem({
+  label,
+  value,
+  helper,
+  tone = 'default',
+}: {
+  label: string;
+  value: ReactNode;
+  helper?: string;
+  tone?: 'default' | 'positive' | 'warning' | 'critical' | 'accent';
+}) {
+  return (
+    <div
+      className={cx(
+        'min-w-[140px] flex-1 rounded-[18px] border px-4 py-3',
+        tone === 'positive' && 'border-emerald-200 bg-emerald-50/80',
+        tone === 'warning' && 'border-amber-200 bg-amber-50/80',
+        tone === 'critical' && 'border-rose-200 bg-rose-50/80',
+        tone === 'accent' && 'border-sky-200 bg-sky-50/80',
+        tone === 'default' && 'border-[color:var(--color-border)] bg-[color:var(--color-surface)]',
+      )}
+    >
+      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--color-muted)]">
+        {label}
+      </p>
+      <div className="mt-2 flex items-end justify-between gap-3">
+        <p className="text-xl font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
+          {value}
+        </p>
+        {helper ? (
+          <p className="text-right text-xs leading-5 text-[color:var(--color-muted)]">
+            {helper}
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 export function Field({
   label,
   description,
@@ -198,7 +256,7 @@ export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
 export function SelectInput(props: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
-      className="h-11 rounded-2xl border border-[color:var(--color-border)] bg-white px-4 text-sm text-[color:var(--color-ink)] outline-none transition focus:border-[color:var(--color-brand-blue)]/60 focus:ring-2 focus:ring-[color:var(--color-brand-blue)]/20"
+      className="h-11 min-w-0 w-full rounded-2xl border border-[color:var(--color-border)] bg-white px-4 text-sm text-[color:var(--color-ink)] outline-none transition focus:border-[color:var(--color-brand-blue)]/60 focus:ring-2 focus:ring-[color:var(--color-brand-blue)]/20"
       {...props}
     />
   );

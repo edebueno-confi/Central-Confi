@@ -108,7 +108,7 @@ export function HelpCenterPage() {
   useHelpCenterDocumentMeta({
     title: 'Genius Support OS | Help Center B2B',
     description:
-      'Documentacao tecnica publica B2B para clientes e usuarios da plataforma Genius Support OS.',
+      'Guias publicos de uso, configuracao e integracao para clientes B2B da plataforma Genius Support OS.',
   });
 
   const loadSpaces = useEffectEvent(async () => {
@@ -121,7 +121,7 @@ export function HelpCenterPage() {
     } catch (error) {
       const classified = classifyAdminError(
         error,
-        'Nao foi possivel carregar a superficie publica da Central de Ajuda.',
+        'Nao foi possivel carregar a Central de Ajuda.',
       );
       setMessage(classified.message);
       setPhase(
@@ -146,7 +146,7 @@ export function HelpCenterPage() {
       <div className="mx-auto flex min-h-screen w-full max-w-5xl items-center px-6 py-12">
         <LoadingState
           title="Carregando a Central de Ajuda"
-          description="A superficie publica esta validando os knowledge spaces disponiveis antes de expor a documentacao tecnica."
+          description="Estamos preparando as centrais publicas disponiveis para leitura."
         />
       </div>
     );
@@ -155,7 +155,7 @@ export function HelpCenterPage() {
   if (phase === 'contract-unavailable') {
     return (
       <div className="mx-auto flex min-h-screen w-full max-w-5xl items-center px-6 py-12">
-        <ContractUnavailableState contractName="read models publicos da Knowledge Base" />
+        <ContractUnavailableState contractName="central publica de ajuda" />
       </div>
     );
   }
@@ -167,7 +167,7 @@ export function HelpCenterPage() {
           title="Falha ao carregar a Central de Ajuda"
           description={
             message ??
-            'A superficie publica nao conseguiu carregar os spaces disponiveis neste ambiente.'
+            'Nao foi possivel carregar as centrais publicas disponiveis neste ambiente.'
           }
           action={<GhostButton onClick={() => void loadSpaces()}>Tentar novamente</GhostButton>}
         />
@@ -179,9 +179,9 @@ export function HelpCenterPage() {
     return (
       <div className="mx-auto flex min-h-screen w-full max-w-5xl items-center px-6 py-12">
         <EmptyState
-          title="Nenhuma central tecnica disponivel"
-          description="Ainda nao existe knowledge space ativo e publicavel neste ambiente."
-          action={<GhostButton onClick={() => void loadSpaces()}>Revalidar contratos</GhostButton>}
+          title="Nenhuma central disponivel"
+          description="Ainda nao existe uma central publicada para leitura neste ambiente."
+          action={<GhostButton onClick={() => void loadSpaces()}>Tentar novamente</GhostButton>}
         />
       </div>
     );
@@ -202,7 +202,7 @@ export function HelpCenterPage() {
                   Documentacao tecnica clara para operar a plataforma sem depender do suporte interno.
                 </h1>
                 <p className="max-w-2xl text-sm leading-7 text-white/80 sm:text-base">
-                  Guias publicados de uso, configuracao e integracao para clientes B2B e usuarios da plataforma. Nada de rascunho, playbook interno ou trilha editorial aparece aqui.
+                  Guias publicados de uso, configuracao e integracao para clientes B2B e usuarios da plataforma. Aqui voce ve apenas o conteudo pronto para leitura.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
@@ -218,7 +218,7 @@ export function HelpCenterPage() {
               </div>
               <div className="flex flex-wrap gap-3 text-xs text-white/76">
                 <span className="rounded-full border border-white/18 bg-white/10 px-3 py-1.5">
-                  leitura publica somente de contratos aprovados
+                  leitura simples e navegacao direta
                 </span>
                 <span className="rounded-full border border-white/18 bg-white/10 px-3 py-1.5">
                   foco em documentacao tecnica B2B
@@ -234,7 +234,7 @@ export function HelpCenterPage() {
                   {spaces.length}
                 </p>
                 <p className="mt-2 text-sm leading-6 text-white/88">
-                  central{spaces.length > 1 ? 's' : ''} tecnica{spaces.length > 1 ? 's' : ''} ativa{spaces.length > 1 ? 's' : ''} para leitura publica neste ambiente.
+                  central{spaces.length > 1 ? 'is' : ''} pronta{spaces.length > 1 ? 's' : ''} para leitura neste ambiente.
                 </p>
               </div>
               <div className="grid gap-3">
@@ -258,7 +258,7 @@ export function HelpCenterPage() {
                       <StatusPill tone="positive">ativo</StatusPill>
                     </div>
                     <p className="mt-3 text-xs leading-5 text-white/84">
-                      Entrada canonica: {space.canonicalPath}
+                      Acesso principal: {space.canonicalPath}
                       {space.canonicalHost ? ` ou ${space.canonicalHost}` : ''}
                     </p>
                   </div>
@@ -278,7 +278,7 @@ export function HelpCenterPage() {
                 Escolha a documentacao certa para a operacao que voce usa.
               </h2>
               <p className="max-w-3xl text-sm leading-7 text-[color:var(--color-muted)]">
-                Cada knowledge space publica apenas conteudo aprovado para aquela marca, com a mesma governanca administrativa no backend.
+                Cada central organiza artigos publicados para uma marca ou operacao, com leitura direta e sem excesso de contexto tecnico.
               </p>
             </div>
           </div>
@@ -291,7 +291,7 @@ export function HelpCenterPage() {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--color-muted)]">
-                    Knowledge Space
+                    Central
                   </p>
                   {space.logoAssetUrl ? (
                     <img
@@ -311,16 +311,6 @@ export function HelpCenterPage() {
               <p className="mt-4 text-sm leading-7 text-[color:var(--color-muted)]">
                 {space.displayName} publica guias de uso, configuracao e integracao para a operacao tecnica B2B da plataforma.
               </p>
-              <div className="mt-5 flex flex-wrap gap-2 text-xs text-[color:var(--color-muted)]">
-                <span className="rounded-full bg-[color:var(--color-surface)] px-3 py-1">
-                  slug: {space.knowledgeSpaceSlug}
-                </span>
-                {space.canonicalHost ? (
-                  <span className="rounded-full bg-[color:var(--color-surface)] px-3 py-1">
-                    host: {space.canonicalHost}
-                  </span>
-                ) : null}
-              </div>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link to={`/help/${space.knowledgeSpaceSlug}`}>
                   <AppButton>Abrir central</AppButton>
@@ -432,8 +422,8 @@ export function HelpCenterSpaceLayout() {
     : 'Help Center B2B | Genius Support OS';
   const helpCenterDescription = space
     ? seoDefaults?.description ??
-      `${space.brand_name} publica documentacao tecnica B2B aprovada para clientes e usuarios da plataforma.`
-    : 'Documentacao tecnica publica B2B da plataforma Genius Support OS.';
+      `${space.brand_name} publica guias de uso, configuracao e integracao para clientes B2B.`
+    : 'Guias publicos B2B da plataforma Genius Support OS.';
 
   useHelpCenterDocumentMeta({
     title: helpCenterTitle,
@@ -449,7 +439,7 @@ export function HelpCenterSpaceLayout() {
       <div className="mx-auto flex min-h-screen w-full max-w-5xl items-center px-6 py-12">
         <LoadingState
           title="Carregando a documentacao tecnica"
-          description="A Central Publica esta resolvendo o knowledge space e a navegacao publica antes de exibir o conteudo."
+          description="Estamos preparando esta central e a navegacao publicada."
         />
       </div>
     );
@@ -458,7 +448,7 @@ export function HelpCenterSpaceLayout() {
   if (phase === 'contract-unavailable') {
     return (
       <div className="mx-auto flex min-h-screen w-full max-w-5xl items-center px-6 py-12">
-        <ContractUnavailableState contractName="superficie publica da Knowledge Base" />
+        <ContractUnavailableState contractName="central publica desta marca" />
       </div>
     );
   }
@@ -470,7 +460,7 @@ export function HelpCenterSpaceLayout() {
           title="Falha ao carregar a central publica"
           description={
             message ??
-            'A superficie publica nao conseguiu resolver o knowledge space solicitado.'
+            'Nao foi possivel abrir a central solicitada neste ambiente.'
           }
           action={<GhostButton onClick={() => void loadSpace(spaceSlug)}>Tentar novamente</GhostButton>}
         />
@@ -483,7 +473,7 @@ export function HelpCenterSpaceLayout() {
       <div className="mx-auto flex min-h-screen w-full max-w-5xl items-center px-6 py-12">
         <EmptyState
           title="Central publica nao encontrada"
-          description="O knowledge space solicitado nao existe ou ainda nao esta ativo para leitura publica."
+          description="A central solicitada nao existe ou ainda nao ficou disponivel para leitura."
           action={
             <Link to="/help">
               <GhostButton>Voltar para /help</GhostButton>
@@ -542,30 +532,30 @@ export function HelpCenterSpaceLayout() {
               </div>
               <div className="grid gap-3 rounded-[24px] border border-white/16 bg-[linear-gradient(180deg,rgba(12,19,42,0.36),rgba(19,31,67,0.62))] p-4 shadow-[0_14px_30px_rgba(8,13,32,0.18)]">
                 <div>
-                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-white/82">
-                    Entrada principal
-                  </p>
+                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-white/82">
+                      Caminho principal
+                    </p>
                   <p className="mt-2 text-sm font-semibold text-white">
                     /help/{space.knowledge_space_slug}
                   </p>
                 </div>
                 {context.routes.some((route) => route.route_kind === 'domain') ? (
                   <div>
-                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-white/82">
-                      Dominio futuro
-                    </p>
+                      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-white/82">
+                        Dominio publicado
+                      </p>
                     <p className="mt-2 text-sm font-semibold text-white">
                       {context.routes.find((route) => route.route_kind === 'domain')?.route_host}
                     </p>
                   </div>
                 ) : (
                   <div>
-                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-white/82">
-                      Superficie
-                    </p>
-                    <p className="mt-2 text-sm leading-7 text-white/88">
-                      Leitura publica com branding seguro e backend ainda como source of truth.
-                    </p>
+                      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-white/82">
+                        Leitura
+                      </p>
+                      <p className="mt-2 text-sm leading-7 text-white/88">
+                        Leitura simples, foco nos artigos e navegacao direta por categorias.
+                      </p>
                   </div>
                 )}
               </div>
@@ -664,10 +654,10 @@ export function HelpCenterSpaceLayout() {
                       <p className="text-sm font-semibold text-[var(--help-ink-strong)]">
                         {category.category_name}
                       </p>
-                      <p className="mt-1 text-xs leading-5 text-[var(--help-muted)]">
-                        {category.category_description ??
-                          'Categoria publica com guias tecnicos aprovados.'}
-                      </p>
+                        <p className="mt-1 text-xs leading-5 text-[var(--help-muted)]">
+                          {category.category_description ??
+                          'Categoria com artigos publicados para consulta rapida.'}
+                        </p>
                     </div>
                     <StatusPill tone={toneForArticleCount(category.subtree_article_count)}>
                       {category.subtree_article_count}
@@ -685,7 +675,7 @@ export function HelpCenterSpaceLayout() {
               </p>
               {latestArticles.length === 0 ? (
                 <p className="text-sm leading-6 text-[var(--help-muted)]">
-                  Ainda nao existem artigos publicados visiveis neste knowledge space.
+                  Ainda nao existem artigos publicados visiveis nesta central.
                 </p>
               ) : (
                 <div className="grid gap-3">
@@ -699,7 +689,7 @@ export function HelpCenterSpaceLayout() {
                         {article.title}
                       </p>
                       <p className="mt-1 text-xs leading-5 text-[var(--help-muted)]">
-                        {article.summary ?? 'Artigo tecnico publicado.'}
+                        {article.summary ?? 'Artigo publicado para consulta.'}
                       </p>
                     </Link>
                   ))}

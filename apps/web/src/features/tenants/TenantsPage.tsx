@@ -31,11 +31,12 @@ import {
   Field,
   GhostButton,
   InlineNotice,
-  MetricCard,
   PageHeader,
   Panel,
   SelectInput,
   StatusPill,
+  SummaryStrip,
+  SummaryStripItem,
   TextInput,
 } from '../../components/ui';
 import {
@@ -193,7 +194,7 @@ export function TenantsPage() {
       if (!detail) {
         setTenantDetail(null);
         setDetailPhase('error');
-        setDetailMessage('O backend nao retornou detalhe para o tenant selecionado.');
+      setDetailMessage('Nao foi possivel abrir o detalhe do cliente selecionado.');
         return;
       }
 
@@ -423,16 +424,16 @@ export function TenantsPage() {
 
   if (phase === 'contract-unavailable') {
     return (
-      <ContractUnavailableState contractName="vw_admin_tenants_list / vw_admin_tenant_detail" />
+      <ContractUnavailableState contractName="lista e detalhe de clientes" />
     );
   }
 
   if (phase === 'error') {
     return (
-      <ErrorState
-        description={
-          pageMessage ?? 'O Admin Console nao conseguiu materializar a leitura de tenants.'
-        }
+        <ErrorState
+          description={
+            pageMessage ?? 'Nao foi possivel carregar a base de clientes nesta area.'
+          }
         action={<AppButton onClick={() => void loadTenants()}>Tentar novamente</AppButton>}
       />
     );
@@ -442,7 +443,7 @@ export function TenantsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Tenants"
-        description="Superficie principal do control plane Genius. A lista concentra clientes B2B, status operacional e contatos da operacao, enquanto o contexto lateral mostra apenas o detalhe contratual do tenant selecionado."
+        description="Base operacional de clientes B2B. Escolha um tenant para revisar status, contatos e contexto de atendimento sem perder a lista principal."
         action={
           <AppButton onClick={() => setShowCreateTenant((current) => !current)}>
             {showCreateTenant ? 'Fechar criacao' : 'Criar tenant'}
@@ -450,19 +451,19 @@ export function TenantsPage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard helper="Leitura oficial em vw_admin_tenants_list." label="Tenants" value={String(totalTenants)} />
-        <MetricCard helper="Status operacional ativo." label="Ativos" value={String(activeTenants)} />
-        <MetricCard helper="Pontos que exigem atencao." label="Suspensos" value={String(suspendedTenants)} />
-        <MetricCard helper="Contatos ativos da operacao." label="Contatos ativos" value={String(totalContacts)} />
-      </div>
+      <SummaryStrip>
+        <SummaryStripItem helper="base atual" label="Tenants" value={String(totalTenants)} />
+        <SummaryStripItem helper="em operacao" label="Ativos" tone="positive" value={String(activeTenants)} />
+        <SummaryStripItem helper="pedem atencao" label="Suspensos" tone="warning" value={String(suspendedTenants)} />
+        <SummaryStripItem helper="prontos para contato" label="Contatos ativos" value={String(totalContacts)} />
+      </SummaryStrip>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(420px,0.92fr)] 2xl:grid-cols-[minmax(0,1.14fr)_minmax(480px,0.86fr)]">
         <div className="space-y-6">
           {showCreateTenant ? (
             <Panel
               title="Criar tenant"
-              description="A criacao continua exclusivamente pela RPC administrativa oficial."
+              description="Abra um novo cliente operacional com nome, identificador e regiao de dados."
             >
               <form className="grid gap-4 md:grid-cols-2" onSubmit={handleCreateTenant}>
                 <Field label="Slug">
@@ -544,7 +545,7 @@ export function TenantsPage() {
 
           <Panel
             title="Base de tenants"
-            description="Lista global oficial do SaaS. Status, nomes operacionais e contato primario chegam apenas pelas views administrativas."
+            description="Lista principal para localizar o cliente, conferir o estado atual e abrir o contexto do tenant selecionado."
             actions={
               <>
                 <TextInput
@@ -561,7 +562,7 @@ export function TenantsPage() {
             {tenants.length === 0 ? (
               <EmptyState
                 title="Nenhum tenant cadastrado"
-                description="O backend ainda nao retornou tenants nesta superficie administrativa."
+                description="Ainda nao existe cliente operacional disponivel nesta area."
               />
             ) : filteredTenants.length === 0 ? (
               <EmptyState
@@ -632,7 +633,7 @@ export function TenantsPage() {
         <div className="space-y-6">
           <Panel
             title="Tenant selecionado"
-            description="Contexto lateral essencial do tenant ativo para governanca de pos-venda."
+            description="Resumo do cliente ativo para decidir o proximo ajuste operacional."
           >
             {detailPhase === 'idle' ? (
               <EmptyState
@@ -640,12 +641,12 @@ export function TenantsPage() {
                 description="O painel lateral so abre contexto quando existe uma linha selecionada."
               />
             ) : detailPhase === 'loading' ? (
-              <LoadingState
-                description="Carregando o detalhe contratual deste tenant."
-                title="Lendo contexto lateral"
-              />
-            ) : detailPhase === 'contract-unavailable' ? (
-              <ContractUnavailableState contractName="vw_admin_tenant_detail" />
+                <LoadingState
+                  description="Carregando o contexto deste cliente."
+                  title="Lendo contexto lateral"
+                />
+              ) : detailPhase === 'contract-unavailable' ? (
+                <ContractUnavailableState contractName="detalhe do cliente" />
             ) : detailPhase === 'error' || !tenantDetail || !selectedTenantSummary ? (
               <ErrorState
                 description={detailMessage ?? 'O detalhe do tenant nao ficou disponivel.'}
@@ -672,10 +673,10 @@ export function TenantsPage() {
                   </div>
                 </div>
 
-                <div className="grid gap-3 lg:grid-cols-2">
-                  <MetricCard label="Memberships ativas" value={String(tenantDetail.active_membership_count)} />
-                  <MetricCard label="Contatos ativos" value={String(tenantDetail.active_contact_count)} />
-                </div>
+                <SummaryStrip className="bg-transparent px-0 py-0 shadow-none border-0">
+                  <SummaryStripItem label="Memberships ativas" value={String(tenantDetail.active_membership_count)} />
+                  <SummaryStripItem label="Contatos ativos" value={String(tenantDetail.active_contact_count)} />
+                </SummaryStrip>
 
                 <div className="rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 text-sm leading-6 text-[color:var(--color-muted)]">
                   <p>
@@ -720,7 +721,7 @@ export function TenantsPage() {
 
           <Panel
             title="Contatos vinculados"
-            description="Contatos de operacao e acompanhamento. Criacao e atualizacao continuam restritas as RPCs administrativas."
+            description="Pessoas de referencia para operacao, suporte e acompanhamento do cliente."
           >
             {!tenantDetail ? (
               <EmptyState
@@ -759,9 +760,19 @@ export function TenantsPage() {
                             <p className="text-sm text-[color:var(--color-muted)]">
                               {contact.email ?? 'Sem email'} · {contact.phone ?? 'Sem telefone'}
                             </p>
-                            <p className="text-xs text-[color:var(--color-muted)]">
-                              Usuario vinculado: {contact.linked_user_id ?? 'nao vinculado'}
-                            </p>
+                            {contact.job_title ? (
+                              <p className="text-xs text-[color:var(--color-muted)]">
+                                {contact.job_title}
+                              </p>
+                            ) : null}
+                            {contact.linked_user_id ? (
+                              <details className="pt-1 text-xs text-[color:var(--color-muted)]">
+                                <summary className="cursor-pointer font-medium">
+                                  Informacoes avancadas
+                                </summary>
+                                <p className="mt-2 break-all">Vinculo interno: {contact.linked_user_id}</p>
+                              </details>
+                            ) : null}
                           </div>
 
                           <GhostButton
@@ -847,21 +858,28 @@ export function TenantsPage() {
                     />
                   </Field>
 
-                  <Field
-                    description="Sem contrato de busca global de usuarios nesta fase. Informe o UUID real quando houver vinculo."
-                    label="Linked user id"
-                  >
-                    <TextInput
-                      onChange={(event) =>
-                        setContactForm((current) => ({
-                          ...current,
-                          linkedUserId: event.target.value,
-                        }))
-                      }
-                      placeholder="00000000-0000-0000-0000-000000000000"
-                      value={contactForm.linkedUserId}
-                    />
-                  </Field>
+                  <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
+                    <summary className="cursor-pointer text-sm font-medium text-[color:var(--color-ink)]">
+                      Informacoes avancadas
+                    </summary>
+                    <div className="mt-3">
+                      <Field
+                        description="Use este campo apenas quando ja existir um vinculo interno conhecido para o contato."
+                        label="Vinculo interno manual"
+                      >
+                        <TextInput
+                          onChange={(event) =>
+                            setContactForm((current) => ({
+                              ...current,
+                              linkedUserId: event.target.value,
+                            }))
+                          }
+                          placeholder="Cole o identificador interno, se existir"
+                          value={contactForm.linkedUserId}
+                        />
+                      </Field>
+                    </div>
+                  </details>
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <label className="flex items-center gap-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 text-sm text-[color:var(--color-ink)]">

@@ -175,6 +175,8 @@ Documentos históricos:
 - Runbook oficial de publicação pública criado em `docs/PUBLIC_HELP_CENTER_PUBLISH_RUNBOOK.md`.
 - Governança oficial de operações de conteúdo criada em `docs/CONTENT_OPERATIONS_GOVERNANCE.md`.
 - Mini design system oficial de workspaces internos criado em `docs/INTERNAL_WORKSPACE_DESIGN_SYSTEM.md`.
+- Checklist oficial de aceite de UI interna criado em `docs/INTERNAL_UI_ACCEPTANCE_CHECKLIST.md`.
+- Backlog oficial de refatoracao de UI criado em `docs/UI_REFACTOR_BACKLOG.md`.
 - Spec oficial do Support Workspace criada em `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`.
 - Spec oficial do perfil operacional do cliente B2B criada em `docs/CUSTOMER_ACCOUNT_PROFILE_SPEC.md`.
 - Revisão oficial do modelo mínimo do perfil operacional do cliente B2B criada em `docs/CUSTOMER_ACCOUNT_PROFILE_DATA_MODEL_REVIEW.md`.
@@ -463,6 +465,10 @@ Documentos históricos:
   - `/support/tickets/:ticketId` passou a tratar conversa e composer como eixo principal, com rail direito recolhivel e historico tecnico sob demanda.
   - `/support/customers/:tenantId` foi simplificada como contexto operacional sintetico do cliente B2B.
   - A direção visual transversal dessa camada ficou formalizada em `docs/INTERNAL_WORKSPACE_DESIGN_SYSTEM.md`.
+- Fase 6.11: Internal UI System Refactor + Operational Design Enforcement concluida localmente.
+  - O contrato de UI interna foi endurecido em `docs/UX_DIRECTION.md`, `docs/INTERNAL_WORKSPACE_DESIGN_SYSTEM.md` e `docs/INTERNAL_UI_ACCEPTANCE_CHECKLIST.md`.
+  - `/admin/tenants`, `/admin/knowledge`, `/admin/access`, `/admin/system`, `/support/queue`, `/support/tickets/:ticketId`, `/support/customers/:tenantId` e a Central Publica passaram por limpeza de copy, reducao de ruido visual e rebaixamento de metadados tecnicos.
+  - O backlog oficial de polimento e evolucao futura dessas superficies ficou consolidado em `docs/UI_REFACTOR_BACKLOG.md`.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.

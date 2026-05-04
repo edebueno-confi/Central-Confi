@@ -182,7 +182,15 @@ function humanizeSupportRole(role: SupportAssignableAgent['role']) {
 }
 
 function formatAssignableAgentLabel(agent: SupportAssignableAgent) {
-  return `${agent.fullName} · ${humanizeSupportRole(agent.role)} · ${agent.email}`;
+  return `${agent.fullName} · ${humanizeSupportRole(agent.role)}`;
+}
+
+function formatAssignedAgentSummary(agent: SupportAssignableAgent | null) {
+  if (!agent) {
+    return null;
+  }
+
+  return `${agent.fullName} · ${humanizeSupportRole(agent.role)}`;
 }
 
 function ticketTenantLabel(ticket: Pick<SupportTicketQueueItem, 'tenantDisplayName' | 'tenantLegalName' | 'tenantSlug'>) {
@@ -341,8 +349,12 @@ function SupportConversation({
   return (
     <div className="space-y-3">
       <div className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 text-sm leading-6 text-[color:var(--color-muted)]">
-        Mostrando {conversationEntries.length} interacoes de conversa e {eventEntries.length} eventos tecnicos na janela recente.
-        {window.hasMore ? ' O restante do historico fica recolhido fora da carga inicial.' : ''}
+        Mostrando {conversationEntries.length} interacoes recentes da conversa.
+        {window.hasMore
+          ? ' O restante do historico fica recolhido para nao pesar a tratativa.'
+          : eventEntries.length > 0
+            ? ` ${eventEntries.length} registro(s) de apoio seguem no historico tecnico.`
+            : ''}
       </div>
 
       {conversationEntries.length === 0 ? (
@@ -364,8 +376,8 @@ function SupportConversation({
         </summary>
         <div className="mt-2 text-xs leading-5 text-[color:var(--color-muted)]">
           {eventEntries.length === 0
-            ? 'Nenhum evento tecnico apareceu na janela recente.'
-            : `Mostrando ${eventEntries.length} eventos tecnicos dentro de ${window.totalAvailableCount} registros recentes.`}
+            ? 'Nenhum registro extra apareceu nesta janela.'
+            : `Mostrando ${eventEntries.length} registro(s) de apoio dentro de ${window.totalAvailableCount} itens recentes.`}
         </div>
         {eventEntries.length === 0 ? null : (
           <div className="mt-3 space-y-2">
@@ -416,7 +428,7 @@ function SupportQueueItem({
             {ticket.title}
           </h3>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[color:var(--color-muted)]">
-            <span>Tenant: {ticketTenantLabel(ticket)}</span>
+            <span>Cliente: {ticketTenantLabel(ticket)}</span>
             <span>Responsavel: {ticket.assignedToFullName ?? 'Nao atribuido'}</span>
             <span>Ultima atividade: {formatDateTime(ticket.lastMessageAt ?? ticket.updatedAt)}</span>
           </div>
@@ -484,7 +496,7 @@ function SupportTicketPreview({
     detail?.tenantDisplayName ??
     detail?.tenantLegalName ??
     detail?.tenantSlug ??
-    (ticket ? ticketTenantLabel(ticket) : 'Tenant nao resolvido');
+    (ticket ? ticketTenantLabel(ticket) : 'Cliente nao resolvido');
   const assigned =
     detail?.assignedToFullName ?? ticket?.assignedToFullName ?? 'Nao atribuido';
   const lastActivity = formatDateTime(
@@ -579,7 +591,7 @@ function SupportQueueToolbar({
         <GhostButton onClick={onRefresh}>Recarregar</GhostButton>
       </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+      <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
         <Field label="Status">
           <SelectInput
             onChange={(event) => onChange({ ...filters, status: event.target.value as QueueFilters['status'] })}
@@ -626,7 +638,7 @@ function SupportQueueToolbar({
           </SelectInput>
         </Field>
 
-        <Field label="Tenant">
+        <Field label="Cliente">
           <SelectInput
             onChange={(event) => onChange({ ...filters, tenantId: event.target.value as QueueFilters['tenantId'] })}
             value={filters.tenantId}
@@ -679,10 +691,10 @@ function SupportCustomerRail({
 }) {
   if (!customer) {
     return (
-      <EmptyState
-        title="Contexto do cliente indisponivel"
-        description="O suporte ainda nao recebeu o tenant operacional deste ticket."
-      />
+        <EmptyState
+          title="Contexto do cliente indisponivel"
+          description="O contexto deste cliente ainda nao ficou disponivel para a tratativa."
+        />
     );
   }
 
@@ -737,9 +749,9 @@ function SupportCustomerRail({
                 Tickets recentes
               </p>
               {recentTickets.length === 0 ? (
-                <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                  Nenhum ticket recente retornado para este tenant.
-                </p>
+                  <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                    Nenhum ticket recente apareceu por aqui.
+                  </p>
               ) : (
                 <div className="space-y-2">
                   {recentTickets.map((ticket) => (
@@ -754,9 +766,9 @@ function SupportCustomerRail({
                 Eventos recentes
               </p>
               {recentEvents.length === 0 ? (
-                <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                  Nenhum evento recente retornado pelo contrato.
-                </p>
+                  <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                    Nenhum evento recente apareceu por aqui.
+                  </p>
               ) : (
                 recentEvents.map((event) => (
                   <SupportRecentEventCard
@@ -804,13 +816,13 @@ function SupportCustomerRail({
       <div className="space-y-2 rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
         <div className="space-y-1">
           <h4 className="text-sm font-semibold text-[color:var(--color-ink)]">Tickets recentes</h4>
-          <p className="text-xs leading-5 text-[color:var(--color-muted)]">
-            Mostrando {recentTickets.length} de {recentTicketsWindow.totalAvailableCount} tickets recentes.
-          </p>
+            <p className="text-xs leading-5 text-[color:var(--color-muted)]">
+              Mostrando {recentTickets.length} de {recentTicketsWindow.totalAvailableCount} tickets recentes.
+            </p>
         </div>
         {recentTickets.length === 0 ? (
           <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-            Nenhum ticket recente retornado para este tenant.
+            Nenhum ticket recente apareceu por aqui.
           </p>
         ) : (
           recentTickets.map((ticket) => <SupportRecentTicketCard key={ticket.id} ticket={ticket} />)
@@ -826,7 +838,7 @@ function SupportCustomerRail({
             <h4 className="text-sm font-semibold text-[color:var(--color-ink)]">Contatos ativos</h4>
             {contacts.length === 0 ? (
               <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                Nenhum contato ativo retornado pelo contrato.
+                Nenhum contato ativo disponivel no momento.
               </p>
             ) : (
               contacts.map((contact) => <SupportContactCard key={contact.id} contact={contact} />)
@@ -839,7 +851,7 @@ function SupportCustomerRail({
             </p>
             {recentEvents.length === 0 ? (
               <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                O backend nao retornou eventos recentes para este tenant.
+                Nenhum evento recente apareceu por aqui.
               </p>
             ) : (
               recentEvents.map((event) => (
@@ -975,7 +987,7 @@ function SupportAccountContextCompact({
   if (!accountContext || !accountContext.profileId) {
     return (
       <InlineNotice tone="warning">
-        Perfil operacional ainda nao cadastrado para este tenant. O suporte segue com contatos e tickets recentes, mas sem stack enriquecido.
+        Perfil operacional ainda nao cadastrado para este cliente. O suporte segue com contatos e tickets recentes, mas sem stack enriquecido.
       </InlineNotice>
     );
   }
@@ -1136,7 +1148,7 @@ function SupportAccountContextOverview({
   if (!accountContext || !accountContext.profileId) {
     return (
       <InlineNotice tone="warning">
-        Este tenant ainda nao tem perfil operacional enriquecido materializado. O suporte pode operar com contatos e tickets recentes, mas sem stack consolidado.
+        Este cliente ainda nao tem um perfil operacional enriquecido. O suporte pode seguir com contatos e tickets recentes, mas sem stack consolidado.
       </InlineNotice>
     );
   }
@@ -1413,7 +1425,7 @@ function SupportWorkspaceView({
         setCustomerRecentTickets(emptyCustomerRecentTicketsWindow());
         setCustomerRecentEvents(emptyCustomerRecentEventsWindow());
         setDetailPhase('error');
-        setDetailMessage('O backend nao retornou detalhe para o ticket selecionado.');
+      setDetailMessage('Nao foi possivel abrir o detalhe do ticket selecionado.');
         return;
       }
 
@@ -1788,13 +1800,13 @@ function SupportWorkspaceView({
   }
 
   if (phase === 'contract-unavailable') {
-    return <ContractUnavailableState contractName="vw_support_tickets_queue" />;
+    return <ContractUnavailableState contractName="fila operacional de tickets" />;
   }
 
   if (phase === 'error') {
     return (
-      <ErrorState
-        description={pageMessage ?? 'A fila oficial do Support Workspace nao ficou disponivel.'}
+        <ErrorState
+          description={pageMessage ?? 'A fila operacional nao ficou disponivel neste ambiente.'}
         action={<AppButton onClick={() => void loadQueue(focusTicketId ?? null)}>Tentar novamente</AppButton>}
       />
     );
@@ -1858,7 +1870,7 @@ function SupportWorkspaceView({
               {tickets.length === 0 ? (
                 <EmptyState
                   title="Sem tickets para esta combinacao de filtros"
-                  description="A fila oficial nao retornou tickets neste recorte. Ajuste filtros ou reidrate a fixture local."
+                  description="Nenhum ticket apareceu com esse recorte. Ajuste os filtros ou recarregue a fila."
                 />
               ) : (
                 <div className="space-y-3">
@@ -1886,10 +1898,10 @@ function SupportWorkspaceView({
               {detailPhase === 'loading' ? (
                 <LoadingState
                   title="Carregando previa"
-                  description="O frontend esta resolvendo detalhe e contexto minimo do ticket selecionado."
+                  description="Estamos preparando a previa do ticket selecionado."
                 />
               ) : detailPhase === 'contract-unavailable' ? (
-                <ContractUnavailableState contractName="vw_support_ticket_detail / vw_support_customer_360" />
+                <ContractUnavailableState contractName="previa operacional do ticket" />
               ) : detailPhase === 'error' ? (
                 <ErrorState description={detailMessage ?? 'A previa do ticket nao ficou disponivel.'} />
               ) : (
@@ -1912,10 +1924,10 @@ function SupportWorkspaceView({
       ) : detailPhase === 'loading' ? (
         <LoadingState
           title="Montando tratativa"
-          description="O frontend esta resolvendo detalhe, timeline e contexto do cliente."
+          description="Estamos preparando a conversa, o contexto do cliente e a operacao do ticket."
         />
       ) : detailPhase === 'contract-unavailable' ? (
-        <ContractUnavailableState contractName="vw_support_ticket_detail / vw_support_ticket_timeline_recent / vw_support_customer_360 / vw_support_customer_account_context" />
+        <ContractUnavailableState contractName="detalhe do ticket, conversa recente e contexto do cliente" />
       ) : detailPhase === 'error' || !ticketDetail || !selectedTicketSummary ? (
         <ErrorState
           description={detailMessage ?? 'O painel operacional do ticket nao ficou disponivel.'}
@@ -1927,22 +1939,22 @@ function SupportWorkspaceView({
               <div className="min-w-0 space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>{humanizeStatus(ticketDetail.status)}</StatusPill>
-                  <span className="text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
-                    {humanizeToken(ticketDetail.priority)} · {humanizeToken(ticketDetail.severity)}
-                  </span>
+                    <span className="text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
+                      {humanizeToken(ticketDetail.priority)} · {humanizeToken(ticketDetail.severity)}
+                    </span>
                 </div>
                 <div className="space-y-2">
                   <h3 className="max-w-5xl text-[1.9rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
                     {ticketDetail.title}
                   </h3>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[color:var(--color-muted)]">
-                    <span>Tenant: {ticketDetail.tenantDisplayName ?? ticketDetail.tenantLegalName ?? ticketDetail.tenantSlug}</span>
-                    <span>Requester: {ticketDetail.requesterContactFullName ?? 'Sem requester resolvido'}</span>
+                    <span>Cliente: {ticketDetail.tenantDisplayName ?? ticketDetail.tenantLegalName ?? ticketDetail.tenantSlug}</span>
+                    <span>Solicitante: {ticketDetail.requesterContactFullName ?? 'Contato nao identificado'}</span>
                     <span>
                       Responsavel:{' '}
-                      {currentAssignedAgent
-                        ? `${currentAssignedAgent.fullName} · ${currentAssignedAgent.email}`
-                        : ticketDetail.assignedToFullName ?? 'Nao atribuido'}
+                      {formatAssignedAgentSummary(currentAssignedAgent)
+                        ?? ticketDetail.assignedToFullName
+                        ?? 'Nao atribuido'}
                     </span>
                     <span>Ultima atividade: {formatDateTime(ticketDetail.lastMessageAt ?? ticketDetail.updatedAt)}</span>
                   </div>
@@ -2082,18 +2094,16 @@ function SupportWorkspaceView({
                         <StatusPill tone={toneForSeverity(ticketDetail.severity)}>{ticketDetail.severity}</StatusPill>
                       </div>
                       <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                        {currentAssignedAgent
-                          ? `${currentAssignedAgent.fullName} · ${currentAssignedAgent.email}`
-                          : ticketDetail.assignedToFullName
-                            ? ticketDetail.assignedToFullName
-                            : 'Ticket sem agente atribuido no momento.'}
+                        {formatAssignedAgentSummary(currentAssignedAgent)
+                          ?? ticketDetail.assignedToFullName
+                          ?? 'Ticket sem agente atribuido no momento.'}
                       </p>
                     </div>
 
                     <div className="space-y-3 border-t border-[color:var(--color-border)] pt-4">
                       {agentsPhase === 'contract-unavailable' ? (
                         <InlineNotice tone="critical">
-                          {agentsMessage ?? 'A view vw_support_assignable_agents nao ficou disponivel neste ambiente.'}
+                          {agentsMessage ?? 'A lista de agentes nao ficou disponivel neste ambiente.'}
                         </InlineNotice>
                       ) : agentsPhase === 'error' ? (
                         <InlineNotice tone="critical">
@@ -2101,11 +2111,11 @@ function SupportWorkspaceView({
                         </InlineNotice>
                       ) : agentsPhase === 'loading' ? (
                         <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                          Carregando agentes atribuiveis deste tenant...
+                          Carregando agentes disponiveis para este cliente...
                         </p>
                       ) : assignableAgents.length === 0 ? (
                         <InlineNotice tone="warning">
-                          Nenhum agente operacional ativo ficou disponivel para este tenant. Use o fallback tecnico apenas se necessario.
+                          Nenhum agente ativo ficou disponivel para este cliente. Use o fallback manual apenas se necessario.
                         </InlineNotice>
                       ) : (
                         <form className="space-y-3" onSubmit={handleAssign}>
@@ -2205,8 +2215,8 @@ function SupportWorkspaceView({
                   <div className="mt-4 space-y-4">
                     <form className="space-y-3" onSubmit={handleAssign}>
                       <Field
-                        label="user_id do responsavel"
-                        description="Fallback tecnico para casos excepcionais. O fluxo principal de atribuicao deve usar o seletor acima."
+                        label="Responsavel manual"
+                        description="Use apenas em excecoes. O fluxo principal de atribuicao deve continuar no seletor acima."
                       >
                         <TextInput
                           onChange={(event) => setAssignDraft(event.target.value)}
@@ -2305,7 +2315,7 @@ export function SupportCustomerPage() {
       setRecentTicketsWindow(emptyCustomerRecentTicketsWindow());
       setRecentEventsWindow(emptyCustomerRecentEventsWindow());
       setPhase('error');
-      setMessage('Tenant ausente na rota do customer 360.');
+      setMessage('Cliente ausente na rota desta tela.');
       return;
     }
 
@@ -2329,7 +2339,7 @@ export function SupportCustomerPage() {
     } catch (error) {
       const classified = classifyAdminError(
         error,
-        'Falha ao carregar o customer 360 do tenant.',
+        'Falha ao carregar o contexto do cliente.',
       );
 
       if (classified.kind === 'session-expired') {
@@ -2372,17 +2382,17 @@ export function SupportCustomerPage() {
   }
 
   if (phase === 'loading') {
-    return <LoadingState title="Carregando customer context" />;
+    return <LoadingState title="Carregando contexto do cliente" />;
   }
 
   if (phase === 'contract-unavailable') {
-    return <ContractUnavailableState contractName="vw_support_customer_360 / vw_support_customer_account_context / vw_support_customer_recent_tickets / vw_support_customer_recent_events" />;
+    return <ContractUnavailableState contractName="resumo operacional do cliente" />;
   }
 
   if (phase === 'error') {
     return (
       <ErrorState
-        description={message ?? 'O customer 360 nao ficou disponivel neste ambiente.'}
+        description={message ?? 'O contexto deste cliente nao ficou disponivel neste ambiente.'}
         action={<AppButton onClick={() => void loadCustomer()}>Tentar novamente</AppButton>}
       />
     );
@@ -2391,8 +2401,8 @@ export function SupportCustomerPage() {
   if (!customer) {
     return (
       <EmptyState
-        title="Tenant nao encontrado"
-        description="O tenant solicitado nao apareceu na camada oficial de support customer 360."
+        title="Cliente nao encontrado"
+        description="O cliente solicitado nao apareceu na leitura operacional disponivel."
       />
     );
   }
@@ -2401,15 +2411,15 @@ export function SupportCustomerPage() {
     <div className="space-y-5">
       <PageHeader
         eyebrow="Support Workspace"
-        title="Customer context"
-        description="Contexto sintetico do cliente B2B para apoiar a tratativa sem transformar a tela em CRM ou dashboard."
+        title="Contexto do cliente"
+        description="Visao operacional sintetica para apoiar a tratativa sem transformar a tela em CRM ou dashboard."
       />
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,0.74fr)_300px]">
         <div className="space-y-5">
-          <Panel
-            title="Resumo operacional do cliente"
-            description="Visao rapida do tenant atendido, com foco em continuidade de suporte e retorno rapido ao ticket."
+            <Panel
+              title="Resumo operacional do cliente"
+              description="Visao rapida do cliente atendido, com foco em continuidade de suporte e retorno rapido ao ticket."
           >
             <div className="space-y-4">
               <div className="flex flex-wrap items-start justify-between gap-3 rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-4">
@@ -2467,10 +2477,10 @@ export function SupportCustomerPage() {
             </div>
           </Panel>
 
-          <Panel
-            title="Produto, stack e tickets recentes"
-            description="Contexto operacional do perfil do cliente e retorno rapido para tickets do mesmo tenant."
-          >
+            <Panel
+              title="Produto, stack e tickets recentes"
+              description="Contexto operacional do perfil do cliente e retorno rapido para tickets deste mesmo cliente."
+            >
             <div className="space-y-5">
               <SupportAccountContextOverview
                 accountContext={accountContext}
@@ -2489,7 +2499,7 @@ export function SupportCustomerPage() {
                 {recentTicketsWindow.tickets.length === 0 ? (
                   <EmptyState
                     title="Sem tickets recentes"
-                    description="O backend nao retornou tickets recentes para este tenant."
+                    description="Nenhum ticket recente apareceu para este cliente."
                   />
                 ) : (
                   <div className="space-y-2">
@@ -2509,7 +2519,7 @@ export function SupportCustomerPage() {
             {customer.activeContacts.length === 0 ? (
               <EmptyState
                 title="Sem contatos ativos"
-                description="O contrato nao retornou contatos ativos para este tenant."
+                description="Nenhum contato ativo ficou disponivel para este cliente."
               />
             ) : (
               <div className="space-y-2">
@@ -2529,10 +2539,10 @@ export function SupportCustomerPage() {
             </p>
             <div className="mt-3 space-y-2">
               {recentEventsWindow.events.length === 0 ? (
-                <EmptyState
-                  title="Sem eventos recentes"
-                  description="O backend nao retornou eventos recentes para este tenant."
-                />
+              <EmptyState
+                title="Sem eventos recentes"
+                description="Nenhum evento recente apareceu para este cliente."
+              />
               ) : (
                 recentEventsWindow.events.map((event) => (
                   <SupportRecentEventCard
@@ -2549,7 +2559,7 @@ export function SupportCustomerPage() {
           <div className="xl:sticky xl:top-4">
             <Panel
               title="Outros clientes acessiveis"
-              description="Lista utilitaria para trocar de tenant sem tirar o foco do atendimento."
+              description="Lista utilitaria para trocar de cliente sem tirar o foco do atendimento."
             >
               <div className="space-y-3">
                 {customers.map((row) => {
