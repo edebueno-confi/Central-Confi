@@ -342,6 +342,17 @@ export interface SupportCustomer360 {
   recentEvents: SupportCustomer360RecentEvent[];
 }
 
+export interface SupportAssignableAgent {
+  userId: Uuid;
+  fullName: string;
+  email: string;
+  tenantId: Uuid;
+  tenantName: string;
+  role: 'platform_admin' | 'support_agent' | 'support_manager';
+  membershipStatus: 'active';
+  isActive: boolean;
+}
+
 export interface RpcCreateTicketPayload {
   tenantId: Uuid;
   title: string;

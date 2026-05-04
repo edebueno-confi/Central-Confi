@@ -72,6 +72,7 @@
   - `vw_support_ticket_detail`
   - `vw_support_ticket_timeline`
   - `vw_support_customer_360`
+  - `vw_support_assignable_agents`
 - a escrita continua apenas por:
   - `rpc_update_ticket_status`
   - `rpc_assign_ticket`
@@ -107,6 +108,12 @@
 - resposta publica e nota interna continuam no mesmo composer, mas com mudanca explicita de modo e CTA principal grande
 - user_id tecnico, fechamento e reabertura ficam recolhidos em areas avancadas
 - customer context fica compacto e serve a continuidade da tratativa sem virar CRM ou painel institucional
+
+## Diretório de agentes da fase 6.3
+- o fluxo principal de atribuicao agora depende de `vw_support_assignable_agents`, nao de UUID manual no corpo da tela
+- o seletor de agente lista apenas operadores ativos e atribuiveis dentro do mesmo tenant permitido
+- `Atribuir a mim` e `Desatribuir` continuam usando apenas `rpc_assign_ticket`
+- o `user_id` tecnico permanece recolhido como fallback excepcional, nunca como caminho principal da operacao
 
 ## Fora de escopo do workspace
 - atendimento a shopper final

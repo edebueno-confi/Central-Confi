@@ -15,6 +15,7 @@ import type {
   RpcReopenTicketResponse,
   RpcUpdateTicketStatusPayload,
   RpcUpdateTicketStatusResponse,
+  SupportAssignableAgent,
   SupportCustomer360,
   SupportTicketDetail,
   SupportTicketQueueItem,
@@ -205,6 +206,19 @@ function mapCustomer360(row: Record<string, unknown>): SupportCustomer360 {
   };
 }
 
+function mapAssignableAgent(row: Record<string, unknown>): SupportAssignableAgent {
+  return {
+    userId: String(row.user_id),
+    fullName: String(row.full_name),
+    email: String(row.email),
+    tenantId: String(row.tenant_id),
+    tenantName: String(row.tenant_name),
+    role: row.role as SupportAssignableAgent['role'],
+    membershipStatus: row.membership_status as SupportAssignableAgent['membershipStatus'],
+    isActive: Boolean(row.is_active),
+  };
+}
+
 interface ListSupportTicketsQueueOptions {
   status?: TicketStatus | 'all';
   priority?: TicketPriority | 'all';
@@ -310,6 +324,22 @@ export async function getSupportCustomer360(tenantId: Uuid) {
   }
 
   return data ? mapCustomer360(data as Record<string, unknown>) : null;
+}
+
+export async function listSupportAssignableAgents(tenantId: Uuid) {
+  const client = requireClient();
+  const { data, error } = await client
+    .from('vw_support_assignable_agents')
+    .select('*')
+    .eq('tenant_id', tenantId)
+    .order('role', { ascending: true })
+    .order('full_name', { ascending: true });
+
+  if (error) {
+    throw toAppError(error, 'Falha ao carregar os agentes atribuiveis do tenant.');
+  }
+
+  return (data ?? []).map((row) => mapAssignableAgent(row as Record<string, unknown>));
 }
 
 export async function createTicket(payload: RpcCreateTicketPayload) {

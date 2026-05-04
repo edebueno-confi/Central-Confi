@@ -77,6 +77,7 @@ Documentos históricos:
 - Migration oficial do contrato de busca pública da Central de Ajuda `supabase/migrations/20260503170246_phase4_9_public_help_center_search_contract.sql`.
 - Migration oficial do advisory persistente de revisão editorial da Knowledge Base `supabase/migrations/20260503204209_phase5_3_knowledge_review_advisory_contract.sql`.
 - Migration oficial dos read models do Support Workspace e revisão de authz `supabase/migrations/20260504004500_phase6_1_support_workspace_read_models.sql`.
+- Migration oficial do diretório de agentes atribuíveis do Support Workspace `supabase/migrations/20260504043000_phase6_3_support_assignable_agents.sql`.
 - Teste local de banco em `supabase/tests/001_phase1_identity_tenancy_rls.sql`.
 - Teste local de hardening em `supabase/tests/002_phase1_1_hardening.sql`.
 - Teste local de control plane administrativo em `supabase/tests/003_phase1_2_admin_control_plane.sql`.
@@ -94,6 +95,7 @@ Documentos históricos:
 - Teste local do contrato de busca pública da Central de Ajuda em `supabase/tests/015_phase4_9_public_help_center_search_contract.sql`.
 - Teste local do advisory persistente de revisão editorial em `supabase/tests/016_phase5_3_knowledge_review_advisory_contract.sql`.
 - Teste local dos read models do Support Workspace em `supabase/tests/017_phase6_1_support_workspace_read_models.sql`.
+- Teste local do diretório de agentes atribuíveis do Support Workspace em `supabase/tests/018_phase6_3_support_assignable_agents.sql`.
 - Seed separado em `supabase/seeds/` e desabilitado por padrão.
 - Fluxo de bootstrap seguro do primeiro `platform_admin` em `supabase/bootstrap/`.
 - Núcleo Fase 1 implementado com `profiles`, `user_global_roles`, `tenants`, `tenant_memberships`, `tenant_contacts` e `audit.audit_logs`.
@@ -113,6 +115,7 @@ Documentos históricos:
 - View contratual administrativa advisory materializada em `vw_admin_knowledge_article_review_advisories`.
 - Views contratuais públicas endurecidas materializadas em `vw_public_knowledge_space_resolver`, `vw_public_knowledge_navigation`, `vw_public_knowledge_articles_list` e `vw_public_knowledge_article_detail`.
 - Views contratuais do Support Workspace materializadas em `vw_support_tickets_queue`, `vw_support_ticket_detail`, `vw_support_ticket_timeline` e `vw_support_customer_360`.
+- Diretório contratual de agentes atribuíveis do Support Workspace materializado em `vw_support_assignable_agents`.
 - RPCs contratuais de escrita materializadas em `rpc_create_ticket`, `rpc_update_ticket_status`, `rpc_assign_ticket`, `rpc_add_ticket_message`, `rpc_add_internal_ticket_note`, `rpc_close_ticket` e `rpc_reopen_ticket`.
 - RPCs contratuais administrativas de Knowledge Base materializadas em `rpc_admin_create_knowledge_category`, `rpc_admin_create_knowledge_article_draft`, `rpc_admin_update_knowledge_article_draft`, `rpc_admin_submit_knowledge_article_for_review`, `rpc_admin_publish_knowledge_article` e `rpc_admin_archive_knowledge_article`.
 - RPCs contratuais administrativas v2 space-aware materializadas em `rpc_admin_create_knowledge_category_v2`, `rpc_admin_create_knowledge_article_draft_v2`, `rpc_admin_update_knowledge_article_draft_v2`, `rpc_admin_submit_knowledge_article_for_review_v2`, `rpc_admin_publish_knowledge_article_v2` e `rpc_admin_archive_knowledge_article_v2`.
@@ -422,6 +425,11 @@ Documentos históricos:
   - `/support/tickets/:ticketId` agora organiza a tratativa em duas zonas reais: composer e timeline no eixo principal, rail operacional compacto com status, atribuição, customer context e detalhes avançados recolhidos.
   - `/support/customers/:tenantId` foi reduzido a contexto operacional do cliente B2B, com tickets recentes, contatos ativos, eventos e navegação lateral utilitária.
   - `/admin/knowledge` deixou de operar como painel com métricas concorrentes e passou a usar master/detail editorial mais estável, com advisory, checklist e bloco técnico recolhidos por padrão.
+- Fase 6.3: Support Workspace Agent Directory + Assignment UX concluída localmente.
+  - O backend passou a expor `vw_support_assignable_agents` como diretório seguro de operadores atribuíveis por tenant, com `security_barrier = true` e boundary compatível com `rpc_assign_ticket`.
+  - O diretório lista apenas `platform_admin`, `support_agent` e `support_manager` ativos, sempre respeitando tenant, membership ativo e bloqueio cross-tenant.
+  - O Support Workspace substituiu o fluxo principal de digitação manual de `user_id` por seletor operacional de agente, com `Atribuir a mim` e `Desatribuir`.
+  - O `user_id` técnico permaneceu apenas como fallback recolhido para exceções operacionais.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -444,6 +452,7 @@ Documentos históricos:
 
 ## Próxima prioridade
 Evoluir o Support Workspace com vínculos operacionais entre tickets, Knowledge
-Base e backlog de engenharia, preservando a simplificação estrutural do
-cockpit operacional e evitando regressão para layouts genéricos, densos ou
-administrativos por conveniência.
+Base e backlog de engenharia, além de recortes/paginação para timeline e
+customer context quando houver volume real, preservando a simplificação
+estrutural do cockpit operacional e evitando regressão para layouts genéricos,
+densos ou administrativos por conveniência.

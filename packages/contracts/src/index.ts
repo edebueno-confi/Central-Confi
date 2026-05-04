@@ -27,6 +27,7 @@ export type {
   RpcReopenTicketResponse,
   RpcUpdateTicketStatusPayload,
   RpcUpdateTicketStatusResponse,
+  SupportAssignableAgent,
   SupportCustomer360,
   SupportCustomer360Contact,
   SupportCustomer360RecentEvent,

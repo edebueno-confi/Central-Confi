@@ -259,6 +259,17 @@ Uso esperado:
 - contexto suficiente do cliente B2B sem virar CRM pesado
 - timeline unica como fonte de verdade operacional
 
+## Diretório de agentes e atribuicao operacional
+- o fluxo principal de atribuicao do Support Workspace deve depender de um diretório seguro de agentes atribuiveis, nunca de digitacao manual de UUID por padrao
+- esse diretório deve ser lido por view propria e seguir o mesmo boundary de authz usado pela atribuicao do ticket
+- o painel de atendimento deve mostrar:
+  - agente atual resolvido por nome e email
+  - seletor simples de agente atribuivel
+  - acao `Atribuir a mim`
+  - acao `Desatribuir`
+- o `user_id` tecnico pode continuar existindo apenas em fallback avancado e recolhido
+- a escrita continua unicamente por `rpc_assign_ticket`
+
 ## Direcao oficial de UX apos a fase 6.2.1
 - o Support Workspace nao deve herdar layout generico do Admin Console por conveniencia
 - a fila precisa ser a superficie dominante de triagem

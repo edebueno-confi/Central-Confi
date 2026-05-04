@@ -162,6 +162,17 @@ Fase 6.1:
   - membros comuns do tenant nao entram no workspace;
   - engenharia continua operando pelo ticketing core e fica fora destes read models, ate existir workspace/contrato proprio.
 
+Fase 6.3:
+- O Support Workspace agora possui um diretório contratual de agentes atribuiveis para remover a dependencia operacional de `user_id` manual no fluxo principal.
+- O frontend de suporte passa a ler tambem:
+  - `vw_support_assignable_agents`
+- A atribuição continua escrita apenas por:
+  - `rpc_assign_ticket`
+- O diretório de agentes segue o mesmo boundary operacional da atribuição:
+  - lista apenas `platform_admin`, `support_manager` e `support_agent` ativos;
+  - exige membership ativo no tenant quando aplicavel;
+  - nao expande acesso cross-tenant nem abre `SELECT` direto nas tabelas base.
+
 ## Views contratuais vigentes
 
 ### `vw_tickets_list`
@@ -379,6 +390,16 @@ Fase 6.1:
   - expõe apenas tenants acessiveis ao workspace de suporte;
   - nao inclui SLA, metricas complexas, CRM generico nem vazamento cross-tenant;
   - agrega contatos e historico operacional no backend para evitar joins do frontend em tabelas base;
+  - usa `security_barrier = true`.
+
+### `vw_support_assignable_agents`
+- Finalidade: diretório seguro de agentes atribuiveis para o Support Workspace.
+- Retorna: `user_id`, `full_name`, `email`, `tenant_id`, `tenant_name`, `role`, `membership_status`, `is_active`.
+- Regras:
+  - lista apenas perfis ativos com membership ativo no tenant;
+  - limita os papeis a `platform_admin`, `support_manager` e `support_agent`;
+  - respeita o mesmo contrato de autorizacao operacional usado por `rpc_assign_ticket`;
+  - nao expõe usuarios de outros tenants nem dados sensiveis adicionais;
   - usa `security_barrier = true`.
 
 ### `vw_public_knowledge_space_resolver`
@@ -720,6 +741,7 @@ Fase 6.1:
   - `vw_support_ticket_detail`
   - `vw_support_ticket_timeline`
   - `vw_support_customer_360`
+  - `vw_support_assignable_agents`
 - O app autenticado lê o Admin Console apenas por:
   - `vw_admin_auth_context`
   - `vw_admin_tenants_list`
@@ -795,6 +817,20 @@ Fase 6.1:
 - a UI do workspace nao le tabelas base de ticketing
 - a UI nao cria mutacoes novas fora das RPCs ja aprovadas
 - a UI continua interna e B2B, sem qualquer capacidade de atendimento a shopper final
+
+## Fase 6.3 - Support Workspace Agent Directory + Assignment UX
+
+### Leitura consumida pelo frontend
+- `vw_support_assignable_agents`
+
+### Escrita consumida pelo frontend
+- `rpc_assign_ticket`
+
+### Boundary mantido
+- a atribuicao principal deixa de depender de digitação manual de UUID
+- o seletor mostra apenas operadores ativos e atribuiveis pelo contrato do backend
+- `Atribuir a mim` e `Desatribuir` continuam usando somente `rpc_assign_ticket`
+- o `user_id` tecnico permanece apenas como fallback recolhido para excecao operacional
 
 ## Próximos contratos planejados
 - Views e RPCs de intake para engenharia.

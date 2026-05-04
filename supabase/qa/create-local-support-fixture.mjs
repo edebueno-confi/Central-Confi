@@ -9,6 +9,32 @@ const FIXTURE = {
     password: 'Local-QA-Admin-2026!',
     fullName: 'QA Local Platform Admin',
   },
+  agents: [
+    {
+      key: 'support-agent-a',
+      email: 'qa.local.support-agent-a@genius.local',
+      password: 'Local-QA-Agent-A-2026!',
+      fullName: 'QA Local Support Agent A',
+      globalRole: 'support_agent',
+      tenantSlug: 'support-qa-a',
+    },
+    {
+      key: 'support-manager-a',
+      email: 'qa.local.support-manager-a@genius.local',
+      password: 'Local-QA-Manager-A-2026!',
+      fullName: 'QA Local Support Manager A',
+      globalRole: 'support_manager',
+      tenantSlug: 'support-qa-a',
+    },
+    {
+      key: 'support-agent-b',
+      email: 'qa.local.support-agent-b@genius.local',
+      password: 'Local-QA-Agent-B-2026!',
+      fullName: 'QA Local Support Agent B',
+      globalRole: 'support_agent',
+      tenantSlug: 'support-qa-b',
+    },
+  ],
   tenants: [
     {
       slug: 'support-qa-a',
@@ -42,7 +68,7 @@ const FIXTURE = {
       priority: 'high',
       severity: 'medium',
       source: 'portal',
-      assignee: 'self',
+      assignee: 'support-agent-a',
       status: 'in_progress',
       publicMessage:
         'Recebemos o caso e estamos validando a trilha operacional da conciliacao.',
@@ -72,7 +98,7 @@ const FIXTURE = {
       priority: 'normal',
       severity: 'low',
       source: 'internal',
-      assignee: 'self',
+      assignee: 'support-manager-a',
       status: 'waiting_customer',
       publicMessage:
         'Solicitamos a confirmacao do novo criterio operacional para concluir a configuracao.',
@@ -381,6 +407,66 @@ function ensurePlatformAdminRole(userId) {
   `);
 }
 
+function ensureGlobalRole({ actorUserId, userId, role }) {
+  runSupabaseDbQuery(`
+    insert into public.user_global_roles (
+      user_id,
+      role,
+      created_by_user_id,
+      updated_by_user_id
+    )
+    select
+      '${sqlEscape(userId)}'::uuid,
+      '${role}'::public.platform_role,
+      '${sqlEscape(actorUserId)}'::uuid,
+      '${sqlEscape(actorUserId)}'::uuid
+    where not exists (
+      select 1
+      from public.user_global_roles
+      where user_id = '${sqlEscape(userId)}'::uuid
+        and role = '${role}'::public.platform_role
+    );
+  `);
+}
+
+function ensureTenantMembership({ actorUserId, tenantId, userId, role = 'tenant_viewer' }) {
+  runSupabaseDbQuery(`
+    insert into public.tenant_memberships (
+      tenant_id,
+      user_id,
+      role,
+      status,
+      invited_by_user_id,
+      created_by_user_id,
+      updated_by_user_id
+    )
+    select
+      '${sqlEscape(tenantId)}'::uuid,
+      '${sqlEscape(userId)}'::uuid,
+      '${role}'::public.tenant_role,
+      'active'::public.membership_status,
+      '${sqlEscape(actorUserId)}'::uuid,
+      '${sqlEscape(actorUserId)}'::uuid,
+      '${sqlEscape(actorUserId)}'::uuid
+    where not exists (
+      select 1
+      from public.tenant_memberships
+      where tenant_id = '${sqlEscape(tenantId)}'::uuid
+        and user_id = '${sqlEscape(userId)}'::uuid
+    );
+  `);
+
+  runSupabaseDbQuery(`
+    update public.tenant_memberships
+    set
+      status = 'active'::public.membership_status,
+      role = '${role}'::public.tenant_role,
+      updated_by_user_id = '${sqlEscape(actorUserId)}'::uuid
+    where tenant_id = '${sqlEscape(tenantId)}'::uuid
+      and user_id = '${sqlEscape(userId)}'::uuid;
+  `);
+}
+
 function ensureTenant(adminUserId, tenant) {
   const existing = runSupabaseDbQuery(`
     select id::text as id
@@ -475,6 +561,8 @@ function ensureContact(adminUserId, tenantId, contact) {
 }
 
 function createSupportTicket({ actorUserId, tenantId, contactId, ticket }) {
+  const assignedUserId = ticket.assignee ? ticket.assignee : null;
+
   const created = runSupabaseDbQuery(`
     insert into public.tickets (
       tenant_id,
@@ -499,7 +587,7 @@ function createSupportTicket({ actorUserId, tenantId, contactId, ticket }) {
       '${ticket.priority}'::public.ticket_priority,
       '${ticket.severity}'::public.ticket_severity,
       '${sqlEscape(actorUserId)}'::uuid,
-      ${ticket.assignee === 'self' ? `'${sqlEscape(actorUserId)}'::uuid` : 'null::uuid'},
+      ${assignedUserId ? `'${sqlEscape(assignedUserId)}'::uuid` : 'null::uuid'},
       '${sqlEscape(actorUserId)}'::uuid
     )
     returning id::text as id;
@@ -529,7 +617,7 @@ function createSupportTicket({ actorUserId, tenantId, contactId, ticket }) {
     );
   `);
 
-  if (ticket.assignee === 'self') {
+  if (assignedUserId) {
     const assignment = runSupabaseDbQuery(`
       insert into public.ticket_assignments (
         tenant_id,
@@ -543,7 +631,7 @@ function createSupportTicket({ actorUserId, tenantId, contactId, ticket }) {
         '${sqlEscape(tenantId)}'::uuid,
         '${sqlEscape(ticketId)}'::uuid,
         'assigned'::public.ticket_assignment_kind,
-        '${sqlEscape(actorUserId)}'::uuid,
+        '${sqlEscape(assignedUserId)}'::uuid,
         null,
         '${sqlEscape(actorUserId)}'::uuid
       )
@@ -569,7 +657,7 @@ function createSupportTicket({ actorUserId, tenantId, contactId, ticket }) {
           'internal'::public.message_visibility,
           '${sqlEscape(actorUserId)}'::uuid,
           '${sqlEscape(assignmentId)}'::uuid,
-          jsonb_build_object('assigned_to_user_id', '${sqlEscape(actorUserId)}')
+          jsonb_build_object('assigned_to_user_id', '${sqlEscape(assignedUserId)}')
         );
       `);
     }
@@ -717,6 +805,48 @@ async function main() {
     const tenantId = ensureTenant(profile.id, tenant);
     tenantMap.set(tenant.slug, tenantId);
     contactMap.set(tenant.slug, ensureContact(profile.id, tenantId, tenant.contact));
+    ensureTenantMembership({
+      actorUserId: profile.id,
+      tenantId,
+      userId: profile.id,
+    });
+  }
+
+  const operatorMap = new Map([['qa-admin', profile.id]]);
+
+  for (const agent of FIXTURE.agents) {
+    const authUser = await createOrUpdateAuthUser({
+      apiUrl,
+      serviceRoleKey,
+      email: agent.email,
+      password: agent.password,
+      fullName: agent.fullName,
+    });
+
+    const agentProfile = queryProfileByEmail(agent.email);
+    if (!agentProfile?.id || !agentProfile.is_active) {
+      fail(`O profile do agente local ${agent.email} nao foi materializado corretamente.`);
+    }
+
+    const tenantId = tenantMap.get(agent.tenantSlug);
+    if (!tenantId) {
+      fail(`Tenant ausente para o agente local ${agent.email}.`);
+    }
+
+    ensureGlobalRole({
+      actorUserId: profile.id,
+      userId: agentProfile.id,
+      role: agent.globalRole,
+    });
+    ensureTenantMembership({
+      actorUserId: profile.id,
+      tenantId,
+      userId: agentProfile.id,
+    });
+
+    operatorMap.set(agent.key, agentProfile.id);
+    operatorMap.set(agent.email, agentProfile.id);
+    operatorMap.set(authUser.id, agentProfile.id);
   }
 
   clearFixtureTickets();
@@ -731,10 +861,17 @@ async function main() {
     }
 
     const ticketId = createSupportTicket({
-      actorUserId: profile.id,
+      actorUserId:
+        ticket.assignee && operatorMap.has(ticket.assignee)
+          ? operatorMap.get(ticket.assignee)
+          : profile.id,
       tenantId,
       contactId,
-      ticket,
+      ticket: {
+        ...ticket,
+        assignee:
+          ticket.assignee && operatorMap.has(ticket.assignee) ? operatorMap.get(ticket.assignee) : null,
+      },
     });
 
     createdTickets.push({
@@ -756,6 +893,13 @@ async function main() {
           email: FIXTURE.qaAdmin.email,
           password: FIXTURE.qaAdmin.password,
         },
+        support_agents: FIXTURE.agents.map((agent) => ({
+          key: agent.key,
+          email: agent.email,
+          password: agent.password,
+          tenant_slug: agent.tenantSlug,
+          user_id: operatorMap.get(agent.key),
+        })),
         tenants: FIXTURE.tenants.map((tenant) => ({
           slug: tenant.slug,
           id: tenantMap.get(tenant.slug),

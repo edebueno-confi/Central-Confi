@@ -40,6 +40,7 @@ import {
   closeTicket,
   getSupportCustomer360,
   getSupportTicketDetail,
+  listSupportAssignableAgents,
   listSupportCustomers360,
   listSupportTicketTimeline,
   listSupportTicketsQueue,
@@ -50,6 +51,7 @@ import {
   TICKET_PRIORITIES,
   TICKET_SEVERITIES,
   TICKET_STATUSES,
+  type SupportAssignableAgent,
   type SupportCustomer360,
   type SupportCustomer360Contact,
   type SupportCustomer360RecentEvent,
@@ -66,6 +68,7 @@ import {
 
 type PagePhase = 'loading' | 'ready' | 'contract-unavailable' | 'error';
 type DetailPhase = 'idle' | 'loading' | 'ready' | 'contract-unavailable' | 'error';
+type AgentsPhase = 'idle' | 'loading' | 'ready' | 'contract-unavailable' | 'error';
 type WorkspaceVariant = 'queue' | 'tickets';
 type ComposerMode = 'public' | 'internal';
 
@@ -144,6 +147,22 @@ function humanizeVisibility(value: string) {
 
 function humanizeStatus(status: TicketStatus) {
   return humanizeToken(status).replaceAll('_', ' ');
+}
+
+function humanizeSupportRole(role: SupportAssignableAgent['role']) {
+  if (role === 'platform_admin') {
+    return 'Platform admin';
+  }
+
+  if (role === 'support_manager') {
+    return 'Support manager';
+  }
+
+  return 'Support agent';
+}
+
+function formatAssignableAgentLabel(agent: SupportAssignableAgent) {
+  return `${agent.fullName} · ${humanizeSupportRole(agent.role)} · ${agent.email}`;
 }
 
 function ticketTenantLabel(ticket: Pick<SupportTicketQueueItem, 'tenantDisplayName' | 'tenantLegalName' | 'tenantSlug'>) {
@@ -777,6 +796,9 @@ function SupportWorkspaceView({
   const [ticketDetail, setTicketDetail] = useState<SupportTicketDetail | null>(null);
   const [timeline, setTimeline] = useState<SupportTicketTimelineItem[]>([]);
   const [customer, setCustomer] = useState<SupportCustomer360 | null>(null);
+  const [assignableAgents, setAssignableAgents] = useState<SupportAssignableAgent[]>([]);
+  const [agentsPhase, setAgentsPhase] = useState<AgentsPhase>('idle');
+  const [agentsMessage, setAgentsMessage] = useState<string | null>(null);
   const [statusDraft, setStatusDraft] = useState<TicketStatusUpdateTarget>('triage');
   const [statusNote, setStatusNote] = useState('');
   const [closeReason, setCloseReason] = useState('');
@@ -833,6 +855,8 @@ function SupportWorkspaceView({
   const loadDetail = useEffectEvent(async (ticketId: string) => {
     setDetailPhase('loading');
     setDetailMessage(null);
+    setAgentsPhase('loading');
+    setAgentsMessage(null);
 
     try {
       const [detail, timelineRows] = await Promise.all([
@@ -859,6 +883,28 @@ function SupportWorkspaceView({
       setStatusDraft(buildStatusChoices(detail.status)[0] ?? 'triage');
       setAssignDraft(detail.assignedToUserId ?? '');
       setComposerMode(detail.canAddMessage ? 'public' : detail.canAddInternalNote ? 'internal' : 'public');
+
+      try {
+        const agentRows = await listSupportAssignableAgents(detail.tenantId);
+        setAssignableAgents(agentRows);
+        setAgentsPhase('ready');
+      } catch (error) {
+        const classified = classifyAdminError(
+          error,
+          'Falha ao carregar o diretorio de agentes atribuiveis.',
+        );
+
+        if (classified.kind === 'session-expired') {
+          markSessionExpired();
+          return;
+        }
+
+        setAssignableAgents([]);
+        setAgentsMessage(classified.message);
+        setAgentsPhase(
+          classified.kind === 'contract-unavailable' ? 'contract-unavailable' : 'error',
+        );
+      }
     } catch (error) {
       const classified = classifyAdminError(
         error,
@@ -878,6 +924,8 @@ function SupportWorkspaceView({
       setTicketDetail(null);
       setTimeline([]);
       setCustomer(null);
+      setAssignableAgents([]);
+      setAgentsPhase('idle');
       setDetailMessage(classified.message);
       setDetailPhase(
         classified.kind === 'contract-unavailable' ? 'contract-unavailable' : 'error',
@@ -911,6 +959,9 @@ function SupportWorkspaceView({
       setTicketDetail(null);
       setTimeline([]);
       setCustomer(null);
+      setAssignableAgents([]);
+      setAgentsPhase('idle');
+      setAgentsMessage(null);
       return;
     }
 
@@ -957,6 +1008,12 @@ function SupportWorkspaceView({
 
   const selectedTicketSummary =
     tickets.find((ticket) => ticket.id === selectedTicketId) ?? null;
+  const currentAssignedAgent =
+    ticketDetail?.assignedToUserId
+      ? assignableAgents.find((agent) => agent.userId === ticketDetail.assignedToUserId) ?? null
+      : null;
+  const currentUserAssignableAgent =
+    user?.id ? assignableAgents.find((agent) => agent.userId === user.id) ?? null : null;
   const totalOpen = tickets.filter(
     (ticket) =>
       ticket.status !== 'resolved' &&
@@ -984,6 +1041,33 @@ function SupportWorkspaceView({
   function applyFailure(message: string) {
     setDetailNotice(message);
     setDetailNoticeTone('critical');
+  }
+
+  async function runAssignment(targetUserId: string | null) {
+    if (!ticketDetail) {
+      return;
+    }
+
+    setSubmitting(true);
+    setDetailNotice(null);
+
+    try {
+      await assignTicket({
+        ticketId: ticketDetail.id,
+        assignedToUserId: targetUserId,
+      });
+      await refreshDetail(ticketDetail.id);
+      applySuccess(targetUserId ? 'Responsavel atualizado com sucesso.' : 'Ticket desatribuido com sucesso.');
+    } catch (error) {
+      const classified = classifyAdminError(error, 'Falha ao atualizar o responsavel.');
+      if (classified.kind === 'session-expired') {
+        markSessionExpired();
+        return;
+      }
+      applyFailure(classified.message);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   async function refreshDetail(ticketId: string) {
@@ -1024,30 +1108,7 @@ function SupportWorkspaceView({
   async function handleAssign(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!ticketDetail) {
-      return;
-    }
-
-    setSubmitting(true);
-    setDetailNotice(null);
-
-    try {
-      await assignTicket({
-        ticketId: ticketDetail.id,
-        assignedToUserId: assignDraft.trim() || null,
-      });
-      await refreshDetail(ticketDetail.id);
-      applySuccess(assignDraft.trim() ? 'Responsavel atualizado com sucesso.' : 'Ticket desatribuido com sucesso.');
-    } catch (error) {
-      const classified = classifyAdminError(error, 'Falha ao atualizar o responsavel.');
-      if (classified.kind === 'session-expired') {
-        markSessionExpired();
-        return;
-      }
-      applyFailure(classified.message);
-    } finally {
-      setSubmitting(false);
-    }
+    await runAssignment(assignDraft.trim() || null);
   }
 
   async function handleSubmitComposer(event: FormEvent<HTMLFormElement>) {
@@ -1308,7 +1369,12 @@ function SupportWorkspaceView({
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[color:var(--color-muted)]">
                 <span>Tenant: {ticketDetail.tenantDisplayName ?? ticketDetail.tenantLegalName ?? ticketDetail.tenantSlug}</span>
                 <span>Requester: {ticketDetail.requesterContactFullName ?? 'Sem requester resolvido'}</span>
-                <span>Responsavel: {ticketDetail.assignedToFullName ?? 'Nao atribuido'}</span>
+                <span>
+                  Responsavel:{' '}
+                  {currentAssignedAgent
+                    ? `${currentAssignedAgent.fullName} · ${currentAssignedAgent.email}`
+                    : ticketDetail.assignedToFullName ?? 'Nao atribuido'}
+                </span>
                 <span>Ultima atividade: {formatDateTime(ticketDetail.lastMessageAt ?? ticketDetail.updatedAt)}</span>
               </div>
               {ticketDetail.description?.trim() ? (
@@ -1418,24 +1484,87 @@ function SupportWorkspaceView({
               >
                 <div className="space-y-5">
                   <div className="space-y-3">
-                    <div className="flex flex-wrap gap-2">
-                      <AppButton
-                        className="min-h-11 px-5"
-                        disabled={submitting || !ticketDetail.canAssign}
-                        onClick={() => {
-                          if (user?.id) {
-                            setAssignDraft(user.id);
-                          }
-                        }}
-                      >
-                        Atribuir a mim
-                      </AppButton>
-                      <GhostButton
-                        disabled={submitting || !ticketDetail.canAssign}
-                        onClick={() => setAssignDraft('')}
-                      >
-                        Desatribuir
-                      </GhostButton>
+                    <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold text-[color:var(--color-ink)]">
+                          Responsavel atual
+                        </p>
+                        <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                          {currentAssignedAgent
+                            ? `${currentAssignedAgent.fullName} · ${currentAssignedAgent.email}`
+                            : ticketDetail.assignedToFullName
+                              ? ticketDetail.assignedToFullName
+                              : 'Ticket sem agente atribuido no momento.'}
+                        </p>
+                      </div>
+
+                      <div className="mt-4 space-y-3">
+                        {agentsPhase === 'contract-unavailable' ? (
+                          <InlineNotice tone="critical">
+                            {agentsMessage ?? 'A view vw_support_assignable_agents nao ficou disponivel neste ambiente.'}
+                          </InlineNotice>
+                        ) : agentsPhase === 'error' ? (
+                          <InlineNotice tone="critical">
+                            {agentsMessage ?? 'Nao foi possivel carregar o diretorio de agentes atribuiveis.'}
+                          </InlineNotice>
+                        ) : agentsPhase === 'loading' ? (
+                          <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                            Carregando agentes atribuiveis deste tenant...
+                          </p>
+                        ) : assignableAgents.length === 0 ? (
+                          <InlineNotice tone="warning">
+                            Nenhum agente operacional ativo ficou disponivel para este tenant. Use o fallback tecnico apenas se necessario.
+                          </InlineNotice>
+                        ) : (
+                          <form className="space-y-3" onSubmit={handleAssign}>
+                            <Field
+                              label="Selecionar agente"
+                              description="Diretorio seguro filtrado pelo mesmo contrato de autorizacao usado em rpc_assign_ticket."
+                            >
+                              <SelectInput
+                                onChange={(event) => setAssignDraft(event.target.value)}
+                                value={assignDraft}
+                              >
+                                <option value="">Sem responsavel</option>
+                                {assignableAgents.map((agent) => (
+                                  <option key={`${agent.tenantId}:${agent.userId}`} value={agent.userId}>
+                                    {formatAssignableAgentLabel(agent)}
+                                  </option>
+                                ))}
+                              </SelectInput>
+                            </Field>
+                            <div className="flex flex-wrap gap-2">
+                              <AppButton
+                                className="min-h-11 px-5"
+                                disabled={submitting || !ticketDetail.canAssign}
+                                type="submit"
+                              >
+                                {submitting ? 'Salvando...' : 'Salvar responsavel'}
+                              </AppButton>
+                              <GhostButton
+                                disabled={
+                                  submitting ||
+                                  !ticketDetail.canAssign ||
+                                  !currentUserAssignableAgent
+                                }
+                                onClick={() =>
+                                  void runAssignment(currentUserAssignableAgent?.userId ?? null)
+                                }
+                                type="button"
+                              >
+                                Atribuir a mim
+                              </GhostButton>
+                              <GhostButton
+                                disabled={submitting || !ticketDetail.canAssign || !ticketDetail.assignedToUserId}
+                                onClick={() => void runAssignment(null)}
+                                type="button"
+                              >
+                                Desatribuir
+                              </GhostButton>
+                            </div>
+                          </form>
+                        )}
+                      </div>
                     </div>
 
                     <form className="space-y-3" onSubmit={handleUpdateStatus}>
@@ -1472,7 +1601,7 @@ function SupportWorkspaceView({
                       <form className="mt-3 space-y-3" onSubmit={handleAssign}>
                         <Field
                           label="user_id do responsavel"
-                          description="Campo tecnico mantido por compatibilidade contratual desta fase."
+                          description="Fallback tecnico para casos excepcionais. O fluxo principal de atribuicao deve usar o seletor acima."
                         >
                           <TextInput
                             onChange={(event) => setAssignDraft(event.target.value)}
