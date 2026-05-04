@@ -493,3 +493,38 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - formaliza como tickets passam a ser atribuídos por operador real sem UUID manual no fluxo principal
   - melhora a futura documentacao de operacao do suporte com passo claro de triagem -> atribuicao -> tratativa
+
+### Fase 6.4 - Support Timeline Volume Guard + Customer Context Pagination
+- fase: `6.4`
+- commit: `e3acd8c`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: o Support Workspace passou a operar com recortes recentes explícitos para timeline e customer context, evitando primeira carga infinita e mantendo a leitura operacional enxuta em volume real.
+- docs alterados:
+  - `docs/PROJECT_STATE.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - leitura por `vw_support_ticket_timeline_recent`
+  - leitura por `vw_support_customer_recent_tickets`
+  - leitura por `vw_support_customer_recent_events`
+  - leitura ajustada em `vw_support_customer_360`
+  - escrita mantida por `rpc_update_ticket_status`
+  - escrita mantida por `rpc_assign_ticket`
+  - escrita mantida por `rpc_add_ticket_message`
+  - escrita mantida por `rpc_add_internal_ticket_note`
+  - escrita mantida por `rpc_close_ticket`
+  - escrita mantida por `rpc_reopen_ticket`
+- telas afetadas:
+  - `/support/queue`
+  - `/support/tickets/:ticketId`
+  - `/support/customers/:tenantId`
+- riscos restantes:
+  - ainda nao existe RPC paginavel para historico completo sob demanda
+  - timeline e customer context ainda vao precisar de segunda camada de navegacao se o volume operacional crescer alem do recorte atual
+  - vinculos ticket -> KB, ticket -> engenharia e SLA seguem fora do escopo funcional
+- impacto na FAQ futura:
+  - documenta que a leitura inicial do suporte usa janelas recentes controladas, nao historico infinito
+  - melhora a futura explicacao operacional de como agentes reentram rapidamente no contexto do ticket e do cliente
