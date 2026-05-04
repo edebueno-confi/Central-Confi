@@ -669,7 +669,7 @@ Cada registro deve informar:
 
 ### Fase 6.8 - Customer Account Profile Backend Materialization
 - fase: `6.8`
-- commit: `pending`
+- commit: `77dc8b0`
 - branch: `codex/phase4-7-public-help-center-branding-contract`
 - data: `2026-05-04`
 - resumo funcional: o backend mínimo do perfil operacional do cliente B2B foi materializado com enums, tabelas próprias, helpers privados de authz e segurança, views contratuais de leitura e RPCs administrativas auditadas.
