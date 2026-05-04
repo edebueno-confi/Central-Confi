@@ -259,6 +259,15 @@ Uso esperado:
 - contexto suficiente do cliente B2B sem virar CRM pesado
 - timeline unica como fonte de verdade operacional
 
+## Direcao oficial de UX apos a fase 6.2.1
+- o Support Workspace nao deve herdar layout generico do Admin Console por conveniencia
+- a fila precisa ser a superficie dominante de triagem
+- o ticket selecionado precisa ser o centro do atendimento
+- resposta publica e nota interna devem viver em composer explicito e impossivel de confundir
+- status e atribuicao devem aparecer como acoes operacionais do fluxo, nao como cards soltos
+- customer context deve ser compacto e util, sem competir com o painel principal de atendimento
+- notebook e desktop largo devem privilegiar largura util real para tratativa, evitando coluna lateral espremida e vazio improdutivo
+
 ## Relacao com a Knowledge Base
 No curto prazo:
 - o suporte deve consultar e reaproveitar artigos existentes
@@ -294,3 +303,4 @@ No medio prazo:
 - manter a primeira versao enxuta: fila, detalhe, timeline, composer, status e atribuicao
 - tratar visao 360 do cliente B2B como contexto operacional, nao como CRM
 - deixar KB link, handoff para engenharia e SLA preparados como proximas camadas controladas
+- manter a gramatica visual do dominio de suporte local ao proprio workspace, usando primitives compartilhadas sem copiar o layout do Admin Console

@@ -12,6 +12,7 @@ Fonte oficial da documentação do Genius Support OS.
 
 - [PROJECT_STATE.md](./PROJECT_STATE.md)
 - [PRODUCT_VISION.md](./PRODUCT_VISION.md)
+- [UX_DIRECTION.md](./UX_DIRECTION.md)
 - [ROADMAP.md](./ROADMAP.md)
 - [MVP_30_DAYS.md](./MVP_30_DAYS.md)
 - [DOCUMENTATION_LEDGER.md](./DOCUMENTATION_LEDGER.md)

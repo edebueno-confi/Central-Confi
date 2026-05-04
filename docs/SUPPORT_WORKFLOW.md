@@ -80,11 +80,14 @@
   - `rpc_close_ticket`
   - `rpc_reopen_ticket`
 
-## Diretrizes de UX da fase 6.2
-- lista dominante com filtros operacionais de status, prioridade, severidade, tenant e responsavel
-- detalhe com leitura continua do contexto do ticket, sem dashboard pesado
-- timeline unica com separacao clara entre resposta publica e nota interna
-- visao 360 enxuta do cliente B2B como contexto lateral, sem virar CRM generico
+## Diretrizes de UX da fase 6.2.1
+- a fila continua como ponto de partida e precisa dominar a triagem
+- o ticket selecionado vira o centro do atendimento, nao um detalhe lateral comprimido
+- resposta publica e nota interna passam a compartilhar um composer unico com modo explicito
+- timeline precisa sustentar leitura operacional continua, nao sequencia de cards equivalentes
+- contexto do cliente B2B deve ser compacto e util para a tratativa
+- status e atribuicao precisam aparecer como acoes operacionais do fluxo
+- o workspace nao deve parecer dashboard generico nem extensao visual do Admin Console
 - foco em operacao interna de suporte/CS, nunca em atendimento a shopper final
 
 ## Fora de escopo do workspace

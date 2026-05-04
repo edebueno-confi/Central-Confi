@@ -1,0 +1,58 @@
+# UX_DIRECTION.md
+
+## Premissa global
+- cada dominio do Genius Support OS deve responder a operacao real do usuario que o utiliza
+- layout, hierarquia, densidade de informacao e interacao nao podem ser herdados por conveniencia de uma superficie para outra
+- tokens visuais, primitives e consistencia de marca podem ser compartilhados
+- a composicao de tela deve ser determinada pelo dominio, nao por reaproveitamento de shell generico
+
+## Regra operacional
+- Admin Console e uma superficie administrativa
+- Knowledge Base Admin e uma superficie editorial
+- Central Publica e uma superficie de leitura/documentacao B2B
+- Support Workspace e uma superficie de tratativa operacional de tickets B2B
+- futuros workspaces devem nascer da mesma logica: o dominio define a UX
+
+## O que pode ser compartilhado
+- tipografia base
+- escala de espacamento
+- tokens de cor
+- primitives de formulario e painel
+- estados vazios, loading e erro quando forem neutros
+
+## O que nao deve ser compartilhado por inercia
+- layout principal de pagina
+- hierarquia de informacao
+- ordem de blocos
+- nivel de destaque de metricas
+- comportamento do detalhe
+- distribuicao de contexto lateral
+- fluxo principal de acao
+
+## Leitura por dominio
+
+### Admin Console
+- foco em governanca, leitura administrativa e manutencao de configuracao
+- pode usar shell e navegacao institucional
+- nao deve ditar a estrutura de superficies operacionais
+
+### Knowledge Base Admin
+- foco em curadoria, revisao e publicacao
+- precisa privilegiar leitura editorial, checklist e contexto de revisao
+
+### Central Publica
+- foco em documentacao tecnica B2B legivel
+- deve parecer documentacao, nao dashboard nem admin
+
+### Support Workspace
+- foco em triagem, atendimento, continuidade operacional e contexto do cliente B2B
+- a fila deve ser superficie dominante
+- o ticket selecionado deve ser o centro da tratativa
+- resposta publica e nota interna nao podem ser confundidas
+- timeline deve funcionar como trilha operacional, nao como card decorativo
+- contexto do cliente ajuda a tratativa, mas nao rouba foco do atendimento
+
+## Regra de decisao para futuras fases
+- antes de reutilizar um layout existente, validar se a operacao real do dominio e a mesma
+- se a operacao for diferente, criar estrutura propria do dominio com base nas mesmas primitives
+- padronizacao visual nao pode sacrificar clareza operacional

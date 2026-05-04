@@ -387,3 +387,42 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - cria a trilha oficial para explicar a operacao minima do suporte interno B2B no produto
   - separa claramente fila, detalhe, timeline e contexto do cliente de qualquer conceito de chat, portal B2B ou help center publico
+
+### Fase 6.2.1 - Support Workspace Operational UX Review
+- fase: `6.2.1`
+- commit: `pendente`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: o Support Workspace deixou de herdar a hierarquia visual do Admin Console e passou a operar como cockpit B2B de tickets, com fila dominante, painel de atendimento, composer unificado e contexto compacto do cliente.
+- docs alterados:
+  - `docs/UX_DIRECTION.md`
+  - `docs/README.md`
+  - `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - leitura mantida por `vw_support_tickets_queue`
+  - leitura mantida por `vw_support_ticket_detail`
+  - leitura mantida por `vw_support_ticket_timeline`
+  - leitura mantida por `vw_support_customer_360`
+  - escrita mantida por `rpc_update_ticket_status`
+  - escrita mantida por `rpc_assign_ticket`
+  - escrita mantida por `rpc_add_ticket_message`
+  - escrita mantida por `rpc_add_internal_ticket_note`
+  - escrita mantida por `rpc_close_ticket`
+  - escrita mantida por `rpc_reopen_ticket`
+- telas afetadas:
+  - `/support`
+  - `/support/queue`
+  - `/support/tickets/:ticketId`
+  - `/support/customers/:tenantId`
+- riscos restantes:
+  - atribuicao ainda depende de `user_id` tecnico, sem diretório proprio nesta superficie
+  - ainda nao existe vinculo ticket -> KB
+  - ainda nao existe vinculo ticket -> engenharia
+  - SLA continua fora do workspace
+- impacto na FAQ futura:
+  - fixa a leitura oficial do workspace como ferramenta de tratativa operacional B2B
+  - ajuda a documentar o fluxo real fila -> ticket -> resposta/nota -> status -> timeline -> contexto do cliente

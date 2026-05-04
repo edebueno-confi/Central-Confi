@@ -407,9 +407,15 @@ Documentos históricos:
   - As rotas `/support`, `/support/tickets`, `/support/tickets/:ticketId`, `/support/customers/:tenantId` e `/support/queue` agora materializam a primeira UI interna mínima do workspace de suporte/CS B2B.
   - A superfície lê apenas `vw_support_tickets_queue`, `vw_support_ticket_detail`, `vw_support_ticket_timeline` e `vw_support_customer_360`.
   - A escrita continua limitada às RPCs existentes de ticketing: `rpc_update_ticket_status`, `rpc_assign_ticket`, `rpc_add_ticket_message`, `rpc_add_internal_ticket_note`, `rpc_close_ticket` e `rpc_reopen_ticket`.
-  - O layout segue o padrão estabilizado do Admin Console: lista dominante, detalhe legível, timeline única, composer de resposta pública, composer de nota interna e visão 360 enxuta do cliente B2B.
+  - A primeira entrega funcional validou rota, contratos e mutações do workspace, mas ainda carregava gramática visual demais do Admin Console.
   - Uma fixture local controlada passou a reidratar tenants, contatos e tickets de QA para inspeção visual do workspace sem depender de credenciais remotas ou dados reais.
   - A QA local validou leitura e mutação real por UI no ambiente local, incluindo adição de nota interna via RPC existente.
+- Fase 6.2.1: Support Workspace Operational UX Review concluída localmente.
+  - O workspace de suporte foi reposicionado como cockpit operacional B2B, deixando de repetir a hierarquia visual do Admin Console.
+  - A fila passou a dominar a triagem, com toolbar operacional, recorte de urgência e seleção clara do ticket em atendimento.
+  - O detalhe do ticket virou painel de tratativa: cabeçalho forte, ações operacionais agrupadas, composer unificado com modo explícito e timeline como trilha principal.
+  - O contexto do cliente B2B ficou compacto e útil, servindo a operação sem competir com o atendimento.
+  - A diretriz global de UX do produto agora está formalizada em `docs/UX_DIRECTION.md`, fixando que cada domínio define sua própria composição de tela.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -432,5 +438,5 @@ Documentos históricos:
 
 ## Próxima prioridade
 Evoluir o Support Workspace com vínculos operacionais entre tickets, Knowledge
-Base e backlog de engenharia, preservando a separação entre suporte interno
-B2B, Central Pública e futuras superfícies externas.
+Base e backlog de engenharia, preservando o cockpit operacional já estabilizado
+e evitando regressão para layouts genéricos de superfície administrativa.
