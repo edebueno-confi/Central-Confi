@@ -466,3 +466,30 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - fixa o metodo oficial de simplificacao de superficies operacionais por dominio
   - melhora a base para documentar o fluxo real de triagem e tratativa sem herdar linguagem de dashboard generico
+
+### Fase 6.3 - Support Workspace Agent Directory + Assignment UX
+- fase: `6.3`
+- commit: `032f76f`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: o Support Workspace passou a expor um diretório contratual de agentes atribuíveis por tenant e substituiu o fluxo principal de digitação manual de `user_id` por seletor operacional de agente, mantendo a escrita somente por `rpc_assign_ticket`.
+- docs alterados:
+  - `docs/PROJECT_STATE.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - leitura por `vw_support_assignable_agents`
+  - escrita mantida por `rpc_assign_ticket`
+- telas afetadas:
+  - `/support/queue`
+  - `/support/tickets/:ticketId`
+  - `/support/customers/:tenantId`
+- riscos restantes:
+  - atribuicao ainda preserva `user_id` tecnico apenas como fallback avancado
+  - o diretório depende das roles globais atuais (`platform_admin`, `support_agent`, `support_manager`) e ainda nao resolve uma role propria de CS
+  - timeline e customer context continuam dependentes de paginacao/recorte quando houver volume real
+- impacto na FAQ futura:
+  - formaliza como tickets passam a ser atribuídos por operador real sem UUID manual no fluxo principal
+  - melhora a futura documentacao de operacao do suporte com passo claro de triagem -> atribuicao -> tratativa
