@@ -634,7 +634,7 @@ Cada registro deve informar:
 
 ### Fase 6.7 - Customer Account Profile Migration Design
 - fase: `6.7`
-- commit: `pending`
+- commit: `738e40b`
 - branch: `codex/phase4-7-public-help-center-branding-contract`
 - data: `2026-05-04`
 - resumo funcional: desenha a migration do Customer Account Profile antes da materialização do backend, fixando enums, tabelas, constraints, authz, views, RPCs administrativas, auditoria e plano de testes.
