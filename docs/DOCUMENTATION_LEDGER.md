@@ -595,3 +595,39 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - cria a base documental para explicar contexto operacional do cliente B2B por produto, stack e restricoes
   - ajuda a futura FAQ interna de suporte e CS a responder quem e o cliente e como ele opera antes da tratativa
+
+### Fase 6.6 - Customer Account Profile Minimum Data Model Review
+- fase: `6.6`
+- commit: `0d9dbbd`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: revisa o modelo mínimo implementável para Customer Account Profile, propondo tabelas dedicadas para profile, integrações, features, customizações e alertas, com bloqueios explícitos para dados sensíveis e sem abrir schema ainda.
+- docs alterados:
+  - `docs/CUSTOMER_ACCOUNT_PROFILE_DATA_MODEL_REVIEW.md`
+  - `docs/README.md`
+  - `docs/DATA_MODEL_STRATEGY.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - propostas futuras:
+    - `vw_support_customer_account_context`
+    - `vw_admin_customer_account_profiles`
+    - `vw_customer_portal_account_context`
+    - `rpc_admin_upsert_customer_account_profile`
+    - `rpc_admin_add_customer_integration`
+    - `rpc_admin_update_customer_integration`
+    - `rpc_admin_add_customer_customization`
+    - `rpc_admin_update_customer_customization`
+    - `rpc_admin_add_customer_account_alert`
+    - `rpc_admin_archive_customer_account_alert`
+- telas afetadas:
+  - nenhuma implementacao nesta fase
+- riscos restantes:
+  - `account_tier` e `provider` ainda dependem de decisão futura entre enum rígido e catálogo controlado
+  - a primeira implementação precisará evitar que `vw_support_customer_360` vire payload monolítico
+  - governança de edição por suporte/CS versus administração ainda precisa virar authz executável
+- impacto na FAQ futura:
+  - ajuda a estruturar futura documentação interna sobre contexto operacional do cliente
+  - prepara base para explicar produto, stack, módulos e alertas sem misturar isso com ticket ou CRM comercial
