@@ -352,7 +352,7 @@ Cada registro deve informar:
 
 ### Fase 6.2 - Support Workspace UI Minimum
 - fase: `6.2`
-- commit: `pendente`
+- commit: `c32035d`
 - branch: `codex/phase4-7-public-help-center-branding-contract`
 - data: `2026-05-04`
 - resumo funcional: primeira UI interna minima do Support Workspace materializada sobre os read models da fase 6.1, com fila dominante, detalhe do ticket, timeline, composers e visao 360 minima do cliente B2B.
