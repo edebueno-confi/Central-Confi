@@ -77,6 +77,7 @@ select is(
         'can_manage_ticket',
         'can_view_internal_ticket_content',
         'can_assign_ticket',
+        'can_access_support_workspace',
         'can_manage_knowledge_base',
         'can_manage_multi_brand_foundation',
         'can_read_knowledge_article'

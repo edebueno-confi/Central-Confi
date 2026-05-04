@@ -76,6 +76,7 @@ Documentos históricos:
 - Migration oficial dos read models públicos da Central de Ajuda `supabase/migrations/20260503004940_phase4_5_public_help_center_read_models.sql`.
 - Migration oficial do contrato de busca pública da Central de Ajuda `supabase/migrations/20260503170246_phase4_9_public_help_center_search_contract.sql`.
 - Migration oficial do advisory persistente de revisão editorial da Knowledge Base `supabase/migrations/20260503204209_phase5_3_knowledge_review_advisory_contract.sql`.
+- Migration oficial dos read models do Support Workspace e revisão de authz `supabase/migrations/20260504004500_phase6_1_support_workspace_read_models.sql`.
 - Teste local de banco em `supabase/tests/001_phase1_identity_tenancy_rls.sql`.
 - Teste local de hardening em `supabase/tests/002_phase1_1_hardening.sql`.
 - Teste local de control plane administrativo em `supabase/tests/003_phase1_2_admin_control_plane.sql`.
@@ -92,6 +93,7 @@ Documentos históricos:
 - Teste local do branding público da Central de Ajuda em `supabase/tests/014_phase4_7_public_help_center_branding_contract.sql`.
 - Teste local do contrato de busca pública da Central de Ajuda em `supabase/tests/015_phase4_9_public_help_center_search_contract.sql`.
 - Teste local do advisory persistente de revisão editorial em `supabase/tests/016_phase5_3_knowledge_review_advisory_contract.sql`.
+- Teste local dos read models do Support Workspace em `supabase/tests/017_phase6_1_support_workspace_read_models.sql`.
 - Seed separado em `supabase/seeds/` e desabilitado por padrão.
 - Fluxo de bootstrap seguro do primeiro `platform_admin` em `supabase/bootstrap/`.
 - Núcleo Fase 1 implementado com `profiles`, `user_global_roles`, `tenants`, `tenant_memberships`, `tenant_contacts` e `audit.audit_logs`.
@@ -110,12 +112,14 @@ Documentos históricos:
 - Views contratuais administrativas v2 space-aware materializadas em `vw_admin_knowledge_categories_v2`, `vw_admin_knowledge_articles_list_v2` e `vw_admin_knowledge_article_detail_v2`.
 - View contratual administrativa advisory materializada em `vw_admin_knowledge_article_review_advisories`.
 - Views contratuais públicas endurecidas materializadas em `vw_public_knowledge_space_resolver`, `vw_public_knowledge_navigation`, `vw_public_knowledge_articles_list` e `vw_public_knowledge_article_detail`.
+- Views contratuais do Support Workspace materializadas em `vw_support_tickets_queue`, `vw_support_ticket_detail`, `vw_support_ticket_timeline` e `vw_support_customer_360`.
 - RPCs contratuais de escrita materializadas em `rpc_create_ticket`, `rpc_update_ticket_status`, `rpc_assign_ticket`, `rpc_add_ticket_message`, `rpc_add_internal_ticket_note`, `rpc_close_ticket` e `rpc_reopen_ticket`.
 - RPCs contratuais administrativas de Knowledge Base materializadas em `rpc_admin_create_knowledge_category`, `rpc_admin_create_knowledge_article_draft`, `rpc_admin_update_knowledge_article_draft`, `rpc_admin_submit_knowledge_article_for_review`, `rpc_admin_publish_knowledge_article` e `rpc_admin_archive_knowledge_article`.
 - RPCs contratuais administrativas v2 space-aware materializadas em `rpc_admin_create_knowledge_category_v2`, `rpc_admin_create_knowledge_article_draft_v2`, `rpc_admin_update_knowledge_article_draft_v2`, `rpc_admin_submit_knowledge_article_for_review_v2`, `rpc_admin_publish_knowledge_article_v2` e `rpc_admin_archive_knowledge_article_v2`.
 - RPCs contratuais advisory materializadas em `rpc_admin_update_knowledge_article_review_status` e `rpc_admin_mark_knowledge_article_reviewed`.
 - `authenticated` não possui `SELECT`, `INSERT`, `UPDATE` nem `DELETE` direto nas tabelas base de ticketing; o app lê via views e escreve via RPCs.
 - Pacote `packages/contracts` materializado com tipos TypeScript para views e RPCs de ticketing.
+- Pacote `packages/contracts` agora também materializa tipos TypeScript para os read models do Support Workspace.
 - Auditoria estrutural das views oficializada com `security_barrier = true`, filtros explícitos por caller e teste pgTAP dedicado.
 - Admin Console mínimo agora possui read models contratuais próprios e bloqueia leitura dessas views para não-`platform_admin`.
 - O gate do Admin Console agora resolve auth/profile/roles globais apenas por `vw_admin_auth_context`.
@@ -161,6 +165,7 @@ Documentos históricos:
 - Runbook oficial de publicação pública criado em `docs/PUBLIC_HELP_CENTER_PUBLISH_RUNBOOK.md`.
 - Governança oficial de operações de conteúdo criada em `docs/CONTENT_OPERATIONS_GOVERNANCE.md`.
 - Spec oficial do Support Workspace criada em `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`.
+- Read models oficiais do Support Workspace materializados com authz restrita a `platform_admin` e roles globais de suporte com membership ativo no tenant.
 - Relatório oficial do inventário legado criado em `docs/reports/KNOWLEDGE_LEGACY_INVENTORY_REPORT.md`.
 - Backlog versionado oficial de curadoria legado criado em `docs/reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`.
 - O inventário atual da base legada em `raw_knowledge/octadesk_export/latest/articles/` identificou 58 artigos, 3 categorias-raiz, 1 grupo de duplicidade por `source_hash` e múltiplos candidatos sensíveis/restritos.
@@ -192,6 +197,7 @@ Documentos históricos:
 - Suite pgTAP atual validada com `Files=13`, `Tests=275`, `Result: PASS`.
 - Suite pgTAP atual validada com `Files=15`, `Tests=304`, `Result: PASS`.
 - Suite pgTAP atual validada com `Files=16`, `Tests=322`, `Result: PASS`.
+- Suite pgTAP atual validada com `Files=17`, `Tests=339`, `Result: PASS`.
 - Pipeline CI para banco em `.github/workflows/supabase-db.yml`.
 - A workflow `.github/workflows/supabase-db.yml` agora valida também `web:typecheck` e `web:build`.
 - A workflow `.github/workflows/supabase-db.yml` agora valida também a compatibilidade do import Octadesk space-aware.
@@ -216,6 +222,7 @@ Documentos históricos:
 - Portal B2B do cliente.
 - Abertura pública de ticket.
 - Chat, widget ou IA na Central Pública.
+- Role específica de CS para operar o Support Workspace sem reaproveitar roles de suporte.
 
 ## Situação por fase
 
@@ -391,6 +398,11 @@ Documentos históricos:
     - vínculo ticket -> engenharia
     - SLA futuro
   - Nenhuma UI, migration, schema, RPC ou automação foi implementada nesta fase.
+- Fase 6.1: Support Workspace Backend Read Models + Authz Review concluída localmente.
+  - Read models `vw_support_tickets_queue`, `vw_support_ticket_detail`, `vw_support_ticket_timeline` e `vw_support_customer_360` foram materializados sobre o ticketing core existente.
+  - A leitura do workspace ficou deliberadamente mais restrita que o ticketing core: apenas `platform_admin` ou `support_agent`/`support_manager` com membership ativo no tenant entram nessa superfície.
+  - A escrita continua nas RPCs de ticketing já existentes, sem novas mutações nesta fase.
+  - `supabase/tests/017_phase6_1_support_workspace_read_models.sql` cobre grants, autorização, cross-tenant, nota interna protegida e bloqueio de base tables.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.

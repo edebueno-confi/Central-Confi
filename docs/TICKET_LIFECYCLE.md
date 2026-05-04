@@ -104,9 +104,20 @@ Reabertura atual:
 - a proxima camada de suporte nao deve duplicar a maquina de estados atual; deve reaproveita-la
 - comentarios publicos e notas internas precisam continuar explicitamente separados na UX futura
 
+## Camada contratual atual do Support Workspace
+- `vw_support_tickets_queue` e a fila oficial para suporte interno B2B
+- `vw_support_ticket_detail` e o detalhe oficial do ticket para o workspace
+- `vw_support_ticket_timeline` e a timeline oficial do workspace com mensagens publicas e notas internas
+- `vw_support_customer_360` concentra contexto minimo do tenant sem virar CRM
+- a escrita continua via RPCs ja existentes de ticketing; esta fase nao cria mutacoes novas
+
+## Boundary de autorizacao da Fase 6.1
+- `platform_admin` acessa todos os tenants
+- `support_agent` e `support_manager` acessam apenas tenants em que tenham membership ativo
+- membros comuns do tenant nao acessam o workspace de suporte
+- `engineering_member` e `engineering_manager` continuam fora da superficie de suporte nesta fase, mesmo conseguindo operar partes do ticketing core
+
 ## Lacunas ainda abertas antes da UI
-- read model orientado a fila de suporte
-- read model de visao 360 do cliente B2B
 - vinculo ticket -> artigo de KB
 - vinculo ticket -> item de engenharia
 - camada executavel de SLA

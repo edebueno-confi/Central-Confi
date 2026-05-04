@@ -43,6 +43,25 @@
 - o contexto do cliente B2B deve existir como visao 360 enxuta, sem virar CRM generico
 - escalonamento para engenharia continua parte do fluxo, mas sem transformar suporte em board tecnico completo nesta fase
 
+## Authz atual do workspace
+- a superficie de suporte interna agora esta contratada em read models proprios:
+  - `vw_support_tickets_queue`
+  - `vw_support_ticket_detail`
+  - `vw_support_ticket_timeline`
+  - `vw_support_customer_360`
+- `platform_admin` pode ler a operacao completa
+- `support_agent` e `support_manager` leem apenas os tenants em que possuem membership ativo
+- membros comuns do tenant continuam fora do workspace
+- engenharia continua fora destes read models especificos ate existir contrato proprio para Engineering Workspace
+
+## Customer 360 minimo
+- tenant operacional e seu status
+- contatos ativos do tenant
+- tickets recentes
+- contagem de tickets por status
+- eventos recentes relevantes
+- sem metricas pesadas, SLA executavel ou funil comercial
+
 ## Fora de escopo do workspace
 - atendimento a shopper final
 - omnichannel B2C

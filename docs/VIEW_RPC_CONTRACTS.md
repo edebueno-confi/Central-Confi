@@ -142,6 +142,26 @@ Fase 5.3:
   - `rpc_admin_mark_knowledge_article_reviewed`
 - O advisory continua sendo apoio de revisao humana, nunca decisao automatica de publish.
 
+Fase 6.1:
+- O Support Workspace agora possui read models contratuais proprios e mais restritos que o ticketing core generico.
+- O frontend futuro de suporte deve ler apenas:
+  - `vw_support_tickets_queue`
+  - `vw_support_ticket_detail`
+  - `vw_support_ticket_timeline`
+  - `vw_support_customer_360`
+- A escrita continua nas RPCs de ticketing ja existentes:
+  - `rpc_update_ticket_status`
+  - `rpc_assign_ticket`
+  - `rpc_add_ticket_message`
+  - `rpc_add_internal_ticket_note`
+  - `rpc_close_ticket`
+  - `rpc_reopen_ticket`
+- A revisao de authz desta fase fechou o workspace como superficie interna de suporte:
+  - `platform_admin` tem acesso global;
+  - `support_agent` e `support_manager` precisam de membership ativo no tenant;
+  - membros comuns do tenant nao entram no workspace;
+  - engenharia continua operando pelo ticketing core e fica fora destes read models, ate existir workspace/contrato proprio.
+
 ## Views contratuais vigentes
 
 ### `vw_tickets_list`
@@ -323,6 +343,42 @@ Fase 5.3:
   - expõe apenas advisories associados a artigos da KB administrativa;
   - não altera nem substitui o dado editorial canonico de `knowledge_articles`;
   - não fica exposta para `anon` nem para surfaces publicas;
+  - usa `security_barrier = true`.
+
+### `vw_support_tickets_queue`
+- Finalidade: fila operacional do Support Workspace interno B2B.
+- Retorna: metadados do ticket, contexto do tenant, requester resolvido, flags de permissao herdadas do core e sinais operacionais (`is_unassigned`, `is_waiting_customer`, `is_waiting_support`, `is_waiting_engineering`).
+- Regras:
+  - retorna linhas apenas para `platform_admin` ou `support_agent`/`support_manager` com membership ativo no tenant;
+  - nao expande acesso para membros comuns nem para engenharia nesta fase;
+  - nao depende de `SELECT` direto do frontend em `tickets`, `tenants` ou `tenant_contacts`;
+  - usa `security_barrier = true`.
+
+### `vw_support_ticket_detail`
+- Finalidade: detalhe contratual do ticket dentro do Support Workspace.
+- Retorna: payload detalhado do ticket, requester, contexto do tenant e flags operacionais do caller.
+- Regras:
+  - reaproveita o `vw_ticket_detail` como base canônica;
+  - preserva separacao entre comunicacao publica e conteudo interno;
+  - nao vaza tickets de outros tenants nem abre acesso para perfis fora do workspace;
+  - usa `security_barrier = true`.
+
+### `vw_support_ticket_timeline`
+- Finalidade: timeline unificada do Support Workspace com contexto enriquecido de tenant e ator.
+- Retorna: mensagens e eventos do ticket, com `actor_full_name` e `actor_email` quando houver profile associado.
+- Regras:
+  - mostra mensagens publicas e notas internas somente para callers do workspace autorizados;
+  - membros comuns do tenant continuam sem acesso a esta superficie;
+  - timeline segue sem depender de `SELECT` direto nas tabelas base;
+  - usa `security_barrier = true`.
+
+### `vw_support_customer_360`
+- Finalidade: read model minimo de visao 360 do cliente B2B para suporte interno.
+- Retorna: tenant, contatos ativos, tickets recentes, contagem de tickets por status e eventos recentes relevantes.
+- Regras:
+  - expõe apenas tenants acessiveis ao workspace de suporte;
+  - nao inclui SLA, metricas complexas, CRM generico nem vazamento cross-tenant;
+  - agrega contatos e historico operacional no backend para evitar joins do frontend em tabelas base;
   - usa `security_barrier = true`.
 
 ### `vw_public_knowledge_space_resolver`

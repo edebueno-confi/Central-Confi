@@ -315,3 +315,37 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - prepara a trilha documental para responder como o suporte interno B2B sera operado
   - separa claramente o workspace interno de suporte da Central Publica e de qualquer experiencia B2C
+
+### Fase 6.1 - Support Workspace Backend Read Models + Authz Review
+- fase: `6.1`
+- commit: `TBD`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: read models especificos do Support Workspace foram materializados no backend, com queue/detail/timeline/customer 360 e authz revista antes de qualquer UI.
+- docs alterados:
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/TICKET_LIFECYCLE.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - `vw_support_tickets_queue`
+  - `vw_support_ticket_detail`
+  - `vw_support_ticket_timeline`
+  - `vw_support_customer_360`
+  - escrita mantida em `rpc_update_ticket_status`
+  - escrita mantida em `rpc_assign_ticket`
+  - escrita mantida em `rpc_add_ticket_message`
+  - escrita mantida em `rpc_add_internal_ticket_note`
+  - escrita mantida em `rpc_close_ticket`
+  - escrita mantida em `rpc_reopen_ticket`
+- telas afetadas:
+  - nenhuma implementacao de UI nesta fase
+  - superficie alvo futura: `/support`, `/support/tickets`, `/support/tickets/:id`, `/support/customers/:tenantId`, `/support/queue`
+- riscos restantes:
+  - ainda nao existe role dedicada de CS para operar o workspace sem reaproveitar roles de suporte
+  - engenharia continua fora desta superficie, apesar de ainda conseguir operar partes do ticketing core generico
+  - SLA, vinculo ticket -> KB e vinculo ticket -> work item de engenharia seguem como lacunas antes da UI
+- impacto na FAQ futura:
+  - prepara a trilha oficial para explicar como a fila de suporte interno enxerga tenants, tickets e notas internas
+  - fixa o boundary de autorizacao do workspace antes da camada visual

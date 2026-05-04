@@ -189,6 +189,159 @@ export interface TicketTimelineEventItem {
 
 export type TicketTimelineItem = TicketTimelineMessageItem | TicketTimelineEventItem;
 
+export interface SupportTicketQueueItem extends TicketViewPermissionFlags {
+  id: Uuid;
+  tenantId: Uuid;
+  tenantSlug: string;
+  tenantDisplayName: string | null;
+  tenantLegalName: string | null;
+  requesterContactId: Uuid | null;
+  requesterContactFullName: string | null;
+  requesterContactEmail: string | null;
+  title: string;
+  source: TicketSource;
+  status: TicketStatus;
+  priority: TicketPriority;
+  severity: TicketSeverity;
+  createdByUserId: Uuid;
+  createdByFullName: string | null;
+  assignedToUserId: Uuid | null;
+  assignedToFullName: string | null;
+  createdAt: IsoTimestamp;
+  updatedAt: IsoTimestamp;
+  resolvedAt: IsoTimestamp | null;
+  closedAt: IsoTimestamp | null;
+  lastMessageAt: IsoTimestamp | null;
+  customerMessageCount: number;
+  internalMessageCount: number;
+  isUnassigned: boolean;
+  isWaitingCustomer: boolean;
+  isWaitingSupport: boolean;
+  isWaitingEngineering: boolean;
+}
+
+export interface SupportTicketDetail extends TicketViewPermissionFlags {
+  id: Uuid;
+  tenantId: Uuid;
+  tenantSlug: string;
+  tenantDisplayName: string | null;
+  tenantLegalName: string | null;
+  tenantStatus: string;
+  requesterContactId: Uuid | null;
+  requesterContactFullName: string | null;
+  requesterContactEmail: string | null;
+  title: string;
+  description: string;
+  source: TicketSource;
+  status: TicketStatus;
+  priority: TicketPriority;
+  severity: TicketSeverity;
+  closeReason: string | null;
+  createdByUserId: Uuid;
+  createdByFullName: string | null;
+  assignedToUserId: Uuid | null;
+  assignedToFullName: string | null;
+  createdAt: IsoTimestamp;
+  updatedAt: IsoTimestamp;
+  resolvedAt: IsoTimestamp | null;
+  closedAt: IsoTimestamp | null;
+  lastMessageAt: IsoTimestamp | null;
+  customerMessageCount: number;
+  internalMessageCount: number;
+  customerAttachmentCount: number;
+  internalAttachmentCount: number;
+}
+
+export interface SupportTicketTimelineMessageItem {
+  ticketId: Uuid;
+  tenantId: Uuid;
+  tenantSlug: string;
+  tenantDisplayName: string | null;
+  timelineEntryId: Uuid;
+  entryType: 'message';
+  visibility: TicketMessageVisibility;
+  occurredAt: IsoTimestamp;
+  actorUserId: Uuid | null;
+  actorFullName: string | null;
+  actorEmail: string | null;
+  messageId: Uuid;
+  eventId: null;
+  eventType: null;
+  assignmentId: null;
+  body: string;
+  metadata: JsonObject;
+}
+
+export interface SupportTicketTimelineEventItem {
+  ticketId: Uuid;
+  tenantId: Uuid;
+  tenantSlug: string;
+  tenantDisplayName: string | null;
+  timelineEntryId: Uuid;
+  entryType: 'event';
+  visibility: TicketMessageVisibility;
+  occurredAt: IsoTimestamp;
+  actorUserId: Uuid | null;
+  actorFullName: string | null;
+  actorEmail: string | null;
+  messageId: Uuid | null;
+  eventId: Uuid;
+  eventType: TicketEventType;
+  assignmentId: Uuid | null;
+  body: null;
+  metadata: JsonObject;
+}
+
+export type SupportTicketTimelineItem =
+  | SupportTicketTimelineMessageItem
+  | SupportTicketTimelineEventItem;
+
+export interface SupportCustomer360Contact {
+  id: Uuid;
+  fullName: string;
+  email: string;
+  isPrimary: boolean;
+  linkedUserId: Uuid | null;
+  createdAt: IsoTimestamp;
+}
+
+export interface SupportCustomer360RecentTicket {
+  id: Uuid;
+  title: string;
+  status: TicketStatus;
+  priority: TicketPriority;
+  severity: TicketSeverity;
+  assignedToUserId: Uuid | null;
+  assignedToFullName: string | null;
+  updatedAt: IsoTimestamp;
+}
+
+export interface SupportCustomer360RecentEvent {
+  ticketId: Uuid;
+  ticketTitle: string;
+  eventType: TicketEventType;
+  visibility: TicketMessageVisibility;
+  occurredAt: IsoTimestamp;
+  actorUserId: Uuid | null;
+}
+
+export interface SupportCustomer360 {
+  tenantId: Uuid;
+  tenantSlug: string;
+  tenantDisplayName: string | null;
+  tenantLegalName: string | null;
+  tenantStatus: string;
+  tenantCreatedAt: IsoTimestamp;
+  tenantUpdatedAt: IsoTimestamp;
+  activeContactsCount: number;
+  totalTicketCount: number;
+  openTicketCount: number;
+  ticketStatusCounts: JsonObject;
+  activeContacts: SupportCustomer360Contact[];
+  recentTickets: SupportCustomer360RecentTicket[];
+  recentEvents: SupportCustomer360RecentEvent[];
+}
+
 export interface RpcCreateTicketPayload {
   tenantId: Uuid;
   title: string;

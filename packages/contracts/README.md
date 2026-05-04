@@ -15,6 +15,11 @@ Fase 2.1 entregue:
 - validação local por `tsc`;
 - workflow CI validando `contracts:typecheck` antes da suíte de banco.
 
+Fase 6.1 entregue:
+- contratos tipados do Support Workspace materializados sobre os read models de suporte;
+- pacote agora cobre fila, detalhe, timeline e customer 360 sem expor tabelas-base;
+- authz do workspace ficou explicitamente restrito a `platform_admin`, `support_agent` e `support_manager` com membership ativo no tenant.
+
 ## Estrutura atual
 
 - [package.json](/C:/Trabalho/packages/contracts/package.json)
@@ -36,6 +41,10 @@ Views:
 - `TicketListItem`
 - `TicketDetail`
 - `TicketTimelineItem`
+- `SupportTicketQueueItem`
+- `SupportTicketDetail`
+- `SupportTicketTimelineItem`
+- `SupportCustomer360`
 
 RPC payloads e responses:
 - `RpcCreateTicketPayload`
