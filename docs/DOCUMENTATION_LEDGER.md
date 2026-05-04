@@ -764,3 +764,40 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - fixa a experiencia oficial do suporte interno como workspace operacional, nao painel administrativo
   - ajuda a documentar como agentes navegam entre fila, ticket, contexto do cliente e conhecimento interno
+
+### Fase 6.11 - Internal UI System Refactor + Operational Design Enforcement
+- fase: `6.11`
+- commit: `2468dc6`
+- branch: `codex/phase6-11-internal-ui-system-refactor`
+- data: `2026-05-04`
+- resumo funcional: o contrato de UI interna foi endurecido e as principais superficies internas e publicas passaram por limpeza de linguagem, rebaixamento de metadados tecnicos e reforco de hierarquia operacional.
+- docs alterados:
+  - `docs/UX_DIRECTION.md`
+  - `docs/INTERNAL_WORKSPACE_DESIGN_SYSTEM.md`
+  - `docs/INTERNAL_UI_ACCEPTANCE_CHECKLIST.md`
+  - `docs/UI_REFACTOR_BACKLOG.md`
+  - `docs/README.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+  - `docs/ROADMAP.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - consumo mantido nas superficies administrativas, de suporte e da Central Publica ja existentes
+- telas afetadas:
+  - `/admin/tenants`
+  - `/admin/knowledge`
+  - `/admin/access`
+  - `/admin/system`
+  - `/support/queue`
+  - `/support/tickets/:ticketId`
+  - `/support/customers/:tenantId`
+  - `/help/genius`
+  - `/help/genius/articles/:articleSlug`
+- riscos restantes:
+  - o aceite visual humano continua sendo o gate final para micro-ajustes de conforto diario
+  - o Support Workspace ainda pode precisar de recorte adicional no rail se o contexto do cliente crescer
+  - edicao do Customer Account Profile, ticket -> KB, ticket -> engenharia, SLA e portal B2B seguem no backlog
+- impacto na FAQ futura:
+  - fixa a regra de que qualquer superficie interna deve esconder detalhes tecnicos do fluxo principal
+  - documenta o criterio oficial de aceite visual e operacional para futuras fases
