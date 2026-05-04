@@ -219,8 +219,9 @@ Uso esperado:
 
 ### `/support/tickets/:id`
 - detalhe do ticket
-- timeline
-- composer
+- conversa recente em primeiro plano
+- composer central de resposta publica e nota interna
+- historico tecnico recolhido sob demanda
 - acoes de status e atribuicao
 
 ### `/support/customers/:tenantId`
@@ -237,14 +238,17 @@ Uso esperado:
 ### Estrutura
 - lista dominante a esquerda ou em coluna principal
 - painel de detalhe forte
-- timeline central no detalhe
-- composer simples para resposta publica e nota interna
+- composer grande e central para resposta publica e nota interna
+- conversa recente como principal area de leitura do ticket
+- timeline tecnica em camada secundaria ou recolhida
 - acoes operacionais visiveis sem modal excessivo
+- contexto do cliente compacto no rail operacional
 
 ### Componentes minimos
 - lista de tickets com filtros
 - header do ticket com status, prioridade, severidade e responsavel
-- timeline unificada
+- conversa recente
+- timeline tecnica controlada
 - bloco de contexto do cliente B2B
 - composer de mensagem
 - composer de nota interna

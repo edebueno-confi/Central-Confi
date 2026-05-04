@@ -169,6 +169,7 @@ Documentos históricos:
 - Governança oficial de operações de conteúdo criada em `docs/CONTENT_OPERATIONS_GOVERNANCE.md`.
 - Spec oficial do Support Workspace criada em `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`.
 - Read models oficiais do Support Workspace materializados com authz restrita a `platform_admin` e roles globais de suporte com membership ativo no tenant.
+- O detalhe do Support Workspace agora prioriza conversa e composer como fluxo principal, mantendo eventos tecnicos e controles avancados em camadas secundarias.
 - Relatório oficial do inventário legado criado em `docs/reports/KNOWLEDGE_LEGACY_INVENTORY_REPORT.md`.
 - Backlog versionado oficial de curadoria legado criado em `docs/reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`.
 - O inventário atual da base legada em `raw_knowledge/octadesk_export/latest/articles/` identificou 58 artigos, 3 categorias-raiz, 1 grupo de duplicidade por `source_hash` e múltiplos candidatos sensíveis/restritos.

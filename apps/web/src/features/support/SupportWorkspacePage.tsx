@@ -125,27 +125,6 @@ function toneForSeverity(severity: TicketSeverity) {
   return 'default' as const;
 }
 
-function toneForTimelineEntry(entry: SupportTicketTimelineItem) {
-  if (entry.visibility === 'internal') {
-    return {
-      card: 'border-[color:var(--color-danger-border)] bg-[color:var(--color-danger-surface)]/65',
-      rail: 'bg-[color:var(--color-danger-ink)]',
-    };
-  }
-
-  if (entry.entryType === 'message') {
-    return {
-      card: 'border-[rgba(48,127,226,0.2)] bg-[rgba(48,127,226,0.08)]',
-      rail: 'bg-[color:var(--color-brand-blue)]',
-    };
-  }
-
-  return {
-    card: 'border-[color:var(--color-border)] bg-[color:var(--color-surface)]',
-    rail: 'bg-[color:var(--color-brand-navy)]',
-  };
-}
-
 function humanizeVisibility(value: string) {
   return value === 'internal' ? 'Nota interna' : 'Resposta publica';
 }
@@ -233,34 +212,31 @@ function summarizeTimelineEvent(entry: SupportTicketTimelineItem) {
   return note || humanizeToken(entry.eventType ?? 'evento');
 }
 
-function TimelineEntry({
+function ConversationEntry({
   entry,
 }: {
   entry: SupportTicketTimelineItem;
 }) {
-  const tones = toneForTimelineEntry(entry);
   const summary = summarizeTimelineEvent(entry);
-  const entryLabel =
-    entry.entryType === 'message'
-      ? humanizeVisibility(entry.visibility)
-      : `${humanizeVisibility(entry.visibility)} · ${humanizeToken(entry.eventType ?? 'evento')}`;
+  const isInternal = entry.visibility === 'internal';
 
   return (
     <article
       className={cx(
-        'rounded-[20px] border p-4 shadow-[0_10px_22px_rgba(19,33,79,0.06)]',
-        tones.card,
+        'rounded-[20px] border px-4 py-4 shadow-[0_10px_22px_rgba(19,33,79,0.04)]',
+        isInternal
+          ? 'border-[color:var(--color-danger-border)] bg-[color:var(--color-danger-surface)]/62'
+          : 'border-[rgba(48,127,226,0.18)] bg-[rgba(48,127,226,0.06)]',
       )}
     >
-      <div className="flex items-start gap-3">
-        <div className={cx('mt-1 h-12 w-1 shrink-0 rounded-full', tones.rail)} />
-        <div className="min-w-0 flex-1 space-y-2">
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <div className="min-w-0 space-y-1">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
-                {entryLabel}
-              </p>
-              <p className="font-medium text-[color:var(--color-ink)]">
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusPill tone={isInternal ? 'critical' : 'accent'}>
+                {humanizeVisibility(entry.visibility)}
+              </StatusPill>
+              <p className="text-xs font-medium text-[color:var(--color-muted)]">
                 {entry.actorFullName ?? entry.actorEmail ?? 'Ator nao resolvido'}
               </p>
             </div>
@@ -268,38 +244,59 @@ function TimelineEntry({
               {formatDateTime(entry.occurredAt)}
             </p>
           </div>
+        </div>
 
-          <div className="text-sm leading-6 text-[color:var(--color-ink)]">
-            {entry.entryType === 'message' ? (
-              <p className="whitespace-pre-wrap">{summary}</p>
-            ) : (
-              <div className="space-y-1">
-                <p className="whitespace-pre-wrap">{summary}</p>
-                {entry.metadata && Object.keys(entry.metadata).length > 0 ? (
-                  <p className="text-xs text-[color:var(--color-muted)]">
-                    {stringifyJsonPreview(entry.metadata)}
-                  </p>
-                ) : null}
-              </div>
-            )}
-          </div>
+        <div className="text-[15px] leading-7 text-[color:var(--color-ink)]">
+          <p className="whitespace-pre-wrap">{summary}</p>
         </div>
       </div>
     </article>
   );
 }
 
-function SupportTimeline({
+function TechnicalTimelineRow({
+  entry,
+}: {
+  entry: SupportTicketTimelineItem;
+}) {
+  const summary = summarizeTimelineEvent(entry);
+
+  return (
+    <div className="flex flex-wrap items-start justify-between gap-3 rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
+      <div className="min-w-0 flex-1 space-y-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusPill tone={entry.visibility === 'internal' ? 'critical' : 'default'}>
+            {entry.eventType ? humanizeToken(entry.eventType) : 'evento'}
+          </StatusPill>
+          <p className="text-xs text-[color:var(--color-muted)]">
+            {entry.actorFullName ?? entry.actorEmail ?? 'Ator nao resolvido'}
+          </p>
+        </div>
+        <p className="text-sm leading-6 text-[color:var(--color-ink)]">{summary}</p>
+        {entry.metadata && Object.keys(entry.metadata).length > 0 ? (
+          <p className="text-xs leading-5 text-[color:var(--color-muted)]">
+            {stringifyJsonPreview(entry.metadata)}
+          </p>
+        ) : null}
+      </div>
+      <p className="text-xs text-[color:var(--color-muted)]">{formatDateTime(entry.occurredAt)}</p>
+    </div>
+  );
+}
+
+function SupportConversation({
   window,
 }: {
   window: SupportTicketTimelineRecentWindow;
 }) {
   const entries = window.entries;
+  const conversationEntries = entries.filter((entry) => entry.entryType === 'message');
+  const eventEntries = entries.filter((entry) => entry.entryType === 'event');
 
-  if (entries.length === 0) {
+  if (conversationEntries.length === 0 && eventEntries.length === 0) {
     return (
       <EmptyState
-        title="Timeline vazia"
+        title="Conversa vazia"
         description="Este ticket ainda nao recebeu mensagens, notas internas nem eventos adicionais."
       />
     );
@@ -308,12 +305,40 @@ function SupportTimeline({
   return (
     <div className="space-y-3">
       <div className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 text-sm leading-6 text-[color:var(--color-muted)]">
-        Mostrando {entries.length} de {window.totalAvailableCount} registros recentes.
-        {window.hasMore ? ' O historico completo fica fora da primeira carga operacional desta tela.' : ''}
+        Mostrando {conversationEntries.length} interacoes de conversa e {eventEntries.length} eventos tecnicos na janela recente.
+        {window.hasMore ? ' O restante do historico fica recolhido fora da carga inicial.' : ''}
       </div>
-      {entries.map((entry) => (
-        <TimelineEntry key={entry.timelineEntryId} entry={entry} />
-      ))}
+
+      {conversationEntries.length === 0 ? (
+        <EmptyState
+          title="Sem conversa recente"
+          description="A janela atual ainda nao trouxe respostas publicas nem notas internas para este ticket."
+        />
+      ) : (
+        <div className="space-y-3">
+          {conversationEntries.map((entry) => (
+            <ConversationEntry key={entry.timelineEntryId} entry={entry} />
+          ))}
+        </div>
+      )}
+
+      <details className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+        <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+          Historico tecnico e eventos de sistema
+        </summary>
+        <div className="mt-2 text-xs leading-5 text-[color:var(--color-muted)]">
+          {eventEntries.length === 0
+            ? 'Nenhum evento tecnico apareceu na janela recente.'
+            : `Mostrando ${eventEntries.length} eventos tecnicos dentro de ${window.totalAvailableCount} registros recentes.`}
+        </div>
+        {eventEntries.length === 0 ? null : (
+          <div className="mt-3 space-y-2">
+            {eventEntries.map((entry) => (
+              <TechnicalTimelineRow key={entry.timelineEntryId} entry={entry} />
+            ))}
+          </div>
+        )}
+      </details>
     </div>
   );
 }
@@ -680,86 +705,183 @@ function SupportCustomerRail({
   const recentTickets = recentTicketsWindow.tickets.slice(0, compact ? 3 : recentTicketsWindow.tickets.length);
   const recentEvents = recentEventsWindow.events.slice(0, compact ? 2 : recentEventsWindow.events.length);
 
-  return (
-    <div className="space-y-3">
-      <div className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <StatusPill>{customer.tenantStatus}</StatusPill>
-          <StatusPill tone="accent">{customer.tenantSlug}</StatusPill>
-        </div>
-        <div className="mt-3 space-y-1">
-          <h3 className="text-base font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
-            {customer.tenantDisplayName ?? customer.tenantLegalName ?? customer.tenantSlug}
-          </h3>
-          <p className="text-sm text-[color:var(--color-muted)]">
-            {customer.tenantLegalName ?? 'Razao social nao resolvida'}
-          </p>
-        </div>
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-[color:var(--color-muted)]">
-          <span>{customer.activeContactsCount} contatos</span>
-          <span>{customer.openTicketCount} abertos</span>
-          <span>{customer.totalTicketCount} no total</span>
-        </div>
-      </div>
-
-      <div className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4">
-        <div className="flex items-center justify-between gap-3">
-          <h4 className="text-sm font-semibold text-[color:var(--color-ink)]">Contatos ativos</h4>
+  if (compact) {
+    return (
+      <div className="space-y-3 rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusPill>{customer.tenantStatus}</StatusPill>
+              <StatusPill tone="accent">{customer.tenantSlug}</StatusPill>
+            </div>
+            <h3 className="text-base font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+              {customer.tenantDisplayName ?? customer.tenantLegalName ?? customer.tenantSlug}
+            </h3>
+            <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+              {customer.activeContactsCount} contatos ativos · {customer.openTicketCount} tickets abertos
+            </p>
+          </div>
           <Link
-            className="text-sm font-medium text-[color:var(--color-brand-blue)]"
+            className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold text-[color:var(--color-brand-blue)]"
             to={`/support/customers/${customer.tenantId}`}
           >
-            Abrir contexto completo
+            Abrir cliente
           </Link>
         </div>
-        <div className="mt-3 space-y-2">
+
+        <div className="space-y-2 border-t border-[color:var(--color-border)] pt-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+            Contatos ativos
+          </p>
           {contacts.length === 0 ? (
-            <p className="text-sm text-[color:var(--color-muted)]">
+            <p className="text-sm leading-6 text-[color:var(--color-muted)]">
               Nenhum contato ativo retornado pelo contrato.
             </p>
           ) : (
-            contacts.map((contact) => <SupportContactCard key={contact.id} contact={contact} />)
+            <div className="space-y-2">
+              {contacts.map((contact) => (
+                <div
+                  className="rounded-[16px] bg-[color:var(--color-surface)] px-3 py-3"
+                  key={contact.id}
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-medium text-[color:var(--color-ink)]">{contact.fullName}</p>
+                    {contact.isPrimary ? <StatusPill tone="accent">principal</StatusPill> : null}
+                  </div>
+                  <p className="mt-1 text-sm text-[color:var(--color-muted)]">{contact.email}</p>
+                </div>
+              ))}
+            </div>
           )}
         </div>
-      </div>
 
-      <div className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4">
-        <h4 className="text-sm font-semibold text-[color:var(--color-ink)]">Tickets recentes</h4>
-        <p className="mt-1 text-xs leading-5 text-[color:var(--color-muted)]">
-          Mostrando {recentTickets.length} de {recentTicketsWindow.totalAvailableCount} tickets recentes.
-        </p>
-        <div className="mt-3 space-y-2">
+        <div className="space-y-2 border-t border-[color:var(--color-border)] pt-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+              Tickets recentes
+            </p>
+            <p className="text-xs text-[color:var(--color-muted)]">
+              {recentTickets.length} de {recentTicketsWindow.totalAvailableCount}
+            </p>
+          </div>
           {recentTickets.length === 0 ? (
-            <p className="text-sm text-[color:var(--color-muted)]">
+            <p className="text-sm leading-6 text-[color:var(--color-muted)]">
               Nenhum ticket recente retornado para este tenant.
             </p>
           ) : (
-            recentTickets.map((ticket) => <SupportRecentTicketCard key={ticket.id} ticket={ticket} />)
+            <div className="space-y-2">
+              {recentTickets.map((ticket) => (
+                <SupportRecentTicketCard key={ticket.id} ticket={ticket} />
+              ))}
+            </div>
           )}
         </div>
-      </div>
 
-      {compact ? null : (
-        <details className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+        <details className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
           <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-            Eventos recentes
+            Eventos recentes e detalhes extras
           </summary>
-          <p className="mt-2 text-xs leading-5 text-[color:var(--color-muted)]">
-            Mostrando {recentEvents.length} de {recentEventsWindow.totalAvailableCount} registros recentes.
-          </p>
           <div className="mt-3 space-y-2">
             {recentEvents.length === 0 ? (
-              <p className="text-sm text-[color:var(--color-muted)]">
-                O backend nao retornou eventos recentes para este tenant.
+              <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                Nenhum evento recente retornado pelo contrato.
               </p>
             ) : (
               recentEvents.map((event) => (
-                <SupportRecentEventCard key={`${event.ticketId}-${event.occurredAt}-${event.eventType}`} event={event} />
+                <SupportRecentEventCard
+                  event={event}
+                  key={`${event.ticketId}-${event.occurredAt}-${event.eventType}`}
+                />
               ))
             )}
           </div>
         </details>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusPill>{customer.tenantStatus}</StatusPill>
+              <StatusPill tone="accent">{customer.tenantSlug}</StatusPill>
+            </div>
+            <h3 className="text-base font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+              {customer.tenantDisplayName ?? customer.tenantLegalName ?? customer.tenantSlug}
+            </h3>
+          </div>
+          <Link
+            className="inline-flex min-h-10 items-center justify-center rounded-full border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold text-[color:var(--color-brand-blue)]"
+            to={`/support/customers/${customer.tenantId}`}
+          >
+            Ver contexto
+          </Link>
+        </div>
+        <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
+          {customer.tenantLegalName ?? 'Razao social nao resolvida'}
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2 text-sm text-[color:var(--color-muted)]">
+          <span className="rounded-full bg-[color:var(--color-surface)] px-3 py-1">
+            {customer.openTicketCount} abertos
+          </span>
+          <span className="rounded-full bg-[color:var(--color-surface)] px-3 py-1">
+            {customer.totalTicketCount} totais
+          </span>
+          <span className="rounded-full bg-[color:var(--color-surface)] px-3 py-1">
+            {customer.activeContactsCount} contatos
+          </span>
+        </div>
+      </div>
+
+      <div className="space-y-2 rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+        <h4 className="text-sm font-semibold text-[color:var(--color-ink)]">Contatos ativos</h4>
+        {contacts.length === 0 ? (
+          <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+            Nenhum contato ativo retornado pelo contrato.
+          </p>
+        ) : (
+          contacts.map((contact) => <SupportContactCard key={contact.id} contact={contact} />)
+        )}
+      </div>
+
+      <div className="space-y-2 rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+        <div className="space-y-1">
+          <h4 className="text-sm font-semibold text-[color:var(--color-ink)]">Tickets recentes</h4>
+          <p className="text-xs leading-5 text-[color:var(--color-muted)]">
+            Mostrando {recentTickets.length} de {recentTicketsWindow.totalAvailableCount} tickets recentes.
+          </p>
+        </div>
+        {recentTickets.length === 0 ? (
+          <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+            Nenhum ticket recente retornado para este tenant.
+          </p>
+        ) : (
+          recentTickets.map((ticket) => <SupportRecentTicketCard key={ticket.id} ticket={ticket} />)
+        )}
+      </div>
+
+      <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+        <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+          Eventos recentes do cliente
+        </summary>
+        <p className="mt-2 text-xs leading-5 text-[color:var(--color-muted)]">
+          Mostrando {recentEvents.length} de {recentEventsWindow.totalAvailableCount} registros recentes.
+        </p>
+        <div className="mt-3 space-y-2">
+          {recentEvents.length === 0 ? (
+            <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+              O backend nao retornou eventos recentes para este tenant.
+            </p>
+          ) : (
+            recentEvents.map((event) => (
+              <SupportRecentEventCard key={`${event.ticketId}-${event.occurredAt}-${event.eventType}`} event={event} />
+            ))
+          )}
+        </div>
+      </details>
     </div>
   );
 }
@@ -770,7 +892,7 @@ function SupportContactCard({
   contact: SupportCustomer360Contact;
 }) {
   return (
-    <div className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3">
+    <div className="rounded-[16px] bg-[color:var(--color-surface)] px-3 py-3">
       <div className="flex flex-wrap items-center gap-2">
         <p className="font-medium text-[color:var(--color-ink)]">{contact.fullName}</p>
         {contact.isPrimary ? <StatusPill tone="accent">principal</StatusPill> : null}
@@ -787,14 +909,14 @@ function SupportRecentTicketCard({
 }) {
   return (
     <Link
-      className="block rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3 transition hover:border-[rgba(48,127,226,0.28)] hover:bg-white"
+      className="block rounded-[16px] bg-[color:var(--color-surface)] px-3 py-3 transition hover:bg-white"
       to={`/support/tickets/${ticket.id}`}
     >
       <div className="flex flex-wrap items-center gap-2">
         <StatusPill tone={toneForTicketStatus(ticket.status)}>{humanizeStatus(ticket.status)}</StatusPill>
         <StatusPill tone={toneForPriority(ticket.priority)}>{ticket.priority}</StatusPill>
       </div>
-      <p className="mt-2 font-medium text-[color:var(--color-ink)]">{ticket.title}</p>
+      <p className="mt-2 line-clamp-2 font-medium text-[color:var(--color-ink)]">{ticket.title}</p>
       <p className="mt-1 text-xs text-[color:var(--color-muted)]">
         Atualizado em {formatDateTime(ticket.updatedAt)}
       </p>
@@ -809,13 +931,13 @@ function SupportRecentEventCard({
 }) {
   return (
     <Link
-      className="block rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3 transition hover:border-[rgba(48,127,226,0.28)] hover:bg-white"
+      className="block rounded-[16px] bg-[color:var(--color-surface)] px-3 py-3 transition hover:bg-white"
       to={`/support/tickets/${event.ticketId}`}
     >
       <div className="flex flex-wrap items-center gap-2">
         <StatusPill tone={event.visibility === 'internal' ? 'critical' : 'accent'}>{humanizeVisibility(event.visibility)}</StatusPill>
       </div>
-      <p className="mt-2 font-medium text-[color:var(--color-ink)]">{event.ticketTitle}</p>
+      <p className="mt-2 line-clamp-2 font-medium text-[color:var(--color-ink)]">{event.ticketTitle}</p>
       <p className="mt-1 text-xs text-[color:var(--color-muted)]">
         {humanizeToken(event.eventType)} · {formatDateTime(event.occurredAt)}
       </p>
@@ -1453,12 +1575,12 @@ function SupportWorkspaceView({
 
           {detailNotice ? <InlineNotice tone={detailNoticeTone}>{detailNotice}</InlineNotice> : null}
 
-          <div className="grid gap-5 xl:grid-cols-[minmax(0,0.68fr)_minmax(300px,0.32fr)]">
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,0.68fr)_minmax(320px,0.32fr)]">
             <div className="space-y-5">
               <Panel
                 className="bg-white"
-                title="Resposta e nota interna"
-                description="Composer principal da tratativa. A troca entre publico e interno fica explicita e central."
+                title="Atendimento em andamento"
+                description="A conversa fica no centro da tratativa. Resposta publica e nota interna usam o mesmo fluxo, sem desviar para formularios tecnicos."
               >
                 <div className="space-y-4">
                   <div className="flex flex-wrap gap-2">
@@ -1492,13 +1614,13 @@ function SupportWorkspaceView({
 
                   <InlineNotice tone={composerMode === 'public' ? 'default' : 'critical'}>
                     {composerMode === 'public'
-                      ? 'A mensagem abaixo sera visivel para o cliente B2B.'
-                      : 'A mensagem abaixo fica restrita ao time interno autorizado.'}
+                      ? 'Modo resposta publica: a devolutiva abaixo sera visivel ao cliente B2B.'
+                      : 'Modo nota interna: este registro fica restrito ao time interno autorizado.'}
                   </InlineNotice>
 
                   <form className="space-y-4" onSubmit={handleSubmitComposer}>
                     <Field
-                      label={composerMode === 'public' ? 'Resposta publica' : 'Nota interna'}
+                      label={composerMode === 'public' ? 'Responder cliente' : 'Registrar nota interna'}
                     >
                       <TextareaInput
                         onChange={(event) =>
@@ -1508,8 +1630,8 @@ function SupportWorkspaceView({
                         }
                         placeholder={
                           composerMode === 'public'
-                            ? 'Escreva a devolutiva tecnico-operacional para o cliente.'
-                            : 'Registre contexto interno, proximo passo ou handoff.'
+                            ? 'Escreva a devolutiva tecnico-operacional ao cliente B2B.'
+                            : 'Registre contexto interno, proximo passo, handoff ou observacao de suporte.'
                         }
                         value={composerDraft}
                       />
@@ -1530,32 +1652,42 @@ function SupportWorkspaceView({
                           : 'Registrar nota interna'}
                     </AppButton>
                   </form>
+                  <div className="border-t border-[color:var(--color-border)] pt-4">
+                    <div className="mb-3 space-y-1">
+                      <h4 className="text-base font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+                        Conversa recente
+                      </h4>
+                      <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                        Mensagens e notas internas ficam no fluxo principal. O historico tecnico fica recolhido sob demanda.
+                      </p>
+                    </div>
+                    <SupportConversation window={timelineWindow} />
+                  </div>
                 </div>
-              </Panel>
-
-              <Panel
-                className="bg-white"
-                title="Timeline operacional"
-                description="Leitura cronologica da tratativa com mensagens publicas, notas internas e eventos de sistema."
-              >
-                <SupportTimeline window={timelineWindow} />
               </Panel>
             </div>
 
             <aside className="space-y-5">
               <Panel
                 className="bg-white xl:sticky xl:top-4"
-                title="Rail operacional"
-                description="Status, atribuicao e contexto compacto do cliente sem competir com a tratativa."
+                title="Operacao do ticket"
+                description="Somente o essencial para atribuir, mover status e consultar o cliente sem tirar o foco da conversa."
               >
                 <div className="space-y-5">
-                  <div className="space-y-3">
-                    <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
-                      <div className="space-y-2">
-                        <p className="text-sm font-semibold text-[color:var(--color-ink)]">
-                          Responsavel atual
-                        </p>
-                        <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                  <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-semibold text-[color:var(--color-ink)]">Status atual</p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>{humanizeStatus(ticketDetail.status)}</StatusPill>
+                          <StatusPill tone={toneForPriority(ticketDetail.priority)}>{ticketDetail.priority}</StatusPill>
+                          <StatusPill tone={toneForSeverity(ticketDetail.severity)}>{ticketDetail.severity}</StatusPill>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-[color:var(--color-border)] pt-3">
+                        <p className="text-sm font-semibold text-[color:var(--color-ink)]">Responsavel atual</p>
+                        <p className="mt-1 text-sm leading-6 text-[color:var(--color-muted)]">
                           {currentAssignedAgent
                             ? `${currentAssignedAgent.fullName} · ${currentAssignedAgent.email}`
                             : ticketDetail.assignedToFullName
@@ -1564,7 +1696,7 @@ function SupportWorkspaceView({
                         </p>
                       </div>
 
-                      <div className="mt-4 space-y-3">
+                      <div className="border-t border-[color:var(--color-border)] pt-3">
                         {agentsPhase === 'contract-unavailable' ? (
                           <InlineNotice tone="critical">
                             {agentsMessage ?? 'A view vw_support_assignable_agents nao ficou disponivel neste ambiente.'}
@@ -1583,10 +1715,7 @@ function SupportWorkspaceView({
                           </InlineNotice>
                         ) : (
                           <form className="space-y-3" onSubmit={handleAssign}>
-                            <Field
-                              label="Selecionar agente"
-                              description="Diretorio seguro filtrado pelo mesmo contrato de autorizacao usado em rpc_assign_ticket."
-                            >
+                            <Field label="Selecionar agente">
                               <SelectInput
                                 onChange={(event) => setAssignDraft(event.target.value)}
                                 value={assignDraft}
@@ -1601,7 +1730,7 @@ function SupportWorkspaceView({
                             </Field>
                             <div className="flex flex-wrap gap-2">
                               <AppButton
-                                className="min-h-11 px-5"
+                                className="min-h-12 px-5"
                                 disabled={submitting || !ticketDetail.canAssign}
                                 type="submit"
                               >
@@ -1631,40 +1760,49 @@ function SupportWorkspaceView({
                           </form>
                         )}
                       </div>
+
+                      <form className="space-y-3 border-t border-[color:var(--color-border)] pt-3" onSubmit={handleUpdateStatus}>
+                        <Field label="Mover status">
+                          <SelectInput
+                            onChange={(event) =>
+                              setStatusDraft(event.target.value as TicketStatusUpdateTarget)
+                            }
+                            value={statusDraft}
+                          >
+                            {buildStatusChoices(ticketDetail.status).map((status) => (
+                              <option key={status} value={status}>
+                                {humanizeStatus(status)}
+                              </option>
+                            ))}
+                          </SelectInput>
+                        </Field>
+                        <Field label="Nota da transicao">
+                          <TextareaInput
+                            onChange={(event) => setStatusNote(event.target.value)}
+                            placeholder="Opcional. Explique a mudanca para o proximo operador."
+                            value={statusNote}
+                          />
+                        </Field>
+                        <AppButton className="min-h-12 px-5" disabled={submitting || !ticketDetail.canUpdateStatus} type="submit">
+                          {submitting ? 'Atualizando...' : 'Salvar status'}
+                        </AppButton>
+                      </form>
                     </div>
+                  </div>
 
-                    <form className="space-y-3" onSubmit={handleUpdateStatus}>
-                      <Field label="Status">
-                        <SelectInput
-                          onChange={(event) =>
-                            setStatusDraft(event.target.value as TicketStatusUpdateTarget)
-                          }
-                          value={statusDraft}
-                        >
-                          {buildStatusChoices(ticketDetail.status).map((status) => (
-                            <option key={status} value={status}>
-                              {humanizeStatus(status)}
-                            </option>
-                          ))}
-                        </SelectInput>
-                      </Field>
-                      <Field label="Nota da transicao">
-                        <TextareaInput
-                          onChange={(event) => setStatusNote(event.target.value)}
-                          placeholder="Opcional. Explique a transicao para o proximo operador."
-                          value={statusNote}
-                        />
-                      </Field>
-                      <AppButton className="min-h-11 px-5" disabled={submitting || !ticketDetail.canUpdateStatus} type="submit">
-                        {submitting ? 'Atualizando...' : 'Salvar status'}
-                      </AppButton>
-                    </form>
+                  <SupportCustomerRail
+                    compact
+                    customer={customer}
+                    recentEventsWindow={customerRecentEvents}
+                    recentTicketsWindow={customerRecentTickets}
+                  />
 
-                    <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
-                      <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                        Atribuicao avancada
-                      </summary>
-                      <form className="mt-3 space-y-3" onSubmit={handleAssign}>
+                  <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                    <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                      Controles tecnicos e acoes de excecao
+                    </summary>
+                    <div className="mt-4 space-y-4">
+                      <form className="space-y-3" onSubmit={handleAssign}>
                         <Field
                           label="user_id do responsavel"
                           description="Fallback tecnico para casos excepcionais. O fluxo principal de atribuicao deve usar o seletor acima."
@@ -1679,14 +1817,9 @@ function SupportWorkspaceView({
                           {submitting ? 'Salvando...' : 'Salvar responsavel'}
                         </AppButton>
                       </form>
-                    </details>
 
-                    {ticketDetail.canClose || ticketDetail.canReopen ? (
-                      <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
-                        <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                          Acoes de excecao
-                        </summary>
-                        <div className="mt-3 space-y-4">
+                      {ticketDetail.canClose || ticketDetail.canReopen ? (
+                        <div className="space-y-4 border-t border-[color:var(--color-border)] pt-4">
                           {ticketDetail.canClose ? (
                             <form className="space-y-3" onSubmit={handleClose}>
                               <Field label="Motivo do fechamento">
@@ -1721,16 +1854,9 @@ function SupportWorkspaceView({
                             </form>
                           ) : null}
                         </div>
-                      </details>
-                    ) : null}
-                  </div>
-
-                  <SupportCustomerRail
-                    compact
-                    customer={customer}
-                    recentEventsWindow={customerRecentEvents}
-                    recentTicketsWindow={customerRecentTickets}
-                  />
+                      ) : null}
+                    </div>
+                  </details>
                 </div>
               </Panel>
             </aside>
@@ -1870,53 +1996,126 @@ export function SupportCustomerPage() {
       <PageHeader
         eyebrow="Support Workspace"
         title="Customer context"
-        description="Resumo operacional do cliente B2B para continuidade da tratativa, com contatos ativos, tickets recentes e eventos relevantes."
+        description="Contexto sintetico do cliente B2B para apoiar a tratativa sem transformar a tela em CRM ou dashboard."
       />
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
         <div className="space-y-5">
           <Panel
-            title="Resumo operacional do tenant"
-            description="Contexto suficiente para entender o cliente atendido sem transformar a superficie em CRM."
+            title="Resumo operacional do cliente"
+            description="Visao rapida do tenant atendido, com foco em continuidade de suporte e retorno rapido ao ticket."
           >
-            <SupportCustomerRail
-              compact
-              customer={customer}
-              recentEventsWindow={recentEventsWindow}
-              recentTicketsWindow={recentTicketsWindow}
-            />
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-start justify-between gap-3 rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+                <div className="min-w-0 space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusPill>{customer.tenantStatus}</StatusPill>
+                    <StatusPill tone="accent">{customer.tenantSlug}</StatusPill>
+                  </div>
+                  <h3 className="text-xl font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
+                    {customer.tenantDisplayName ?? customer.tenantLegalName ?? customer.tenantSlug}
+                  </h3>
+                  <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                    {customer.tenantLegalName ?? 'Razao social nao resolvida'}
+                  </p>
+                </div>
+                <Link
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold text-[color:var(--color-brand-blue)]"
+                  to="/support/queue"
+                >
+                  Voltar para fila
+                </Link>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-3">
+                <CompactCounter
+                  helper="Tickets em operacao neste tenant."
+                  label="Abertos"
+                  value={String(customer.openTicketCount)}
+                />
+                <CompactCounter
+                  helper="Contatos operacionais ativos."
+                  label="Contatos"
+                  value={String(customer.activeContactsCount)}
+                />
+                <CompactCounter
+                  helper="Historico total retornado pelo read model."
+                  label="Tickets totais"
+                  value={String(customer.totalTicketCount)}
+                />
+              </div>
+            </div>
           </Panel>
 
           <Panel
-            title="Eventos recentes do tenant"
-            description="Ultimos movimentos relevantes para reentrar rapidamente no contexto do atendimento."
+            title="Tickets recentes"
+            description="Retorno rapido para tickets do mesmo cliente sem carregar uma lista longa demais."
           >
             <div className="mb-3 text-xs leading-5 text-[color:var(--color-muted)]">
-              Mostrando {recentEventsWindow.events.length} de {recentEventsWindow.totalAvailableCount} registros recentes.
+              Mostrando {recentTicketsWindow.tickets.length} de {recentTicketsWindow.totalAvailableCount} tickets recentes.
             </div>
-            {recentEventsWindow.events.length === 0 ? (
+            {recentTicketsWindow.tickets.length === 0 ? (
               <EmptyState
-                title="Sem eventos recentes"
-                description="O backend nao retornou eventos recentes para este tenant."
+                title="Sem tickets recentes"
+                description="O backend nao retornou tickets recentes para este tenant."
               />
             ) : (
               <div className="space-y-2">
-                {recentEventsWindow.events.map((event) => (
-                  <SupportRecentEventCard
-                    event={event}
-                    key={`${event.ticketId}-${event.occurredAt}-${event.eventType}`}
-                  />
+                {recentTicketsWindow.tickets.map((ticket) => (
+                  <SupportRecentTicketCard key={ticket.id} ticket={ticket} />
                 ))}
               </div>
             )}
           </Panel>
+
+          <Panel
+            title="Contatos ativos"
+            description="Somente os contatos que ajudam a continuar o atendimento atual."
+          >
+            {customer.activeContacts.length === 0 ? (
+              <EmptyState
+                title="Sem contatos ativos"
+                description="O contrato nao retornou contatos ativos para este tenant."
+              />
+            ) : (
+              <div className="space-y-2">
+                {customer.activeContacts.map((contact) => (
+                  <SupportContactCard contact={contact} key={contact.id} />
+                ))}
+              </div>
+            )}
+          </Panel>
+
+          <details className="rounded-[22px] border border-[color:var(--color-border)] bg-white px-5 py-4">
+            <summary className="cursor-pointer text-base font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+              Eventos recentes do cliente
+            </summary>
+            <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
+              Mostrando {recentEventsWindow.events.length} de {recentEventsWindow.totalAvailableCount} registros recentes.
+            </p>
+            <div className="mt-3 space-y-2">
+              {recentEventsWindow.events.length === 0 ? (
+                <EmptyState
+                  title="Sem eventos recentes"
+                  description="O backend nao retornou eventos recentes para este tenant."
+                />
+              ) : (
+                recentEventsWindow.events.map((event) => (
+                  <SupportRecentEventCard
+                    event={event}
+                    key={`${event.ticketId}-${event.occurredAt}-${event.eventType}`}
+                  />
+                ))
+              )}
+            </div>
+          </details>
         </div>
 
         <aside className="space-y-5">
           <div className="xl:sticky xl:top-4">
             <Panel
               title="Outros clientes acessiveis"
-              description="Navegacao utilitaria para trocar de tenant sem sair do workspace."
+              description="Lista utilitaria para trocar de tenant sem tirar o foco do atendimento."
             >
               <div className="space-y-3">
                 {customers.map((row) => {

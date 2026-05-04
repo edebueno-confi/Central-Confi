@@ -131,6 +131,17 @@
 - a UI nao deve simular paginacao carregando tudo por baixo
 - enquanto nao existir RPC paginavel dedicada, a leitura operacional fica explicitamente limitada ao recorte recente
 
+## Passo visual da fase 6.4.1
+- a tela `/support/tickets/:ticketId` passa a tratar conversa e composer como fluxo principal de atendimento
+- respostas publicas e notas internas continuam no mesmo composer, mas com modo explicito e CTA principal forte
+- eventos de sistema e historico tecnico ficam recolhidos em area secundaria
+- o rail operacional fica reduzido a:
+  - status
+  - atribuicao
+  - cliente B2B compacto
+  - acoes principais
+- `/support/customers/:tenantId` fica como apoio operacional sintetico, sem visual de CRM pesado ou dashboard
+
 ## Fora de escopo do workspace
 - atendimento a shopper final
 - omnichannel B2C

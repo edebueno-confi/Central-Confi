@@ -48,8 +48,9 @@
 - foco em triagem, atendimento, continuidade operacional e contexto do cliente B2B
 - a fila deve ser superficie dominante
 - o ticket selecionado deve ser o centro da tratativa
+- a conversa entre suporte e cliente deve ocupar o fluxo principal de atendimento
 - resposta publica e nota interna nao podem ser confundidas
-- timeline deve funcionar como trilha operacional, nao como card decorativo
+- timeline tecnica e eventos repetitivos devem ficar rebaixados ou recolhidos
 - contexto do cliente ajuda a tratativa, mas nao rouba foco do atendimento
 
 ## Regra de decisao para futuras fases
@@ -72,9 +73,10 @@
 ### Support Workspace
 - fila domina a triagem em `/support/queue`
 - ticket vira fluxo de tratativa em `/support/tickets/:ticketId`
-- composer fica no eixo principal antes da timeline
+- composer fica no eixo principal antes do historico tecnico
 - contexto do cliente opera como rail compacto de apoio
 - atribuicao tecnica avancada e acoes de excecao ficam recolhidas
+- conversa recente vira a principal superficie de leitura do ticket
 
 ### Knowledge Base Admin
 - curadoria editorial opera em master/detail real, sem dashboard de metricas dominando a tela
