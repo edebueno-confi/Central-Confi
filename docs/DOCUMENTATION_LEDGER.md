@@ -528,3 +528,41 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - documenta que a leitura inicial do suporte usa janelas recentes controladas, nao historico infinito
   - melhora a futura explicacao operacional de como agentes reentram rapidamente no contexto do ticket e do cliente
+
+### Fase 6.4.1 - Support Ticket Conversation UX Pass
+- fase: `6.4.1`
+- commit: `72dc31e`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: a tratativa do ticket passou a ser orientada por conversa, com composer e interacoes recentes no eixo principal, historico tecnico recolhido e customer context reduzido a apoio operacional.
+- docs alterados:
+  - `docs/UX_DIRECTION.md`
+  - `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - leitura mantida por `vw_support_ticket_detail`
+  - leitura mantida por `vw_support_ticket_timeline_recent`
+  - leitura mantida por `vw_support_customer_360`
+  - leitura mantida por `vw_support_customer_recent_tickets`
+  - leitura mantida por `vw_support_customer_recent_events`
+  - leitura mantida por `vw_support_assignable_agents`
+  - escrita mantida por `rpc_update_ticket_status`
+  - escrita mantida por `rpc_assign_ticket`
+  - escrita mantida por `rpc_add_ticket_message`
+  - escrita mantida por `rpc_add_internal_ticket_note`
+  - escrita mantida por `rpc_close_ticket`
+  - escrita mantida por `rpc_reopen_ticket`
+- telas afetadas:
+  - `/support/tickets/:ticketId`
+  - `/support/customers/:tenantId`
+  - `/support/queue`
+- riscos restantes:
+  - fallback tecnico por `user_id` permanece em area avancada
+  - historico tecnico completo continua sem RPC paginavel sob demanda
+  - customer context ainda depende de recorte adicional se houver crescimento forte de contatos e tickets
+- impacto na FAQ futura:
+  - melhora a futura documentacao do fluxo real de atendimento do suporte
+  - fixa a conversa como superficie principal do ticket e o contexto do cliente como apoio operacional
