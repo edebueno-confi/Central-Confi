@@ -371,6 +371,103 @@ export interface SupportAssignableAgent {
   isActive: boolean;
 }
 
+export type CustomerProductLine =
+  | 'genius_returns'
+  | 'after_sale'
+  | 'hybrid'
+  | 'other';
+
+export type CustomerOperationalStatus =
+  | 'onboarding'
+  | 'active'
+  | 'limited'
+  | 'suspended'
+  | 'legacy';
+
+export type CustomerIntegrationType =
+  | 'ecommerce_platform'
+  | 'erp'
+  | 'oms'
+  | 'logistics_provider'
+  | 'carrier'
+  | 'gateway'
+  | 'refund_provider'
+  | 'custom_api'
+  | 'other';
+
+export type CustomerIntegrationStatus =
+  | 'planned'
+  | 'active'
+  | 'degraded'
+  | 'disabled'
+  | 'deprecated';
+
+export type CustomerIntegrationEnvironment =
+  | 'production'
+  | 'sandbox'
+  | 'staging'
+  | 'other';
+
+export type CustomerCustomizationRiskLevel = 'low' | 'medium' | 'high' | 'critical';
+
+export type CustomerAlertSeverity = 'info' | 'warning' | 'high' | 'critical';
+
+export interface SupportCustomerAccountIntegration {
+  id: Uuid;
+  integrationType: CustomerIntegrationType;
+  provider: string;
+  status: CustomerIntegrationStatus;
+  environment: CustomerIntegrationEnvironment;
+  notes: string | null;
+}
+
+export interface SupportCustomerAccountFeature {
+  featureKey: string;
+  enabled: boolean;
+  source: string;
+  notes: string | null;
+}
+
+export interface SupportCustomerAccountCustomization {
+  id: Uuid;
+  title: string;
+  description: string;
+  riskLevel: CustomerCustomizationRiskLevel;
+  operationalNote: string | null;
+  status: string;
+}
+
+export interface SupportCustomerAccountAlert {
+  id: Uuid;
+  severity: CustomerAlertSeverity;
+  title: string;
+  description: string;
+  expiresAt: IsoTimestamp | null;
+}
+
+export interface SupportCustomerAccountContext {
+  tenantId: Uuid;
+  tenantSlug: string;
+  tenantDisplayName: string | null;
+  tenantLegalName: string | null;
+  tenantStatus: string;
+  profileId: Uuid | null;
+  productLine: CustomerProductLine | null;
+  operationalStatus: CustomerOperationalStatus | null;
+  accountTier: string | null;
+  internalNotes: string | null;
+  operationalFlags: JsonObject;
+  activeContactsCount: number;
+  totalTicketCount: number;
+  openTicketCount: number;
+  ticketStatusCounts: JsonObject;
+  activeContacts: SupportCustomer360Contact[];
+  integrations: SupportCustomerAccountIntegration[];
+  enabledFeatures: SupportCustomerAccountFeature[];
+  activeCustomizations: SupportCustomerAccountCustomization[];
+  activeAlerts: SupportCustomerAccountAlert[];
+}
+
 export interface RpcCreateTicketPayload {
   tenantId: Uuid;
   title: string;

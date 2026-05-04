@@ -9,6 +9,13 @@ export {
 } from './ticketing.js';
 
 export type {
+  CustomerAlertSeverity,
+  CustomerCustomizationRiskLevel,
+  CustomerIntegrationEnvironment,
+  CustomerIntegrationStatus,
+  CustomerIntegrationType,
+  CustomerOperationalStatus,
+  CustomerProductLine,
   IsoTimestamp,
   JsonObject,
   JsonPrimitive,
@@ -28,6 +35,11 @@ export type {
   RpcUpdateTicketStatusPayload,
   RpcUpdateTicketStatusResponse,
   SupportAssignableAgent,
+  SupportCustomerAccountAlert,
+  SupportCustomerAccountContext,
+  SupportCustomerAccountCustomization,
+  SupportCustomerAccountFeature,
+  SupportCustomerAccountIntegration,
   SupportCustomer360,
   SupportCustomer360Contact,
   SupportCustomerRecentEventsWindow,

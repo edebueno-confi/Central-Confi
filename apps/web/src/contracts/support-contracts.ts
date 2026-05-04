@@ -6,6 +6,13 @@ export {
 } from '@genius-support-os/contracts';
 
 export type {
+  CustomerAlertSeverity,
+  CustomerCustomizationRiskLevel,
+  CustomerIntegrationEnvironment,
+  CustomerIntegrationStatus,
+  CustomerIntegrationType,
+  CustomerOperationalStatus,
+  CustomerProductLine,
   JsonObject,
   RpcAddInternalTicketNotePayload,
   RpcAddInternalTicketNoteResponse,
@@ -22,6 +29,11 @@ export type {
   RpcUpdateTicketStatusPayload,
   RpcUpdateTicketStatusResponse,
   SupportAssignableAgent,
+  SupportCustomerAccountAlert,
+  SupportCustomerAccountContext,
+  SupportCustomerAccountCustomization,
+  SupportCustomerAccountFeature,
+  SupportCustomerAccountIntegration,
   SupportCustomer360,
   SupportCustomer360Contact,
   SupportCustomerRecentEventsWindow,

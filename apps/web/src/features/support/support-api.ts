@@ -1,6 +1,11 @@
 import { toAppError } from '../../app/errors';
 import { requireSupabaseBrowserClient } from '../../app/supabase-browser';
 import type {
+  CustomerIntegrationEnvironment,
+  CustomerIntegrationStatus,
+  CustomerIntegrationType,
+  CustomerOperationalStatus,
+  CustomerProductLine,
   RpcAddInternalTicketNotePayload,
   RpcAddInternalTicketNoteResponse,
   RpcAddTicketMessagePayload,
@@ -16,6 +21,11 @@ import type {
   RpcUpdateTicketStatusPayload,
   RpcUpdateTicketStatusResponse,
   SupportAssignableAgent,
+  SupportCustomerAccountAlert,
+  SupportCustomerAccountContext,
+  SupportCustomerAccountCustomization,
+  SupportCustomerAccountFeature,
+  SupportCustomerAccountIntegration,
   SupportCustomer360,
   SupportCustomerRecentEventsWindow,
   SupportCustomerRecentTicketsWindow,
@@ -222,6 +232,111 @@ function mapAssignableAgent(row: Record<string, unknown>): SupportAssignableAgen
   };
 }
 
+function mapCustomerAccountIntegration(
+  row: Record<string, unknown>,
+): SupportCustomerAccountIntegration {
+  return {
+    id: String(row.id),
+    integrationType: row.integration_type as CustomerIntegrationType,
+    provider: String(row.provider),
+    status: row.status as CustomerIntegrationStatus,
+    environment: row.environment as CustomerIntegrationEnvironment,
+    notes: (row.notes as string | null) ?? null,
+  };
+}
+
+function mapCustomerAccountFeature(
+  row: Record<string, unknown>,
+): SupportCustomerAccountFeature {
+  return {
+    featureKey: String(row.feature_key),
+    enabled: Boolean(row.enabled),
+    source: String(row.source),
+    notes: (row.notes as string | null) ?? null,
+  };
+}
+
+function mapCustomerAccountCustomization(
+  row: Record<string, unknown>,
+): SupportCustomerAccountCustomization {
+  return {
+    id: String(row.id),
+    title: String(row.title),
+    description: String(row.description),
+    riskLevel: row.risk_level as SupportCustomerAccountCustomization['riskLevel'],
+    operationalNote: (row.operational_note as string | null) ?? null,
+    status: String(row.status),
+  };
+}
+
+function mapCustomerAccountAlert(row: Record<string, unknown>): SupportCustomerAccountAlert {
+  return {
+    id: String(row.id),
+    severity: row.severity as SupportCustomerAccountAlert['severity'],
+    title: String(row.title),
+    description: String(row.description),
+    expiresAt: (row.expires_at as string | null) ?? null,
+  };
+}
+
+function mapCustomerAccountContext(
+  row: Record<string, unknown>,
+): SupportCustomerAccountContext {
+  const activeContacts = Array.isArray(row.active_contacts)
+    ? row.active_contacts.map((item) => mapCustomerContact(item as Record<string, unknown>))
+    : [];
+  const integrations = Array.isArray(row.integrations)
+    ? row.integrations.map((item) =>
+        mapCustomerAccountIntegration(item as Record<string, unknown>),
+      )
+    : [];
+  const enabledFeatures = Array.isArray(row.enabled_features)
+    ? row.enabled_features.map((item) =>
+        mapCustomerAccountFeature(item as Record<string, unknown>),
+      )
+    : [];
+  const activeCustomizations = Array.isArray(row.active_customizations)
+    ? row.active_customizations.map((item) =>
+        mapCustomerAccountCustomization(item as Record<string, unknown>),
+      )
+    : [];
+  const activeAlerts = Array.isArray(row.active_alerts)
+    ? row.active_alerts.map((item) =>
+        mapCustomerAccountAlert(item as Record<string, unknown>),
+      )
+    : [];
+
+  return {
+    tenantId: String(row.tenant_id),
+    tenantSlug: String(row.tenant_slug),
+    tenantDisplayName: (row.tenant_display_name as string | null) ?? null,
+    tenantLegalName: (row.tenant_legal_name as string | null) ?? null,
+    tenantStatus: String(row.tenant_status),
+    profileId: (row.profile_id as string | null) ?? null,
+    productLine: (row.product_line as CustomerProductLine | null) ?? null,
+    operationalStatus:
+      (row.operational_status as CustomerOperationalStatus | null) ?? null,
+    accountTier: (row.account_tier as string | null) ?? null,
+    internalNotes: (row.internal_notes as string | null) ?? null,
+    operationalFlags:
+      row.operational_flags && typeof row.operational_flags === 'object'
+        ? (row.operational_flags as JsonObject)
+        : ({} as JsonObject),
+    activeContactsCount: Number(row.active_contacts_count ?? 0),
+    totalTicketCount: Number(row.total_ticket_count ?? 0),
+    openTicketCount: Number(row.open_ticket_count ?? 0),
+    ticketStatusCounts:
+      row.ticket_status_counts && typeof row.ticket_status_counts === 'object'
+        ? (row.ticket_status_counts as JsonObject)
+        : ({} as JsonObject),
+    activeContacts,
+    integrations,
+    enabledFeatures,
+    activeCustomizations,
+    activeAlerts,
+  };
+}
+
 function mapRecentWindowMeta(row: Record<string, unknown> | null | undefined) {
   return {
     totalAvailableCount: Number(row?.total_available_count ?? 0),
@@ -346,6 +461,21 @@ export async function getSupportCustomer360(tenantId: Uuid) {
   }
 
   return data ? mapCustomer360(data as Record<string, unknown>) : null;
+}
+
+export async function getSupportCustomerAccountContext(tenantId: Uuid) {
+  const client = requireClient();
+  const { data, error } = await client
+    .from('vw_support_customer_account_context')
+    .select('*')
+    .eq('tenant_id', tenantId)
+    .maybeSingle();
+
+  if (error) {
+    throw toAppError(error, 'Falha ao carregar o contexto operacional enriquecido do cliente.');
+  }
+
+  return data ? mapCustomerAccountContext(data as Record<string, unknown>) : null;
 }
 
 export async function getSupportCustomerRecentTickets(

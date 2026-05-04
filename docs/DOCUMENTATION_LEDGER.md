@@ -699,3 +699,27 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - cria a base backend oficial para futura documentacao interna sobre stack, modulos e alertas do cliente B2B
   - separa com mais rigor o que e contexto operacional interno do que podera aparecer no portal B2B no futuro
+
+### Fase 6.9 - Support Workspace Customer Account Context UI
+- fase: `6.9`
+- commit: `PENDENTE`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: o Support Workspace passou a consumir `vw_support_customer_account_context` para exibir o stack operacional do cliente B2B no ticket e na visao de cliente, mantendo conversa e composer como foco principal da tratativa.
+- docs alterados:
+  - `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - `vw_support_customer_account_context`
+- telas afetadas:
+  - `/support/tickets/:ticketId`
+  - `/support/customers/:tenantId`
+- riscos restantes:
+  - o contexto enriquecido ainda depende de governanca de catalogo para `account_tier`, `provider`, `source` e `feature_key`
+  - o rail do ticket continua deliberadamente resumido; qualquer expansao futura precisa preservar conversa/composer como foco
+  - `ticket -> KB`, `ticket -> engenharia` e SLA seguem fora do escopo
+- impacto na FAQ futura:
+  - consolida como suporte enxerga produto, stack, customizacoes e alertas do cliente B2B no fluxo real de atendimento

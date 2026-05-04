@@ -451,6 +451,11 @@ Documentos históricos:
   - A timeline inicial do ticket agora carrega apenas a janela recente com `recent_limit`, `total_available_count` e `has_more`, evitando primeira carga infinita.
   - O customer context passou a separar resumo do tenant e preview de contatos em `vw_support_customer_360` dos recortes recentes operacionais de tickets e eventos.
   - O frontend do workspace passou a consumir esses recortes recentes explicitamente, sem simular paginação carregando o histórico completo por trás.
+- Fase 6.9: Support Workspace Customer Account Context UI concluída localmente.
+  - O Support Workspace passou a consumir `vw_support_customer_account_context` no ticket e na visão do cliente, sem abrir UI de edição do perfil.
+  - `/support/tickets/:ticketId` agora mostra no rail apenas produto, status operacional, tier, plataforma, integrações principais, features relevantes, customizações de risco e alertas ativos.
+  - `/support/customers/:tenantId` passou a exibir stack, integrações, features, customizações, alertas, contatos e tickets recentes em layout operacional leve.
+  - Observacoes internas, flags e detalhes extensos do perfil operacional ficaram recolhidos por padrao.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -472,6 +477,6 @@ Documentos históricos:
 - Não permitir leitura do Admin Console fora das views `vw_admin_*`.
 
 ## Próxima prioridade
-Abrir a fase de consumo controlado do Customer Account Profile no Support
-Workspace, usando `vw_support_customer_account_context` com criterio
-operacional e sem inflar a tratativa do ticket com payload demais.
+Abrir a próxima fase de evolução do Support Workspace apenas depois da
+inspeção operacional do contexto enriquecido do cliente B2B em volume real,
+preservando conversa/composer como foco principal da tratativa.

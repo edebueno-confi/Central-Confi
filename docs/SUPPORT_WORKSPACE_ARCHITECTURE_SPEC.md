@@ -296,6 +296,10 @@ Uso esperado:
 - status e atribuicao devem aparecer como acoes operacionais do fluxo, nao como cards soltos
 - customer context deve ser compacto e util, sem competir com o painel principal de atendimento
 - notebook e desktop largo devem privilegiar largura util real para tratativa, evitando coluna lateral espremida e vazio improdutivo
+- o contexto enriquecido de conta do cliente deve aparecer apenas como apoio operacional:
+  - no ticket, mostrar somente produto, status operacional, tier, plataforma, integrações principais, features relevantes, customizações de risco e alertas ativos
+  - observacoes internas, flags e listas extensas ficam recolhidas
+  - a conversa e o composer continuam como foco principal da tratativa
 
 ## Correcao estrutural consolidada na fase 6.2.2
 - `/support/queue` deve operar como ferramenta de triagem, nao como dashboard

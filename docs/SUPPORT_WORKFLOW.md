@@ -85,7 +85,10 @@
 - a manutencao do perfil operacional passou a existir apenas por RPCs administrativas dedicadas
 - `platform_admin` continua como write actor garantido do primeiro corte
 - `support_manager` e `support_agent` continuam apenas com leitura controlada por tenant no MVP do dominio
-- o workspace atual ainda nao foi expandido para mostrar todo esse contexto; a estabilizacao visual e a calibracao do payload continuam separadas da materializacao backend
+- o workspace agora consome esse contexto de forma controlada:
+  - `/support/tickets/:ticketId` mostra apenas produto, status operacional, tier, plataforma, integrações principais, features relevantes, customizações de risco e alertas ativos no rail
+  - `/support/customers/:tenantId` expande stack, integrações, features, customizações, alertas, contatos e tickets recentes sem virar CRM pesado
+  - observacoes internas, flags e detalhes extensos ficam recolhidos por padrao
 
 ## Superficie minima ja implementada
 - `/support` redireciona para a fila oficial `/support/queue`

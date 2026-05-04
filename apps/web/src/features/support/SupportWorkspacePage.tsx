@@ -38,6 +38,7 @@ import {
   addTicketMessage,
   assignTicket,
   closeTicket,
+  getSupportCustomerAccountContext,
   getSupportCustomer360,
   getSupportCustomerRecentEvents,
   getSupportCustomerRecentTickets,
@@ -54,6 +55,11 @@ import {
   TICKET_SEVERITIES,
   TICKET_STATUSES,
   type SupportAssignableAgent,
+  type SupportCustomerAccountAlert,
+  type SupportCustomerAccountContext,
+  type SupportCustomerAccountCustomization,
+  type SupportCustomerAccountFeature,
+  type SupportCustomerAccountIntegration,
   type SupportCustomer360,
   type SupportCustomer360Contact,
   type SupportCustomerRecentEventsWindow,
@@ -131,6 +137,36 @@ function humanizeVisibility(value: string) {
 
 function humanizeStatus(status: TicketStatus) {
   return humanizeToken(status).replaceAll('_', ' ');
+}
+
+function humanizeCustomerValue(value: string) {
+  return humanizeToken(value).replaceAll('_', ' ');
+}
+
+function toneForAlertSeverity(severity: SupportCustomerAccountAlert['severity']) {
+  if (severity === 'critical') {
+    return 'critical' as const;
+  }
+
+  if (severity === 'high' || severity === 'warning') {
+    return 'warning' as const;
+  }
+
+  return 'default' as const;
+}
+
+function toneForCustomizationRisk(
+  riskLevel: SupportCustomerAccountCustomization['riskLevel'],
+) {
+  if (riskLevel === 'critical') {
+    return 'critical' as const;
+  }
+
+  if (riskLevel === 'high' || riskLevel === 'medium') {
+    return 'warning' as const;
+  }
+
+  return 'default' as const;
 }
 
 function humanizeSupportRole(role: SupportAssignableAgent['role']) {
@@ -682,11 +718,13 @@ function SupportQueueToolbar({
 }
 
 function SupportCustomerRail({
+  accountContext,
   customer,
   recentTicketsWindow,
   recentEventsWindow,
   compact = false,
 }: {
+  accountContext: SupportCustomerAccountContext | null;
   customer: SupportCustomer360 | null;
   recentTicketsWindow: SupportCustomerRecentTicketsWindow;
   recentEventsWindow: SupportCustomerRecentEventsWindow;
@@ -704,6 +742,7 @@ function SupportCustomerRail({
   const contacts = customer.activeContacts.slice(0, compact ? 2 : 4);
   const recentTickets = recentTicketsWindow.tickets.slice(0, compact ? 3 : recentTicketsWindow.tickets.length);
   const recentEvents = recentEventsWindow.events.slice(0, compact ? 2 : recentEventsWindow.events.length);
+  const primaryContact = primaryContactFromCustomer(customer);
 
   if (compact) {
     return (
@@ -729,71 +768,57 @@ function SupportCustomerRail({
           </Link>
         </div>
 
-        <div className="space-y-2 border-t border-[color:var(--color-border)] pt-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
-            Contatos ativos
-          </p>
-          {contacts.length === 0 ? (
-            <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-              Nenhum contato ativo retornado pelo contrato.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {contacts.map((contact) => (
-                <div
-                  className="rounded-[16px] bg-[color:var(--color-surface)] px-3 py-3"
-                  key={contact.id}
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium text-[color:var(--color-ink)]">{contact.fullName}</p>
-                    {contact.isPrimary ? <StatusPill tone="accent">principal</StatusPill> : null}
-                  </div>
-                  <p className="mt-1 text-sm text-[color:var(--color-muted)]">{contact.email}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-2 border-t border-[color:var(--color-border)] pt-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
-              Tickets recentes
-            </p>
-            <p className="text-xs text-[color:var(--color-muted)]">
-              {recentTickets.length} de {recentTicketsWindow.totalAvailableCount}
-            </p>
-          </div>
-          {recentTickets.length === 0 ? (
-            <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-              Nenhum ticket recente retornado para este tenant.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {recentTickets.map((ticket) => (
-                <SupportRecentTicketCard key={ticket.id} ticket={ticket} />
-              ))}
-            </div>
-          )}
-        </div>
+        <SupportAccountContextCompact accountContext={accountContext} customer={customer} />
 
         <details className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
           <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-            Eventos recentes e detalhes extras
+            Contato e atividade recente
           </summary>
-          <div className="mt-3 space-y-2">
-            {recentEvents.length === 0 ? (
-              <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                Nenhum evento recente retornado pelo contrato.
+          <div className="mt-3 space-y-3">
+            {primaryContact ? (
+              <div className="rounded-[16px] bg-white px-3 py-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-medium text-[color:var(--color-ink)]">{primaryContact.fullName}</p>
+                  {primaryContact.isPrimary ? <StatusPill tone="accent">principal</StatusPill> : null}
+                </div>
+                <p className="mt-1 text-sm text-[color:var(--color-muted)]">{primaryContact.email}</p>
+              </div>
+            ) : null}
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                Tickets recentes
               </p>
-            ) : (
-              recentEvents.map((event) => (
-                <SupportRecentEventCard
-                  event={event}
-                  key={`${event.ticketId}-${event.occurredAt}-${event.eventType}`}
-                />
-              ))
-            )}
+              {recentTickets.length === 0 ? (
+                <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                  Nenhum ticket recente retornado para este tenant.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {recentTickets.map((ticket) => (
+                    <SupportRecentTicketCard key={ticket.id} ticket={ticket} />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                Eventos recentes
+              </p>
+              {recentEvents.length === 0 ? (
+                <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                  Nenhum evento recente retornado pelo contrato.
+                </p>
+              ) : (
+                recentEvents.map((event) => (
+                  <SupportRecentEventCard
+                    event={event}
+                    key={`${event.ticketId}-${event.occurredAt}-${event.eventType}`}
+                  />
+                ))
+              )}
+            </div>
           </div>
         </details>
       </div>
@@ -823,28 +848,10 @@ function SupportCustomerRail({
         <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
           {customer.tenantLegalName ?? 'Razao social nao resolvida'}
         </p>
-        <div className="mt-3 flex flex-wrap gap-2 text-sm text-[color:var(--color-muted)]">
-          <span className="rounded-full bg-[color:var(--color-surface)] px-3 py-1">
-            {customer.openTicketCount} abertos
-          </span>
-          <span className="rounded-full bg-[color:var(--color-surface)] px-3 py-1">
-            {customer.totalTicketCount} totais
-          </span>
-          <span className="rounded-full bg-[color:var(--color-surface)] px-3 py-1">
-            {customer.activeContactsCount} contatos
-          </span>
-        </div>
       </div>
 
-      <div className="space-y-2 rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
-        <h4 className="text-sm font-semibold text-[color:var(--color-ink)]">Contatos ativos</h4>
-        {contacts.length === 0 ? (
-          <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-            Nenhum contato ativo retornado pelo contrato.
-          </p>
-        ) : (
-          contacts.map((contact) => <SupportContactCard key={contact.id} contact={contact} />)
-        )}
+      <div className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+        <SupportAccountContextCompact accountContext={accountContext} customer={customer} />
       </div>
 
       <div className="space-y-2 rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
@@ -865,21 +872,34 @@ function SupportCustomerRail({
 
       <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
         <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-          Eventos recentes do cliente
+          Contatos e eventos recentes
         </summary>
-        <p className="mt-2 text-xs leading-5 text-[color:var(--color-muted)]">
-          Mostrando {recentEvents.length} de {recentEventsWindow.totalAvailableCount} registros recentes.
-        </p>
-        <div className="mt-3 space-y-2">
-          {recentEvents.length === 0 ? (
-            <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-              O backend nao retornou eventos recentes para este tenant.
+        <div className="mt-3 space-y-3">
+          <div className="space-y-2">
+            <h4 className="text-sm font-semibold text-[color:var(--color-ink)]">Contatos ativos</h4>
+            {contacts.length === 0 ? (
+              <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                Nenhum contato ativo retornado pelo contrato.
+              </p>
+            ) : (
+              contacts.map((contact) => <SupportContactCard key={contact.id} contact={contact} />)
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-xs leading-5 text-[color:var(--color-muted)]">
+              Mostrando {recentEvents.length} de {recentEventsWindow.totalAvailableCount} registros recentes.
             </p>
-          ) : (
-            recentEvents.map((event) => (
-              <SupportRecentEventCard key={`${event.ticketId}-${event.occurredAt}-${event.eventType}`} event={event} />
-            ))
-          )}
+            {recentEvents.length === 0 ? (
+              <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                O backend nao retornou eventos recentes para este tenant.
+              </p>
+            ) : (
+              recentEvents.map((event) => (
+                <SupportRecentEventCard key={`${event.ticketId}-${event.occurredAt}-${event.eventType}`} event={event} />
+              ))
+            )}
+          </div>
         </div>
       </details>
     </div>
@@ -945,6 +965,394 @@ function SupportRecentEventCard({
   );
 }
 
+function primaryContactFromCustomer(customer: SupportCustomer360) {
+  return customer.activeContacts.find((contact) => contact.isPrimary) ?? customer.activeContacts[0] ?? null;
+}
+
+function primaryPlatformFromContext(accountContext: SupportCustomerAccountContext | null) {
+  return (
+    accountContext?.integrations.find(
+      (integration) => integration.integrationType === 'ecommerce_platform',
+    ) ?? null
+  );
+}
+
+function visibleOperationalIntegrations(accountContext: SupportCustomerAccountContext | null, limit: number) {
+  if (!accountContext) {
+    return [];
+  }
+
+  return accountContext.integrations
+    .filter((integration) => integration.integrationType !== 'ecommerce_platform')
+    .slice(0, limit);
+}
+
+function visibleRiskCustomizations(accountContext: SupportCustomerAccountContext | null, limit: number) {
+  if (!accountContext) {
+    return [];
+  }
+
+  return accountContext.activeCustomizations
+    .filter((customization) => customization.riskLevel === 'high' || customization.riskLevel === 'critical')
+    .slice(0, limit);
+}
+
+function visibleFeatureSlice(accountContext: SupportCustomerAccountContext | null, limit: number) {
+  if (!accountContext) {
+    return [];
+  }
+
+  return accountContext.enabledFeatures.slice(0, limit);
+}
+
+function visibleAlertSlice(accountContext: SupportCustomerAccountContext | null, limit: number) {
+  if (!accountContext) {
+    return [];
+  }
+
+  return accountContext.activeAlerts.slice(0, limit);
+}
+
+function SupportAccountContextCompact({
+  accountContext,
+  customer,
+}: {
+  accountContext: SupportCustomerAccountContext | null;
+  customer: SupportCustomer360;
+}) {
+  if (!accountContext || !accountContext.profileId) {
+    return (
+      <InlineNotice tone="warning">
+        Perfil operacional ainda nao cadastrado para este tenant. O suporte segue com contatos e tickets recentes, mas sem stack enriquecido.
+      </InlineNotice>
+    );
+  }
+
+  const primaryPlatform = primaryPlatformFromContext(accountContext);
+  const integrations = visibleOperationalIntegrations(accountContext, 3);
+  const features = visibleFeatureSlice(accountContext, 4);
+  const alerts = visibleAlertSlice(accountContext, 2);
+  const riskyCustomizations = visibleRiskCustomizations(accountContext, 2);
+  const primaryContact = primaryContactFromCustomer(customer);
+
+  return (
+    <div className="space-y-3">
+      <div className="space-y-2 rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+        <div className="flex flex-wrap gap-2">
+          {accountContext.productLine ? (
+            <StatusPill tone="accent">{humanizeCustomerValue(accountContext.productLine)}</StatusPill>
+          ) : null}
+          {accountContext.operationalStatus ? (
+            <StatusPill tone={accountContext.operationalStatus === 'active' ? 'positive' : 'warning'}>
+              {humanizeCustomerValue(accountContext.operationalStatus)}
+            </StatusPill>
+          ) : null}
+          {accountContext.accountTier ? <StatusPill>{accountContext.accountTier}</StatusPill> : null}
+        </div>
+        <div className="space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+            Stack principal
+          </p>
+          <p className="text-sm font-medium text-[color:var(--color-ink)]">
+            {primaryPlatform ? primaryPlatform.provider : 'Plataforma nao registrada'}
+          </p>
+          {integrations.length > 0 ? (
+            <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+              {integrations.map((integration) => integration.provider).join(' · ')}
+            </p>
+          ) : null}
+        </div>
+      </div>
+
+      {alerts.length > 0 ? (
+        <div className="space-y-2">
+          {alerts.map((alert) => (
+            <InlineNotice key={alert.id} tone={toneForAlertSeverity(alert.severity)}>
+              <span className="font-semibold">{alert.title}</span>
+              {`: ${alert.description}`}
+            </InlineNotice>
+          ))}
+        </div>
+      ) : null}
+
+      {features.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+            Features ativas
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {features.map((feature) => (
+              <StatusPill key={feature.featureKey}>{humanizeCustomerValue(feature.featureKey)}</StatusPill>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {riskyCustomizations.length > 0 ? (
+        <div className="space-y-2 rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+            Customizacoes com risco
+          </p>
+          <div className="space-y-2">
+            {riskyCustomizations.map((customization) => (
+              <div key={customization.id} className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-medium text-[color:var(--color-ink)]">
+                    {customization.title}
+                  </p>
+                  <StatusPill tone={toneForCustomizationRisk(customization.riskLevel)}>
+                    {humanizeCustomerValue(customization.riskLevel)}
+                  </StatusPill>
+                </div>
+                <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                  {customization.operationalNote ?? customization.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {primaryContact ? (
+        <div className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+            Contato operacional
+          </p>
+          <p className="mt-1 text-sm font-medium text-[color:var(--color-ink)]">
+            {primaryContact.fullName}
+          </p>
+          <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+            {primaryContact.email}
+          </p>
+        </div>
+      ) : null}
+
+      <details className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-3">
+        <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+          Detalhes operacionais recolhidos
+        </summary>
+        <div className="mt-3 space-y-3">
+          {accountContext.integrations.length > 0 ? (
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                Integracoes registradas
+              </p>
+              <div className="space-y-2">
+                {accountContext.integrations.map((integration) => (
+                  <div
+                    key={integration.id}
+                    className="rounded-[16px] bg-[color:var(--color-surface)] px-3 py-3"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-medium text-[color:var(--color-ink)]">
+                        {integration.provider}
+                      </p>
+                      <StatusPill>{humanizeCustomerValue(integration.integrationType)}</StatusPill>
+                      <StatusPill tone={integration.status === 'active' ? 'positive' : 'warning'}>
+                        {humanizeCustomerValue(integration.status)}
+                      </StatusPill>
+                    </div>
+                    <p className="mt-1 text-sm leading-6 text-[color:var(--color-muted)]">
+                      Ambiente: {humanizeCustomerValue(integration.environment)}
+                      {integration.notes ? ` · ${integration.notes}` : ''}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {accountContext.internalNotes ? (
+            <div className="space-y-1 rounded-[16px] bg-[color:var(--color-surface)] px-3 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                Observacao interna
+              </p>
+              <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                {accountContext.internalNotes}
+              </p>
+            </div>
+          ) : null}
+        </div>
+      </details>
+    </div>
+  );
+}
+
+function SupportAccountContextOverview({
+  accountContext,
+  customer,
+}: {
+  accountContext: SupportCustomerAccountContext | null;
+  customer: SupportCustomer360;
+}) {
+  if (!accountContext || !accountContext.profileId) {
+    return (
+      <InlineNotice tone="warning">
+        Este tenant ainda nao tem perfil operacional enriquecido materializado. O suporte pode operar com contatos e tickets recentes, mas sem stack consolidado.
+      </InlineNotice>
+    );
+  }
+
+  const primaryPlatform = primaryPlatformFromContext(accountContext);
+  const primaryContact = primaryContactFromCustomer(customer);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        <StatusPill tone="accent">{humanizeCustomerValue(accountContext.productLine ?? 'other')}</StatusPill>
+        {accountContext.operationalStatus ? (
+          <StatusPill tone={accountContext.operationalStatus === 'active' ? 'positive' : 'warning'}>
+            {humanizeCustomerValue(accountContext.operationalStatus)}
+          </StatusPill>
+        ) : null}
+        {accountContext.accountTier ? <StatusPill>{accountContext.accountTier}</StatusPill> : null}
+      </div>
+
+      {accountContext.activeAlerts.length > 0 ? (
+        <div className="space-y-2">
+          {accountContext.activeAlerts.map((alert) => (
+            <InlineNotice key={alert.id} tone={toneForAlertSeverity(alert.severity)}>
+              <span className="font-semibold">{alert.title}</span>
+              {`: ${alert.description}`}
+            </InlineNotice>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+        <div className="space-y-3 rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+              Plataforma e integracoes
+            </p>
+            <p className="text-sm font-medium text-[color:var(--color-ink)]">
+              {primaryPlatform ? primaryPlatform.provider : 'Plataforma nao registrada'}
+            </p>
+            <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+              {primaryPlatform
+                ? `Ambiente ${humanizeCustomerValue(primaryPlatform.environment)} · ${humanizeCustomerValue(primaryPlatform.status)}`
+                : 'Sem ambiente de e-commerce consolidado no perfil.'}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            {accountContext.integrations.length === 0 ? (
+              <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                Nenhuma integracao registrada no perfil.
+              </p>
+            ) : (
+              accountContext.integrations.map((integration) => (
+                <div
+                  key={integration.id}
+                  className="rounded-[16px] bg-white px-3 py-3"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-medium text-[color:var(--color-ink)]">
+                      {integration.provider}
+                    </p>
+                    <StatusPill>{humanizeCustomerValue(integration.integrationType)}</StatusPill>
+                    <StatusPill tone={integration.status === 'active' ? 'positive' : 'warning'}>
+                      {humanizeCustomerValue(integration.status)}
+                    </StatusPill>
+                  </div>
+                  <p className="mt-1 text-sm leading-6 text-[color:var(--color-muted)]">
+                    Ambiente {humanizeCustomerValue(integration.environment)}
+                    {integration.notes ? ` · ${integration.notes}` : ''}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-3 rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+              Features e customizacoes
+            </p>
+            <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+              Somente o que impacta a resposta operacional do suporte.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {accountContext.enabledFeatures.length === 0 ? (
+              <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                Nenhuma feature ativa registrada.
+              </p>
+            ) : (
+              accountContext.enabledFeatures.map((feature) => (
+                <StatusPill key={feature.featureKey}>{humanizeCustomerValue(feature.featureKey)}</StatusPill>
+              ))
+            )}
+          </div>
+
+          {accountContext.activeCustomizations.length > 0 ? (
+            <div className="space-y-2">
+              {accountContext.activeCustomizations.map((customization) => (
+                <div key={customization.id} className="rounded-[16px] bg-white px-3 py-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-medium text-[color:var(--color-ink)]">
+                      {customization.title}
+                    </p>
+                    <StatusPill tone={toneForCustomizationRisk(customization.riskLevel)}>
+                      {humanizeCustomerValue(customization.riskLevel)}
+                    </StatusPill>
+                  </div>
+                  <p className="mt-1 text-sm leading-6 text-[color:var(--color-muted)]">
+                    {customization.operationalNote ?? customization.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {primaryContact ? (
+            <div className="rounded-[16px] bg-white px-3 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                Contato principal
+              </p>
+              <p className="mt-1 text-sm font-medium text-[color:var(--color-ink)]">
+                {primaryContact.fullName}
+              </p>
+              <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                {primaryContact.email}
+              </p>
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+        <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+          Observacoes internas e flags controladas
+        </summary>
+        <div className="mt-3 space-y-3">
+          {accountContext.internalNotes ? (
+            <div className="rounded-[16px] bg-[color:var(--color-surface)] px-3 py-3">
+              <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                {accountContext.internalNotes}
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+              Nenhuma observacao interna controlada registrada.
+            </p>
+          )}
+          <div className="rounded-[16px] bg-[color:var(--color-surface)] px-3 py-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+              Flags operacionais
+            </p>
+            <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-words text-xs leading-6 text-[color:var(--color-muted)]">
+              {stringifyJsonPreview(accountContext.operationalFlags)}
+            </pre>
+          </div>
+        </div>
+      </details>
+    </div>
+  );
+}
+
 function SupportWorkspaceView({
   variant,
   focusTicketId,
@@ -968,6 +1376,8 @@ function SupportWorkspaceView({
     emptyTimelineWindow(),
   );
   const [customer, setCustomer] = useState<SupportCustomer360 | null>(null);
+  const [customerAccountContext, setCustomerAccountContext] =
+    useState<SupportCustomerAccountContext | null>(null);
   const [customerRecentTickets, setCustomerRecentTickets] =
     useState<SupportCustomerRecentTicketsWindow>(emptyCustomerRecentTicketsWindow());
   const [customerRecentEvents, setCustomerRecentEvents] =
@@ -1053,14 +1463,16 @@ function SupportWorkspaceView({
         return;
       }
 
-      const [customerRow, recentTicketsWindow, recentEventsWindow] = await Promise.all([
+      const [customerRow, customerAccountRow, recentTicketsWindow, recentEventsWindow] = await Promise.all([
         getSupportCustomer360(detail.tenantId),
+        getSupportCustomerAccountContext(detail.tenantId),
         getSupportCustomerRecentTickets(detail.tenantId),
         getSupportCustomerRecentEvents(detail.tenantId),
       ]);
       setTicketDetail(detail);
       setTimelineWindow(timelineRecent);
       setCustomer(customerRow);
+      setCustomerAccountContext(customerAccountRow);
       setCustomerRecentTickets(recentTicketsWindow);
       setCustomerRecentEvents(recentEventsWindow);
       setDetailPhase('ready');
@@ -1108,6 +1520,7 @@ function SupportWorkspaceView({
       setTicketDetail(null);
       setTimelineWindow(emptyTimelineWindow());
       setCustomer(null);
+      setCustomerAccountContext(null);
       setCustomerRecentTickets(emptyCustomerRecentTicketsWindow());
       setCustomerRecentEvents(emptyCustomerRecentEventsWindow());
       setAssignableAgents([]);
@@ -1145,6 +1558,7 @@ function SupportWorkspaceView({
       setTicketDetail(null);
       setTimelineWindow(emptyTimelineWindow());
       setCustomer(null);
+      setCustomerAccountContext(null);
       setCustomerRecentTickets(emptyCustomerRecentTicketsWindow());
       setCustomerRecentEvents(emptyCustomerRecentEventsWindow());
       setAssignableAgents([]);
@@ -1537,7 +1951,7 @@ function SupportWorkspaceView({
           description="O frontend esta resolvendo detalhe, timeline e contexto do cliente."
         />
       ) : detailPhase === 'contract-unavailable' ? (
-        <ContractUnavailableState contractName="vw_support_ticket_detail / vw_support_ticket_timeline_recent / vw_support_customer_360" />
+        <ContractUnavailableState contractName="vw_support_ticket_detail / vw_support_ticket_timeline_recent / vw_support_customer_360 / vw_support_customer_account_context" />
       ) : detailPhase === 'error' || !ticketDetail || !selectedTicketSummary ? (
         <ErrorState
           description={detailMessage ?? 'O painel operacional do ticket nao ficou disponivel.'}
@@ -1791,6 +2205,7 @@ function SupportWorkspaceView({
                   </div>
 
                   <SupportCustomerRail
+                    accountContext={customerAccountContext}
                     compact
                     customer={customer}
                     recentEventsWindow={customerRecentEvents}
@@ -1889,6 +2304,8 @@ export function SupportCustomerPage() {
   const [phase, setPhase] = useState<PagePhase>('loading');
   const [message, setMessage] = useState<string | null>(null);
   const [customer, setCustomer] = useState<SupportCustomer360 | null>(null);
+  const [accountContext, setAccountContext] =
+    useState<SupportCustomerAccountContext | null>(null);
   const [customers, setCustomers] = useState<SupportCustomer360[]>([]);
   const [recentTicketsWindow, setRecentTicketsWindow] =
     useState<SupportCustomerRecentTicketsWindow>(emptyCustomerRecentTicketsWindow());
@@ -1898,6 +2315,7 @@ export function SupportCustomerPage() {
   const loadCustomer = useEffectEvent(async () => {
     if (!tenantId) {
       setCustomer(null);
+      setAccountContext(null);
       setCustomers([]);
       setRecentTicketsWindow(emptyCustomerRecentTicketsWindow());
       setRecentEventsWindow(emptyCustomerRecentEventsWindow());
@@ -1907,8 +2325,9 @@ export function SupportCustomerPage() {
     }
 
     try {
-      const [detail, rows, recentTickets, recentEvents] = await Promise.all([
+      const [detail, context, rows, recentTickets, recentEvents] = await Promise.all([
         getSupportCustomer360(tenantId),
+        getSupportCustomerAccountContext(tenantId),
         listSupportCustomers360(),
         getSupportCustomerRecentTickets(tenantId),
         getSupportCustomerRecentEvents(tenantId),
@@ -1916,6 +2335,7 @@ export function SupportCustomerPage() {
 
       setBackendDenied(false);
       setCustomer(detail);
+      setAccountContext(context);
       setCustomers(rows);
       setRecentTicketsWindow(recentTickets);
       setRecentEventsWindow(recentEvents);
@@ -1938,6 +2358,7 @@ export function SupportCustomerPage() {
       }
 
       setCustomer(null);
+      setAccountContext(null);
       setCustomers([]);
       setRecentTicketsWindow(emptyCustomerRecentTicketsWindow());
       setRecentEventsWindow(emptyCustomerRecentEventsWindow());
@@ -1970,7 +2391,7 @@ export function SupportCustomerPage() {
   }
 
   if (phase === 'contract-unavailable') {
-    return <ContractUnavailableState contractName="vw_support_customer_360 / vw_support_customer_recent_tickets / vw_support_customer_recent_events" />;
+    return <ContractUnavailableState contractName="vw_support_customer_360 / vw_support_customer_account_context / vw_support_customer_recent_tickets / vw_support_customer_recent_events" />;
   }
 
   if (phase === 'error') {
@@ -2011,6 +2432,9 @@ export function SupportCustomerPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <StatusPill>{customer.tenantStatus}</StatusPill>
                     <StatusPill tone="accent">{customer.tenantSlug}</StatusPill>
+                    {accountContext?.productLine ? (
+                      <StatusPill>{humanizeCustomerValue(accountContext.productLine)}</StatusPill>
+                    ) : null}
                   </div>
                   <h3 className="text-xl font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
                     {customer.tenantDisplayName ?? customer.tenantLegalName ?? customer.tenantSlug}
@@ -2045,6 +2469,16 @@ export function SupportCustomerPage() {
                 />
               </div>
             </div>
+          </Panel>
+
+          <Panel
+            title="Produto, stack e alertas"
+            description="Resumo operacional do perfil do cliente para responder o ticket com contexto real, sem virar CRM pesado."
+          >
+            <SupportAccountContextOverview
+              accountContext={accountContext}
+              customer={customer}
+            />
           </Panel>
 
           <Panel
@@ -2088,7 +2522,7 @@ export function SupportCustomerPage() {
 
           <details className="rounded-[22px] border border-[color:var(--color-border)] bg-white px-5 py-4">
             <summary className="cursor-pointer text-base font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
-              Eventos recentes do cliente
+              Eventos recentes e detalhes extras
             </summary>
             <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
               Mostrando {recentEventsWindow.events.length} de {recentEventsWindow.totalAvailableCount} registros recentes.

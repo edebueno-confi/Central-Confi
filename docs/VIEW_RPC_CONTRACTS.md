@@ -895,6 +895,16 @@ Fase 6.8:
 ### Leitura consumida pelo frontend
 - `vw_support_assignable_agents`
 
+## Fase 6.9 - Support Workspace Customer Account Context UI
+
+### Leitura consumida pelo frontend
+- `vw_support_customer_account_context`
+
+### Regras de consumo
+- `/support/tickets/:ticketId` consome o contexto apenas no rail operacional, com payload resumido e detalhes extras recolhidos.
+- `/support/customers/:tenantId` consome o mesmo contrato para visão operacional mais completa de stack, integrações, features, customizações e alertas.
+- nenhum dado do Customer Account Profile passa a ser lido por tabela-base no frontend.
+
 ### Escrita consumida pelo frontend
 - `rpc_assign_ticket`
 
