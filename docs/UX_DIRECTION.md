@@ -56,3 +56,28 @@
 - antes de reutilizar um layout existente, validar se a operacao real do dominio e a mesma
 - se a operacao for diferente, criar estrutura propria do dominio com base nas mesmas primitives
 - padronizacao visual nao pode sacrificar clareza operacional
+
+## Gate estrutural para superficies operacionais
+- superficies operacionais nao devem abrir com muitos blocos equivalentes competindo ao mesmo tempo
+- o layout deve privilegiar no maximo 2 zonas principais de trabalho por tela
+- a area util dominante precisa pertencer ao fluxo principal da tarefa, nao a contexto secundario
+- detalhes tecnicos, metadados longos e trilhas auxiliares devem ficar recolhidos por padrao
+- badges e sinais visuais devem ser usados apenas quando ajudam a decidir ou priorizar
+- acoes principais precisam ter tamanho confortavel e posicao previsivel
+- acoes secundarias devem ser rebaixadas, agrupadas ou recolhidas
+- texto nunca pode vazar ou depender de coluna estreita para continuar legivel
+
+## Aplicacao direta da fase 6.2.2
+
+### Support Workspace
+- fila domina a triagem em `/support/queue`
+- ticket vira fluxo de tratativa em `/support/tickets/:ticketId`
+- composer fica no eixo principal antes da timeline
+- contexto do cliente opera como rail compacto de apoio
+- atribuicao tecnica avancada e acoes de excecao ficam recolhidas
+
+### Knowledge Base Admin
+- curadoria editorial opera em master/detail real, sem dashboard de metricas dominando a tela
+- a lista do artigo e a revisao editorial dividem a largura util da tela
+- advisory, checklist e bloco tecnico ficam resumidos ou recolhidos por padrao
+- a superficie deve priorizar leitura, decisao e publish controlado, nao exibicao simultanea de todos os metadados

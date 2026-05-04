@@ -90,6 +90,24 @@
 - o workspace nao deve parecer dashboard generico nem extensao visual do Admin Console
 - foco em operacao interna de suporte/CS, nunca em atendimento a shopper final
 
+## Correcoes consolidadas na fase 6.2.2
+- a fila oficial passou a mostrar apenas o essencial para triagem:
+  - status
+  - prioridade e severidade
+  - titulo
+  - tenant
+  - responsavel
+  - ultima atividade
+- o preview lateral da fila existe apenas para decidir o atendimento; nao concorre com a lista dominante
+- o detalhe do ticket agora segue a ordem operacional:
+  1. cabecalho do ticket
+  2. composer
+  3. timeline
+  4. rail de status, atribuicao e cliente
+- resposta publica e nota interna continuam no mesmo composer, mas com mudanca explicita de modo e CTA principal grande
+- user_id tecnico, fechamento e reabertura ficam recolhidos em areas avancadas
+- customer context fica compacto e serve a continuidade da tratativa sem virar CRM ou painel institucional
+
 ## Fora de escopo do workspace
 - atendimento a shopper final
 - omnichannel B2C

@@ -13,7 +13,6 @@ import {
   Field,
   GhostButton,
   InlineNotice,
-  MetricCard,
   PageHeader,
   Panel,
   SelectInput,
@@ -574,20 +573,11 @@ export function KnowledgePage() {
     articleActionFeedback.articleId === selectedArticleId
       ? articleActionFeedback.message
       : null;
-  const rootCategoryCount = categories.filter(
-    (category) => category.parent_category_id === null,
-  ).length;
   const draftArticleCount = articles.filter(
     (article) => article.status === 'draft',
   ).length;
   const reviewArticleCount = articles.filter(
     (article) => article.status === 'review',
-  ).length;
-  const publishedArticleCount = articles.filter(
-    (article) => article.status === 'published',
-  ).length;
-  const reviewedAdvisoryCount = advisories.filter(
-    (advisory) => advisory.review_status === 'reviewed',
   ).length;
   const legacyArticleCount = articles.filter(
     (article) => article.source_path || article.source_hash,
@@ -1243,7 +1233,7 @@ export function KnowledgePage() {
     <div className="space-y-6">
       <PageHeader
         title="Knowledge"
-        description="Curadoria editorial space-aware da Knowledge Base. A operacao filtra por knowledge space, lista artigos, edita drafts e controla o fluxo de revisao sem abrir a Central Publica."
+        description="Curadoria editorial space-aware da Knowledge Base com foco em revisar artigo, advisory e checklist sem poluir a tela."
         action={
           <div className="flex flex-wrap gap-2">
             <GhostButton
@@ -1266,49 +1256,26 @@ export function KnowledgePage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
-        <MetricCard
-          label="Knowledge spaces"
-          value={String(spaces.length)}
-          helper="Leitura oficial em vw_admin_knowledge_spaces."
-        />
-        <MetricCard
-          label="Categorias"
-          value={String(categories.length)}
-          helper={`${rootCategoryCount} categorias raiz no space selecionado.`}
-        />
-        <MetricCard
-          label="Drafts"
-          value={String(draftArticleCount)}
-          helper="Rascunhos visiveis com os filtros atuais."
-        />
-        <MetricCard
-          label="Review/Publicados"
-          value={`${reviewArticleCount}/${publishedArticleCount}`}
-          helper="Revisao humana continua obrigatoria antes da publicacao."
-        />
-        <MetricCard
-          label="Legado no space"
-          value={String(legacyArticleCount)}
-          helper="Artigos com source_path/source_hash disponiveis para curadoria."
-        />
-        <MetricCard
-          label="Advisories revisados"
-          value={`${reviewedAdvisoryCount}/${advisories.length}`}
-          helper="Revisoes persistidas no contrato de advisory editorial."
-        />
-        <MetricCard
-          label="Restritos / duplicados"
-          value={`${restrictedArticleCount}/${duplicateHashGroupCount}`}
-          helper="Primeiro numero: artigos restricted. Segundo: grupos duplicados no advisory."
-        />
-      </div>
+      <div className="space-y-4 rounded-[24px] border border-[color:var(--color-border)] bg-white p-4 shadow-[0_12px_28px_rgba(19,33,79,0.06)]">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-[color:var(--color-muted)]">
+          <span className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2">
+            {draftArticleCount} drafts
+          </span>
+          <span className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2">
+            {reviewArticleCount} em review
+          </span>
+          <span className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2">
+            {legacyArticleCount} do legado
+          </span>
+          <span className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2">
+            {restrictedArticleCount} restritos
+          </span>
+          <span className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2">
+            {duplicateHashGroupCount} grupos duplicados
+          </span>
+        </div>
 
-      <Panel
-        title="Escopo editorial"
-        description="A leitura desta etapa usa apenas knowledge spaces, views v2 space-aware e o advisory contratual de revisao editorial. Nenhuma tabela-base da Knowledge Base e acessada pelo frontend."
-      >
-        <div className="grid gap-4 xl:grid-cols-3 2xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.9fr)_minmax(0,0.9fr)]">
+        <div className="grid gap-4 xl:grid-cols-3 2xl:grid-cols-6">
           <Field label="Knowledge space">
             <SelectInput
               onChange={(event) => setSelectedSpaceId(event.target.value || null)}
@@ -1399,7 +1366,7 @@ export function KnowledgePage() {
             </SelectInput>
           </Field>
 
-          <div className="flex items-end xl:col-span-3 2xl:col-span-3">
+          <div className="flex items-end xl:col-span-3 2xl:col-span-1">
             <GhostButton
               disabled={!selectedSpaceId}
               onClick={() => {
@@ -1414,7 +1381,7 @@ export function KnowledgePage() {
         </div>
 
         {selectedSpace ? (
-          <div className="mt-5 grid gap-4 rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(340px,0.8fr)]">
+          <div className="grid gap-3 rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)]">
             <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
                 <StatusPill tone={toneForSpaceStatus(selectedSpace.status)}>
@@ -1424,7 +1391,7 @@ export function KnowledgePage() {
                 <StatusPill>{selectedSpace.default_locale}</StatusPill>
               </div>
               <div className="space-y-1">
-                <h2 className="text-xl font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
+                <h2 className="text-lg font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
                   {selectedSpace.display_name}
                 </h2>
                 <p className="text-sm text-[color:var(--color-muted)]">
@@ -1438,29 +1405,23 @@ export function KnowledgePage() {
             </div>
 
             <div className="space-y-3">
-              <InlineNotice tone="warning">
-                Esta superficie continua interna. Publicar um artigo aqui nao abre
-                Help Center nem Central Publica.
-              </InlineNotice>
-              {selectedSpace.owner_tenant_id ? (
-                <InlineNotice>
-                  Compatibilidade legada ativa pelo tenant dono{' '}
-                  {selectedSpace.owner_tenant_display_name ?? selectedSpace.owner_tenant_slug}.
-                </InlineNotice>
-              ) : (
-                <InlineNotice>
-                  Este knowledge space ainda opera sem `owner_tenant_id` oficial.
-                </InlineNotice>
-              )}
+              <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                Esta superficie continua interna. Publicar um artigo aqui nao abre a Central Publica automaticamente.
+              </p>
+              <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                {selectedSpace.owner_tenant_id
+                  ? `Compatibilidade legada ativa pelo tenant dono ${selectedSpace.owner_tenant_display_name ?? selectedSpace.owner_tenant_slug}.`
+                  : 'Este knowledge space ainda opera sem owner_tenant_id oficial.'}
+              </p>
             </div>
           </div>
         ) : null}
-      </Panel>
+      </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.06fr)_minmax(460px,0.94fr)] 2xl:grid-cols-[minmax(0,1.08fr)_minmax(560px,0.92fr)]">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,0.45fr)_minmax(0,0.55fr)]">
         <Panel
           title="Artigos"
-          description="Lista space-aware de artigos administrativos da Knowledge Base."
+          description="Lista dominante de curadoria com sinais suficientes para decidir qual artigo entra em revisao."
         >
           {contentPhase === 'idle' ? (
             <EmptyState
@@ -1497,112 +1458,55 @@ export function KnowledgePage() {
               }
             />
           ) : (
-            <div className="overflow-hidden rounded-[24px] border border-[color:var(--color-border)]">
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="bg-[color:var(--color-surface)] text-[color:var(--color-muted)]">
-                    <tr>
-                      <th className="px-4 py-3 font-medium">Artigo</th>
-                      <th className="px-4 py-3 font-medium">Status</th>
-                      <th className="px-4 py-3 font-medium">Visibility</th>
-                      <th className="px-4 py-3 font-medium">Categoria</th>
-                      <th className="px-4 py-3 font-medium">Atualizado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredArticles.map((article) => {
-                      const isSelected = article.id === selectedArticleId;
-                      const articleAdvisory = advisoryMap.get(article.id);
-                      const duplicateCount =
-                        articleAdvisory?.duplicate_group_article_count ??
-                        (article.source_hash
-                          ? sourceHashCounts.get(article.source_hash) ?? 0
-                          : 0);
-                      return (
-                        <tr
-                          key={article.id}
-                          className={cx(
-                            isSelected
-                              ? 'bg-[rgba(48,127,226,0.08)]'
-                              : article.visibility === 'restricted'
-                                ? 'bg-[rgba(191,45,45,0.05)]'
-                                : article.visibility === 'internal'
-                                  ? 'bg-[rgba(186,122,47,0.05)]'
-                                  : 'bg-white',
-                          )}
-                        >
-                          <td className="px-4 py-3">
-                            <button
-                              className="flex w-full flex-col items-start gap-1 rounded-2xl text-left outline-none focus:ring-2 focus:ring-[color:var(--color-brand-blue)]/25"
-                              onClick={() => {
-                                setSelectedArticleId(article.id);
-                                setPanelMode('detail');
-                                setArticleFormMessage(null);
-                                setCategoryFormMessage(null);
-                                setArticleActionFeedback(null);
-                              }}
-                              type="button"
-                            >
-                              <span className="font-medium text-[color:var(--color-ink)]">
-                                {article.title}
-                              </span>
-                              <span className="text-xs text-[color:var(--color-muted)]">
-                                {article.slug}
-                                {article.source_path ? ' · importado do legado' : ' · manual'}
-                                {article.source_hash
-                                  ? ` · hash ${article.source_hash.slice(0, 8)}`
-                                  : ''}
-                                {duplicateCount > 1 ? ` · duplicado x${duplicateCount}` : ''}
-                              </span>
-                              {articleAdvisory ? (
-                                <div className="flex flex-wrap gap-2">
-                                  <StatusPill
-                                    tone={toneForAdvisoryClassification(
-                                      articleAdvisory.suggested_classification,
-                                    )}
-                                  >
-                                    {articleAdvisory.suggested_classification}
-                                  </StatusPill>
-                                  <StatusPill
-                                    tone={toneForReviewStatus(articleAdvisory.review_status)}
-                                  >
-                                    {articleAdvisory.review_status}
-                                  </StatusPill>
-                                </div>
-                              ) : null}
-                              {article.visibility === 'restricted' ? (
-                                <span className="text-[0.72rem] font-medium uppercase tracking-[0.12em] text-[color:var(--color-danger-ink)]">
-                                  revisao cautelosa obrigatoria
-                                </span>
-                              ) : article.visibility === 'internal' ? (
-                                <span className="text-[0.72rem] font-medium uppercase tracking-[0.12em] text-[color:var(--color-warning-ink)]">
-                                  confirmar escopo interno antes de promover
-                                </span>
-                              ) : null}
-                            </button>
-                          </td>
-                          <td className="px-4 py-3">
-                            <StatusPill tone={toneForArticleStatus(article.status)}>
-                              {article.status}
-                            </StatusPill>
-                          </td>
-                          <td className="px-4 py-3">
-                            <StatusPill tone={toneForVisibility(article.visibility)}>
-                              {article.visibility}
-                            </StatusPill>
-                          </td>
-                          <td className="px-4 py-3 text-[color:var(--color-muted)]">
-                            {article.category_name ?? 'Sem categoria'}
-                          </td>
-                          <td className="px-4 py-3 text-[color:var(--color-muted)]">
-                            {formatDateTime(article.updated_at)}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+            <div className="space-y-3">
+              {filteredArticles.map((article) => {
+                const isSelected = article.id === selectedArticleId;
+                const articleAdvisory = advisoryMap.get(article.id);
+                const duplicateCount =
+                  articleAdvisory?.duplicate_group_article_count ??
+                  (article.source_hash ? sourceHashCounts.get(article.source_hash) ?? 0 : 0);
+                return (
+                  <button
+                    className={cx(
+                      'flex w-full flex-col gap-3 rounded-[22px] border px-4 py-4 text-left transition',
+                      isSelected
+                        ? 'border-[rgba(48,127,226,0.42)] bg-[rgba(48,127,226,0.08)] shadow-[0_10px_24px_rgba(19,33,79,0.06)]'
+                        : 'border-[color:var(--color-border)] bg-white hover:border-[rgba(48,127,226,0.24)]',
+                    )}
+                    key={article.id}
+                    onClick={() => {
+                      setSelectedArticleId(article.id);
+                      setPanelMode('detail');
+                      setArticleFormMessage(null);
+                      setCategoryFormMessage(null);
+                      setArticleActionFeedback(null);
+                    }}
+                    type="button"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusPill tone={toneForArticleStatus(article.status)}>{article.status}</StatusPill>
+                      <StatusPill tone={toneForVisibility(article.visibility)}>{article.visibility}</StatusPill>
+                      {articleAdvisory ? (
+                        <StatusPill tone={toneForAdvisoryClassification(articleAdvisory.suggested_classification)}>
+                          {articleAdvisory.suggested_classification}
+                        </StatusPill>
+                      ) : null}
+                    </div>
+
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+                        {article.title}
+                      </h3>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[color:var(--color-muted)]">
+                        <span>{article.category_name ?? 'Sem categoria'}</span>
+                        <span>{article.source_path ? 'Legado' : 'Manual'}</span>
+                        <span>{formatDateTime(article.updated_at)}</span>
+                        {duplicateCount > 1 ? <span>Duplicado x{duplicateCount}</span> : null}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           )}
         </Panel>
@@ -1932,7 +1836,7 @@ export function KnowledgePage() {
             />
           ) : (
             <div className="space-y-5">
-              <div className="space-y-4">
+              <div className="space-y-3 rounded-[22px] border border-[color:var(--color-border)] bg-white px-5 py-5">
                 <div className="flex flex-wrap items-center gap-2">
                   <StatusPill tone={toneForArticleStatus(articleDetail.status)}>
                     {articleDetail.status}
@@ -1940,34 +1844,13 @@ export function KnowledgePage() {
                   <StatusPill tone={toneForVisibility(articleDetail.visibility)}>
                     {articleDetail.visibility}
                   </StatusPill>
-                  {selectedAdvisory ? (
-                    <>
-                      <StatusPill
-                        tone={toneForAdvisoryClassification(
-                          selectedAdvisory.suggested_classification,
-                        )}
-                      >
-                        {selectedAdvisory.suggested_classification}
-                      </StatusPill>
-                      <StatusPill
-                        tone={toneForReviewStatus(selectedAdvisory.review_status)}
-                      >
-                        {selectedAdvisory.review_status}
-                      </StatusPill>
-                    </>
-                  ) : null}
-                  {articleDetail.category_name ? (
-                    <StatusPill>{articleDetail.category_name}</StatusPill>
-                  ) : null}
+                  {articleDetail.category_name ? <StatusPill>{articleDetail.category_name}</StatusPill> : null}
                 </div>
-                <div className="space-y-1">
-                  <h2 className="text-xl font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
+                <div className="space-y-2">
+                  <h2 className="text-[1.7rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
                     {articleDetail.title}
                   </h2>
-                  <p className="text-sm text-[color:var(--color-muted)]">
-                    {articleDetail.slug}
-                    {articleDetail.summary ? ` · ${articleDetail.summary}` : ''}
-                  </p>
+                  <p className="text-sm text-[color:var(--color-muted)]">{articleDetail.slug}</p>
                 </div>
               </div>
 
@@ -2024,53 +1907,6 @@ export function KnowledgePage() {
                 </InlineNotice>
               ) : null}
 
-              {selectedAdvisory ? (
-                <div className="rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <StatusPill
-                      tone={toneForAdvisoryClassification(
-                        selectedAdvisory.suggested_classification,
-                      )}
-                    >
-                      {selectedAdvisory.suggested_classification}
-                    </StatusPill>
-                    <StatusPill tone={toneForVisibility(selectedAdvisory.suggested_visibility)}>
-                      sugere {selectedAdvisory.suggested_visibility}
-                    </StatusPill>
-                    <StatusPill tone={toneForReviewStatus(selectedAdvisory.review_status)}>
-                      revisao {selectedAdvisory.review_status}
-                    </StatusPill>
-                    {selectedAdvisory.duplicate_group_key ? (
-                      <StatusPill tone="warning">
-                        grupo duplicado x{selectedAdvisory.duplicate_group_article_count}
-                      </StatusPill>
-                    ) : null}
-                  </div>
-                  <p className="mt-3 text-sm leading-6 text-[color:var(--color-muted)]">
-                    {selectedAdvisory.classification_reason}
-                  </p>
-                  {advisoryRiskFlags.length > 0 ? (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {advisoryRiskFlags.map((flag) => (
-                        <StatusPill key={flag} tone="critical">
-                          {flag}
-                        </StatusPill>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="mt-3 text-sm leading-6 text-[color:var(--color-muted)]">
-                      Sem risk flags automáticos no backlog controlado.
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <InlineNotice>
-                  Este artigo ainda nao possui advisory persistido. Rode o sync de
-                  backlog controlado para materializar classificacao sugerida,
-                  duplicidade editorial e status humano persistente.
-                </InlineNotice>
-              )}
-
               <div className="flex flex-wrap gap-3">
                 {(articleDetail.status === 'draft' || articleDetail.status === 'review') ? (
                   <GhostButton
@@ -2109,85 +1945,69 @@ export function KnowledgePage() {
                 ) : null}
               </div>
 
-              <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
-                <div className="rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 text-sm leading-6 text-[color:var(--color-muted)]">
-                  <p>Knowledge space: {articleDetail.knowledge_space_display_name}</p>
-                  <p>Organization: {articleDetail.organization_display_name}</p>
-                  <p>Revisoes: {articleDetail.revisions.length}</p>
-                  <p>Revision atual: {articleDetail.current_revision_number}</p>
-                  <p>Criado: {formatDateTime(articleDetail.created_at)}</p>
-                  <p>Atualizado: {formatDateTime(articleDetail.updated_at)}</p>
-                  {selectedAdvisory ? (
-                    <>
-                      <p>Review status persistido: {selectedAdvisory.review_status}</p>
-                      <p>
-                        Classificacao sugerida: {selectedAdvisory.suggested_classification}
-                      </p>
-                      <p>
-                        Visibility sugerida: {selectedAdvisory.suggested_visibility}
-                      </p>
-                      {selectedAdvisory.reviewed_at ? (
-                        <p>
-                          Revisado por {selectedAdvisory.reviewed_by_full_name ?? 'usuario interno'} em{' '}
-                          {formatDateTime(selectedAdvisory.reviewed_at)}
-                        </p>
-                      ) : null}
-                    </>
-                  ) : null}
-                  {articleDetail.submitted_for_review_at ? (
-                    <p>
-                      Enviado para revisao:{' '}
-                      {formatDateTime(articleDetail.submitted_for_review_at)}
-                    </p>
-                  ) : null}
-                  {articleDetail.published_at ? (
-                    <p>Publicado: {formatDateTime(articleDetail.published_at)}</p>
-                  ) : null}
-                  {articleDetail.archived_at ? (
-                    <p>Arquivado: {formatDateTime(articleDetail.archived_at)}</p>
-                  ) : null}
+              <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4 text-sm text-[color:var(--color-muted)]">
+                <div className="flex flex-wrap gap-x-4 gap-y-1">
+                  <span>Space: {articleDetail.knowledge_space_display_name}</span>
+                  <span>Revisoes: {articleDetail.revisions.length}</span>
+                  <span>Atualizado: {formatDateTime(articleDetail.updated_at)}</span>
+                  {selectedAdvisory ? <span>Review status: {selectedAdvisory.review_status}</span> : null}
                 </div>
-
-                <details className="rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 text-sm leading-6 text-[color:var(--color-muted)]">
-                  <summary className="cursor-pointer text-sm font-semibold uppercase tracking-[0.16em] text-[color:var(--color-ink)]">
-                    Bloco tecnico de origem
-                  </summary>
-                  <div className="mt-3 space-y-2">
-                    <p>
-                      Origem:{' '}
-                      {articleDetail.source_path || articleDetail.source_hash
-                        ? 'importado do legado'
-                        : 'manual'}
-                    </p>
-                    {articleDetail.source_path ? (
-                      <p>Source path: {articleDetail.source_path}</p>
-                    ) : null}
-                    {articleDetail.source_hash ? (
-                      <p>Source hash: {articleDetail.source_hash}</p>
-                    ) : null}
-                  </div>
-                </details>
               </div>
 
               {editorialChecklist ? (
-                <div className="space-y-4">
-                  <div className="grid gap-4 xl:grid-cols-2">
-                    <div className="space-y-3 rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
-                      <div className="space-y-1">
-                        <h3 className="text-base font-semibold text-[color:var(--color-ink)]">
-                          Sinais do artigo atual
-                        </h3>
+                <div className="space-y-3">
+                  <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4" open>
+                    <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                      Advisory resumido
+                    </summary>
+                    <div className="mt-3 space-y-3">
+                      {selectedAdvisory ? (
+                        <>
+                          <div className="flex flex-wrap gap-2">
+                            <StatusPill tone={toneForAdvisoryClassification(selectedAdvisory.suggested_classification)}>
+                              {selectedAdvisory.suggested_classification}
+                            </StatusPill>
+                            <StatusPill tone={toneForVisibility(selectedAdvisory.suggested_visibility)}>
+                              {selectedAdvisory.suggested_visibility}
+                            </StatusPill>
+                            <StatusPill tone={toneForReviewStatus(selectedAdvisory.review_status)}>
+                              {selectedAdvisory.review_status}
+                            </StatusPill>
+                            {selectedAdvisory.duplicate_group_key ? (
+                              <StatusPill tone="warning">
+                                duplicado x{selectedAdvisory.duplicate_group_article_count}
+                              </StatusPill>
+                            ) : null}
+                          </div>
+                          <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                            {selectedAdvisory.classification_reason}
+                          </p>
+                          {advisoryRiskFlags.length > 0 ? (
+                            <div className="flex flex-wrap gap-2">
+                              {advisoryRiskFlags.map((flag) => (
+                                <StatusPill key={flag} tone="critical">
+                                  {flag}
+                                </StatusPill>
+                              ))}
+                            </div>
+                          ) : null}
+                        </>
+                      ) : (
                         <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                          Sinais objetivos atuais do artigo carregado pela view v2.
+                          Este artigo ainda nao possui advisory persistido.
                         </p>
-                      </div>
+                      )}
+                    </div>
+                  </details>
 
-                      <div className="space-y-3">
+                  <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+                    <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                      Checklist editorial
+                    </summary>
+                    <div className="mt-4 space-y-4">
+                      <div className="space-y-2">
                         {editorialChecklist.automated.map((item) => (
-                          <div
-                            key={item.label}
-                            className="rounded-[20px] border border-[color:var(--color-border)] bg-white p-4"
-                          >
+                          <div key={item.label} className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3">
                             <div className="flex flex-wrap items-center gap-2">
                               <StatusPill tone={item.tone}>{item.label}</StatusPill>
                             </div>
@@ -2197,145 +2017,91 @@ export function KnowledgePage() {
                           </div>
                         ))}
                       </div>
-                    </div>
 
-                    <div className="space-y-3 rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
-                      <div className="space-y-1">
-                        <h3 className="text-base font-semibold text-[color:var(--color-ink)]">
-                          Sinais do backlog
-                        </h3>
-                        <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                          Advisory persistente vindo do backend. Serve como apoio de
-                          curadoria, nao como decisao automatica.
-                        </p>
+                      <div className="grid gap-3">
+                        {persistedHumanChecklist.map((item, index) => {
+                          const field = HUMAN_CONFIRMATION_FIELDS[index];
+                          const checked = humanConfirmationsDraft[field.key] === true;
+
+                          return (
+                            <label
+                              key={field.key}
+                              className="flex gap-3 rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3"
+                            >
+                              <input
+                                checked={checked}
+                                className="mt-1 h-4 w-4 rounded border-[color:var(--color-border)]"
+                                onChange={(event) =>
+                                  updateHumanConfirmation(field.key, event.target.checked)
+                                }
+                                type="checkbox"
+                              />
+                              <div className="space-y-1">
+                                <p className="font-medium text-[color:var(--color-ink)]">{item.label}</p>
+                                <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                                  {item.description}
+                                </p>
+                              </div>
+                            </label>
+                          );
+                        })}
                       </div>
 
-                      {selectedAdvisory ? (
-                        <div className="space-y-3">
-                          <div className="rounded-[20px] border border-[color:var(--color-border)] bg-white p-4">
-                            <div className="flex flex-wrap gap-2">
-                              <StatusPill
-                                tone={toneForAdvisoryClassification(
-                                  selectedAdvisory.suggested_classification,
-                                )}
-                              >
-                                {selectedAdvisory.suggested_classification}
-                              </StatusPill>
-                              <StatusPill tone={toneForVisibility(selectedAdvisory.suggested_visibility)}>
-                                {selectedAdvisory.suggested_visibility}
-                              </StatusPill>
-                              {selectedAdvisory.duplicate_group_key ? (
-                                <StatusPill tone="warning">
-                                  duplicado x{selectedAdvisory.duplicate_group_article_count}
-                                </StatusPill>
-                              ) : null}
-                            </div>
-                            <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
-                              {selectedAdvisory.classification_reason}
-                            </p>
-                            {advisoryRiskFlags.length > 0 ? (
-                              <div className="mt-3 flex flex-wrap gap-2">
-                                {advisoryRiskFlags.map((flag) => (
-                                  <StatusPill key={flag} tone="critical">
-                                    {flag}
-                                  </StatusPill>
-                                ))}
-                              </div>
-                            ) : null}
-                          </div>
-                        </div>
-                      ) : (
-                        <EmptyState
-                          title="Sem advisory persistido"
-                          description="A materializacao do backlog ainda nao gerou um advisory para este artigo."
-                        />
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
-                    <div className="space-y-1">
-                      <h3 className="text-base font-semibold text-[color:var(--color-ink)]">
-                        Confirmacoes humanas persistidas
-                      </h3>
-                      <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                        Checklist salvo no advisory. Nao altera artigo, visibility nem publish automaticamente.
-                      </p>
-                    </div>
-
-                    <div className="grid gap-3 xl:grid-cols-2">
-                      {persistedHumanChecklist.map((item, index) => {
-                        const field = HUMAN_CONFIRMATION_FIELDS[index];
-                        const checked = humanConfirmationsDraft[field.key] === true;
-
-                        return (
-                          <label
-                            key={field.key}
-                            className="flex gap-3 rounded-[20px] border border-[color:var(--color-border)] bg-white p-4"
+                      <div className="grid gap-4 xl:grid-cols-[minmax(240px,0.6fr)_minmax(0,1.4fr)]">
+                        <Field label="Status da revisao editorial">
+                          <SelectInput
+                            onChange={(event) =>
+                              setReviewStatusDraft(event.target.value as KnowledgeArticleReviewStatus)
+                            }
+                            value={reviewStatusDraft}
                           >
-                            <input
-                              checked={checked}
-                              className="mt-1 h-4 w-4 rounded border-[color:var(--color-border)]"
-                              onChange={(event) =>
-                                updateHumanConfirmation(field.key, event.target.checked)
-                              }
-                              type="checkbox"
-                            />
-                            <div className="space-y-2">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <StatusPill tone={item.tone}>{item.label}</StatusPill>
-                              </div>
-                              <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                                {item.description}
-                              </p>
-                            </div>
-                          </label>
-                        );
-                      })}
-                    </div>
+                            {KNOWLEDGE_ARTICLE_REVIEW_STATUSES.map((status) => (
+                              <option key={status} value={status}>
+                                {status}
+                              </option>
+                            ))}
+                          </SelectInput>
+                        </Field>
 
-                    <div className="grid gap-4 xl:grid-cols-[minmax(260px,0.7fr)_minmax(0,1.3fr)]">
-                      <Field label="Status da revisao editorial">
-                        <SelectInput
-                          onChange={(event) =>
-                            setReviewStatusDraft(
-                              event.target.value as KnowledgeArticleReviewStatus,
-                            )
-                          }
-                          value={reviewStatusDraft}
+                        <Field label="Notas de revisao">
+                          <TextareaInput
+                            onChange={(event) => setReviewNotesDraft(event.target.value)}
+                            placeholder="Observacoes curtas da revisao humana."
+                            value={reviewNotesDraft}
+                          />
+                        </Field>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3">
+                        <GhostButton
+                          disabled={!selectedAdvisory || reviewAdvisorySubmitting}
+                          onClick={() => void handleSaveReviewAdvisoryStatus()}
                         >
-                          {KNOWLEDGE_ARTICLE_REVIEW_STATUSES.map((status) => (
-                            <option key={status} value={status}>
-                              {status}
-                            </option>
-                          ))}
-                        </SelectInput>
-                      </Field>
-
-                      <Field label="Notas de revisao">
-                        <TextareaInput
-                          onChange={(event) => setReviewNotesDraft(event.target.value)}
-                          placeholder="Observacoes curtas da revisao humana."
-                          value={reviewNotesDraft}
-                        />
-                      </Field>
+                          {reviewAdvisorySubmitting ? 'Salvando...' : 'Salvar revisao'}
+                        </GhostButton>
+                        <AppButton
+                          disabled={!selectedAdvisory || reviewAdvisorySubmitting}
+                          onClick={() => void handleMarkReviewAdvisoryReviewed()}
+                        >
+                          {reviewAdvisorySubmitting ? 'Marcando...' : 'Marcar revisado'}
+                        </AppButton>
+                      </div>
                     </div>
+                  </details>
 
-                    <div className="flex flex-wrap gap-3">
-                      <GhostButton
-                        disabled={!selectedAdvisory || reviewAdvisorySubmitting}
-                        onClick={() => void handleSaveReviewAdvisoryStatus()}
-                      >
-                        {reviewAdvisorySubmitting ? 'Salvando...' : 'Salvar revisao'}
-                      </GhostButton>
-                      <AppButton
-                        disabled={!selectedAdvisory || reviewAdvisorySubmitting}
-                        onClick={() => void handleMarkReviewAdvisoryReviewed()}
-                      >
-                        {reviewAdvisorySubmitting ? 'Marcando...' : 'Marcar revisado'}
-                      </AppButton>
+                  <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+                    <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                      Bloco tecnico de origem
+                    </summary>
+                    <div className="mt-3 space-y-2 text-sm leading-6 text-[color:var(--color-muted)]">
+                      <p>
+                        Origem:{' '}
+                        {articleDetail.source_path || articleDetail.source_hash ? 'importado do legado' : 'manual'}
+                      </p>
+                      {articleDetail.source_path ? <p>Source path: {articleDetail.source_path}</p> : null}
+                      {articleDetail.source_hash ? <p>Source hash: {articleDetail.source_hash}</p> : null}
                     </div>
-                  </div>
+                  </details>
                 </div>
               ) : null}
 
@@ -2361,21 +2127,21 @@ export function KnowledgePage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <h3 className="text-base font-semibold text-[color:var(--color-ink)]">
+              <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+                <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
                   Trilha de origem
-                </h3>
-                {articleDetail.sources.length === 0 ? (
-                  <EmptyState
-                    title="Sem fontes rastreadas"
-                    description="Este artigo ainda nao possui trilha de fonte agregada no detalhe."
-                  />
-                ) : (
-                  <div className="space-y-3">
-                    {articleDetail.sources.slice(0, 4).map((source) => (
+                </summary>
+                <div className="mt-3 space-y-3">
+                  {articleDetail.sources.length === 0 ? (
+                    <EmptyState
+                      title="Sem fontes rastreadas"
+                      description="Este artigo ainda nao possui trilha de fonte agregada no detalhe."
+                    />
+                  ) : (
+                    articleDetail.sources.slice(0, 4).map((source) => (
                       <div
                         key={source.id}
-                        className="rounded-[22px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4"
+                        className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3"
                       >
                         <p className="font-medium text-[color:var(--color-ink)]">
                           {source.source_title ?? source.source_kind}
@@ -2387,26 +2153,26 @@ export function KnowledgePage() {
                           hash {source.source_hash}
                         </p>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                    ))
+                  )}
+                </div>
+              </details>
 
-              <div className="space-y-2">
-                <h3 className="text-base font-semibold text-[color:var(--color-ink)]">
+              <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+                <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
                   Revisoes recentes
-                </h3>
-                {articleDetail.revisions.length === 0 ? (
-                  <EmptyState
-                    title="Sem revisoes agregadas"
-                    description="O backend nao retornou historico de revisoes para este artigo."
-                  />
-                ) : (
-                  <div className="space-y-3">
-                    {articleDetail.revisions.slice(0, 4).map((revision) => (
+                </summary>
+                <div className="mt-3 space-y-3">
+                  {articleDetail.revisions.length === 0 ? (
+                    <EmptyState
+                      title="Sem revisoes agregadas"
+                      description="O backend nao retornou historico de revisoes para este artigo."
+                    />
+                  ) : (
+                    articleDetail.revisions.slice(0, 4).map((revision) => (
                       <div
                         key={revision.id}
-                        className="rounded-[22px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4"
+                        className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3"
                       >
                         <div className="flex flex-wrap items-center gap-2">
                           <StatusPill tone={toneForArticleStatus(revision.status_snapshot)}>
@@ -2417,17 +2183,17 @@ export function KnowledgePage() {
                           </StatusPill>
                           <StatusPill>rev {revision.revision_number}</StatusPill>
                         </div>
-                        <p className="mt-3 text-sm font-medium text-[color:var(--color-ink)]">
+                        <p className="mt-2 text-sm font-medium text-[color:var(--color-ink)]">
                           {revision.title}
                         </p>
                         <p className="mt-1 text-xs text-[color:var(--color-muted)]">
                           {revision.change_note ?? 'Sem anotacao de mudanca'}
                         </p>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                    ))
+                  )}
+                </div>
+              </details>
             </div>
           )}
         </Panel>

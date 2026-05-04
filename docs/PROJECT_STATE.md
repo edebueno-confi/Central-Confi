@@ -416,6 +416,12 @@ Documentos históricos:
   - O detalhe do ticket virou painel de tratativa: cabeçalho forte, ações operacionais agrupadas, composer unificado com modo explícito e timeline como trilha principal.
   - O contexto do cliente B2B ficou compacto e útil, servindo a operação sem competir com o atendimento.
   - A diretriz global de UX do produto agora está formalizada em `docs/UX_DIRECTION.md`, fixando que cada domínio define sua própria composição de tela.
+- Fase 6.2.2: Domain-Specific UX Correction Gate concluída localmente.
+  - O Support Workspace passou por simplificação estrutural para reduzir cards, badges e blocos simultâneos, priorizando triagem e tratativa real em notebook e desktop largo.
+  - `/support/queue` agora opera com resumo compacto, lista dominante de tickets e preview lateral curto do ticket em foco.
+  - `/support/tickets/:ticketId` agora organiza a tratativa em duas zonas reais: composer e timeline no eixo principal, rail operacional compacto com status, atribuição, customer context e detalhes avançados recolhidos.
+  - `/support/customers/:tenantId` foi reduzido a contexto operacional do cliente B2B, com tickets recentes, contatos ativos, eventos e navegação lateral utilitária.
+  - `/admin/knowledge` deixou de operar como painel com métricas concorrentes e passou a usar master/detail editorial mais estável, com advisory, checklist e bloco técnico recolhidos por padrão.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -438,5 +444,6 @@ Documentos históricos:
 
 ## Próxima prioridade
 Evoluir o Support Workspace com vínculos operacionais entre tickets, Knowledge
-Base e backlog de engenharia, preservando o cockpit operacional já estabilizado
-e evitando regressão para layouts genéricos de superfície administrativa.
+Base e backlog de engenharia, preservando a simplificação estrutural do
+cockpit operacional e evitando regressão para layouts genéricos, densos ou
+administrativos por conveniência.

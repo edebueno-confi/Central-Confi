@@ -189,48 +189,40 @@ function TimelineEntry({
 }) {
   const tones = toneForTimelineEntry(entry);
   const summary = summarizeTimelineEvent(entry);
+  const entryLabel =
+    entry.entryType === 'message'
+      ? humanizeVisibility(entry.visibility)
+      : `${humanizeVisibility(entry.visibility)} · ${humanizeToken(entry.eventType ?? 'evento')}`;
 
   return (
     <article
       className={cx(
-        'rounded-[24px] border p-4 shadow-[0_14px_30px_rgba(19,33,79,0.08)]',
+        'rounded-[20px] border p-4 shadow-[0_10px_22px_rgba(19,33,79,0.06)]',
         tones.card,
       )}
     >
-      <div className="flex items-start gap-4">
-        <div className={cx('mt-1 h-16 w-1 shrink-0 rounded-full', tones.rail)} />
-        <div className="min-w-0 flex-1 space-y-3">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <StatusPill tone={entry.visibility === 'internal' ? 'critical' : 'accent'}>
-                  {humanizeVisibility(entry.visibility)}
-                </StatusPill>
-                <StatusPill>
-                  {entry.entryType === 'message'
-                    ? 'mensagem'
-                    : humanizeToken(entry.eventType ?? 'evento')}
-                </StatusPill>
-              </div>
-              <div className="space-y-1">
-                <p className="font-medium text-[color:var(--color-ink)]">
-                  {entry.actorFullName ?? entry.actorEmail ?? 'Ator nao resolvido'}
-                </p>
-                <p className="text-xs text-[color:var(--color-muted)]">
-                  {formatDateTime(entry.occurredAt)}
-                </p>
-              </div>
+      <div className="flex items-start gap-3">
+        <div className={cx('mt-1 h-12 w-1 shrink-0 rounded-full', tones.rail)} />
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="min-w-0 space-y-1">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                {entryLabel}
+              </p>
+              <p className="font-medium text-[color:var(--color-ink)]">
+                {entry.actorFullName ?? entry.actorEmail ?? 'Ator nao resolvido'}
+              </p>
             </div>
+            <p className="text-xs text-[color:var(--color-muted)]">
+              {formatDateTime(entry.occurredAt)}
+            </p>
           </div>
 
-          <div className="rounded-[20px] border border-white/70 bg-white/92 px-4 py-3 text-sm leading-6 text-[color:var(--color-ink)]">
+          <div className="text-sm leading-6 text-[color:var(--color-ink)]">
             {entry.entryType === 'message' ? (
               <p className="whitespace-pre-wrap">{summary}</p>
             ) : (
-              <div className="space-y-2">
-                <p className="font-medium text-[color:var(--color-ink)]">
-                  {humanizeToken(entry.eventType ?? 'evento')}
-                </p>
+              <div className="space-y-1">
                 <p className="whitespace-pre-wrap">{summary}</p>
                 {entry.metadata && Object.keys(entry.metadata).length > 0 ? (
                   <p className="text-xs text-[color:var(--color-muted)]">
@@ -335,50 +327,163 @@ function SupportQueueItem({
   return (
     <article
       className={cx(
-        'rounded-[26px] border p-4 shadow-[0_18px_36px_rgba(19,33,79,0.08)] transition',
+        'rounded-[22px] border p-4 transition',
         isSelected
-          ? 'border-[rgba(48,127,226,0.52)] bg-[rgba(48,127,226,0.09)]'
+          ? 'border-[rgba(48,127,226,0.46)] bg-[rgba(48,127,226,0.08)] shadow-[0_14px_28px_rgba(19,33,79,0.08)]'
           : 'border-[color:var(--color-border)] bg-white hover:border-[rgba(48,127,226,0.24)] hover:bg-[rgba(255,255,255,0.98)]',
       )}
     >
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-        <button
-          className="min-w-0 flex-1 text-left"
-          onClick={onSelect}
-          type="button"
-        >
-          <div className="flex flex-wrap items-center gap-2">
-            <StatusPill tone={toneForTicketStatus(ticket.status)}>{humanizeStatus(ticket.status)}</StatusPill>
-            <StatusPill tone={toneForPriority(ticket.priority)}>{ticket.priority}</StatusPill>
-            <StatusPill tone={toneForSeverity(ticket.severity)}>{ticket.severity}</StatusPill>
-            {ticket.isUnassigned ? <StatusPill tone="warning">Nao atribuido</StatusPill> : null}
-          </div>
-
-          <div className="mt-3 space-y-2">
-            <h3 className="text-lg font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
-              {ticket.title}
-            </h3>
-            <TicketMetaLine ticket={ticket} />
-          </div>
-        </button>
-
-        <div className="flex flex-wrap items-start gap-2 xl:justify-end">
-          <GhostButton onClick={onSelect}>Atender ticket</GhostButton>
-          <Link
-            className="inline-flex items-center justify-center rounded-full border border-[color:var(--color-border)] bg-white/92 px-4 py-2 text-sm font-medium text-[color:var(--color-ink)] transition hover:border-[color:var(--color-brand-blue)]/40 hover:bg-[color:var(--color-surface)]"
-            to={`/support/customers/${ticket.tenantId}`}
-          >
-            Ver cliente
-          </Link>
+      <button
+        className="block w-full min-w-0 text-left"
+        onClick={onSelect}
+        type="button"
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusPill tone={toneForTicketStatus(ticket.status)}>{humanizeStatus(ticket.status)}</StatusPill>
+          <StatusPill tone={toneForPriority(ticket.priority)}>{ticket.priority}</StatusPill>
+          <StatusPill tone={toneForSeverity(ticket.severity)}>{ticket.severity}</StatusPill>
         </div>
+
+        <div className="mt-3 space-y-2">
+          <h3 className="max-w-full text-lg font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
+            {ticket.title}
+          </h3>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[color:var(--color-muted)]">
+            <span>Tenant: {ticketTenantLabel(ticket)}</span>
+            <span>Responsavel: {ticket.assignedToFullName ?? 'Nao atribuido'}</span>
+            <span>Ultima atividade: {formatDateTime(ticket.lastMessageAt ?? ticket.updatedAt)}</span>
+          </div>
+        </div>
+      </button>
+    </article>
+  );
+}
+
+function SupportSummaryStrip({
+  totalOpen,
+  waitingCustomer,
+  highAttention,
+  unassigned,
+}: {
+  totalOpen: number;
+  waitingCustomer: number;
+  highAttention: number;
+  unassigned: number;
+}) {
+  const items = [
+    { label: 'Abertos', value: totalOpen },
+    { label: 'Urgentes', value: highAttention },
+    { label: 'Nao atribuidos', value: unassigned },
+    { label: 'Aguardando cliente', value: waitingCustomer },
+  ];
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-[18px] border border-[color:var(--color-border)] bg-white/88 px-3 py-3">
+      {items.map((item) => (
+        <div
+          className="inline-flex items-center gap-2 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2"
+          key={item.label}
+        >
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
+            {item.label}
+          </span>
+          <span className="text-sm font-semibold text-[color:var(--color-ink)]">{item.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SupportTicketPreview({
+  ticket,
+  detail,
+  customer,
+}: {
+  ticket: SupportTicketQueueItem | null;
+  detail: SupportTicketDetail | null;
+  customer: SupportCustomer360 | null;
+}) {
+  if (!ticket && !detail) {
+    return (
+      <EmptyState
+        title="Nenhum ticket em foco"
+        description="Selecione um ticket da fila para abrir a previa operacional."
+      />
+    );
+  }
+
+  const title = detail?.title ?? ticket?.title ?? 'Ticket sem titulo';
+  const tenant =
+    detail?.tenantDisplayName ??
+    detail?.tenantLegalName ??
+    detail?.tenantSlug ??
+    (ticket ? ticketTenantLabel(ticket) : 'Tenant nao resolvido');
+  const assigned =
+    detail?.assignedToFullName ?? ticket?.assignedToFullName ?? 'Nao atribuido';
+  const lastActivity = formatDateTime(
+    detail?.lastMessageAt ?? detail?.updatedAt ?? ticket?.lastMessageAt ?? ticket?.updatedAt ?? null,
+  );
+  const tenantId = detail?.tenantId ?? ticket?.tenantId ?? null;
+  const ticketId = detail?.id ?? ticket?.id ?? null;
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-[22px] border border-[color:var(--color-border)] bg-[color:var(--color-brand-navy)] px-5 py-5 text-white">
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusPill tone={toneForTicketStatus(detail?.status ?? ticket?.status ?? 'new')}>
+            {humanizeStatus((detail?.status ?? ticket?.status ?? 'new') as TicketStatus)}
+          </StatusPill>
+          <StatusPill tone={toneForPriority(detail?.priority ?? ticket?.priority ?? 'normal')}>
+            {detail?.priority ?? ticket?.priority ?? 'normal'}
+          </StatusPill>
+          <StatusPill tone={toneForSeverity(detail?.severity ?? ticket?.severity ?? 'low')}>
+            {detail?.severity ?? ticket?.severity ?? 'low'}
+          </StatusPill>
+        </div>
+
+        <div className="mt-4 space-y-2">
+          <h3 className="text-[1.45rem] font-semibold tracking-[-0.05em]">{title}</h3>
+          <div className="space-y-1 text-sm text-white/72">
+            <p>Cliente B2B: {tenant}</p>
+            <p>Responsavel: {assigned}</p>
+            <p>Ultima atividade: {lastActivity}</p>
+          </div>
+        </div>
+
+        {ticketId ? (
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link
+              className="inline-flex min-h-11 items-center justify-center rounded-full bg-white px-5 py-2 text-sm font-semibold text-[color:var(--color-brand-navy)]"
+              to={`/support/tickets/${ticketId}`}
+            >
+              Atender ticket
+            </Link>
+            {tenantId ? (
+              <Link
+                className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/22 px-5 py-2 text-sm font-semibold text-white"
+                to={`/support/customers/${tenantId}`}
+              >
+                Ver cliente
+              </Link>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-3 text-xs leading-5 text-[color:var(--color-muted)]">
-        <span>{ticket.customerMessageCount} respostas publicas</span>
-        <span>{ticket.internalMessageCount} notas internas</span>
-        <span>Origem: {ticket.source}</span>
+      <div className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4 text-sm leading-6 text-[color:var(--color-muted)]">
+        <p className="font-medium text-[color:var(--color-ink)]">Previa de atendimento</p>
+        <p className="mt-2">
+          {detail?.description?.trim() ||
+            'Abra o ticket para responder, registrar nota interna ou ajustar status e atribuicao.'}
+        </p>
+        {customer ? (
+          <div className="mt-4 border-t border-[color:var(--color-border)] pt-3 text-sm">
+            <p>Contato principal: {customer.activeContacts[0]?.fullName ?? 'Nao resolvido'}</p>
+            <p>Tickets abertos deste cliente: {customer.openTicketCount}</p>
+          </div>
+        ) : null}
       </div>
-    </article>
+    </div>
   );
 }
 
@@ -515,52 +620,35 @@ function SupportCustomerRail({
   const recentEvents = customer.recentEvents.slice(0, compact ? 2 : 4);
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-[22px] border border-[color:var(--color-border)] bg-[rgba(19,33,79,0.96)] p-4 text-white shadow-[0_18px_36px_rgba(19,33,79,0.18)]">
+    <div className="space-y-3">
+      <div className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4">
         <div className="flex flex-wrap items-center gap-2">
           <StatusPill>{customer.tenantStatus}</StatusPill>
           <StatusPill tone="accent">{customer.tenantSlug}</StatusPill>
         </div>
         <div className="mt-3 space-y-1">
-          <h3 className="text-lg font-semibold tracking-[-0.03em]">
+          <h3 className="text-base font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
             {customer.tenantDisplayName ?? customer.tenantLegalName ?? customer.tenantSlug}
           </h3>
-          <p className="text-sm text-white/72">
+          <p className="text-sm text-[color:var(--color-muted)]">
             {customer.tenantLegalName ?? 'Razao social nao resolvida'}
           </p>
         </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-[18px] border border-white/12 bg-white/8 px-3 py-3">
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-white/58">
-              Contatos
-            </p>
-            <p className="mt-2 text-2xl font-semibold">{customer.activeContactsCount}</p>
-          </div>
-          <div className="rounded-[18px] border border-white/12 bg-white/8 px-3 py-3">
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-white/58">
-              Abertos
-            </p>
-            <p className="mt-2 text-2xl font-semibold">{customer.openTicketCount}</p>
-          </div>
-          <div className="rounded-[18px] border border-white/12 bg-white/8 px-3 py-3">
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-white/58">
-              Total
-            </p>
-            <p className="mt-2 text-2xl font-semibold">{customer.totalTicketCount}</p>
-          </div>
+        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-[color:var(--color-muted)]">
+          <span>{customer.activeContactsCount} contatos</span>
+          <span>{customer.openTicketCount} abertos</span>
+          <span>{customer.totalTicketCount} no total</span>
         </div>
       </div>
 
-      <div className="rounded-[22px] border border-[color:var(--color-border)] bg-white p-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
+      <div className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4">
         <div className="flex items-center justify-between gap-3">
-          <h4 className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-            Contatos ativos
-          </h4>
+          <h4 className="text-sm font-semibold text-[color:var(--color-ink)]">Contatos ativos</h4>
           <Link
             className="text-sm font-medium text-[color:var(--color-brand-blue)]"
             to={`/support/customers/${customer.tenantId}`}
           >
-            Abrir 360
+            Abrir contexto completo
           </Link>
         </div>
         <div className="mt-3 space-y-2">
@@ -569,35 +657,29 @@ function SupportCustomerRail({
               Nenhum contato ativo retornado pelo contrato.
             </p>
           ) : (
-            contacts.map((contact) => (
-              <SupportContactCard key={contact.id} contact={contact} />
-            ))
+            contacts.map((contact) => <SupportContactCard key={contact.id} contact={contact} />)
           )}
         </div>
       </div>
 
-      <div className="rounded-[22px] border border-[color:var(--color-border)] bg-white p-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
-        <h4 className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-          Tickets recentes
-        </h4>
+      <div className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+        <h4 className="text-sm font-semibold text-[color:var(--color-ink)]">Tickets recentes</h4>
         <div className="mt-3 space-y-2">
           {recentTickets.length === 0 ? (
             <p className="text-sm text-[color:var(--color-muted)]">
               Nenhum ticket recente retornado para este tenant.
             </p>
           ) : (
-            recentTickets.map((ticket) => (
-              <SupportRecentTicketCard key={ticket.id} ticket={ticket} />
-            ))
+            recentTickets.map((ticket) => <SupportRecentTicketCard key={ticket.id} ticket={ticket} />)
           )}
         </div>
       </div>
 
       {compact ? null : (
-        <div className="rounded-[22px] border border-[color:var(--color-border)] bg-white p-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
-          <h4 className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+        <details className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+          <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
             Eventos recentes
-          </h4>
+          </summary>
           <div className="mt-3 space-y-2">
             {recentEvents.length === 0 ? (
               <p className="text-sm text-[color:var(--color-muted)]">
@@ -609,7 +691,7 @@ function SupportCustomerRail({
               ))
             )}
           </div>
-        </div>
+        </details>
       )}
     </div>
   );
@@ -621,7 +703,7 @@ function SupportContactCard({
   contact: SupportCustomer360Contact;
 }) {
   return (
-    <div className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
+    <div className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3">
       <div className="flex flex-wrap items-center gap-2">
         <p className="font-medium text-[color:var(--color-ink)]">{contact.fullName}</p>
         {contact.isPrimary ? <StatusPill tone="accent">principal</StatusPill> : null}
@@ -638,7 +720,7 @@ function SupportRecentTicketCard({
 }) {
   return (
     <Link
-      className="block rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 transition hover:border-[rgba(48,127,226,0.28)] hover:bg-white"
+      className="block rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3 transition hover:border-[rgba(48,127,226,0.28)] hover:bg-white"
       to={`/support/tickets/${ticket.id}`}
     >
       <div className="flex flex-wrap items-center gap-2">
@@ -660,18 +742,15 @@ function SupportRecentEventCard({
 }) {
   return (
     <Link
-      className="block rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 transition hover:border-[rgba(48,127,226,0.28)] hover:bg-white"
+      className="block rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3 transition hover:border-[rgba(48,127,226,0.28)] hover:bg-white"
       to={`/support/tickets/${event.ticketId}`}
     >
       <div className="flex flex-wrap items-center gap-2">
-        <StatusPill>{humanizeToken(event.eventType)}</StatusPill>
-        <StatusPill tone={event.visibility === 'internal' ? 'critical' : 'accent'}>
-          {humanizeVisibility(event.visibility)}
-        </StatusPill>
+        <StatusPill tone={event.visibility === 'internal' ? 'critical' : 'accent'}>{humanizeVisibility(event.visibility)}</StatusPill>
       </div>
       <p className="mt-2 font-medium text-[color:var(--color-ink)]">{event.ticketTitle}</p>
       <p className="mt-1 text-xs text-[color:var(--color-muted)]">
-        {formatDateTime(event.occurredAt)}
+        {humanizeToken(event.eventType)} · {formatDateTime(event.occurredAt)}
       </p>
     </Link>
   );
@@ -1114,6 +1193,9 @@ function SupportWorkspaceView({
 
   const canUsePublicComposer = ticketDetail?.canAddMessage ?? false;
   const canUseInternalComposer = ticketDetail?.canAddInternalNote ?? false;
+  const selectedQueueTicket =
+    tickets.find((ticket) => ticket.id === selectedTicketId) ?? null;
+  const previewTicket = ticketDetail ?? null;
 
   return (
     <div className="space-y-5">
@@ -1122,39 +1204,12 @@ function SupportWorkspaceView({
         title={variant === 'queue' ? 'Fila operacional' : 'Cockpit de tickets'}
         description={
           variant === 'queue'
-            ? 'Triagem, prioridade e contexto do cliente organizados para definir o proximo atendimento sem virar dashboard generico.'
-            : 'Fila viva, atendimento do ticket selecionado, timeline e contexto do cliente B2B na mesma superficie operacional.'
+            ? 'Triagem enxuta para decidir rapidamente qual ticket entra em atendimento.'
+            : 'Tratativa do ticket em fluxo continuo: resposta, nota interna, status, timeline e contexto do cliente.'
         }
       />
 
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <CompactCounter
-          helper="Tickets ainda em operacao."
-          label="Abertos"
-          tone={totalOpen > 0 ? 'positive' : 'default'}
-          value={String(totalOpen)}
-        />
-        <CompactCounter
-          helper="Pontos aguardando retorno do cliente."
-          label="Waiting customer"
-          tone={waitingCustomer > 0 ? 'warning' : 'default'}
-          value={String(waitingCustomer)}
-        />
-        <CompactCounter
-          helper="Urgente ou severidade critica."
-          label="Alta atencao"
-          tone={highAttention > 0 ? 'critical' : 'default'}
-          value={String(highAttention)}
-        />
-        <CompactCounter
-          helper="Sem operador responsavel."
-          label="Nao atribuidos"
-          tone={unassigned > 0 ? 'warning' : 'default'}
-          value={String(unassigned)}
-        />
-      </div>
-
-      <div className="grid gap-5 xl:grid-cols-[minmax(390px,0.92fr)_minmax(0,1.08fr)] 2xl:grid-cols-[minmax(420px,0.86fr)_minmax(0,1.14fr)]">
+      {variant === 'queue' ? (
         <div className="space-y-4">
           <SupportQueueToolbar
             assigneeOptions={assigneeOptions}
@@ -1164,364 +1219,324 @@ function SupportWorkspaceView({
             tenantOptions={tenantOptions}
           />
 
-          <Panel
-            title="Fila viva de tickets"
-            description="Selecione o ticket que entra em tratativa agora. A listagem prioriza sinais de urgencia, contexto e ultima atividade."
-          >
-            {tickets.length === 0 ? (
-              <EmptyState
-                title="Sem tickets para esta combinacao de filtros"
-                description="A fila oficial nao retornou tickets neste recorte. Ajuste filtros ou reidrate a fixture local."
-              />
-            ) : (
-              <div className="space-y-3">
-                {tickets.map((ticket) => (
-                  <SupportQueueItem
-                    isSelected={ticket.id === selectedTicketId}
-                    key={ticket.id}
-                    onSelect={() => handleSelectTicket(ticket.id)}
-                    ticket={ticket}
-                  />
-                ))}
-              </div>
-            )}
-          </Panel>
-        </div>
+          <SupportSummaryStrip
+            highAttention={highAttention}
+            totalOpen={totalOpen}
+            unassigned={unassigned}
+            waitingCustomer={waitingCustomer}
+          />
 
-        <div className="space-y-4">
-          {detailPhase === 'idle' ? (
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,0.7fr)_minmax(320px,0.3fr)]">
             <Panel
-              title="Nenhum ticket em tratativa"
-              description="Selecione um ticket da fila para abrir o cockpit de atendimento."
+              className="bg-white"
+              title="Fila de tickets"
+              description="Lista dominante para triagem. Cada item mostra apenas o necessario para decidir o proximo atendimento."
             >
-              <EmptyState
-                title="Sem ticket selecionado"
-                description="A fila continua disponivel na coluna principal. Quando um ticket for escolhido, o painel de atendimento aparece aqui."
-              />
+              {tickets.length === 0 ? (
+                <EmptyState
+                  title="Sem tickets para esta combinacao de filtros"
+                  description="A fila oficial nao retornou tickets neste recorte. Ajuste filtros ou reidrate a fixture local."
+                />
+              ) : (
+                <div className="space-y-3">
+                  {tickets.map((ticket) => (
+                    <SupportQueueItem
+                      isSelected={ticket.id === selectedTicketId}
+                      key={ticket.id}
+                      onSelect={() => handleSelectTicket(ticket.id)}
+                      ticket={ticket}
+                    />
+                  ))}
+                </div>
+              )}
             </Panel>
-          ) : detailPhase === 'loading' ? (
-            <LoadingState
-              title="Montando cockpit do ticket"
-              description="O frontend esta resolvendo detalhe, timeline e contexto do cliente para abrir a tratativa."
-            />
-          ) : detailPhase === 'contract-unavailable' ? (
-            <ContractUnavailableState contractName="vw_support_ticket_detail / vw_support_ticket_timeline / vw_support_customer_360" />
-          ) : detailPhase === 'error' || !ticketDetail || !selectedTicketSummary ? (
-            <ErrorState
-              description={detailMessage ?? 'O painel operacional do ticket nao ficou disponivel.'}
-            />
-          ) : (
-            <div className="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_320px]">
-              <div className="space-y-5">
-                <Panel
-                  title="Ticket em tratativa"
-                  description="Centro do atendimento com contexto minimo para responder, registrar nota interna, atribuir e mover status."
-                >
-                  <div className="space-y-5">
-                    <div className="rounded-[24px] border border-[rgba(48,127,226,0.18)] bg-[linear-gradient(145deg,rgba(18,31,75,0.98),rgba(36,73,160,0.96))] p-5 text-white shadow-[0_22px_48px_rgba(18,31,75,0.22)]">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>{humanizeStatus(ticketDetail.status)}</StatusPill>
-                        <StatusPill tone={toneForPriority(ticketDetail.priority)}>{ticketDetail.priority}</StatusPill>
-                        <StatusPill tone={toneForSeverity(ticketDetail.severity)}>{ticketDetail.severity}</StatusPill>
-                        {ticketDetail.assignedToUserId ? null : <StatusPill tone="warning">Nao atribuido</StatusPill>}
-                      </div>
 
-                      <div className="mt-4 space-y-2">
-                        <h3 className="text-[1.8rem] font-semibold tracking-[-0.05em]">
-                          {ticketDetail.title}
-                        </h3>
-                        <p className="max-w-4xl text-sm leading-6 text-white/78">
-                          {ticketDetail.description}
-                        </p>
-                      </div>
+            <Panel
+              className="bg-white xl:sticky xl:top-4"
+              title="Ticket selecionado"
+              description="Previa curta antes de abrir a tratativa completa."
+            >
+              {detailPhase === 'loading' ? (
+                <LoadingState
+                  title="Carregando previa"
+                  description="O frontend esta resolvendo detalhe e contexto minimo do ticket selecionado."
+                />
+              ) : detailPhase === 'contract-unavailable' ? (
+                <ContractUnavailableState contractName="vw_support_ticket_detail / vw_support_customer_360" />
+              ) : detailPhase === 'error' ? (
+                <ErrorState description={detailMessage ?? 'A previa do ticket nao ficou disponivel.'} />
+              ) : (
+                <SupportTicketPreview customer={customer} detail={previewTicket} ticket={selectedQueueTicket} />
+              )}
+            </Panel>
+          </div>
+        </div>
+      ) : detailPhase === 'idle' ? (
+        <Panel
+          className="bg-white"
+          title="Nenhum ticket em tratativa"
+          description="Abra um ticket pela fila para entrar no fluxo de atendimento."
+        >
+          <EmptyState
+            title="Sem ticket selecionado"
+            description="Use a fila operacional para escolher o ticket que sera tratado agora."
+          />
+        </Panel>
+      ) : detailPhase === 'loading' ? (
+        <LoadingState
+          title="Montando tratativa"
+          description="O frontend esta resolvendo detalhe, timeline e contexto do cliente."
+        />
+      ) : detailPhase === 'contract-unavailable' ? (
+        <ContractUnavailableState contractName="vw_support_ticket_detail / vw_support_ticket_timeline / vw_support_customer_360" />
+      ) : detailPhase === 'error' || !ticketDetail || !selectedTicketSummary ? (
+        <ErrorState
+          description={detailMessage ?? 'O painel operacional do ticket nao ficou disponivel.'}
+        />
+      ) : (
+        <div className="space-y-5">
+          <div className="rounded-[22px] border border-[color:var(--color-border)] bg-white px-5 py-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>{humanizeStatus(ticketDetail.status)}</StatusPill>
+              <StatusPill tone={toneForPriority(ticketDetail.priority)}>{ticketDetail.priority}</StatusPill>
+              <StatusPill tone={toneForSeverity(ticketDetail.severity)}>{ticketDetail.severity}</StatusPill>
+            </div>
+            <div className="mt-3 space-y-2">
+              <h3 className="text-[1.9rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
+                {ticketDetail.title}
+              </h3>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[color:var(--color-muted)]">
+                <span>Tenant: {ticketDetail.tenantDisplayName ?? ticketDetail.tenantLegalName ?? ticketDetail.tenantSlug}</span>
+                <span>Requester: {ticketDetail.requesterContactFullName ?? 'Sem requester resolvido'}</span>
+                <span>Responsavel: {ticketDetail.assignedToFullName ?? 'Nao atribuido'}</span>
+                <span>Ultima atividade: {formatDateTime(ticketDetail.lastMessageAt ?? ticketDetail.updatedAt)}</span>
+              </div>
+              {ticketDetail.description?.trim() ? (
+                <p className="max-w-4xl text-sm leading-6 text-[color:var(--color-muted)]">
+                  {ticketDetail.description}
+                </p>
+              ) : null}
+            </div>
+          </div>
 
-                      <div className="mt-5 grid gap-3 md:grid-cols-2">
-                        <div className="rounded-[20px] border border-white/10 bg-white/8 px-4 py-3">
-                          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-white/58">
-                            Cliente B2B
-                          </p>
-                          <p className="mt-2 font-medium">
-                            {ticketDetail.tenantDisplayName ?? ticketDetail.tenantLegalName ?? ticketDetail.tenantSlug}
-                          </p>
-                          <p className="mt-1 text-sm text-white/68">
-                            {ticketDetail.requesterContactFullName ?? 'Sem requester resolvido'} · {ticketDetail.requesterContactEmail ?? 'Sem email'}
-                          </p>
-                        </div>
-                        <div className="rounded-[20px] border border-white/10 bg-white/8 px-4 py-3">
-                          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-white/58">
-                            Continuo operacional
-                          </p>
-                          <p className="mt-2 font-medium">
-                            Responsavel: {ticketDetail.assignedToFullName ?? 'Nao atribuido'}
-                          </p>
-                          <p className="mt-1 text-sm text-white/68">
-                            Ultima atividade em {formatDateTime(ticketDetail.lastMessageAt ?? ticketDetail.updatedAt)}
-                          </p>
-                        </div>
-                      </div>
+          {detailNotice ? <InlineNotice tone={detailNoticeTone}>{detailNotice}</InlineNotice> : null}
+
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,0.68fr)_minmax(300px,0.32fr)]">
+            <div className="space-y-5">
+              <Panel
+                className="bg-white"
+                title="Resposta e nota interna"
+                description="Composer principal da tratativa. A troca entre publico e interno fica explicita e central."
+              >
+                <div className="space-y-4">
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      className={cx(
+                        'inline-flex min-h-11 items-center justify-center rounded-full border px-5 py-2 text-sm font-semibold transition',
+                        composerMode === 'public'
+                          ? 'border-[rgba(48,127,226,0.28)] bg-[rgba(48,127,226,0.1)] text-[color:var(--color-brand-blue)]'
+                          : 'border-[color:var(--color-border)] bg-white text-[color:var(--color-muted)]',
+                      )}
+                      disabled={!canUsePublicComposer}
+                      onClick={() => setComposerMode('public')}
+                      type="button"
+                    >
+                      Resposta publica
+                    </button>
+                    <button
+                      className={cx(
+                        'inline-flex min-h-11 items-center justify-center rounded-full border px-5 py-2 text-sm font-semibold transition',
+                        composerMode === 'internal'
+                          ? 'border-[color:var(--color-danger-border)] bg-[color:var(--color-danger-surface)] text-[color:var(--color-danger-ink)]'
+                          : 'border-[color:var(--color-border)] bg-white text-[color:var(--color-muted)]',
+                      )}
+                      disabled={!canUseInternalComposer}
+                      onClick={() => setComposerMode('internal')}
+                      type="button"
+                    >
+                      Nota interna
+                    </button>
+                  </div>
+
+                  <InlineNotice tone={composerMode === 'public' ? 'default' : 'critical'}>
+                    {composerMode === 'public'
+                      ? 'A mensagem abaixo sera visivel para o cliente B2B.'
+                      : 'A mensagem abaixo fica restrita ao time interno autorizado.'}
+                  </InlineNotice>
+
+                  <form className="space-y-4" onSubmit={handleSubmitComposer}>
+                    <Field
+                      label={composerMode === 'public' ? 'Resposta publica' : 'Nota interna'}
+                    >
+                      <TextareaInput
+                        onChange={(event) =>
+                          composerMode === 'public'
+                            ? setMessageDraft(event.target.value)
+                            : setNoteDraft(event.target.value)
+                        }
+                        placeholder={
+                          composerMode === 'public'
+                            ? 'Escreva a devolutiva tecnico-operacional para o cliente.'
+                            : 'Registre contexto interno, proximo passo ou handoff.'
+                        }
+                        value={composerDraft}
+                      />
+                    </Field>
+                    <AppButton
+                      className={
+                        composerMode === 'internal'
+                          ? 'min-h-12 bg-[linear-gradient(135deg,#7c2648,#b63f76)] px-6'
+                          : 'min-h-12 px-6'
+                      }
+                      disabled={composerDisabled}
+                      type="submit"
+                    >
+                      {submitting
+                        ? 'Salvando...'
+                        : composerMode === 'public'
+                          ? 'Enviar resposta publica'
+                          : 'Registrar nota interna'}
+                    </AppButton>
+                  </form>
+                </div>
+              </Panel>
+
+              <Panel
+                className="bg-white"
+                title="Timeline operacional"
+                description="Leitura cronologica da tratativa com mensagens publicas, notas internas e eventos de sistema."
+              >
+                <SupportTimeline entries={timeline} />
+              </Panel>
+            </div>
+
+            <aside className="space-y-5">
+              <Panel
+                className="bg-white xl:sticky xl:top-4"
+                title="Rail operacional"
+                description="Status, atribuicao e contexto compacto do cliente sem competir com a tratativa."
+              >
+                <div className="space-y-5">
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap gap-2">
+                      <AppButton
+                        className="min-h-11 px-5"
+                        disabled={submitting || !ticketDetail.canAssign}
+                        onClick={() => {
+                          if (user?.id) {
+                            setAssignDraft(user.id);
+                          }
+                        }}
+                      >
+                        Atribuir a mim
+                      </AppButton>
+                      <GhostButton
+                        disabled={submitting || !ticketDetail.canAssign}
+                        onClick={() => setAssignDraft('')}
+                      >
+                        Desatribuir
+                      </GhostButton>
                     </div>
 
-                    {detailNotice ? (
-                      <InlineNotice tone={detailNoticeTone}>
-                        {detailNotice}
-                      </InlineNotice>
-                    ) : null}
+                    <form className="space-y-3" onSubmit={handleUpdateStatus}>
+                      <Field label="Status">
+                        <SelectInput
+                          onChange={(event) =>
+                            setStatusDraft(event.target.value as TicketStatusUpdateTarget)
+                          }
+                          value={statusDraft}
+                        >
+                          {buildStatusChoices(ticketDetail.status).map((status) => (
+                            <option key={status} value={status}>
+                              {humanizeStatus(status)}
+                            </option>
+                          ))}
+                        </SelectInput>
+                      </Field>
+                      <Field label="Nota da transicao">
+                        <TextareaInput
+                          onChange={(event) => setStatusNote(event.target.value)}
+                          placeholder="Opcional. Explique a transicao para o proximo operador."
+                          value={statusNote}
+                        />
+                      </Field>
+                      <AppButton className="min-h-11 px-5" disabled={submitting || !ticketDetail.canUpdateStatus} type="submit">
+                        {submitting ? 'Atualizando...' : 'Salvar status'}
+                      </AppButton>
+                    </form>
 
-                    <Panel
-                      className="bg-white"
-                      title="Acoes operacionais"
-                      description="Atribuicao e mudanca de status agrupadas como parte do fluxo normal da tratativa."
-                    >
-                      <div className="grid gap-4 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-                        <form className="space-y-3" onSubmit={handleAssign}>
-                          <Field
-                            label="Responsavel do ticket"
-                            description="UUID tecnico do operador interno. Nesta fase ainda nao existe diretório dedicado nesta superficie."
-                          >
-                            <TextInput
-                              onChange={(event) => setAssignDraft(event.target.value)}
-                              placeholder="00000000-0000-0000-0000-000000000000"
-                              value={assignDraft}
-                            />
-                          </Field>
-                          <div className="flex flex-wrap gap-2">
-                            <AppButton disabled={submitting || !ticketDetail.canAssign} type="submit">
-                              {submitting ? 'Salvando...' : 'Salvar responsavel'}
-                            </AppButton>
-                            <GhostButton
-                              disabled={submitting || !ticketDetail.canAssign || !user?.id}
-                              onClick={() => setAssignDraft(user?.id ?? '')}
-                            >
-                              Atribuir a mim
-                            </GhostButton>
-                            <GhostButton
-                              disabled={submitting || !ticketDetail.canAssign}
-                              onClick={() => setAssignDraft('')}
-                            >
-                              Desatribuir
-                            </GhostButton>
-                          </div>
-                        </form>
+                    <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                      <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                        Atribuicao avancada
+                      </summary>
+                      <form className="mt-3 space-y-3" onSubmit={handleAssign}>
+                        <Field
+                          label="user_id do responsavel"
+                          description="Campo tecnico mantido por compatibilidade contratual desta fase."
+                        >
+                          <TextInput
+                            onChange={(event) => setAssignDraft(event.target.value)}
+                            placeholder="00000000-0000-0000-0000-000000000000"
+                            value={assignDraft}
+                          />
+                        </Field>
+                        <AppButton className="min-h-11 px-5" disabled={submitting || !ticketDetail.canAssign} type="submit">
+                          {submitting ? 'Salvando...' : 'Salvar responsavel'}
+                        </AppButton>
+                      </form>
+                    </details>
 
-                        <form className="space-y-3" onSubmit={handleUpdateStatus}>
-                          <Field label="Mover status">
-                            <SelectInput
-                              onChange={(event) =>
-                                setStatusDraft(event.target.value as TicketStatusUpdateTarget)
-                              }
-                              value={statusDraft}
-                            >
-                              {buildStatusChoices(ticketDetail.status).map((status) => (
-                                <option key={status} value={status}>
-                                  {humanizeStatus(status)}
-                                </option>
-                              ))}
-                            </SelectInput>
-                          </Field>
-                          <Field
-                            label="Contexto da transicao"
-                            description="Opcional. O backend registra esta mudanca como evento do ticket."
-                          >
-                            <TextareaInput
-                              onChange={(event) => setStatusNote(event.target.value)}
-                              placeholder="Explique o motivo da mudanca para quem assume ou revisa o ticket depois."
-                              value={statusNote}
-                            />
-                          </Field>
-                          <AppButton disabled={submitting || !ticketDetail.canUpdateStatus} type="submit">
-                            {submitting ? 'Atualizando...' : 'Salvar status'}
-                          </AppButton>
-                        </form>
-                      </div>
-
-                      {ticketDetail.canClose || ticketDetail.canReopen ? (
-                        <div className="mt-5 grid gap-4 xl:grid-cols-2">
+                    {ticketDetail.canClose || ticketDetail.canReopen ? (
+                      <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                        <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                          Acoes de excecao
+                        </summary>
+                        <div className="mt-3 space-y-4">
                           {ticketDetail.canClose ? (
-                            <form
-                              className="rounded-[20px] border border-[color:var(--color-danger-border)] bg-[color:var(--color-danger-surface)]/58 p-4"
-                              onSubmit={handleClose}
-                            >
-                              <div className="space-y-3">
-                                <div>
-                                  <h4 className="font-medium text-[color:var(--color-ink)]">
-                                    Encerrar ticket
-                                  </h4>
-                                  <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                                    Acao de excecao. Use apenas quando o retorno final ao cliente B2B ja estiver consolidado.
-                                  </p>
-                                </div>
+                            <form className="space-y-3" onSubmit={handleClose}>
+                              <Field label="Motivo do fechamento">
                                 <TextareaInput
                                   onChange={(event) => setCloseReason(event.target.value)}
-                                  placeholder="Motivo obrigatorio para fechamento."
+                                  placeholder="Obrigatorio para encerrar."
                                   value={closeReason}
                                 />
-                                <AppButton
-                                  className="bg-[linear-gradient(135deg,#8b1e3f,#c3365e)]"
-                                  disabled={submitting || closeReason.trim().length === 0}
-                                  type="submit"
-                                >
-                                  {submitting ? 'Fechando...' : 'Fechar ticket'}
-                                </AppButton>
-                              </div>
+                              </Field>
+                              <AppButton
+                                className="min-h-11 bg-[linear-gradient(135deg,#8b1e3f,#c3365e)] px-5"
+                                disabled={submitting || closeReason.trim().length === 0}
+                                type="submit"
+                              >
+                                {submitting ? 'Fechando...' : 'Fechar ticket'}
+                              </AppButton>
                             </form>
                           ) : null}
 
                           {ticketDetail.canReopen ? (
-                            <form
-                              className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4"
-                              onSubmit={handleReopen}
-                            >
-                              <div className="space-y-3">
-                                <div>
-                                  <h4 className="font-medium text-[color:var(--color-ink)]">
-                                    Reabrir ticket
-                                  </h4>
-                                  <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                                    Use quando a demanda voltar a exigir tratativa ativa do suporte.
-                                  </p>
-                                </div>
+                            <form className="space-y-3" onSubmit={handleReopen}>
+                              <Field label="Motivo da reabertura">
                                 <TextareaInput
                                   onChange={(event) => setReopenReason(event.target.value)}
-                                  placeholder="Contexto opcional para reabertura."
+                                  placeholder="Opcional para reabrir."
                                   value={reopenReason}
                                 />
-                                <GhostButton disabled={submitting} type="submit">
-                                  {submitting ? 'Reabrindo...' : 'Reabrir ticket'}
-                                </GhostButton>
-                              </div>
+                              </Field>
+                              <GhostButton disabled={submitting} type="submit">
+                                {submitting ? 'Reabrindo...' : 'Reabrir ticket'}
+                              </GhostButton>
                             </form>
                           ) : null}
                         </div>
-                      ) : null}
-                    </Panel>
-
-                    <Panel
-                      className="bg-white"
-                      title="Resposta e nota interna"
-                      description="Composer unico com destino explicito para evitar troca acidental entre resposta publica e contexto interno."
-                    >
-                      <div className="space-y-4">
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            className={cx(
-                              'inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition',
-                              composerMode === 'public'
-                                ? 'border-[rgba(48,127,226,0.28)] bg-[rgba(48,127,226,0.1)] text-[color:var(--color-brand-blue)]'
-                                : 'border-[color:var(--color-border)] bg-white text-[color:var(--color-muted)]',
-                            )}
-                            disabled={!canUsePublicComposer}
-                            onClick={() => setComposerMode('public')}
-                            type="button"
-                          >
-                            Resposta publica
-                          </button>
-                          <button
-                            className={cx(
-                              'inline-flex items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition',
-                              composerMode === 'internal'
-                                ? 'border-[color:var(--color-danger-border)] bg-[color:var(--color-danger-surface)] text-[color:var(--color-danger-ink)]'
-                                : 'border-[color:var(--color-border)] bg-white text-[color:var(--color-muted)]',
-                            )}
-                            disabled={!canUseInternalComposer}
-                            onClick={() => setComposerMode('internal')}
-                            type="button"
-                          >
-                            Nota interna
-                          </button>
-                        </div>
-
-                        <InlineNotice tone={composerMode === 'public' ? 'default' : 'critical'}>
-                          {composerMode === 'public'
-                            ? 'Tudo o que for enviado aqui fica visivel para o cliente B2B.'
-                            : 'Tudo o que for enviado aqui fica restrito ao time interno de suporte, CS e engenharia autorizada.'}
-                        </InlineNotice>
-
-                        <form className="space-y-3" onSubmit={handleSubmitComposer}>
-                          <Field
-                            label={composerMode === 'public' ? 'Resposta publica' : 'Nota interna'}
-                            description={
-                              composerMode === 'public'
-                                ? 'Fale como devolutiva tecnico-operacional para o cliente B2B.'
-                                : 'Registre contexto interno para continuidade da tratativa.'
-                            }
-                          >
-                            <TextareaInput
-                              onChange={(event) =>
-                                composerMode === 'public'
-                                  ? setMessageDraft(event.target.value)
-                                  : setNoteDraft(event.target.value)
-                              }
-                              placeholder={
-                                composerMode === 'public'
-                                  ? 'Descreva a resposta que o cliente B2B vai receber agora.'
-                                  : 'Registre investigacao, contexto interno ou handoff para a operacao.'
-                              }
-                              value={composerDraft}
-                            />
-                          </Field>
-                          <div className="flex flex-wrap gap-2">
-                            <AppButton
-                              className={
-                                composerMode === 'internal'
-                                  ? 'bg-[linear-gradient(135deg,#7c2648,#b63f76)]'
-                                  : undefined
-                              }
-                              disabled={composerDisabled}
-                              type="submit"
-                            >
-                              {submitting
-                                ? 'Salvando...'
-                                : composerMode === 'public'
-                                  ? 'Enviar resposta publica'
-                                  : 'Registrar nota interna'}
-                            </AppButton>
-                            {composerMode === 'public' && !canUsePublicComposer ? (
-                              <GhostButton disabled>Sem permissao para resposta publica</GhostButton>
-                            ) : null}
-                            {composerMode === 'internal' && !canUseInternalComposer ? (
-                              <GhostButton disabled>Sem permissao para nota interna</GhostButton>
-                            ) : null}
-                          </div>
-                        </form>
-                      </div>
-                    </Panel>
-
-                    <Panel
-                      className="bg-white"
-                      title="Timeline operacional"
-                      description="Trilha continua do ticket com respostas publicas, notas internas e eventos de status."
-                    >
-                      <SupportTimeline entries={timeline} />
-                    </Panel>
-
-                    <div className="2xl:hidden">
-                      <Panel
-                        className="bg-white"
-                        title="Contexto do cliente"
-                        description="Snapshot compacto do tenant para apoiar a tratativa sem roubar foco do atendimento."
-                      >
-                        <SupportCustomerRail compact customer={customer} />
-                      </Panel>
-                    </div>
+                      </details>
+                    ) : null}
                   </div>
-                </Panel>
-              </div>
 
-              <aside className="hidden space-y-5 2xl:block">
-                <div className="2xl:sticky 2xl:top-4">
-                  <Panel
-                    className="bg-white"
-                    title="Contexto do cliente"
-                    description="Rail compacto do tenant para reduzir troca de contexto durante a operacao."
-                  >
-                    <SupportCustomerRail compact customer={customer} />
-                  </Panel>
+                  <SupportCustomerRail compact customer={customer} />
                 </div>
-              </aside>
-            </div>
-          )}
+              </Panel>
+            </aside>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -1652,7 +1667,7 @@ export function SupportCustomerPage() {
             title="Resumo operacional do tenant"
             description="Contexto suficiente para entender o cliente atendido sem transformar a superficie em CRM."
           >
-            <SupportCustomerRail customer={customer} />
+            <SupportCustomerRail compact customer={customer} />
           </Panel>
 
           <Panel

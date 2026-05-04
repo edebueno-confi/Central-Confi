@@ -268,6 +268,17 @@ Uso esperado:
 - customer context deve ser compacto e util, sem competir com o painel principal de atendimento
 - notebook e desktop largo devem privilegiar largura util real para tratativa, evitando coluna lateral espremida e vazio improdutivo
 
+## Correcao estrutural consolidada na fase 6.2.2
+- `/support/queue` deve operar como ferramenta de triagem, nao como dashboard
+- o resumo de fila deve ser compacto e auxiliar, sem cards grandes de metrica
+- a fila ocupa a maior parte da tela e o preview do ticket ativo existe apenas para decidir qual ticket assumir
+- `/support/tickets/:ticketId` deve operar como painel de atendimento
+- o composer precisa aparecer antes da timeline e usar modo explicito entre resposta publica e nota interna
+- status, atribuicao e user_id tecnico nao devem ocupar o centro da tela; ficam no rail operacional com avancado recolhido
+- a timeline deve parecer trilha cronologica continua, nao pilha de cards equivalentes
+- `/support/customers/:tenantId` deve servir retorno rapido para a tratativa, com tickets recentes, contatos e eventos em estrutura compacta
+- qualquer informacao que nao ajude a responder, priorizar, atribuir ou continuar a operacao deve ser rebaixada ou recolhida
+
 ## Relacao com a Knowledge Base
 No curto prazo:
 - o suporte deve consultar e reaproveitar artigos existentes
