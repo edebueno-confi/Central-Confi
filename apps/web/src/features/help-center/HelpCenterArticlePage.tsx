@@ -144,7 +144,7 @@ export function HelpCenterArticlePage() {
 
   return (
     <>
-      <section className="rounded-[34px] border border-[var(--help-border)] bg-[var(--help-panel)] p-6 shadow-[var(--shadow-panel)] backdrop-blur sm:p-8">
+      <section className="rounded-[34px] border border-[var(--help-border)] bg-[color:var(--help-surface-strong)] p-6 shadow-[0_20px_44px_rgba(20,31,71,0.08)] sm:p-8">
         <div className="space-y-5">
           <div className="flex flex-wrap items-center gap-3">
             <Link
@@ -194,7 +194,7 @@ export function HelpCenterArticlePage() {
         </div>
       </section>
 
-      <section className="rounded-[34px] border border-[var(--help-border)] bg-white/84 p-6 shadow-[0_22px_48px_rgba(20,31,71,0.06)] backdrop-blur sm:p-8 lg:p-10">
+      <section className="rounded-[34px] border border-[var(--help-border)] bg-white p-6 shadow-[0_22px_48px_rgba(20,31,71,0.06)] sm:p-8 lg:p-10">
         <div className="mx-auto max-w-4xl">
           <MarkdownDocument source={article.body_md} />
         </div>
@@ -205,7 +205,7 @@ export function HelpCenterArticlePage() {
       </InlineNotice>
 
       {relatedArticles.length > 0 ? (
-        <section className="rounded-[34px] border border-[var(--help-border)] bg-[var(--help-panel)] p-6 shadow-[var(--shadow-panel)] backdrop-blur sm:p-8">
+        <section className="rounded-[34px] border border-[var(--help-border)] bg-[color:var(--help-surface-strong)] p-6 shadow-[0_20px_44px_rgba(20,31,71,0.08)] sm:p-8">
           <div className="space-y-4">
             <div>
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[var(--help-muted)]">
@@ -219,7 +219,7 @@ export function HelpCenterArticlePage() {
               {relatedArticles.map((entry) => (
                 <Link
                   key={entry.id}
-                  className="rounded-[24px] border border-[var(--help-border)] bg-white/78 px-5 py-4 no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-white"
+                  className="rounded-[24px] border border-[var(--help-border)] bg-white px-5 py-4 no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-[color:var(--help-surface)]"
                   to={`/help/${spaceSlug}/articles/${entry.slug}`}
                 >
                   <p className="text-base font-semibold text-[var(--help-ink-strong)]">

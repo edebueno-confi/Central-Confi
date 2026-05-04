@@ -225,15 +225,15 @@ export function HelpCenterPage() {
                 </span>
               </div>
             </div>
-            <div className="grid gap-4 rounded-[30px] border border-white/14 bg-white/10 p-5 backdrop-blur">
+            <div className="grid gap-4 rounded-[30px] border border-white/18 bg-[linear-gradient(180deg,rgba(12,19,42,0.42),rgba(19,31,67,0.68))] p-5 shadow-[0_16px_34px_rgba(8,13,32,0.18)]">
               <div>
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-white/65">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-white/78">
                   Disponivel agora
                 </p>
-                <p className="mt-2 text-3xl font-semibold tracking-[-0.05em]">
+                <p className="mt-2 text-3xl font-semibold tracking-[-0.05em] text-white">
                   {spaces.length}
                 </p>
-                <p className="mt-2 text-sm leading-6 text-white/76">
+                <p className="mt-2 text-sm leading-6 text-white/88">
                   central{spaces.length > 1 ? 's' : ''} tecnica{spaces.length > 1 ? 's' : ''} ativa{spaces.length > 1 ? 's' : ''} para leitura publica neste ambiente.
                 </p>
               </div>
@@ -241,12 +241,12 @@ export function HelpCenterPage() {
                 {spaces.map((space) => (
                   <div
                     key={space.knowledgeSpaceSlug}
-                    className="rounded-[24px] border border-white/12 bg-[rgba(255,255,255,0.08)] px-4 py-3"
+                    className="rounded-[24px] border border-white/14 bg-[rgba(255,255,255,0.14)] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <p className="text-sm font-semibold">{space.brandName}</p>
-                        <p className="text-xs text-white/68">{space.organizationDisplayName}</p>
+                        <p className="text-sm font-semibold text-white">{space.brandName}</p>
+                        <p className="text-xs text-white/82">{space.organizationDisplayName}</p>
                       </div>
                       {space.logoAssetUrl ? (
                         <img
@@ -257,7 +257,7 @@ export function HelpCenterPage() {
                       ) : null}
                       <StatusPill tone="positive">ativo</StatusPill>
                     </div>
-                    <p className="mt-3 text-xs leading-5 text-white/74">
+                    <p className="mt-3 text-xs leading-5 text-white/84">
                       Entrada canonica: {space.canonicalPath}
                       {space.canonicalHost ? ` ou ${space.canonicalHost}` : ''}
                     </p>
@@ -510,7 +510,7 @@ export function HelpCenterSpaceLayout() {
             <div className="relative space-y-5">
               <div className="flex items-center justify-between gap-3">
                 <Link
-                  className="text-[0.72rem] font-semibold uppercase tracking-[0.26em] text-white/70 no-underline"
+                  className="text-[0.72rem] font-semibold uppercase tracking-[0.26em] text-white/82 no-underline"
                   to="/help"
                 >
                   Help Center
@@ -535,35 +535,35 @@ export function HelpCenterSpaceLayout() {
                   <h1 className="text-3xl font-semibold tracking-[-0.05em] text-white">
                     {space.brand_name}
                   </h1>
-                  <p className="text-sm leading-6 text-white/76">
+                  <p className="text-sm leading-7 text-white/88">
                     {space.knowledge_space_display_name} publica apenas documentacao tecnica aprovada para clientes B2B e usuarios da plataforma.
                   </p>
                 </div>
               </div>
-              <div className="grid gap-3 rounded-[24px] border border-white/14 bg-white/10 p-4 backdrop-blur">
+              <div className="grid gap-3 rounded-[24px] border border-white/16 bg-[linear-gradient(180deg,rgba(12,19,42,0.36),rgba(19,31,67,0.62))] p-4 shadow-[0_14px_30px_rgba(8,13,32,0.18)]">
                 <div>
-                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-white/62">
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-white/82">
                     Entrada principal
                   </p>
-                  <p className="mt-2 text-sm font-medium text-white">
+                  <p className="mt-2 text-sm font-semibold text-white">
                     /help/{space.knowledge_space_slug}
                   </p>
                 </div>
                 {context.routes.some((route) => route.route_kind === 'domain') ? (
                   <div>
-                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-white/62">
+                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-white/82">
                       Dominio futuro
                     </p>
-                    <p className="mt-2 text-sm font-medium text-white">
+                    <p className="mt-2 text-sm font-semibold text-white">
                       {context.routes.find((route) => route.route_kind === 'domain')?.route_host}
                     </p>
                   </div>
                 ) : (
                   <div>
-                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-white/62">
+                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-white/82">
                       Superficie
                     </p>
-                    <p className="mt-2 text-sm leading-6 text-white/78">
+                    <p className="mt-2 text-sm leading-7 text-white/88">
                       Leitura publica com branding seguro e backend ainda como source of truth.
                     </p>
                   </div>
@@ -573,7 +573,7 @@ export function HelpCenterSpaceLayout() {
           </section>
 
           {supportContacts && (supportContacts.email || supportContacts.docsUrl || supportContacts.statusPageUrl || supportContacts.websiteUrl) ? (
-            <section className="rounded-[30px] border border-[var(--help-border)] bg-[var(--help-panel)] p-5 shadow-[var(--shadow-panel)] backdrop-blur">
+            <section className="rounded-[30px] border border-[var(--help-border)] bg-[color:var(--help-surface-strong)] p-5 shadow-[0_18px_42px_rgba(20,31,71,0.08)]">
               <div className="space-y-3">
                 <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[var(--help-muted)]">
                   Contato tecnico
@@ -581,7 +581,7 @@ export function HelpCenterSpaceLayout() {
                 <div className="grid gap-3 text-sm">
                   {supportContacts.email ? (
                     <a
-                      className="rounded-[22px] border border-[var(--help-border)] bg-white/74 px-4 py-3 text-[var(--help-link)] no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-white hover:text-[var(--help-link-hover)]"
+                      className="rounded-[22px] border border-[var(--help-border)] bg-white px-4 py-3 text-[var(--help-link)] no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-[color:var(--help-surface)] hover:text-[var(--help-link-hover)]"
                       href={`mailto:${supportContacts.email}`}
                     >
                       {supportContacts.email}
@@ -589,7 +589,7 @@ export function HelpCenterSpaceLayout() {
                   ) : null}
                   {supportContacts.docsUrl ? (
                     <a
-                      className="rounded-[22px] border border-[var(--help-border)] bg-white/74 px-4 py-3 text-[var(--help-link)] no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-white hover:text-[var(--help-link-hover)]"
+                      className="rounded-[22px] border border-[var(--help-border)] bg-white px-4 py-3 text-[var(--help-link)] no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-[color:var(--help-surface)] hover:text-[var(--help-link-hover)]"
                       href={supportContacts.docsUrl}
                       rel="noreferrer"
                       target="_blank"
@@ -599,7 +599,7 @@ export function HelpCenterSpaceLayout() {
                   ) : null}
                   {supportContacts.statusPageUrl ? (
                     <a
-                      className="rounded-[22px] border border-[var(--help-border)] bg-white/74 px-4 py-3 text-[var(--help-link)] no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-white hover:text-[var(--help-link-hover)]"
+                      className="rounded-[22px] border border-[var(--help-border)] bg-white px-4 py-3 text-[var(--help-link)] no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-[color:var(--help-surface)] hover:text-[var(--help-link-hover)]"
                       href={supportContacts.statusPageUrl}
                       rel="noreferrer"
                       target="_blank"
@@ -609,7 +609,7 @@ export function HelpCenterSpaceLayout() {
                   ) : null}
                   {supportContacts.websiteUrl ? (
                     <a
-                      className="rounded-[22px] border border-[var(--help-border)] bg-white/74 px-4 py-3 text-[var(--help-link)] no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-white hover:text-[var(--help-link-hover)]"
+                      className="rounded-[22px] border border-[var(--help-border)] bg-white px-4 py-3 text-[var(--help-link)] no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-[color:var(--help-surface)] hover:text-[var(--help-link-hover)]"
                       href={supportContacts.websiteUrl}
                       rel="noreferrer"
                       target="_blank"
@@ -622,7 +622,7 @@ export function HelpCenterSpaceLayout() {
             </section>
           ) : null}
 
-          <section className="rounded-[30px] border border-[var(--help-border)] bg-[var(--help-panel)] p-5 shadow-[var(--shadow-panel)] backdrop-blur">
+          <section className="rounded-[30px] border border-[var(--help-border)] bg-[color:var(--help-surface-strong)] p-5 shadow-[0_18px_42px_rgba(20,31,71,0.08)]">
             <div className="space-y-2">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[var(--help-muted)]">
                 Navegacao
@@ -656,7 +656,7 @@ export function HelpCenterSpaceLayout() {
               {topCategories.map((category) => (
                 <Link
                   key={category.category_id}
-                  className="rounded-[22px] border border-[var(--help-border)] bg-white/74 px-4 py-3 no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-white"
+                  className="rounded-[22px] border border-[var(--help-border)] bg-white px-4 py-3 no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-[color:var(--help-surface)]"
                   to={`/help/${space.knowledge_space_slug}/articles`}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -678,7 +678,7 @@ export function HelpCenterSpaceLayout() {
             </div>
           </section>
 
-          <section className="rounded-[30px] border border-[var(--help-border)] bg-[var(--help-panel)] p-5 shadow-[var(--shadow-panel)] backdrop-blur">
+          <section className="rounded-[30px] border border-[var(--help-border)] bg-[color:var(--help-surface-strong)] p-5 shadow-[0_18px_42px_rgba(20,31,71,0.08)]">
             <div className="space-y-2">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[var(--help-muted)]">
                 Ultimos publicados
@@ -692,7 +692,7 @@ export function HelpCenterSpaceLayout() {
                   {latestArticles.map((article) => (
                     <Link
                       key={article.id}
-                      className="rounded-[22px] border border-[var(--help-border)] bg-white/74 px-4 py-3 no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-white"
+                      className="rounded-[22px] border border-[var(--help-border)] bg-white px-4 py-3 no-underline transition hover:border-[var(--help-accent)]/30 hover:bg-[color:var(--help-surface)]"
                       to={`/help/${space.knowledge_space_slug}/articles/${article.slug}`}
                     >
                       <p className="text-sm font-semibold text-[var(--help-ink-strong)]">
