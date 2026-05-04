@@ -96,3 +96,17 @@ Reabertura atual:
 - leitura do app ocorre por views;
 - escrita do app ocorre por RPCs;
 - mutações de ticket geram trilha em `ticket_events` e `audit.audit_logs`.
+
+## Leitura arquitetural para o Support Workspace
+- `vw_tickets_list` deve sustentar a fila operacional inicial
+- `vw_ticket_detail` deve sustentar o painel de detalhe inicial
+- `vw_ticket_timeline` deve sustentar a timeline unica do ticket
+- a proxima camada de suporte nao deve duplicar a maquina de estados atual; deve reaproveita-la
+- comentarios publicos e notas internas precisam continuar explicitamente separados na UX futura
+
+## Lacunas ainda abertas antes da UI
+- read model orientado a fila de suporte
+- read model de visao 360 do cliente B2B
+- vinculo ticket -> artigo de KB
+- vinculo ticket -> item de engenharia
+- camada executavel de SLA

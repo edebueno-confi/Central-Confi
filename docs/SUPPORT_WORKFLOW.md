@@ -35,3 +35,17 @@
 - Abrir bug sem contexto.
 - Fechar ticket sem devolutiva.
 - Usar conhecimento informal sem artigo.
+
+## Direção arquitetural do Support Workspace
+- o Support Workspace futuro deve partir da fila de tickets, nao de dashboard pesado
+- a lista operacional deve ser a superficie dominante
+- o detalhe do ticket deve concentrar timeline, composer, atribuicao e acoes de status
+- o contexto do cliente B2B deve existir como visao 360 enxuta, sem virar CRM generico
+- escalonamento para engenharia continua parte do fluxo, mas sem transformar suporte em board tecnico completo nesta fase
+
+## Fora de escopo do workspace
+- atendimento a shopper final
+- omnichannel B2C
+- chat widget
+- IA ativa
+- portal B2B

@@ -272,3 +272,46 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - define quando um artigo curado esta operacionalmente apto a alimentar FAQ tecnica B2B
   - cria trilha de governanca para responder quem revisa, quem publica e como documentar cada mudanca
+
+### Fase 6.0 - Support Workspace Architecture Spec
+- fase: `6.0`
+- commit: `TBD`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-03`
+- resumo funcional: spec arquitetural do Support Workspace interno definida sobre o ticketing core existente, com escopo, rotas futuras, UX minima e lacunas mapeadas antes de qualquer UI.
+- docs alterados:
+  - `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/TICKET_LIFECYCLE.md`
+  - `docs/ROADMAP.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+  - `docs/README.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - contratos reutilizaveis mapeados:
+    - `vw_tickets_list`
+    - `vw_ticket_detail`
+    - `vw_ticket_timeline`
+    - `rpc_create_ticket`
+    - `rpc_update_ticket_status`
+    - `rpc_assign_ticket`
+    - `rpc_add_ticket_message`
+    - `rpc_add_internal_ticket_note`
+    - `rpc_close_ticket`
+    - `rpc_reopen_ticket`
+- telas afetadas:
+  - nenhuma implementacao de UI nesta fase
+  - rotas futuras propostas:
+    - `/support`
+    - `/support/tickets`
+    - `/support/tickets/:id`
+    - `/support/customers/:tenantId`
+    - `/support/queue`
+- riscos restantes:
+  - ainda faltam read models especificos de suporte antes da UI
+  - visao 360 do cliente B2B, vinculo com KB e vinculo com engenharia continuam sem contrato proprio
+  - SLA segue apenas como direcao arquitetural futura
+- impacto na FAQ futura:
+  - prepara a trilha documental para responder como o suporte interno B2B sera operado
+  - separa claramente o workspace interno de suporte da Central Publica e de qualquer experiencia B2C

@@ -34,6 +34,7 @@ Documentos prioritários:
 - `KNOWLEDGE_CONTENT_CURATION_PLAN.md`
 - `PUBLIC_HELP_CENTER_PUBLISH_RUNBOOK.md`
 - `CONTENT_OPERATIONS_GOVERNANCE.md`
+- `SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`
 - `reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`
 
 Documentos históricos:
@@ -159,6 +160,7 @@ Documentos históricos:
 - Estratégia oficial de curadoria do corpus legado criada em `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md`.
 - Runbook oficial de publicação pública criado em `docs/PUBLIC_HELP_CENTER_PUBLISH_RUNBOOK.md`.
 - Governança oficial de operações de conteúdo criada em `docs/CONTENT_OPERATIONS_GOVERNANCE.md`.
+- Spec oficial do Support Workspace criada em `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`.
 - Relatório oficial do inventário legado criado em `docs/reports/KNOWLEDGE_LEGACY_INVENTORY_REPORT.md`.
 - Backlog versionado oficial de curadoria legado criado em `docs/reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`.
 - O inventário atual da base legada em `raw_knowledge/octadesk_export/latest/articles/` identificou 58 artigos, 3 categorias-raiz, 1 grupo de duplicidade por `source_hash` e múltiplos candidatos sensíveis/restritos.
@@ -378,6 +380,17 @@ Documentos históricos:
     - readiness operacional do `knowledge_space`
     - uso do `DOCUMENTATION_LEDGER.md` e da futura FAQ como trilha de rastreabilidade
   - Nenhum artigo novo foi publicado, nenhuma mudança de produto foi aplicada e nenhum deploy remoto foi executado nesta fase.
+- Fase 6.0: Support Workspace Architecture Spec concluída localmente.
+  - A arquitetura do futuro workspace interno de suporte e CS foi formalizada em `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`.
+  - A spec reaproveita o ticketing core já materializado por `vw_tickets_list`, `vw_ticket_detail`, `vw_ticket_timeline` e pelas RPCs atuais de ticketing.
+  - As lacunas antes da UI ficaram explicitadas:
+    - read models específicos de suporte
+    - filtros de fila
+    - visão 360 do cliente B2B
+    - vínculo ticket -> KB
+    - vínculo ticket -> engenharia
+    - SLA futuro
+  - Nenhuma UI, migration, schema, RPC ou automação foi implementada nesta fase.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -399,8 +412,7 @@ Documentos históricos:
 - Não permitir leitura do Admin Console fora das views `vw_admin_*`.
 
 ## Próxima prioridade
-Manter a Central Pública mínima restrita a leitura e preparar as próximas
-camadas sem romper a separação entre curadoria administrativa, leitura pública
-e IA. O próximo avanço recomendado é aprofundar roteamento por domínio,
-governança editorial adicional e observabilidade da camada pública, sem abrir
-chat, portal B2B ou automações antes do contrato certo.
+Planejar a próxima camada funcional do Support Workspace com foco em fila,
+detalhe, timeline e contexto do cliente B2B, sem romper o ticketing core já
+materializado nem misturar suporte interno com portal, help center público ou
+board de engenharia.

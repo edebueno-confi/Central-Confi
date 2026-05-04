@@ -4,13 +4,16 @@
 - Fundação técnica.
 - Tickets internos.
 - Base de conhecimento interna.
+- Spec do Support Workspace interno B2B.
 - Portal simples do cliente B2B.
 
 ## Médio prazo
+- UI mínima do Support Workspace.
+- Read models específicos de suporte.
 - SLA avançado.
 - Macros.
-- Dashboard de produtividade.
 - Work items para engenharia.
+- Dashboard de produtividade.
 - Central pública técnica para clientes B2B e usuários da plataforma.
 
 ## Longo prazo
