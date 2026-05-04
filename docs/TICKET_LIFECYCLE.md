@@ -121,3 +121,13 @@ Reabertura atual:
 - vinculo ticket -> artigo de KB
 - vinculo ticket -> item de engenharia
 - camada executavel de SLA
+
+## Superficie minima do Support Workspace
+- `/support` e `/support/queue` operam a fila dominante sobre `vw_support_tickets_queue`
+- `/support/tickets/:ticketId` usa `vw_support_ticket_detail` e `vw_support_ticket_timeline`
+- `/support/customers/:tenantId` usa `vw_support_customer_360`
+- a troca de status continua apoiada por `rpc_update_ticket_status`, `rpc_close_ticket` e `rpc_reopen_ticket`
+- atribuicao continua apoiada por `rpc_assign_ticket`
+- resposta publica continua apoiada por `rpc_add_ticket_message`
+- nota interna continua apoiada por `rpc_add_internal_ticket_note`
+- a fase 6.2 nao altera a maquina de estados do ticketing core; apenas materializa a UI operacional minima sobre os contratos ja aprovados

@@ -62,6 +62,31 @@
 - eventos recentes relevantes
 - sem metricas pesadas, SLA executavel ou funil comercial
 
+## Superficie minima ja implementada
+- `/support` redireciona para a fila oficial `/support/queue`
+- `/support/queue` e `/support/tickets` usam a fila dominante de tickets do workspace
+- `/support/tickets/:ticketId` ancora o detalhe operacional do ticket
+- `/support/customers/:tenantId` materializa a visao 360 minima do cliente B2B
+- a leitura dessa superficie ocorre apenas por:
+  - `vw_support_tickets_queue`
+  - `vw_support_ticket_detail`
+  - `vw_support_ticket_timeline`
+  - `vw_support_customer_360`
+- a escrita continua apenas por:
+  - `rpc_update_ticket_status`
+  - `rpc_assign_ticket`
+  - `rpc_add_ticket_message`
+  - `rpc_add_internal_ticket_note`
+  - `rpc_close_ticket`
+  - `rpc_reopen_ticket`
+
+## Diretrizes de UX da fase 6.2
+- lista dominante com filtros operacionais de status, prioridade, severidade, tenant e responsavel
+- detalhe com leitura continua do contexto do ticket, sem dashboard pesado
+- timeline unica com separacao clara entre resposta publica e nota interna
+- visao 360 enxuta do cliente B2B como contexto lateral, sem virar CRM generico
+- foco em operacao interna de suporte/CS, nunca em atendimento a shopper final
+
 ## Fora de escopo do workspace
 - atendimento a shopper final
 - omnichannel B2C

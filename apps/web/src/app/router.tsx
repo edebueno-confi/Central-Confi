@@ -64,6 +64,36 @@ const SystemPage = lazy(async () => {
   return { default: module.SystemPage };
 });
 
+const SupportWorkspaceShell = lazy(async () => {
+  const module = await import('../features/support/SupportWorkspaceShell');
+  return { default: module.SupportWorkspaceShell };
+});
+
+const SupportQueuePage = lazy(async () => {
+  const module = await import('../features/support/SupportWorkspacePage');
+  return { default: module.SupportQueuePage };
+});
+
+const SupportTicketsPage = lazy(async () => {
+  const module = await import('../features/support/SupportWorkspacePage');
+  return { default: module.SupportTicketsPage };
+});
+
+const SupportTicketPage = lazy(async () => {
+  const module = await import('../features/support/SupportWorkspacePage');
+  return { default: module.SupportTicketPage };
+});
+
+const SupportCustomerPage = lazy(async () => {
+  const module = await import('../features/support/SupportWorkspacePage');
+  return { default: module.SupportCustomerPage };
+});
+
+const SupportGate = lazy(async () => {
+  const module = await import('../features/support/SupportGate');
+  return { default: module.SupportGate };
+});
+
 function RouteLoading() {
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-4xl items-center px-6 py-12">
@@ -142,6 +172,36 @@ export const router = createBrowserRouter([
           {
             path: 'system',
             element: withSuspense(<SystemPage />),
+          },
+        ],
+      },
+      {
+        path: '/support',
+        element: withSuspense(
+          <SupportGate>
+            <SupportWorkspaceShell />
+          </SupportGate>,
+        ),
+        children: [
+          {
+            index: true,
+            element: <Navigate replace to="/support/queue" />,
+          },
+          {
+            path: 'queue',
+            element: withSuspense(<SupportQueuePage />),
+          },
+          {
+            path: 'tickets',
+            element: withSuspense(<SupportTicketsPage />),
+          },
+          {
+            path: 'tickets/:ticketId',
+            element: withSuspense(<SupportTicketPage />),
+          },
+          {
+            path: 'customers/:tenantId',
+            element: withSuspense(<SupportCustomerPage />),
           },
         ],
       },

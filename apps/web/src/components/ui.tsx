@@ -85,16 +85,18 @@ export function PageHeader({
   title,
   description,
   action,
+  eyebrow = 'Admin Console',
 }: {
   title: string;
   description: string;
   action?: ReactNode;
+  eyebrow?: string;
 }) {
   return (
     <header className="flex flex-wrap items-start justify-between gap-4">
       <div className="space-y-2">
         <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-[color:var(--color-muted)]">
-          Admin Console
+          {eyebrow}
         </p>
         <div className="space-y-1">
           <h1 className="text-3xl font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">

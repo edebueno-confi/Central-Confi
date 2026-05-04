@@ -403,6 +403,13 @@ Documentos históricos:
   - A leitura do workspace ficou deliberadamente mais restrita que o ticketing core: apenas `platform_admin` ou `support_agent`/`support_manager` com membership ativo no tenant entram nessa superfície.
   - A escrita continua nas RPCs de ticketing já existentes, sem novas mutações nesta fase.
   - `supabase/tests/017_phase6_1_support_workspace_read_models.sql` cobre grants, autorização, cross-tenant, nota interna protegida e bloqueio de base tables.
+- Fase 6.2: Support Workspace UI Minimum concluída localmente.
+  - As rotas `/support`, `/support/tickets`, `/support/tickets/:ticketId`, `/support/customers/:tenantId` e `/support/queue` agora materializam a primeira UI interna mínima do workspace de suporte/CS B2B.
+  - A superfície lê apenas `vw_support_tickets_queue`, `vw_support_ticket_detail`, `vw_support_ticket_timeline` e `vw_support_customer_360`.
+  - A escrita continua limitada às RPCs existentes de ticketing: `rpc_update_ticket_status`, `rpc_assign_ticket`, `rpc_add_ticket_message`, `rpc_add_internal_ticket_note`, `rpc_close_ticket` e `rpc_reopen_ticket`.
+  - O layout segue o padrão estabilizado do Admin Console: lista dominante, detalhe legível, timeline única, composer de resposta pública, composer de nota interna e visão 360 enxuta do cliente B2B.
+  - Uma fixture local controlada passou a reidratar tenants, contatos e tickets de QA para inspeção visual do workspace sem depender de credenciais remotas ou dados reais.
+  - A QA local validou leitura e mutação real por UI no ambiente local, incluindo adição de nota interna via RPC existente.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -424,7 +431,6 @@ Documentos históricos:
 - Não permitir leitura do Admin Console fora das views `vw_admin_*`.
 
 ## Próxima prioridade
-Planejar a próxima camada funcional do Support Workspace com foco em fila,
-detalhe, timeline e contexto do cliente B2B, sem romper o ticketing core já
-materializado nem misturar suporte interno com portal, help center público ou
-board de engenharia.
+Evoluir o Support Workspace com vínculos operacionais entre tickets, Knowledge
+Base e backlog de engenharia, preservando a separação entre suporte interno
+B2B, Central Pública e futuras superfícies externas.

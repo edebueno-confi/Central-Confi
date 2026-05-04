@@ -349,3 +349,41 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - prepara a trilha oficial para explicar como a fila de suporte interno enxerga tenants, tickets e notas internas
   - fixa o boundary de autorizacao do workspace antes da camada visual
+
+### Fase 6.2 - Support Workspace UI Minimum
+- fase: `6.2`
+- commit: `pendente`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: primeira UI interna minima do Support Workspace materializada sobre os read models da fase 6.1, com fila dominante, detalhe do ticket, timeline, composers e visao 360 minima do cliente B2B.
+- docs alterados:
+  - `docs/PROJECT_STATE.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/TICKET_LIFECYCLE.md`
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - leitura por `vw_support_tickets_queue`
+  - leitura por `vw_support_ticket_detail`
+  - leitura por `vw_support_ticket_timeline`
+  - leitura por `vw_support_customer_360`
+  - escrita por `rpc_update_ticket_status`
+  - escrita por `rpc_assign_ticket`
+  - escrita por `rpc_add_ticket_message`
+  - escrita por `rpc_add_internal_ticket_note`
+  - escrita por `rpc_close_ticket`
+  - escrita por `rpc_reopen_ticket`
+- telas afetadas:
+  - `/support`
+  - `/support/queue`
+  - `/support/tickets`
+  - `/support/tickets/:ticketId`
+  - `/support/customers/:tenantId`
+- riscos restantes:
+  - ainda nao existe vinculo ticket -> artigo de KB na superficie
+  - ainda nao existe vinculo ticket -> item de engenharia
+  - SLA continua fora da UI e do contrato operacional desta fase
+  - a fixture local de tickets e apenas operacional para QA, nao baseline persistente do banco local apos `supabase:verify`
+- impacto na FAQ futura:
+  - cria a trilha oficial para explicar a operacao minima do suporte interno B2B no produto
+  - separa claramente fila, detalhe, timeline e contexto do cliente de qualquer conceito de chat, portal B2B ou help center publico

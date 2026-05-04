@@ -715,6 +715,11 @@ Fase 6.1:
   - `vw_tickets_list`
   - `vw_ticket_detail`
   - `vw_ticket_timeline`
+- O app autenticado lê o Support Workspace apenas por:
+  - `vw_support_tickets_queue`
+  - `vw_support_ticket_detail`
+  - `vw_support_ticket_timeline`
+  - `vw_support_customer_360`
 - O app autenticado lê o Admin Console apenas por:
   - `vw_admin_auth_context`
   - `vw_admin_tenants_list`
@@ -762,6 +767,34 @@ Fase 6.1:
   - `rpc_admin_archive_knowledge_article_v2`
   - `rpc_admin_update_knowledge_article_review_status`
   - `rpc_admin_mark_knowledge_article_reviewed`
+
+## Fase 6.2 - Support Workspace UI Minimum
+
+### Rotas materializadas
+- `/support`
+- `/support/tickets`
+- `/support/tickets/:ticketId`
+- `/support/customers/:tenantId`
+- `/support/queue`
+
+### Leitura consumida pelo frontend
+- `vw_support_tickets_queue`
+- `vw_support_ticket_detail`
+- `vw_support_ticket_timeline`
+- `vw_support_customer_360`
+
+### Escrita consumida pelo frontend
+- `rpc_update_ticket_status`
+- `rpc_assign_ticket`
+- `rpc_add_ticket_message`
+- `rpc_add_internal_ticket_note`
+- `rpc_close_ticket`
+- `rpc_reopen_ticket`
+
+### Boundary mantido
+- a UI do workspace nao le tabelas base de ticketing
+- a UI nao cria mutacoes novas fora das RPCs ja aprovadas
+- a UI continua interna e B2B, sem qualquer capacidade de atendimento a shopper final
 
 ## Próximos contratos planejados
 - Views e RPCs de intake para engenharia.

@@ -8,9 +8,11 @@ export default defineConfig({
   server: {
     host: '127.0.0.1',
     port: 4173,
+    allowedHosts: ['host.docker.internal', '127.0.0.1', 'localhost'],
   },
   preview: {
     host: '127.0.0.1',
     port: 4173,
+    allowedHosts: ['host.docker.internal', '127.0.0.1', 'localhost'],
   },
 });
