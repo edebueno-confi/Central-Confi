@@ -702,7 +702,7 @@ Cada registro deve informar:
 
 ### Fase 6.9 - Support Workspace Customer Account Context UI
 - fase: `6.9`
-- commit: `PENDENTE`
+- commit: `9916b23`
 - branch: `codex/phase4-7-public-help-center-branding-contract`
 - data: `2026-05-04`
 - resumo funcional: o Support Workspace passou a consumir `vw_support_customer_account_context` para exibir o stack operacional do cliente B2B no ticket e na visao de cliente, mantendo conversa e composer como foco principal da tratativa.
