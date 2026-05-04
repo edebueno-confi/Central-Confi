@@ -69,6 +69,7 @@
 ## Proxima camada de contexto do cliente
 - o Support Workspace ja validou a necessidade de um perfil operacional mais rico do cliente B2B
 - esse dominio fica especificado em `CUSTOMER_ACCOUNT_PROFILE_SPEC.md`
+- a proposta minima de modelo fica revisada em `CUSTOMER_ACCOUNT_PROFILE_DATA_MODEL_REVIEW.md`
 - o suporte precisa consultar, antes da resposta:
   - produto ativo
   - plano e modulos relevantes

@@ -38,6 +38,19 @@ Responsabilidade:
 - execução de suporte;
 - histórico de atendimento.
 
+Expansão futura aprovada em revisão documental:
+- `customer_account_profiles`
+- `customer_account_integrations`
+- `customer_account_features`
+- `customer_account_customizations`
+- `customer_account_alerts`
+
+Responsabilidade futura:
+- contexto operacional persistente do cliente B2B;
+- resumo de produto, plano, stack e customizações;
+- alertas operacionais para suporte e CS;
+- suporte ao futuro portal B2B sem virar CRM genérico.
+
 ### Conteúdo e superfície pública
 - `knowledge_spaces`
 - `knowledge_space_domains`
@@ -89,6 +102,8 @@ Responsabilidade:
 ### Tabelas operacionais
 - Preferem `tenant_id` como chave de isolamento.
 - Devem continuar independentes de `knowledge_space` até existir necessidade operacional real.
+- O futuro Customer Account Profile também deve nascer ancorado em `tenant_id`.
+- Contrato resumido, stack, features, customizações e alertas pertencem ao eixo operacional do cliente B2B, não ao ticket e não ao `knowledge_space`.
 
 ### Tabelas editoriais e públicas
 - Devem convergir para `knowledge_space_id` como escopo autoritativo.
@@ -112,6 +127,18 @@ Campos-base esperados quando aplicável:
 - `updated_at`
 - `created_by_user_id`
 - `updated_by_user_id`
+
+## Guardrails aprovados para Customer Account Profile
+- não armazenar segredos, tokens, credenciais ou payloads sensíveis de integração
+- usar tabelas dedicadas para integrações, features, customizações e alertas
+- permitir `jsonb` apenas para flags operacionais pequenas e controladas
+- evitar modelo genérico de CRM comercial
+- separar claramente o que é:
+  - cadastro do cliente
+  - contrato/plano
+  - stack e integrações
+  - customizações
+  - alertas
 
 ## Histórico
 Nunca sobrescrever histórico relevante.

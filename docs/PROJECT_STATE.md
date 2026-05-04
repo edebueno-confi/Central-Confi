@@ -36,6 +36,7 @@ Documentos prioritários:
 - `CONTENT_OPERATIONS_GOVERNANCE.md`
 - `SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`
 - `CUSTOMER_ACCOUNT_PROFILE_SPEC.md`
+- `CUSTOMER_ACCOUNT_PROFILE_DATA_MODEL_REVIEW.md`
 - `reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`
 
 Documentos históricos:
@@ -170,6 +171,7 @@ Documentos históricos:
 - Governança oficial de operações de conteúdo criada em `docs/CONTENT_OPERATIONS_GOVERNANCE.md`.
 - Spec oficial do Support Workspace criada em `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`.
 - Spec oficial do perfil operacional do cliente B2B criada em `docs/CUSTOMER_ACCOUNT_PROFILE_SPEC.md`.
+- Revisão oficial do modelo mínimo do perfil operacional do cliente B2B criada em `docs/CUSTOMER_ACCOUNT_PROFILE_DATA_MODEL_REVIEW.md`.
 - Read models oficiais do Support Workspace materializados com authz restrita a `platform_admin` e roles globais de suporte com membership ativo no tenant.
 - O detalhe do Support Workspace agora prioriza conversa e composer como fluxo principal, mantendo eventos tecnicos e controles avancados em camadas secundarias.
 - Relatório oficial do inventário legado criado em `docs/reports/KNOWLEDGE_LEGACY_INVENTORY_REPORT.md`.
@@ -231,6 +233,8 @@ Documentos históricos:
 - Chat, widget ou IA na Central Pública.
 - Role específica de CS para operar o Support Workspace sem reaproveitar roles de suporte.
 - Dominio materializado de Customer Account Profile para produto, plano, stack, customizacoes e alertas operacionais.
+- Migration oficial do Customer Account Profile.
+- Views/RPCs contratuais do Customer Account Profile.
 
 ## Situação por fase
 
