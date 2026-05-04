@@ -566,3 +566,32 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - melhora a futura documentacao do fluxo real de atendimento do suporte
   - fixa a conversa como superficie principal do ticket e o contexto do cliente como apoio operacional
+
+### Fase 6.5 - Customer Account Profile / B2B CRM Context Spec
+- fase: `6.5`
+- commit: `4fab672`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: especifica o dominio de perfil operacional do cliente B2B para suporte e CS, separando identificacao, contrato, stack, customizacoes, contatos e observacoes internas sem inflar o produto para um CRM generico.
+- docs alterados:
+  - `docs/CUSTOMER_ACCOUNT_PROFILE_SPEC.md`
+  - `docs/README.md`
+  - `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - impacto futuro avaliado sobre `tenants`
+  - impacto futuro avaliado sobre `tenant_contacts`
+  - impacto futuro avaliado sobre `vw_support_customer_360`
+  - impacto futuro avaliado sobre Support Workspace, tickets, Knowledge Base e portal B2B
+- telas afetadas:
+  - nenhuma implementacao nesta fase
+- riscos restantes:
+  - ainda nao existe modelo de dados dedicado para contrato, stack e customizacoes do cliente
+  - `vw_support_customer_360` continua entregando apenas contexto minimo
+  - a futura implementacao precisa separar com rigor leitura interna, leitura do cliente e dados sensiveis
+- impacto na FAQ futura:
+  - cria a base documental para explicar contexto operacional do cliente B2B por produto, stack e restricoes
+  - ajuda a futura FAQ interna de suporte e CS a responder quem e o cliente e como ele opera antes da tratativa
