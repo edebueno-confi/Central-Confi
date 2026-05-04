@@ -318,7 +318,7 @@ Cada registro deve informar:
 
 ### Fase 6.1 - Support Workspace Backend Read Models + Authz Review
 - fase: `6.1`
-- commit: `TBD`
+- commit: `fbf170c`
 - branch: `codex/phase4-7-public-help-center-branding-contract`
 - data: `2026-05-04`
 - resumo funcional: read models especificos do Support Workspace foram materializados no backend, com queue/detail/timeline/customer 360 e authz revista antes de qualquer UI.
