@@ -723,3 +723,44 @@ Cada registro deve informar:
   - `ticket -> KB`, `ticket -> engenharia` e SLA seguem fora do escopo
 - impacto na FAQ futura:
   - consolida como suporte enxerga produto, stack, customizacoes e alertas do cliente B2B no fluxo real de atendimento
+
+### Fase 6.10 - Internal Workspace Shell + Agent UX System
+- fase: `6.10`
+- commit: `607204c`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: o Support Workspace ganhou shell interno colapsavel, fila mais dominante, ticket workspace centrado na conversa e customer context mais sintetico, com mini design system oficial para superficies operacionais internas.
+- docs alterados:
+  - `docs/UX_DIRECTION.md`
+  - `docs/INTERNAL_WORKSPACE_DESIGN_SYSTEM.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/README.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - leitura mantida por `vw_support_tickets_queue`
+  - leitura mantida por `vw_support_ticket_detail`
+  - leitura mantida por `vw_support_ticket_timeline_recent`
+  - leitura mantida por `vw_support_customer_360`
+  - leitura mantida por `vw_support_customer_recent_tickets`
+  - leitura mantida por `vw_support_customer_recent_events`
+  - leitura mantida por `vw_support_customer_account_context`
+  - leitura mantida por `vw_support_assignable_agents`
+  - escrita mantida por `rpc_update_ticket_status`
+  - escrita mantida por `rpc_assign_ticket`
+  - escrita mantida por `rpc_add_ticket_message`
+  - escrita mantida por `rpc_add_internal_ticket_note`
+  - escrita mantida por `rpc_close_ticket`
+  - escrita mantida por `rpc_reopen_ticket`
+- telas afetadas:
+  - `/support/queue`
+  - `/support/tickets/:ticketId`
+  - `/support/customers/:tenantId`
+- riscos restantes:
+  - o workspace ainda depende de disciplina de catalogo para `feature_key`, `provider` e `account_tier`
+  - o historico tecnico completo continua recolhido e sem RPC paginavel sob demanda
+  - ticket -> KB, ticket -> engenharia e SLA seguem fora do escopo
+- impacto na FAQ futura:
+  - fixa a experiencia oficial do suporte interno como workspace operacional, nao painel administrativo
+  - ajuda a documentar como agentes navegam entre fila, ticket, contexto do cliente e conhecimento interno
