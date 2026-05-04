@@ -390,7 +390,7 @@ Cada registro deve informar:
 
 ### Fase 6.2.1 - Support Workspace Operational UX Review
 - fase: `6.2.1`
-- commit: `pendente`
+- commit: `59edfc2`
 - branch: `codex/phase4-7-public-help-center-branding-contract`
 - data: `2026-05-04`
 - resumo funcional: o Support Workspace deixou de herdar a hierarquia visual do Admin Console e passou a operar como cockpit B2B de tickets, com fila dominante, painel de atendimento, composer unificado e contexto compacto do cliente.
