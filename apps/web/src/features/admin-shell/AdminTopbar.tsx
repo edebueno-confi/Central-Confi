@@ -28,11 +28,10 @@ export function AdminTopbar() {
 
   return (
     <header className="flex flex-wrap items-start justify-between gap-4 rounded-[28px] border border-[color:var(--color-border)] bg-white/84 px-5 py-4 shadow-[var(--shadow-panel)] backdrop-blur sm:px-6">
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <StatusPill tone="accent">{runtimeConfig?.appEnv ?? 'development'}</StatusPill>
           <StatusPill>platform_admin</StatusPill>
-          <StatusPill>pos-venda</StatusPill>
         </div>
         <div className="space-y-1">
           <h2 className="text-xl font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">

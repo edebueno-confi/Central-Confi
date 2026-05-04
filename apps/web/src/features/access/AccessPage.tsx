@@ -390,14 +390,14 @@ export function AccessPage() {
         description="Governanca minima de memberships para quem opera tenants no ecossistema Genius. A leitura vem da view global oficial e as mutacoes continuam restritas as RPCs administrativas aprovadas."
       />
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard helper="Leitura oficial da view global." label="Memberships" value={String(totalMemberships)} />
         <MetricCard helper="Usuarios ativos em tenants." label="Ativos" value={String(activeMemberships)} />
         <MetricCard helper="Convites pendentes." label="Convidados" value={String(invitedMemberships)} />
         <MetricCard helper="Acessos revogados." label="Revogados" value={String(revokedMemberships)} />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_420px]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(420px,0.92fr)] 2xl:grid-cols-[minmax(0,1.14fr)_minmax(500px,0.86fr)]">
         <div className="space-y-6">
           <Panel
             title="Memberships por tenant"

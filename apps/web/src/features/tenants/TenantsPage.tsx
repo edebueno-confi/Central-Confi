@@ -450,14 +450,14 @@ export function TenantsPage() {
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard helper="Leitura oficial em vw_admin_tenants_list." label="Tenants" value={String(totalTenants)} />
         <MetricCard helper="Status operacional ativo." label="Ativos" value={String(activeTenants)} />
         <MetricCard helper="Pontos que exigem atencao." label="Suspensos" value={String(suspendedTenants)} />
         <MetricCard helper="Contatos ativos da operacao." label="Contatos ativos" value={String(totalContacts)} />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.75fr)_420px]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(420px,0.92fr)] 2xl:grid-cols-[minmax(0,1.14fr)_minmax(480px,0.86fr)]">
         <div className="space-y-6">
           {showCreateTenant ? (
             <Panel
@@ -672,7 +672,7 @@ export function TenantsPage() {
                   </div>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 lg:grid-cols-2">
                   <MetricCard label="Memberships ativas" value={String(tenantDetail.active_membership_count)} />
                   <MetricCard label="Contatos ativos" value={String(tenantDetail.active_contact_count)} />
                 </div>

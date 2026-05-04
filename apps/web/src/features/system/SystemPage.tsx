@@ -157,7 +157,7 @@ export function SystemPage() {
         description="Estado minimo do backbone operacional Genius e rastreabilidade administrativa oficial. Sem dashboard executivo e sem joins fora das views aprovadas."
       />
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard helper="Superficie ativa do SaaS." label="Tenants ativos" value={String(activeTenants)} />
         <MetricCard helper="Memberships em operacao." label="Memberships ativos" value={String(activeMemberships)} />
         <MetricCard helper="Eventos carregados do feed oficial." label="Eventos" value={String(auditFeed.length)} />

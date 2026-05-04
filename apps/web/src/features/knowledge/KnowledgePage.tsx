@@ -1266,7 +1266,7 @@ export function KnowledgePage() {
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-7">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
         <MetricCard
           label="Knowledge spaces"
           value={String(spaces.length)}
@@ -1308,7 +1308,7 @@ export function KnowledgePage() {
         title="Escopo editorial"
         description="A leitura desta etapa usa apenas knowledge spaces, views v2 space-aware e o advisory contratual de revisao editorial. Nenhuma tabela-base da Knowledge Base e acessada pelo frontend."
       >
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.78fr)_minmax(0,0.78fr)_minmax(0,0.78fr)_minmax(0,0.78fr)_auto]">
+        <div className="grid gap-4 xl:grid-cols-3 2xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.9fr)_minmax(0,0.9fr)]">
           <Field label="Knowledge space">
             <SelectInput
               onChange={(event) => setSelectedSpaceId(event.target.value || null)}
@@ -1399,7 +1399,7 @@ export function KnowledgePage() {
             </SelectInput>
           </Field>
 
-          <div className="flex items-end">
+          <div className="flex items-end xl:col-span-3 2xl:col-span-3">
             <GhostButton
               disabled={!selectedSpaceId}
               onClick={() => {
@@ -1414,7 +1414,7 @@ export function KnowledgePage() {
         </div>
 
         {selectedSpace ? (
-          <div className="mt-5 grid gap-4 rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+          <div className="mt-5 grid gap-4 rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(340px,0.8fr)]">
             <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
                 <StatusPill tone={toneForSpaceStatus(selectedSpace.status)}>
@@ -1457,7 +1457,7 @@ export function KnowledgePage() {
         ) : null}
       </Panel>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(360px,0.95fr)]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.06fr)_minmax(460px,0.94fr)] 2xl:grid-cols-[minmax(0,1.08fr)_minmax(560px,0.92fr)]">
         <Panel
           title="Artigos"
           description="Lista space-aware de artigos administrativos da Knowledge Base."
@@ -1932,7 +1932,7 @@ export function KnowledgePage() {
             />
           ) : (
             <div className="space-y-5">
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <StatusPill tone={toneForArticleStatus(articleDetail.status)}>
                     {articleDetail.status}
@@ -2109,138 +2109,148 @@ export function KnowledgePage() {
                 ) : null}
               </div>
 
-              <div className="rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 text-sm leading-6 text-[color:var(--color-muted)]">
-                <p>Knowledge space: {articleDetail.knowledge_space_display_name}</p>
-                <p>Organization: {articleDetail.organization_display_name}</p>
-                <p>Revisoes: {articleDetail.revisions.length}</p>
-                <p>Revision atual: {articleDetail.current_revision_number}</p>
-                <p>Criado: {formatDateTime(articleDetail.created_at)}</p>
-                <p>Atualizado: {formatDateTime(articleDetail.updated_at)}</p>
-                <p>
-                  Origem:{' '}
-                  {articleDetail.source_path || articleDetail.source_hash
-                    ? 'importado do legado'
-                    : 'manual'}
-                </p>
-                {articleDetail.source_path ? (
-                  <p>Source path: {articleDetail.source_path}</p>
-                ) : null}
-                {articleDetail.source_hash ? (
-                  <p>Source hash: {articleDetail.source_hash}</p>
-                ) : null}
-                {selectedAdvisory ? (
-                  <>
-                    <p>Review status persistido: {selectedAdvisory.review_status}</p>
-                    <p>
-                      Classificacao sugerida: {selectedAdvisory.suggested_classification}
-                    </p>
-                    <p>
-                      Visibility sugerida: {selectedAdvisory.suggested_visibility}
-                    </p>
-                    {selectedAdvisory.reviewed_at ? (
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
+                <div className="rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 text-sm leading-6 text-[color:var(--color-muted)]">
+                  <p>Knowledge space: {articleDetail.knowledge_space_display_name}</p>
+                  <p>Organization: {articleDetail.organization_display_name}</p>
+                  <p>Revisoes: {articleDetail.revisions.length}</p>
+                  <p>Revision atual: {articleDetail.current_revision_number}</p>
+                  <p>Criado: {formatDateTime(articleDetail.created_at)}</p>
+                  <p>Atualizado: {formatDateTime(articleDetail.updated_at)}</p>
+                  {selectedAdvisory ? (
+                    <>
+                      <p>Review status persistido: {selectedAdvisory.review_status}</p>
                       <p>
-                        Revisado por {selectedAdvisory.reviewed_by_full_name ?? 'usuario interno'} em{' '}
-                        {formatDateTime(selectedAdvisory.reviewed_at)}
+                        Classificacao sugerida: {selectedAdvisory.suggested_classification}
                       </p>
+                      <p>
+                        Visibility sugerida: {selectedAdvisory.suggested_visibility}
+                      </p>
+                      {selectedAdvisory.reviewed_at ? (
+                        <p>
+                          Revisado por {selectedAdvisory.reviewed_by_full_name ?? 'usuario interno'} em{' '}
+                          {formatDateTime(selectedAdvisory.reviewed_at)}
+                        </p>
+                      ) : null}
+                    </>
+                  ) : null}
+                  {articleDetail.submitted_for_review_at ? (
+                    <p>
+                      Enviado para revisao:{' '}
+                      {formatDateTime(articleDetail.submitted_for_review_at)}
+                    </p>
+                  ) : null}
+                  {articleDetail.published_at ? (
+                    <p>Publicado: {formatDateTime(articleDetail.published_at)}</p>
+                  ) : null}
+                  {articleDetail.archived_at ? (
+                    <p>Arquivado: {formatDateTime(articleDetail.archived_at)}</p>
+                  ) : null}
+                </div>
+
+                <details className="rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 text-sm leading-6 text-[color:var(--color-muted)]">
+                  <summary className="cursor-pointer text-sm font-semibold uppercase tracking-[0.16em] text-[color:var(--color-ink)]">
+                    Bloco tecnico de origem
+                  </summary>
+                  <div className="mt-3 space-y-2">
+                    <p>
+                      Origem:{' '}
+                      {articleDetail.source_path || articleDetail.source_hash
+                        ? 'importado do legado'
+                        : 'manual'}
+                    </p>
+                    {articleDetail.source_path ? (
+                      <p>Source path: {articleDetail.source_path}</p>
                     ) : null}
-                  </>
-                ) : null}
-                {articleDetail.submitted_for_review_at ? (
-                  <p>
-                    Enviado para revisao:{' '}
-                    {formatDateTime(articleDetail.submitted_for_review_at)}
-                  </p>
-                ) : null}
-                {articleDetail.published_at ? (
-                  <p>Publicado: {formatDateTime(articleDetail.published_at)}</p>
-                ) : null}
-                {articleDetail.archived_at ? (
-                  <p>Arquivado: {formatDateTime(articleDetail.archived_at)}</p>
-                ) : null}
+                    {articleDetail.source_hash ? (
+                      <p>Source hash: {articleDetail.source_hash}</p>
+                    ) : null}
+                  </div>
+                </details>
               </div>
 
               {editorialChecklist ? (
-                <div className="grid gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,0.95fr)_minmax(0,1.1fr)]">
-                  <div className="space-y-3 rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
-                    <div className="space-y-1">
-                      <h3 className="text-base font-semibold text-[color:var(--color-ink)]">
-                        Sinais do artigo atual
-                      </h3>
-                      <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                        Sinais objetivos atuais do artigo carregado pela view v2.
-                      </p>
-                    </div>
+                <div className="space-y-4">
+                  <div className="grid gap-4 xl:grid-cols-2">
+                    <div className="space-y-3 rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
+                      <div className="space-y-1">
+                        <h3 className="text-base font-semibold text-[color:var(--color-ink)]">
+                          Sinais do artigo atual
+                        </h3>
+                        <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                          Sinais objetivos atuais do artigo carregado pela view v2.
+                        </p>
+                      </div>
 
-                    <div className="space-y-3">
-                      {editorialChecklist.automated.map((item) => (
-                        <div
-                          key={item.label}
-                          className="rounded-[20px] border border-[color:var(--color-border)] bg-white p-4"
-                        >
-                          <div className="flex flex-wrap items-center gap-2">
-                            <StatusPill tone={item.tone}>{item.label}</StatusPill>
-                          </div>
-                          <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
-                            {item.description}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
-                    <div className="space-y-1">
-                      <h3 className="text-base font-semibold text-[color:var(--color-ink)]">
-                        Sinais do backlog
-                      </h3>
-                      <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                        Advisory persistente vindo do backend. Serve como apoio de
-                        curadoria, nao como decisao automatica.
-                      </p>
-                    </div>
-
-                    {selectedAdvisory ? (
                       <div className="space-y-3">
-                        <div
-                          className="rounded-[20px] border border-[color:var(--color-border)] bg-white p-4"
-                        >
-                          <div className="flex flex-wrap gap-2">
-                            <StatusPill
-                              tone={toneForAdvisoryClassification(
-                                selectedAdvisory.suggested_classification,
-                              )}
-                            >
-                              {selectedAdvisory.suggested_classification}
-                            </StatusPill>
-                            <StatusPill tone={toneForVisibility(selectedAdvisory.suggested_visibility)}>
-                              {selectedAdvisory.suggested_visibility}
-                            </StatusPill>
-                            {selectedAdvisory.duplicate_group_key ? (
-                              <StatusPill tone="warning">
-                                duplicado x{selectedAdvisory.duplicate_group_article_count}
+                        {editorialChecklist.automated.map((item) => (
+                          <div
+                            key={item.label}
+                            className="rounded-[20px] border border-[color:var(--color-border)] bg-white p-4"
+                          >
+                            <div className="flex flex-wrap items-center gap-2">
+                              <StatusPill tone={item.tone}>{item.label}</StatusPill>
+                            </div>
+                            <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
+                              {item.description}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
+                      <div className="space-y-1">
+                        <h3 className="text-base font-semibold text-[color:var(--color-ink)]">
+                          Sinais do backlog
+                        </h3>
+                        <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                          Advisory persistente vindo do backend. Serve como apoio de
+                          curadoria, nao como decisao automatica.
+                        </p>
+                      </div>
+
+                      {selectedAdvisory ? (
+                        <div className="space-y-3">
+                          <div className="rounded-[20px] border border-[color:var(--color-border)] bg-white p-4">
+                            <div className="flex flex-wrap gap-2">
+                              <StatusPill
+                                tone={toneForAdvisoryClassification(
+                                  selectedAdvisory.suggested_classification,
+                                )}
+                              >
+                                {selectedAdvisory.suggested_classification}
                               </StatusPill>
+                              <StatusPill tone={toneForVisibility(selectedAdvisory.suggested_visibility)}>
+                                {selectedAdvisory.suggested_visibility}
+                              </StatusPill>
+                              {selectedAdvisory.duplicate_group_key ? (
+                                <StatusPill tone="warning">
+                                  duplicado x{selectedAdvisory.duplicate_group_article_count}
+                                </StatusPill>
+                              ) : null}
+                            </div>
+                            <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
+                              {selectedAdvisory.classification_reason}
+                            </p>
+                            {advisoryRiskFlags.length > 0 ? (
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {advisoryRiskFlags.map((flag) => (
+                                  <StatusPill key={flag} tone="critical">
+                                    {flag}
+                                  </StatusPill>
+                                ))}
+                              </div>
                             ) : null}
                           </div>
-                          <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
-                            {selectedAdvisory.classification_reason}
-                          </p>
-                          {advisoryRiskFlags.length > 0 ? (
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              {advisoryRiskFlags.map((flag) => (
-                                <StatusPill key={flag} tone="critical">
-                                  {flag}
-                                </StatusPill>
-                              ))}
-                            </div>
-                          ) : null}
                         </div>
-                      </div>
-                    ) : (
-                      <EmptyState
-                        title="Sem advisory persistido"
-                        description="A materializacao do backlog ainda nao gerou um advisory para este artigo."
-                      />
-                    )}
+                      ) : (
+                        <EmptyState
+                          title="Sem advisory persistido"
+                          description="A materializacao do backlog ainda nao gerou um advisory para este artigo."
+                        />
+                      )}
+                    </div>
                   </div>
 
                   <div className="space-y-3 rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
@@ -2253,7 +2263,7 @@ export function KnowledgePage() {
                       </p>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="grid gap-3 xl:grid-cols-2">
                       {persistedHumanChecklist.map((item, index) => {
                         const field = HUMAN_CONFIRMATION_FIELDS[index];
                         const checked = humanConfirmationsDraft[field.key] === true;
@@ -2284,30 +2294,32 @@ export function KnowledgePage() {
                       })}
                     </div>
 
-                    <Field label="Status da revisao editorial">
-                      <SelectInput
-                        onChange={(event) =>
-                          setReviewStatusDraft(
-                            event.target.value as KnowledgeArticleReviewStatus,
-                          )
-                        }
-                        value={reviewStatusDraft}
-                      >
-                        {KNOWLEDGE_ARTICLE_REVIEW_STATUSES.map((status) => (
-                          <option key={status} value={status}>
-                            {status}
-                          </option>
-                        ))}
-                      </SelectInput>
-                    </Field>
+                    <div className="grid gap-4 xl:grid-cols-[minmax(260px,0.7fr)_minmax(0,1.3fr)]">
+                      <Field label="Status da revisao editorial">
+                        <SelectInput
+                          onChange={(event) =>
+                            setReviewStatusDraft(
+                              event.target.value as KnowledgeArticleReviewStatus,
+                            )
+                          }
+                          value={reviewStatusDraft}
+                        >
+                          {KNOWLEDGE_ARTICLE_REVIEW_STATUSES.map((status) => (
+                            <option key={status} value={status}>
+                              {status}
+                            </option>
+                          ))}
+                        </SelectInput>
+                      </Field>
 
-                    <Field label="Notas de revisao">
-                      <TextareaInput
-                        onChange={(event) => setReviewNotesDraft(event.target.value)}
-                        placeholder="Observacoes curtas da revisao humana."
-                        value={reviewNotesDraft}
-                      />
-                    </Field>
+                      <Field label="Notas de revisao">
+                        <TextareaInput
+                          onChange={(event) => setReviewNotesDraft(event.target.value)}
+                          placeholder="Observacoes curtas da revisao humana."
+                          value={reviewNotesDraft}
+                        />
+                      </Field>
+                    </div>
 
                     <div className="flex flex-wrap gap-3">
                       <GhostButton
