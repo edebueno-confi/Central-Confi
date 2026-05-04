@@ -275,7 +275,7 @@ Cada registro deve informar:
 
 ### Fase 6.0 - Support Workspace Architecture Spec
 - fase: `6.0`
-- commit: `TBD`
+- commit: `0e6c7a5`
 - branch: `codex/phase4-7-public-help-center-branding-contract`
 - data: `2026-05-03`
 - resumo funcional: spec arquitetural do Support Workspace interno definida sobre o ticketing core existente, com escopo, rotas futuras, UX minima e lacunas mapeadas antes de qualquer UI.
