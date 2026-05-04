@@ -426,3 +426,43 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - fixa a leitura oficial do workspace como ferramenta de tratativa operacional B2B
   - ajuda a documentar o fluxo real fila -> ticket -> resposta/nota -> status -> timeline -> contexto do cliente
+
+### Fase 6.2.2 - Domain-Specific UX Correction Gate
+- fase: `6.2.2`
+- commit: `c7d9eb7`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: suporte e curadoria editorial passaram por simplificacao estrutural por dominio, reduzindo cards, badges, metadados simultaneos e colunas espremidas para priorizar triagem, tratativa e revisao humana real.
+- docs alterados:
+  - `docs/UX_DIRECTION.md`
+  - `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - leitura mantida por `vw_support_tickets_queue`
+  - leitura mantida por `vw_support_ticket_detail`
+  - leitura mantida por `vw_support_ticket_timeline`
+  - leitura mantida por `vw_support_customer_360`
+  - leitura mantida por `vw_admin_knowledge_articles_list_v2`
+  - leitura mantida por `vw_admin_knowledge_article_detail_v2`
+  - leitura mantida por `vw_admin_knowledge_article_review_advisories`
+  - escrita mantida por `rpc_update_ticket_status`
+  - escrita mantida por `rpc_assign_ticket`
+  - escrita mantida por `rpc_add_ticket_message`
+  - escrita mantida por `rpc_add_internal_ticket_note`
+  - escrita mantida por `rpc_close_ticket`
+  - escrita mantida por `rpc_reopen_ticket`
+- telas afetadas:
+  - `/support/queue`
+  - `/support/tickets/:ticketId`
+  - `/support/customers/:tenantId`
+  - `/admin/knowledge`
+- riscos restantes:
+  - atribuicao continua dependente de `user_id` tecnico em area avancada
+  - timeline e customer context ainda dependem do volume e da qualidade dos dados retornados pelos contratos atuais
+  - vinculos ticket -> KB, ticket -> engenharia e SLA seguem fora do escopo funcional desta fase
+- impacto na FAQ futura:
+  - fixa o metodo oficial de simplificacao de superficies operacionais por dominio
+  - melhora a base para documentar o fluxo real de triagem e tratativa sem herdar linguagem de dashboard generico
