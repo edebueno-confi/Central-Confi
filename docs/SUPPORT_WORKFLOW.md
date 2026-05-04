@@ -166,6 +166,23 @@
   - acoes principais
 - `/support/customers/:tenantId` fica como apoio operacional sintetico, sem visual de CRM pesado ou dashboard
 
+## Shell e workspace da fase 6.10
+- o Support Workspace passa a usar shell interno colapsavel proprio
+- a sidebar do suporte deixa de explicar a operacao e passa a servir navegacao rapida:
+  - queue
+  - tickets
+  - customers
+  - knowledge
+  - admin quando autorizado
+- o ticket vira workspace unico de atendimento:
+  1. cabecalho compacto
+  2. composer
+  3. conversa recente
+  4. rail operacional recolhivel
+  5. historico tecnico e acoes de excecao recolhidos
+- `/support/customers/:tenantId` continua apoiando a tratativa, mas com stack, tickets, contatos e eventos em leitura curta
+- a referencia visual transversal dessa camada fica em `INTERNAL_WORKSPACE_DESIGN_SYSTEM.md`
+
 ## Fora de escopo do workspace
 - atendimento a shopper final
 - omnichannel B2C

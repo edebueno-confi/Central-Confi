@@ -68,6 +68,17 @@
 - acoes secundarias devem ser rebaixadas, agrupadas ou recolhidas
 - texto nunca pode vazar ou depender de coluna estreita para continuar legivel
 
+## Sistema interno operacional
+- a direcao visual detalhada das superficies internas fica formalizada em `INTERNAL_WORKSPACE_DESIGN_SYSTEM.md`
+- shells internos devem ser colapsaveis, compactos e orientados a area util
+- sidebars internas servem navegacao e estado minimo, nunca cards explicativos longos
+- rails laterais existem para apoio operacional utilitario e podem ser recolhidos quando a largura precisa voltar ao fluxo principal
+- accordions e detalhes recolhidos sao o lugar correto para:
+  - historico tecnico
+  - metadados longos
+  - fallback tecnico
+  - acoes de excecao
+
 ## Aplicacao direta da fase 6.2.2
 
 ### Support Workspace

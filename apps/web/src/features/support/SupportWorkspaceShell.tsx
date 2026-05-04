@@ -1,167 +1,327 @@
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import mascotUrl from '../../../assets/brand/genius-mascot.svg';
-import { GhostButton, StatusPill } from '../../components/ui';
+import { GhostButton, StatusPill, cx } from '../../components/ui';
 import { useAuthContext } from '../auth/auth-context';
 
-const navigation = [
-  { label: 'Support', to: '/support', shortLabel: 'SUP' },
-  { label: 'Queue', to: '/support/queue', shortLabel: 'Q' },
-  { label: 'Tickets', to: '/support/tickets', shortLabel: 'TKT' },
-];
+const SIDEBAR_STORAGE_KEY = 'support-workspace-shell-collapsed';
 
 const routeCopy: Record<string, { title: string; subtitle: string }> = {
   '/support': {
-    title: 'Cockpit de suporte',
+    title: 'Agent workspace',
     subtitle:
-      'Operacao interna de suporte e CS B2B sobre a fila oficial de tickets, sem dashboard generico.',
+      'Fila, tratativa e contexto operacional do cliente B2B na mesma superficie interna.',
   },
   '/support/queue': {
-    title: 'Fila operacional',
-    subtitle:
-      'Triagem viva de tickets com leitura rapida de urgencia, contexto e ultima atividade.',
+    title: 'Queue',
+    subtitle: 'Triagem rapida com fila dominante e preview curto do ticket em foco.',
   },
   '/support/tickets': {
-    title: 'Tratativa de tickets',
+    title: 'Tickets',
     subtitle:
-      'Atendimento, resposta publica, nota interna, status e atribuicao na mesma superficie operacional.',
+      'Tratativa diaria com conversa central, operacao lateral utilitaria e contexto sob demanda.',
   },
 };
 
 function describeRoute(pathname: string) {
   if (pathname.startsWith('/support/customers/')) {
     return {
-      title: 'Customer context',
+      title: 'Customers',
       subtitle:
-        'Contexto operacional do cliente B2B com contatos ativos, tickets recentes e eventos relevantes.',
+        'Contexto operacional do cliente B2B com stack, tickets recentes e contatos uteis para a tratativa.',
     };
   }
 
   if (pathname.startsWith('/support/tickets/')) {
     return {
-      title: 'Ticket em tratativa',
+      title: 'Ticket workspace',
       subtitle:
-        'Painel de atendimento do ticket com timeline, resposta publica, nota interna e transicoes operacionais.',
+        'Conversa primeiro, operacao essencial no rail e historico tecnico fora do fluxo principal.',
     };
   }
 
   return routeCopy[pathname] ?? routeCopy['/support'];
 }
 
-function SupportSidebar() {
-  const { user } = useAuthContext();
+function usePersistedSidebarState() {
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const stored = window.localStorage.getItem(SIDEBAR_STORAGE_KEY);
+    setCollapsed(stored === 'true');
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(collapsed));
+  }, [collapsed]);
+
+  return [collapsed, setCollapsed] as const;
+}
+
+function SupportSidebar({
+  collapsed,
+  onToggle,
+}: {
+  collapsed: boolean;
+  onToggle: () => void;
+}) {
+  const location = useLocation();
+  const { gate, user } = useAuthContext();
+
+  const customerPath = location.pathname.startsWith('/support/customers/')
+    ? location.pathname
+    : '/support/queue';
+
+  const navigation = useMemo(
+    () =>
+      [
+        {
+          label: 'Queue',
+          shortLabel: 'Q',
+          to: '/support/queue',
+          isActive: (pathname: string) => pathname === '/support' || pathname === '/support/queue',
+        },
+        {
+          label: 'Tickets',
+          shortLabel: 'T',
+          to: '/support/tickets',
+          isActive: (pathname: string) => pathname.startsWith('/support/tickets'),
+        },
+        {
+          label: 'Customers',
+          shortLabel: 'C',
+          to: customerPath,
+          isActive: (pathname: string) => pathname.startsWith('/support/customers/'),
+        },
+        {
+          label: 'Knowledge',
+          shortLabel: 'K',
+          to: '/admin/knowledge',
+          isActive: (pathname: string) => pathname.startsWith('/admin/knowledge'),
+        },
+        ...(gate.actor?.is_platform_admin
+          ? [
+              {
+                label: 'Admin',
+                shortLabel: 'A',
+                to: '/admin/tenants',
+                isActive: (pathname: string) => pathname.startsWith('/admin/'),
+              },
+            ]
+          : []),
+      ] satisfies Array<{
+        label: string;
+        shortLabel: string;
+        to: string;
+        isActive: (pathname: string) => boolean;
+      }>,
+    [customerPath, gate.actor?.is_platform_admin],
+  );
 
   return (
-    <aside className="flex h-full flex-col rounded-[30px] border border-white/55 bg-[linear-gradient(180deg,rgba(17,28,66,0.99),rgba(25,48,112,0.98))] p-5 text-white shadow-[0_28px_60px_rgba(20,31,71,0.22)]">
-      <div className="rounded-[24px] border border-white/10 bg-white/6 p-4">
-        <div className="flex items-center gap-3">
-          <img alt="Mascote Genius" className="w-12" src={mascotUrl} />
-          <div className="space-y-1">
-            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-white/58">
+    <aside
+      className={cx(
+        'flex h-full flex-col rounded-[28px] border border-white/50 bg-[linear-gradient(180deg,rgba(17,28,66,0.99),rgba(24,42,97,0.98))] p-3 text-white shadow-[0_24px_54px_rgba(20,31,71,0.22)] transition-[width,padding] duration-200',
+        collapsed ? 'w-[92px]' : 'w-[244px]',
+      )}
+    >
+      <div
+        className={cx(
+          'flex items-center gap-3 rounded-[22px] border border-white/10 bg-white/6 px-3 py-3',
+          collapsed && 'justify-center px-2',
+        )}
+      >
+        <img alt="Mascote Genius" className="w-11 shrink-0" src={mascotUrl} />
+        {!collapsed ? (
+          <div className="min-w-0 space-y-1">
+            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.26em] text-white/58">
               Genius
             </p>
-            <h1 className="text-lg font-semibold tracking-[-0.04em]">
+            <h1 className="text-base font-semibold tracking-[-0.04em]">
               Support Workspace
             </h1>
           </div>
-        </div>
-        <div className="mt-3 rounded-[18px] border border-white/10 bg-white/8 px-3 py-3">
-          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-white/58">
-            Operacao
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">Cockpit operacional B2B</p>
-          <p className="mt-1 text-xs leading-5 text-white/66">
-            Triagem, atendimento, contexto do cliente e devolutiva tecnico-operacional.
-          </p>
-        </div>
+        ) : null}
       </div>
 
-      <nav className="mt-8 grid gap-2">
-        {navigation.map((item) => (
-          <NavLink
-            key={item.to}
-            className={({ isActive }) =>
-              [
-                'group flex items-center gap-3 rounded-[22px] px-3 py-3 text-sm font-medium transition',
-                isActive
-                  ? 'bg-white text-[color:var(--color-brand-navy)] shadow-[0_16px_34px_rgba(12,20,48,0.18)]'
-                  : 'text-white/74 hover:bg-white/10 hover:text-white',
-              ].join(' ')
-            }
-            to={item.to}
-          >
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-current/16 bg-current/6 text-[0.68rem] font-semibold uppercase tracking-[0.18em]">
-              {item.shortLabel}
-            </span>
-            <span>{item.label}</span>
-          </NavLink>
-        ))}
+      <div className={cx('mt-3 flex', collapsed ? 'justify-center' : 'justify-end')}>
+        <GhostButton
+          className={cx(
+            'min-h-10 border-white/16 bg-white/8 px-3 text-white hover:bg-white/12 hover:text-white',
+            collapsed && 'w-full justify-center px-0',
+          )}
+          onClick={onToggle}
+        >
+          {collapsed ? '>>' : '<<'}
+        </GhostButton>
+      </div>
+
+      <nav className="mt-5 grid gap-2">
+        {navigation.map((item) => {
+          const active = item.isActive(location.pathname);
+
+          return (
+            <Link
+              className={cx(
+                'group flex min-h-12 items-center gap-3 rounded-[18px] px-3 py-2 text-sm font-medium transition',
+                collapsed ? 'justify-center px-0' : '',
+                active
+                  ? 'bg-white text-[color:var(--color-brand-navy)] shadow-[0_14px_28px_rgba(12,20,48,0.18)]'
+                  : 'text-white/76 hover:bg-white/10 hover:text-white',
+              )}
+              key={`${item.label}:${item.to}`}
+              title={item.label}
+              to={item.to}
+            >
+              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-current/16 bg-current/8 text-[0.72rem] font-semibold uppercase tracking-[0.16em]">
+                {item.shortLabel}
+              </span>
+              {!collapsed ? <span className="min-w-0 truncate">{item.label}</span> : null}
+            </Link>
+          );
+        })}
       </nav>
 
-      <div className="mt-auto rounded-[24px] border border-white/10 bg-white/8 p-4">
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.24em] text-white/58">
-          Sessao atual
+      <div className="mt-auto rounded-[22px] border border-white/10 bg-white/8 px-3 py-3">
+        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/58">
+          {collapsed ? 'Sessao' : 'Sessao atual'}
         </p>
-        <div className="mt-3 space-y-1">
-          <p className="font-medium text-white">
-            {String(user?.user_metadata?.full_name ?? user?.email ?? 'Operador interno')}
+        <div className="mt-2 space-y-1">
+          <p className="text-sm font-medium text-white">
+            {collapsed
+              ? String(user?.user_metadata?.full_name ?? user?.email ?? 'QA')
+                  .split(' ')
+                  .slice(0, 2)
+                  .join(' ')
+              : String(user?.user_metadata?.full_name ?? user?.email ?? 'Operador interno')}
           </p>
-          <p className="text-xs text-white/68">{user?.email ?? 'Sem email resolvido'}</p>
-          <p className="pt-2 text-xs leading-5 text-white/60">
-            Workspace interno para triagem, contexto do cliente e resposta tecnico-operacional.
-          </p>
+          {!collapsed ? (
+            <p className="text-xs text-white/66">{user?.email ?? 'Sem email resolvido'}</p>
+          ) : null}
         </div>
       </div>
     </aside>
   );
 }
 
-function SupportTopbar() {
+function SupportQuickNav() {
+  const location = useLocation();
+  const { gate } = useAuthContext();
+  const customerPath = location.pathname.startsWith('/support/customers/')
+    ? location.pathname
+    : '/support/queue';
+
+  const items = [
+    { label: 'Queue', to: '/support/queue' },
+    { label: 'Tickets', to: '/support/tickets' },
+    { label: 'Customers', to: customerPath },
+    { label: 'Knowledge', to: '/admin/knowledge' },
+    ...(gate.actor?.is_platform_admin ? [{ label: 'Admin', to: '/admin/tenants' }] : []),
+  ];
+
+  return (
+    <nav className="flex gap-2 overflow-x-auto pb-1 lg:hidden">
+      {items.map((item) => (
+        <NavLink
+          className={({ isActive }) =>
+            cx(
+              'inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition',
+              isActive
+                ? 'border-[rgba(48,127,226,0.24)] bg-[rgba(48,127,226,0.1)] text-[color:var(--color-brand-blue)]'
+                : 'border-[color:var(--color-border)] bg-white text-[color:var(--color-ink)]',
+            )
+          }
+          key={`${item.label}:${item.to}`}
+          to={item.to}
+        >
+          {item.label}
+        </NavLink>
+      ))}
+    </nav>
+  );
+}
+
+function SupportTopbar({
+  sidebarCollapsed,
+  onToggleSidebar,
+}: {
+  sidebarCollapsed: boolean;
+  onToggleSidebar: () => void;
+}) {
   const location = useLocation();
   const { runtimeConfig, signOut } = useAuthContext();
   const copy = describeRoute(location.pathname);
 
   return (
-    <header className="flex flex-wrap items-start justify-between gap-4 rounded-[24px] border border-[color:var(--color-border)] bg-white/88 px-5 py-4 shadow-[0_16px_34px_rgba(19,33,79,0.09)] backdrop-blur sm:px-6">
-      <div className="space-y-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <StatusPill tone="accent">{runtimeConfig?.appEnv ?? 'development'}</StatusPill>
-          <StatusPill>cockpit operacional</StatusPill>
+    <header className="rounded-[24px] border border-[color:var(--color-border)] bg-white/92 px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)] backdrop-blur sm:px-5">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusPill tone="accent">{runtimeConfig?.appEnv ?? 'development'}</StatusPill>
+            <StatusPill>agent workspace</StatusPill>
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-xl font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
+              {copy.title}
+            </h2>
+            <p className="max-w-3xl text-sm leading-6 text-[color:var(--color-muted)]">
+              {copy.subtitle}
+            </p>
+          </div>
         </div>
-        <div className="space-y-1">
-          <h2 className="text-xl font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
-            {copy.title}
-          </h2>
-          <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-            {copy.subtitle}
-          </p>
+
+        <div className="flex flex-wrap gap-2">
+          <GhostButton
+            className="hidden min-h-11 px-4 lg:inline-flex"
+            onClick={onToggleSidebar}
+          >
+            {sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'}
+          </GhostButton>
+          <GhostButton
+            className="min-h-11 border-[rgba(48,127,226,0.18)] text-[color:var(--color-brand-blue)]"
+            onClick={() => void signOut()}
+          >
+            Encerrar sessao
+          </GhostButton>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <GhostButton
-          className="border-[rgba(48,127,226,0.18)] text-[color:var(--color-brand-blue)]"
-          onClick={() => void signOut()}
-        >
-          Encerrar sessao
-        </GhostButton>
+      <div className="mt-4">
+        <SupportQuickNav />
       </div>
     </header>
   );
 }
 
 export function SupportWorkspaceShell() {
+  const [sidebarCollapsed, setSidebarCollapsed] = usePersistedSidebarState();
+
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#eef4ff_0%,#f8fbff_42%,#f3f6fb_100%)] text-[color:var(--color-ink)]">
-      <div className="mx-auto flex max-w-[1880px] gap-5 px-4 py-4 sm:px-6 lg:px-8">
-        <div className="hidden w-[256px] shrink-0 xl:block">
-          <div className="sticky top-4 h-[calc(100vh-2rem)]">
-            <SupportSidebar />
+    <div className="min-h-screen bg-[linear-gradient(180deg,#eef4ff_0%,#f7faff_42%,#f3f6fb_100%)] text-[color:var(--color-ink)]">
+      <div className="mx-auto flex max-w-[1920px] gap-4 px-3 py-3 sm:px-5 lg:px-6">
+        <div className="hidden shrink-0 lg:block">
+          <div className="sticky top-3 h-[calc(100vh-1.5rem)]">
+            <SupportSidebar
+              collapsed={sidebarCollapsed}
+              onToggle={() => setSidebarCollapsed((current) => !current)}
+            />
           </div>
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="space-y-5">
-            <SupportTopbar />
+          <div className="space-y-4">
+            <SupportTopbar
+              onToggleSidebar={() => setSidebarCollapsed((current) => !current)}
+              sidebarCollapsed={sidebarCollapsed}
+            />
             <main className="min-w-0">
               <Outlet />
             </main>

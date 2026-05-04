@@ -301,6 +301,17 @@ Uso esperado:
   - observacoes internas, flags e listas extensas ficam recolhidas
   - a conversa e o composer continuam como foco principal da tratativa
 
+## Direcao consolidada da fase 6.10
+- o Support Workspace passa a usar um shell interno proprio, colapsavel e mais compacto
+- a sidebar do suporte deixa de carregar cards textuais longos e passa a servir navegacao util
+- a tela do ticket deve operar como workspace unico:
+  - conversa e composer no centro
+  - rail operacional recolhivel
+  - contexto do cliente compacto
+  - historico tecnico e acoes avancadas sob demanda
+- a fila continua dominante e a customer view continua sintetica
+- a referencia transversal desse comportamento fica em `INTERNAL_WORKSPACE_DESIGN_SYSTEM.md`
+
 ## Correcao estrutural consolidada na fase 6.2.2
 - `/support/queue` deve operar como ferramenta de triagem, nao como dashboard
 - o resumo de fila deve ser compacto e auxiliar, sem cards grandes de metrica

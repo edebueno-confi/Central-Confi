@@ -379,60 +379,6 @@ function SupportConversation({
   );
 }
 
-function CompactCounter({
-  label,
-  value,
-  helper,
-  tone = 'default',
-}: {
-  label: string;
-  value: string;
-  helper?: string;
-  tone?: 'default' | 'warning' | 'critical' | 'positive';
-}) {
-  const toneClass =
-    tone === 'warning'
-      ? 'border-[color:var(--color-warning-border)] bg-[color:var(--color-warning-surface)]/72'
-      : tone === 'critical'
-        ? 'border-[color:var(--color-danger-border)] bg-[color:var(--color-danger-surface)]/72'
-        : tone === 'positive'
-          ? 'border-[color:var(--color-success-border)] bg-[color:var(--color-success-surface)]/72'
-          : 'border-[color:var(--color-border)] bg-white/90';
-
-  return (
-    <div className={cx('rounded-[20px] border px-4 py-3', toneClass)}>
-      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--color-muted)]">
-        {label}
-      </p>
-      <div className="mt-2 flex items-end justify-between gap-3">
-        <p className="text-2xl font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
-          {value}
-        </p>
-        {helper ? (
-          <p className="max-w-[180px] text-right text-xs leading-5 text-[color:var(--color-muted)]">
-            {helper}
-          </p>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-function TicketMetaLine({
-  ticket,
-}: {
-  ticket: SupportTicketQueueItem;
-}) {
-  return (
-    <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs leading-5 text-[color:var(--color-muted)]">
-      <span>Tenant: {ticketTenantLabel(ticket)}</span>
-      <span>Requester: {ticket.requesterContactFullName ?? 'Sem requester'}</span>
-      <span>Responsavel: {ticket.assignedToFullName ?? 'Nao atribuido'}</span>
-      <span>Ultima atividade: {formatDateTime(ticket.lastMessageAt ?? ticket.updatedAt)}</span>
-    </div>
-  );
-}
-
 function SupportQueueItem({
   ticket,
   isSelected,
@@ -445,9 +391,9 @@ function SupportQueueItem({
   return (
     <article
       className={cx(
-        'rounded-[22px] border p-4 transition',
+        'rounded-[20px] border p-4 transition',
         isSelected
-          ? 'border-[rgba(48,127,226,0.46)] bg-[rgba(48,127,226,0.08)] shadow-[0_14px_28px_rgba(19,33,79,0.08)]'
+          ? 'border-[rgba(48,127,226,0.46)] bg-[rgba(48,127,226,0.08)] shadow-[0_10px_22px_rgba(19,33,79,0.08)]'
           : 'border-[color:var(--color-border)] bg-white hover:border-[rgba(48,127,226,0.24)] hover:bg-[rgba(255,255,255,0.98)]',
       )}
     >
@@ -456,14 +402,17 @@ function SupportQueueItem({
         onClick={onSelect}
         type="button"
       >
-        <div className="flex flex-wrap items-center gap-2">
-          <StatusPill tone={toneForTicketStatus(ticket.status)}>{humanizeStatus(ticket.status)}</StatusPill>
-          <StatusPill tone={toneForPriority(ticket.priority)}>{ticket.priority}</StatusPill>
-          <StatusPill tone={toneForSeverity(ticket.severity)}>{ticket.severity}</StatusPill>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <StatusPill tone={toneForTicketStatus(ticket.status)}>
+            {humanizeStatus(ticket.status)}
+          </StatusPill>
+          <p className="text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
+            {humanizeToken(ticket.priority)} · {humanizeToken(ticket.severity)}
+          </p>
         </div>
 
-        <div className="mt-3 space-y-2">
-          <h3 className="max-w-full text-lg font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
+        <div className="mt-3 min-w-0 space-y-2">
+          <h3 className="line-clamp-2 max-w-full text-lg font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
             {ticket.title}
           </h3>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[color:var(--color-muted)]">
@@ -546,21 +495,19 @@ function SupportTicketPreview({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-[22px] border border-[color:var(--color-border)] bg-[color:var(--color-brand-navy)] px-5 py-5 text-white">
+      <div className="rounded-[22px] border border-[rgba(48,127,226,0.22)] bg-[linear-gradient(180deg,rgba(17,28,66,1),rgba(24,42,97,0.98))] px-5 py-5 text-white">
         <div className="flex flex-wrap items-center gap-2">
           <StatusPill tone={toneForTicketStatus(detail?.status ?? ticket?.status ?? 'new')}>
             {humanizeStatus((detail?.status ?? ticket?.status ?? 'new') as TicketStatus)}
           </StatusPill>
-          <StatusPill tone={toneForPriority(detail?.priority ?? ticket?.priority ?? 'normal')}>
-            {detail?.priority ?? ticket?.priority ?? 'normal'}
-          </StatusPill>
-          <StatusPill tone={toneForSeverity(detail?.severity ?? ticket?.severity ?? 'low')}>
-            {detail?.severity ?? ticket?.severity ?? 'low'}
-          </StatusPill>
+          <span className="text-xs font-medium uppercase tracking-[0.14em] text-white/66">
+            {humanizeToken(detail?.priority ?? ticket?.priority ?? 'normal')} ·{' '}
+            {humanizeToken(detail?.severity ?? ticket?.severity ?? 'low')}
+          </span>
         </div>
 
-        <div className="mt-4 space-y-2">
-          <h3 className="text-[1.45rem] font-semibold tracking-[-0.05em]">{title}</h3>
+        <div className="mt-4 min-w-0 space-y-2">
+          <h3 className="line-clamp-3 text-[1.45rem] font-semibold tracking-[-0.05em]">{title}</h3>
           <div className="space-y-1 text-sm text-white/72">
             <p>Cliente B2B: {tenant}</p>
             <p>Responsavel: {assigned}</p>
@@ -571,14 +518,14 @@ function SupportTicketPreview({
         {ticketId ? (
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
-              className="inline-flex min-h-11 items-center justify-center rounded-full bg-white px-5 py-2 text-sm font-semibold text-[color:var(--color-brand-navy)]"
+              className="inline-flex min-h-12 items-center justify-center rounded-full bg-white px-5 py-2 text-sm font-semibold text-[color:var(--color-brand-navy)]"
               to={`/support/tickets/${ticketId}`}
             >
               Atender ticket
             </Link>
             {tenantId ? (
               <Link
-                className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/22 px-5 py-2 text-sm font-semibold text-white"
+                className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/22 px-5 py-2 text-sm font-semibold text-white"
                 to={`/support/customers/${tenantId}`}
               >
                 Ver cliente
@@ -619,7 +566,7 @@ function SupportQueueToolbar({
   onRefresh: () => void;
 }) {
   return (
-    <div className="rounded-[24px] border border-[color:var(--color-border)] bg-[rgba(255,255,255,0.92)] p-4 shadow-[0_16px_32px_rgba(19,33,79,0.08)]">
+    <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1">
           <p className="text-sm font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
@@ -746,7 +693,7 @@ function SupportCustomerRail({
 
   if (compact) {
     return (
-      <div className="space-y-3 rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+      <div className="space-y-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 space-y-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -772,11 +719,11 @@ function SupportCustomerRail({
 
         <details className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
           <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-            Contato e atividade recente
+            Atividade recente e contato
           </summary>
           <div className="mt-3 space-y-3">
             {primaryContact ? (
-              <div className="rounded-[16px] bg-white px-3 py-3">
+              <div className="rounded-[16px] border border-[color:var(--color-border)] bg-white px-3 py-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-medium text-[color:var(--color-ink)]">{primaryContact.fullName}</p>
                   {primaryContact.isPrimary ? <StatusPill tone="accent">principal</StatusPill> : null}
@@ -912,8 +859,8 @@ function SupportContactCard({
   contact: SupportCustomer360Contact;
 }) {
   return (
-    <div className="rounded-[16px] bg-[color:var(--color-surface)] px-3 py-3">
-      <div className="flex flex-wrap items-center gap-2">
+    <div className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="font-medium text-[color:var(--color-ink)]">{contact.fullName}</p>
         {contact.isPrimary ? <StatusPill tone="accent">principal</StatusPill> : null}
       </div>
@@ -929,12 +876,14 @@ function SupportRecentTicketCard({
 }) {
   return (
     <Link
-      className="block rounded-[16px] bg-[color:var(--color-surface)] px-3 py-3 transition hover:bg-white"
+      className="block rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3 transition hover:bg-white"
       to={`/support/tickets/${ticket.id}`}
     >
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <StatusPill tone={toneForTicketStatus(ticket.status)}>{humanizeStatus(ticket.status)}</StatusPill>
-        <StatusPill tone={toneForPriority(ticket.priority)}>{ticket.priority}</StatusPill>
+        <span className="text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
+          {humanizeToken(ticket.priority)}
+        </span>
       </div>
       <p className="mt-2 line-clamp-2 font-medium text-[color:var(--color-ink)]">{ticket.title}</p>
       <p className="mt-1 text-xs text-[color:var(--color-muted)]">
@@ -951,15 +900,18 @@ function SupportRecentEventCard({
 }) {
   return (
     <Link
-      className="block rounded-[16px] bg-[color:var(--color-surface)] px-3 py-3 transition hover:bg-white"
+      className="block rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3 transition hover:bg-white"
       to={`/support/tickets/${event.ticketId}`}
     >
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <StatusPill tone={event.visibility === 'internal' ? 'critical' : 'accent'}>{humanizeVisibility(event.visibility)}</StatusPill>
+        <span className="text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
+          {humanizeToken(event.eventType)}
+        </span>
       </div>
       <p className="mt-2 line-clamp-2 font-medium text-[color:var(--color-ink)]">{event.ticketTitle}</p>
       <p className="mt-1 text-xs text-[color:var(--color-muted)]">
-        {humanizeToken(event.eventType)} · {formatDateTime(event.occurredAt)}
+        {formatDateTime(event.occurredAt)}
       </p>
     </Link>
   );
@@ -1037,31 +989,41 @@ function SupportAccountContextCompact({
 
   return (
     <div className="space-y-3">
-      <div className="space-y-2 rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
-        <div className="flex flex-wrap gap-2">
-          {accountContext.productLine ? (
-            <StatusPill tone="accent">{humanizeCustomerValue(accountContext.productLine)}</StatusPill>
-          ) : null}
-          {accountContext.operationalStatus ? (
-            <StatusPill tone={accountContext.operationalStatus === 'active' ? 'positive' : 'warning'}>
-              {humanizeCustomerValue(accountContext.operationalStatus)}
-            </StatusPill>
-          ) : null}
-          {accountContext.accountTier ? <StatusPill>{accountContext.accountTier}</StatusPill> : null}
-        </div>
-        <div className="space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
-            Stack principal
-          </p>
-          <p className="text-sm font-medium text-[color:var(--color-ink)]">
-            {primaryPlatform ? primaryPlatform.provider : 'Plataforma nao registrada'}
-          </p>
-          {integrations.length > 0 ? (
-            <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-              {integrations.map((integration) => integration.provider).join(' · ')}
-            </p>
-          ) : null}
-        </div>
+      <div className="flex flex-wrap gap-2">
+        {accountContext.productLine ? (
+          <StatusPill tone="accent">{humanizeCustomerValue(accountContext.productLine)}</StatusPill>
+        ) : null}
+        {accountContext.operationalStatus ? (
+          <StatusPill tone={accountContext.operationalStatus === 'active' ? 'positive' : 'warning'}>
+            {humanizeCustomerValue(accountContext.operationalStatus)}
+          </StatusPill>
+        ) : null}
+        {accountContext.accountTier ? <StatusPill>{accountContext.accountTier}</StatusPill> : null}
+      </div>
+
+      <div className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+        <dl className="grid gap-3 text-sm leading-6 text-[color:var(--color-muted)]">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <dt className="font-medium text-[color:var(--color-ink)]">Plataforma</dt>
+            <dd className="text-right">
+              {primaryPlatform ? primaryPlatform.provider : 'Plataforma nao registrada'}
+            </dd>
+          </div>
+          <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-3">
+            <dt className="font-medium text-[color:var(--color-ink)]">Integracoes</dt>
+            <dd className="text-right">
+              {integrations.length > 0
+                ? integrations.map((integration) => integration.provider).join(' · ')
+                : 'Sem integracoes principais'}
+            </dd>
+          </div>
+          <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-3">
+            <dt className="font-medium text-[color:var(--color-ink)]">Contato operacional</dt>
+            <dd className="text-right">
+              {primaryContact ? `${primaryContact.fullName} · ${primaryContact.email}` : 'Nao resolvido'}
+            </dd>
+          </div>
+        </dl>
       </div>
 
       {alerts.length > 0 ? (
@@ -1104,26 +1066,12 @@ function SupportAccountContextCompact({
                     {humanizeCustomerValue(customization.riskLevel)}
                   </StatusPill>
                 </div>
-                <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                <p className="line-clamp-3 text-sm leading-6 text-[color:var(--color-muted)]">
                   {customization.operationalNote ?? customization.description}
                 </p>
               </div>
             ))}
           </div>
-        </div>
-      ) : null}
-
-      {primaryContact ? (
-        <div className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
-            Contato operacional
-          </p>
-          <p className="mt-1 text-sm font-medium text-[color:var(--color-ink)]">
-            {primaryContact.fullName}
-          </p>
-          <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-            {primaryContact.email}
-          </p>
         </div>
       ) : null}
 
@@ -1220,10 +1168,10 @@ function SupportAccountContextOverview({
       ) : null}
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-        <div className="space-y-3 rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+        <div className="space-y-4 rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
           <div className="space-y-1">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
-              Plataforma e integracoes
+              Plataforma e stack
             </p>
             <p className="text-sm font-medium text-[color:var(--color-ink)]">
               {primaryPlatform ? primaryPlatform.provider : 'Plataforma nao registrada'}
@@ -1244,16 +1192,18 @@ function SupportAccountContextOverview({
               accountContext.integrations.map((integration) => (
                 <div
                   key={integration.id}
-                  className="rounded-[16px] bg-white px-3 py-3"
+                  className="rounded-[16px] border border-[color:var(--color-border)] bg-white px-3 py-3"
                 >
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm font-medium text-[color:var(--color-ink)]">
                       {integration.provider}
                     </p>
-                    <StatusPill>{humanizeCustomerValue(integration.integrationType)}</StatusPill>
-                    <StatusPill tone={integration.status === 'active' ? 'positive' : 'warning'}>
-                      {humanizeCustomerValue(integration.status)}
-                    </StatusPill>
+                    <div className="flex flex-wrap gap-2">
+                      <StatusPill>{humanizeCustomerValue(integration.integrationType)}</StatusPill>
+                      <StatusPill tone={integration.status === 'active' ? 'positive' : 'warning'}>
+                        {humanizeCustomerValue(integration.status)}
+                      </StatusPill>
+                    </div>
                   </div>
                   <p className="mt-1 text-sm leading-6 text-[color:var(--color-muted)]">
                     Ambiente {humanizeCustomerValue(integration.environment)}
@@ -1265,13 +1215,13 @@ function SupportAccountContextOverview({
           </div>
         </div>
 
-        <div className="space-y-3 rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+        <div className="space-y-4 rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
           <div className="space-y-1">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
-              Features e customizacoes
+              Features, risco e contato
             </p>
             <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-              Somente o que impacta a resposta operacional do suporte.
+              Somente o que altera a resposta operacional do suporte.
             </p>
           </div>
 
@@ -1290,8 +1240,11 @@ function SupportAccountContextOverview({
           {accountContext.activeCustomizations.length > 0 ? (
             <div className="space-y-2">
               {accountContext.activeCustomizations.map((customization) => (
-                <div key={customization.id} className="rounded-[16px] bg-white px-3 py-3">
-                  <div className="flex flex-wrap items-center gap-2">
+                <div
+                  key={customization.id}
+                  className="rounded-[16px] border border-[color:var(--color-border)] bg-white px-3 py-3"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm font-medium text-[color:var(--color-ink)]">
                       {customization.title}
                     </p>
@@ -1308,7 +1261,7 @@ function SupportAccountContextOverview({
           ) : null}
 
           {primaryContact ? (
-            <div className="rounded-[16px] bg-white px-3 py-3">
+            <div className="rounded-[16px] border border-[color:var(--color-border)] bg-white px-3 py-3">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
                 Contato principal
               </p>
@@ -1396,6 +1349,7 @@ function SupportWorkspaceView({
   const [detailNotice, setDetailNotice] = useState<string | null>(null);
   const [detailNoticeTone, setDetailNoticeTone] = useState<'default' | 'critical'>('default');
   const [submitting, setSubmitting] = useState(false);
+  const [ticketRailOpen, setTicketRailOpen] = useState(true);
 
   const loadQueue = useEffectEvent(async (preferredTicketId?: string | null) => {
     try {
@@ -1874,27 +1828,33 @@ function SupportWorkspaceView({
 
       {variant === 'queue' ? (
         <div className="space-y-4">
-          <SupportQueueToolbar
-            assigneeOptions={assigneeOptions}
-            filters={filters}
-            onChange={setFilters}
-            onRefresh={() => void loadQueue(focusTicketId ?? null)}
-            tenantOptions={tenantOptions}
-          />
+          <div className="space-y-3 rounded-[24px] border border-[color:var(--color-border)] bg-white/92 px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
+            <SupportQueueToolbar
+              assigneeOptions={assigneeOptions}
+              filters={filters}
+              onChange={setFilters}
+              onRefresh={() => void loadQueue(focusTicketId ?? null)}
+              tenantOptions={tenantOptions}
+            />
 
-          <SupportSummaryStrip
-            highAttention={highAttention}
-            totalOpen={totalOpen}
-            unassigned={unassigned}
-            waitingCustomer={waitingCustomer}
-          />
+            <SupportSummaryStrip
+              highAttention={highAttention}
+              totalOpen={totalOpen}
+              unassigned={unassigned}
+              waitingCustomer={waitingCustomer}
+            />
+          </div>
 
-          <div className="grid gap-5 xl:grid-cols-[minmax(0,0.7fr)_minmax(320px,0.3fr)]">
-            <Panel
-              className="bg-white"
-              title="Fila de tickets"
-              description="Lista dominante para triagem. Cada item mostra apenas o necessario para decidir o proximo atendimento."
-            >
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,0.72fr)_minmax(320px,0.28fr)]">
+            <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-5 py-5 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
+              <div className="mb-4 space-y-1">
+                <h2 className="text-lg font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+                  Fila de tickets
+                </h2>
+                <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                  Lista dominante para decidir o proximo atendimento sem excesso de metadados.
+                </p>
+              </div>
               {tickets.length === 0 ? (
                 <EmptyState
                   title="Sem tickets para esta combinacao de filtros"
@@ -1912,13 +1872,17 @@ function SupportWorkspaceView({
                   ))}
                 </div>
               )}
-            </Panel>
+            </section>
 
-            <Panel
-              className="bg-white xl:sticky xl:top-4"
-              title="Ticket selecionado"
-              description="Previa curta antes de abrir a tratativa completa."
-            >
+            <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-5 py-5 shadow-[0_14px_28px_rgba(19,33,79,0.08)] xl:sticky xl:top-4">
+              <div className="mb-4 space-y-1">
+                <h2 className="text-lg font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+                  Ticket selecionado
+                </h2>
+                <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                  Preview curto antes de entrar na tratativa completa.
+                </p>
+              </div>
               {detailPhase === 'loading' ? (
                 <LoadingState
                   title="Carregando previa"
@@ -1931,7 +1895,7 @@ function SupportWorkspaceView({
               ) : (
                 <SupportTicketPreview customer={customer} detail={previewTicket} ticket={selectedQueueTicket} />
               )}
-            </Panel>
+            </section>
           </div>
         </div>
       ) : detailPhase === 'idle' ? (
@@ -1958,38 +1922,63 @@ function SupportWorkspaceView({
         />
       ) : (
         <div className="space-y-5">
-          <div className="rounded-[22px] border border-[color:var(--color-border)] bg-white px-5 py-5">
-            <div className="flex flex-wrap items-center gap-2">
-              <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>{humanizeStatus(ticketDetail.status)}</StatusPill>
-              <StatusPill tone={toneForPriority(ticketDetail.priority)}>{ticketDetail.priority}</StatusPill>
-              <StatusPill tone={toneForSeverity(ticketDetail.severity)}>{ticketDetail.severity}</StatusPill>
-            </div>
-            <div className="mt-3 space-y-2">
-              <h3 className="text-[1.9rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
-                {ticketDetail.title}
-              </h3>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[color:var(--color-muted)]">
-                <span>Tenant: {ticketDetail.tenantDisplayName ?? ticketDetail.tenantLegalName ?? ticketDetail.tenantSlug}</span>
-                <span>Requester: {ticketDetail.requesterContactFullName ?? 'Sem requester resolvido'}</span>
-                <span>
-                  Responsavel:{' '}
-                  {currentAssignedAgent
-                    ? `${currentAssignedAgent.fullName} · ${currentAssignedAgent.email}`
-                    : ticketDetail.assignedToFullName ?? 'Nao atribuido'}
-                </span>
-                <span>Ultima atividade: {formatDateTime(ticketDetail.lastMessageAt ?? ticketDetail.updatedAt)}</span>
+          <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-5 py-5 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="min-w-0 space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>{humanizeStatus(ticketDetail.status)}</StatusPill>
+                  <span className="text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
+                    {humanizeToken(ticketDetail.priority)} · {humanizeToken(ticketDetail.severity)}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  <h3 className="max-w-5xl text-[1.9rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
+                    {ticketDetail.title}
+                  </h3>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[color:var(--color-muted)]">
+                    <span>Tenant: {ticketDetail.tenantDisplayName ?? ticketDetail.tenantLegalName ?? ticketDetail.tenantSlug}</span>
+                    <span>Requester: {ticketDetail.requesterContactFullName ?? 'Sem requester resolvido'}</span>
+                    <span>
+                      Responsavel:{' '}
+                      {currentAssignedAgent
+                        ? `${currentAssignedAgent.fullName} · ${currentAssignedAgent.email}`
+                        : ticketDetail.assignedToFullName ?? 'Nao atribuido'}
+                    </span>
+                    <span>Ultima atividade: {formatDateTime(ticketDetail.lastMessageAt ?? ticketDetail.updatedAt)}</span>
+                  </div>
+                  {ticketDetail.description?.trim() ? (
+                    <p className="max-w-4xl text-sm leading-6 text-[color:var(--color-muted)]">
+                      {ticketDetail.description}
+                    </p>
+                  ) : null}
+                </div>
               </div>
-              {ticketDetail.description?.trim() ? (
-                <p className="max-w-4xl text-sm leading-6 text-[color:var(--color-muted)]">
-                  {ticketDetail.description}
-                </p>
-              ) : null}
+
+              <div className="flex flex-wrap gap-2">
+                <GhostButton
+                  className="min-h-11 px-4"
+                  onClick={() => navigate('/support/queue')}
+                >
+                  Voltar para fila
+                </GhostButton>
+                <GhostButton
+                  className="min-h-11 px-4"
+                  onClick={() => setTicketRailOpen((current) => !current)}
+                >
+                  {ticketRailOpen ? 'Recolher operacao' : 'Mostrar operacao'}
+                </GhostButton>
+              </div>
             </div>
-          </div>
+          </section>
 
           {detailNotice ? <InlineNotice tone={detailNoticeTone}>{detailNotice}</InlineNotice> : null}
 
-          <div className="grid gap-5 xl:grid-cols-[minmax(0,0.68fr)_minmax(320px,0.32fr)]">
+          <div
+            className={cx(
+              'grid gap-5',
+              ticketRailOpen ? 'xl:grid-cols-[minmax(0,1fr)_340px]' : 'xl:grid-cols-1',
+            )}
+          >
             <div className="space-y-5">
               <Panel
                 className="bg-white"
@@ -2081,76 +2070,69 @@ function SupportWorkspaceView({
               </Panel>
             </div>
 
-            <aside className="space-y-5">
-              <Panel
-                className="bg-white xl:sticky xl:top-4"
-                title="Operacao do ticket"
-                description="Somente o essencial para atribuir, mover status e consultar o cliente sem tirar o foco da conversa."
-              >
-                <div className="space-y-5">
-                  <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm font-semibold text-[color:var(--color-ink)]">Status atual</p>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>{humanizeStatus(ticketDetail.status)}</StatusPill>
-                          <StatusPill tone={toneForPriority(ticketDetail.priority)}>{ticketDetail.priority}</StatusPill>
-                          <StatusPill tone={toneForSeverity(ticketDetail.severity)}>{ticketDetail.severity}</StatusPill>
-                        </div>
+            {ticketRailOpen ? (
+              <aside className="space-y-4 xl:sticky xl:top-4 xl:self-start">
+                <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold text-[color:var(--color-ink)]">Operacao do ticket</p>
+                      <div className="flex flex-wrap gap-2">
+                        <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>{humanizeStatus(ticketDetail.status)}</StatusPill>
+                        <StatusPill tone={toneForPriority(ticketDetail.priority)}>{ticketDetail.priority}</StatusPill>
+                        <StatusPill tone={toneForSeverity(ticketDetail.severity)}>{ticketDetail.severity}</StatusPill>
                       </div>
+                      <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                        {currentAssignedAgent
+                          ? `${currentAssignedAgent.fullName} · ${currentAssignedAgent.email}`
+                          : ticketDetail.assignedToFullName
+                            ? ticketDetail.assignedToFullName
+                            : 'Ticket sem agente atribuido no momento.'}
+                      </p>
+                    </div>
 
-                      <div className="border-t border-[color:var(--color-border)] pt-3">
-                        <p className="text-sm font-semibold text-[color:var(--color-ink)]">Responsavel atual</p>
-                        <p className="mt-1 text-sm leading-6 text-[color:var(--color-muted)]">
-                          {currentAssignedAgent
-                            ? `${currentAssignedAgent.fullName} · ${currentAssignedAgent.email}`
-                            : ticketDetail.assignedToFullName
-                              ? ticketDetail.assignedToFullName
-                              : 'Ticket sem agente atribuido no momento.'}
+                    <div className="space-y-3 border-t border-[color:var(--color-border)] pt-4">
+                      {agentsPhase === 'contract-unavailable' ? (
+                        <InlineNotice tone="critical">
+                          {agentsMessage ?? 'A view vw_support_assignable_agents nao ficou disponivel neste ambiente.'}
+                        </InlineNotice>
+                      ) : agentsPhase === 'error' ? (
+                        <InlineNotice tone="critical">
+                          {agentsMessage ?? 'Nao foi possivel carregar o diretorio de agentes atribuiveis.'}
+                        </InlineNotice>
+                      ) : agentsPhase === 'loading' ? (
+                        <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                          Carregando agentes atribuiveis deste tenant...
                         </p>
-                      </div>
-
-                      <div className="border-t border-[color:var(--color-border)] pt-3">
-                        {agentsPhase === 'contract-unavailable' ? (
-                          <InlineNotice tone="critical">
-                            {agentsMessage ?? 'A view vw_support_assignable_agents nao ficou disponivel neste ambiente.'}
-                          </InlineNotice>
-                        ) : agentsPhase === 'error' ? (
-                          <InlineNotice tone="critical">
-                            {agentsMessage ?? 'Nao foi possivel carregar o diretorio de agentes atribuiveis.'}
-                          </InlineNotice>
-                        ) : agentsPhase === 'loading' ? (
-                          <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                            Carregando agentes atribuiveis deste tenant...
-                          </p>
-                        ) : assignableAgents.length === 0 ? (
-                          <InlineNotice tone="warning">
-                            Nenhum agente operacional ativo ficou disponivel para este tenant. Use o fallback tecnico apenas se necessario.
-                          </InlineNotice>
-                        ) : (
-                          <form className="space-y-3" onSubmit={handleAssign}>
-                            <Field label="Selecionar agente">
-                              <SelectInput
-                                onChange={(event) => setAssignDraft(event.target.value)}
-                                value={assignDraft}
-                              >
-                                <option value="">Sem responsavel</option>
-                                {assignableAgents.map((agent) => (
-                                  <option key={`${agent.tenantId}:${agent.userId}`} value={agent.userId}>
-                                    {formatAssignableAgentLabel(agent)}
-                                  </option>
-                                ))}
-                              </SelectInput>
-                            </Field>
+                      ) : assignableAgents.length === 0 ? (
+                        <InlineNotice tone="warning">
+                          Nenhum agente operacional ativo ficou disponivel para este tenant. Use o fallback tecnico apenas se necessario.
+                        </InlineNotice>
+                      ) : (
+                        <form className="space-y-3" onSubmit={handleAssign}>
+                          <Field label="Selecionar agente">
+                            <SelectInput
+                              onChange={(event) => setAssignDraft(event.target.value)}
+                              value={assignDraft}
+                            >
+                              <option value="">Sem responsavel</option>
+                              {assignableAgents.map((agent) => (
+                                <option key={`${agent.tenantId}:${agent.userId}`} value={agent.userId}>
+                                  {formatAssignableAgentLabel(agent)}
+                                </option>
+                              ))}
+                            </SelectInput>
+                          </Field>
+                          <div className="grid gap-2">
+                            <AppButton
+                              className="min-h-12 px-5"
+                              disabled={submitting || !ticketDetail.canAssign}
+                              type="submit"
+                            >
+                              {submitting ? 'Salvando...' : 'Salvar responsavel'}
+                            </AppButton>
                             <div className="flex flex-wrap gap-2">
-                              <AppButton
-                                className="min-h-12 px-5"
-                                disabled={submitting || !ticketDetail.canAssign}
-                                type="submit"
-                              >
-                                {submitting ? 'Salvando...' : 'Salvar responsavel'}
-                              </AppButton>
                               <GhostButton
+                                className="min-h-11 px-4"
                                 disabled={
                                   submitting ||
                                   !ticketDetail.canAssign ||
@@ -2164,6 +2146,7 @@ function SupportWorkspaceView({
                                 Atribuir a mim
                               </GhostButton>
                               <GhostButton
+                                className="min-h-11 px-4"
                                 disabled={submitting || !ticketDetail.canAssign || !ticketDetail.assignedToUserId}
                                 onClick={() => void runAssignment(null)}
                                 type="button"
@@ -2171,39 +2154,41 @@ function SupportWorkspaceView({
                                 Desatribuir
                               </GhostButton>
                             </div>
-                          </form>
-                        )}
-                      </div>
-
-                      <form className="space-y-3 border-t border-[color:var(--color-border)] pt-3" onSubmit={handleUpdateStatus}>
-                        <Field label="Mover status">
-                          <SelectInput
-                            onChange={(event) =>
-                              setStatusDraft(event.target.value as TicketStatusUpdateTarget)
-                            }
-                            value={statusDraft}
-                          >
-                            {buildStatusChoices(ticketDetail.status).map((status) => (
-                              <option key={status} value={status}>
-                                {humanizeStatus(status)}
-                              </option>
-                            ))}
-                          </SelectInput>
-                        </Field>
-                        <Field label="Nota da transicao">
-                          <TextareaInput
-                            onChange={(event) => setStatusNote(event.target.value)}
-                            placeholder="Opcional. Explique a mudanca para o proximo operador."
-                            value={statusNote}
-                          />
-                        </Field>
-                        <AppButton className="min-h-12 px-5" disabled={submitting || !ticketDetail.canUpdateStatus} type="submit">
-                          {submitting ? 'Atualizando...' : 'Salvar status'}
-                        </AppButton>
-                      </form>
+                          </div>
+                        </form>
+                      )}
                     </div>
-                  </div>
 
+                    <form className="space-y-3 border-t border-[color:var(--color-border)] pt-4" onSubmit={handleUpdateStatus}>
+                      <Field label="Mover status">
+                        <SelectInput
+                          onChange={(event) =>
+                            setStatusDraft(event.target.value as TicketStatusUpdateTarget)
+                          }
+                          value={statusDraft}
+                        >
+                          {buildStatusChoices(ticketDetail.status).map((status) => (
+                            <option key={status} value={status}>
+                              {humanizeStatus(status)}
+                            </option>
+                          ))}
+                        </SelectInput>
+                      </Field>
+                      <Field label="Nota da transicao">
+                        <TextareaInput
+                          onChange={(event) => setStatusNote(event.target.value)}
+                          placeholder="Opcional. Explique a mudanca para o proximo operador."
+                          value={statusNote}
+                        />
+                      </Field>
+                      <AppButton className="min-h-12 px-5" disabled={submitting || !ticketDetail.canUpdateStatus} type="submit">
+                        {submitting ? 'Atualizando...' : 'Salvar status'}
+                      </AppButton>
+                    </form>
+                  </div>
+                </section>
+
+                <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
                   <SupportCustomerRail
                     accountContext={customerAccountContext}
                     compact
@@ -2211,70 +2196,70 @@ function SupportWorkspaceView({
                     recentEventsWindow={customerRecentEvents}
                     recentTicketsWindow={customerRecentTickets}
                   />
+                </section>
 
-                  <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
-                    <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                      Controles tecnicos e acoes de excecao
-                    </summary>
-                    <div className="mt-4 space-y-4">
-                      <form className="space-y-3" onSubmit={handleAssign}>
-                        <Field
-                          label="user_id do responsavel"
-                          description="Fallback tecnico para casos excepcionais. O fluxo principal de atribuicao deve usar o seletor acima."
-                        >
-                          <TextInput
-                            onChange={(event) => setAssignDraft(event.target.value)}
-                            placeholder="00000000-0000-0000-0000-000000000000"
-                            value={assignDraft}
-                          />
-                        </Field>
-                        <AppButton className="min-h-11 px-5" disabled={submitting || !ticketDetail.canAssign} type="submit">
-                          {submitting ? 'Salvando...' : 'Salvar responsavel'}
-                        </AppButton>
-                      </form>
+                <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
+                  <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                    Controles tecnicos e acoes de excecao
+                  </summary>
+                  <div className="mt-4 space-y-4">
+                    <form className="space-y-3" onSubmit={handleAssign}>
+                      <Field
+                        label="user_id do responsavel"
+                        description="Fallback tecnico para casos excepcionais. O fluxo principal de atribuicao deve usar o seletor acima."
+                      >
+                        <TextInput
+                          onChange={(event) => setAssignDraft(event.target.value)}
+                          placeholder="00000000-0000-0000-0000-000000000000"
+                          value={assignDraft}
+                        />
+                      </Field>
+                      <AppButton className="min-h-11 px-5" disabled={submitting || !ticketDetail.canAssign} type="submit">
+                        {submitting ? 'Salvando...' : 'Salvar responsavel'}
+                      </AppButton>
+                    </form>
 
-                      {ticketDetail.canClose || ticketDetail.canReopen ? (
-                        <div className="space-y-4 border-t border-[color:var(--color-border)] pt-4">
-                          {ticketDetail.canClose ? (
-                            <form className="space-y-3" onSubmit={handleClose}>
-                              <Field label="Motivo do fechamento">
-                                <TextareaInput
-                                  onChange={(event) => setCloseReason(event.target.value)}
-                                  placeholder="Obrigatorio para encerrar."
-                                  value={closeReason}
-                                />
-                              </Field>
-                              <AppButton
-                                className="min-h-11 bg-[linear-gradient(135deg,#8b1e3f,#c3365e)] px-5"
-                                disabled={submitting || closeReason.trim().length === 0}
-                                type="submit"
-                              >
-                                {submitting ? 'Fechando...' : 'Fechar ticket'}
-                              </AppButton>
-                            </form>
-                          ) : null}
+                    {ticketDetail.canClose || ticketDetail.canReopen ? (
+                      <div className="space-y-4 border-t border-[color:var(--color-border)] pt-4">
+                        {ticketDetail.canClose ? (
+                          <form className="space-y-3" onSubmit={handleClose}>
+                            <Field label="Motivo do fechamento">
+                              <TextareaInput
+                                onChange={(event) => setCloseReason(event.target.value)}
+                                placeholder="Obrigatorio para encerrar."
+                                value={closeReason}
+                              />
+                            </Field>
+                            <AppButton
+                              className="min-h-11 bg-[linear-gradient(135deg,#8b1e3f,#c3365e)] px-5"
+                              disabled={submitting || closeReason.trim().length === 0}
+                              type="submit"
+                            >
+                              {submitting ? 'Fechando...' : 'Fechar ticket'}
+                            </AppButton>
+                          </form>
+                        ) : null}
 
-                          {ticketDetail.canReopen ? (
-                            <form className="space-y-3" onSubmit={handleReopen}>
-                              <Field label="Motivo da reabertura">
-                                <TextareaInput
-                                  onChange={(event) => setReopenReason(event.target.value)}
-                                  placeholder="Opcional para reabrir."
-                                  value={reopenReason}
-                                />
-                              </Field>
-                              <GhostButton disabled={submitting} type="submit">
-                                {submitting ? 'Reabrindo...' : 'Reabrir ticket'}
-                              </GhostButton>
-                            </form>
-                          ) : null}
-                        </div>
-                      ) : null}
-                    </div>
-                  </details>
-                </div>
-              </Panel>
-            </aside>
+                        {ticketDetail.canReopen ? (
+                          <form className="space-y-3" onSubmit={handleReopen}>
+                            <Field label="Motivo da reabertura">
+                              <TextareaInput
+                                onChange={(event) => setReopenReason(event.target.value)}
+                                placeholder="Opcional para reabrir."
+                                value={reopenReason}
+                              />
+                            </Field>
+                            <GhostButton className="min-h-11 px-4" disabled={submitting} type="submit">
+                              {submitting ? 'Reabrindo...' : 'Reabrir ticket'}
+                            </GhostButton>
+                          </form>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                </details>
+              </aside>
+            ) : null}
           </div>
         </div>
       )}
@@ -2420,7 +2405,7 @@ export function SupportCustomerPage() {
         description="Contexto sintetico do cliente B2B para apoiar a tratativa sem transformar a tela em CRM ou dashboard."
       />
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,0.74fr)_300px]">
         <div className="space-y-5">
           <Panel
             title="Resumo operacional do cliente"
@@ -2451,55 +2436,70 @@ export function SupportCustomerPage() {
                 </Link>
               </div>
 
-              <div className="grid gap-3 md:grid-cols-3">
-                <CompactCounter
-                  helper="Tickets em operacao neste tenant."
-                  label="Abertos"
-                  value={String(customer.openTicketCount)}
-                />
-                <CompactCounter
-                  helper="Contatos operacionais ativos."
-                  label="Contatos"
-                  value={String(customer.activeContactsCount)}
-                />
-                <CompactCounter
-                  helper="Historico total retornado pelo read model."
-                  label="Tickets totais"
-                  value={String(customer.totalTicketCount)}
-                />
-              </div>
-            </div>
-          </Panel>
-
-          <Panel
-            title="Produto, stack e alertas"
-            description="Resumo operacional do perfil do cliente para responder o ticket com contexto real, sem virar CRM pesado."
-          >
-            <SupportAccountContextOverview
-              accountContext={accountContext}
-              customer={customer}
-            />
-          </Panel>
-
-          <Panel
-            title="Tickets recentes"
-            description="Retorno rapido para tickets do mesmo cliente sem carregar uma lista longa demais."
-          >
-            <div className="mb-3 text-xs leading-5 text-[color:var(--color-muted)]">
-              Mostrando {recentTicketsWindow.tickets.length} de {recentTicketsWindow.totalAvailableCount} tickets recentes.
-            </div>
-            {recentTicketsWindow.tickets.length === 0 ? (
-              <EmptyState
-                title="Sem tickets recentes"
-                description="O backend nao retornou tickets recentes para este tenant."
-              />
-            ) : (
-              <div className="space-y-2">
-                {recentTicketsWindow.tickets.map((ticket) => (
-                  <SupportRecentTicketCard key={ticket.id} ticket={ticket} />
+              <div className="flex flex-wrap gap-2">
+                {[
+                  {
+                    label: 'Abertos',
+                    value: String(customer.openTicketCount),
+                  },
+                  {
+                    label: 'Contatos',
+                    value: String(customer.activeContactsCount),
+                  },
+                  {
+                    label: 'Tickets totais',
+                    value: String(customer.totalTicketCount),
+                  },
+                ].map((item) => (
+                  <div
+                    className="inline-flex items-center gap-2 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2"
+                    key={item.label}
+                  >
+                    <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
+                      {item.label}
+                    </span>
+                    <span className="text-sm font-semibold text-[color:var(--color-ink)]">
+                      {item.value}
+                    </span>
+                  </div>
                 ))}
               </div>
-            )}
+            </div>
+          </Panel>
+
+          <Panel
+            title="Produto, stack e tickets recentes"
+            description="Contexto operacional do perfil do cliente e retorno rapido para tickets do mesmo tenant."
+          >
+            <div className="space-y-5">
+              <SupportAccountContextOverview
+                accountContext={accountContext}
+                customer={customer}
+              />
+
+              <div className="border-t border-[color:var(--color-border)] pt-4">
+                <div className="mb-3 space-y-1">
+                  <h3 className="text-base font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+                    Tickets recentes
+                  </h3>
+                  <p className="text-xs leading-5 text-[color:var(--color-muted)]">
+                    Mostrando {recentTicketsWindow.tickets.length} de {recentTicketsWindow.totalAvailableCount} tickets recentes.
+                  </p>
+                </div>
+                {recentTicketsWindow.tickets.length === 0 ? (
+                  <EmptyState
+                    title="Sem tickets recentes"
+                    description="O backend nao retornou tickets recentes para este tenant."
+                  />
+                ) : (
+                  <div className="space-y-2">
+                    {recentTicketsWindow.tickets.map((ticket) => (
+                      <SupportRecentTicketCard key={ticket.id} ticket={ticket} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </Panel>
 
           <Panel

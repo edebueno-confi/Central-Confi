@@ -174,6 +174,7 @@ Documentos históricos:
 - Estratégia oficial de curadoria do corpus legado criada em `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md`.
 - Runbook oficial de publicação pública criado em `docs/PUBLIC_HELP_CENTER_PUBLISH_RUNBOOK.md`.
 - Governança oficial de operações de conteúdo criada em `docs/CONTENT_OPERATIONS_GOVERNANCE.md`.
+- Mini design system oficial de workspaces internos criado em `docs/INTERNAL_WORKSPACE_DESIGN_SYSTEM.md`.
 - Spec oficial do Support Workspace criada em `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`.
 - Spec oficial do perfil operacional do cliente B2B criada em `docs/CUSTOMER_ACCOUNT_PROFILE_SPEC.md`.
 - Revisão oficial do modelo mínimo do perfil operacional do cliente B2B criada em `docs/CUSTOMER_ACCOUNT_PROFILE_DATA_MODEL_REVIEW.md`.
@@ -452,10 +453,16 @@ Documentos históricos:
   - O customer context passou a separar resumo do tenant e preview de contatos em `vw_support_customer_360` dos recortes recentes operacionais de tickets e eventos.
   - O frontend do workspace passou a consumir esses recortes recentes explicitamente, sem simular paginação carregando o histórico completo por trás.
 - Fase 6.9: Support Workspace Customer Account Context UI concluída localmente.
-  - O Support Workspace passou a consumir `vw_support_customer_account_context` no ticket e na visão do cliente, sem abrir UI de edição do perfil.
-  - `/support/tickets/:ticketId` agora mostra no rail apenas produto, status operacional, tier, plataforma, integrações principais, features relevantes, customizações de risco e alertas ativos.
-  - `/support/customers/:tenantId` passou a exibir stack, integrações, features, customizações, alertas, contatos e tickets recentes em layout operacional leve.
-  - Observacoes internas, flags e detalhes extensos do perfil operacional ficaram recolhidos por padrao.
+- O Support Workspace passou a consumir `vw_support_customer_account_context` no ticket e na visão do cliente, sem abrir UI de edição do perfil.
+- `/support/tickets/:ticketId` agora mostra no rail apenas produto, status operacional, tier, plataforma, integrações principais, features relevantes, customizações de risco e alertas ativos.
+- `/support/customers/:tenantId` passou a exibir stack, integrações, features, customizações, alertas, contatos e tickets recentes em layout operacional leve.
+- Observacoes internas, flags e detalhes extensos do perfil operacional ficaram recolhidos por padrao.
+- Fase 6.10: Internal Workspace Shell + Agent UX System concluída localmente.
+  - O Support Workspace agora usa shell interno colapsavel proprio, sem cards textuais longos na sidebar e com navegacao operacional mais util.
+  - `/support/queue` foi ajustada para operar como fila dominante com preview leve do ticket selecionado.
+  - `/support/tickets/:ticketId` passou a tratar conversa e composer como eixo principal, com rail direito recolhivel e historico tecnico sob demanda.
+  - `/support/customers/:tenantId` foi simplificada como contexto operacional sintetico do cliente B2B.
+  - A direção visual transversal dessa camada ficou formalizada em `docs/INTERNAL_WORKSPACE_DESIGN_SYSTEM.md`.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -477,6 +484,7 @@ Documentos históricos:
 - Não permitir leitura do Admin Console fora das views `vw_admin_*`.
 
 ## Próxima prioridade
-Abrir a próxima fase de evolução do Support Workspace apenas depois da
-inspeção operacional do contexto enriquecido do cliente B2B em volume real,
-preservando conversa/composer como foco principal da tratativa.
+Abrir a próxima fase funcional do Support Workspace apenas depois da
+inspeção visual e operacional do shell interno consolidado, preservando
+conversa/composer como foco principal e sem regredir para padrão visual de
+painel administrativo.
