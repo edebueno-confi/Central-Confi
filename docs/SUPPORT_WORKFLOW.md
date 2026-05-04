@@ -70,6 +70,7 @@
 - o Support Workspace ja validou a necessidade de um perfil operacional mais rico do cliente B2B
 - esse dominio fica especificado em `CUSTOMER_ACCOUNT_PROFILE_SPEC.md`
 - a proposta minima de modelo fica revisada em `CUSTOMER_ACCOUNT_PROFILE_DATA_MODEL_REVIEW.md`
+- o desenho tecnico pre-migration desse dominio fica consolidado em `CUSTOMER_ACCOUNT_PROFILE_MIGRATION_DESIGN.md`
 - o suporte precisa consultar, antes da resposta:
   - produto ativo
   - plano e modulos relevantes
@@ -77,6 +78,13 @@
   - customizacoes e alertas
   - contatos por finalidade
 - esse contexto deve apoiar a tratativa sem transformar a tela em CRM generico
+
+## Boundary previsto para a Fase 6.8
+- o suporte continua lendo apenas por read models contratuais, nunca por tabela-base do perfil do cliente
+- o primeiro read model futuro desse dominio sera `vw_support_customer_account_context`
+- a manutencao do perfil operacional ficara em RPCs administrativas dedicadas
+- `platform_admin` sera o write actor garantido no primeiro corte
+- `support_manager` e `support_agent` continuam apenas com leitura controlada por tenant no MVP do dominio
 
 ## Superficie minima ja implementada
 - `/support` redireciona para a fila oficial `/support/queue`

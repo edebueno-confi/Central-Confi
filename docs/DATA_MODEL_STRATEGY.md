@@ -140,6 +140,21 @@ Campos-base esperados quando aplicável:
   - customizações
   - alertas
 
+## Desenho pré-migration da Fase 6.7
+- o desenho técnico da migration agora está consolidado em `CUSTOMER_ACCOUNT_PROFILE_MIGRATION_DESIGN.md`
+- os enums fortes previstos ficam limitados a:
+  - `customer_product_line`
+  - `customer_operational_status`
+  - `customer_integration_type`
+  - `customer_integration_status`
+  - `customer_integration_environment`
+  - `customer_customization_risk_level`
+  - `customer_alert_severity`
+- `feature_key`, `source`, `provider` e `account_tier` permanecem como chaves controladas no primeiro corte, evitando rigidez prematura
+- nenhuma tabela-base desse domínio deve ser lida diretamente pelo app; suporte e administração leem apenas por views contratuais futuras
+- a escrita prevista para a Fase 6.8 continua exclusivamente em RPCs administrativas auditadas
+- o bloqueio de dados sensíveis não deve depender de regex solta no frontend: ele nasce da combinação de schema estreito, validação de RPC e testes pgTAP
+
 ## Histórico
 Nunca sobrescrever histórico relevante.
 

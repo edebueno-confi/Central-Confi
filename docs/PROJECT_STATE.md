@@ -37,6 +37,7 @@ Documentos prioritários:
 - `SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`
 - `CUSTOMER_ACCOUNT_PROFILE_SPEC.md`
 - `CUSTOMER_ACCOUNT_PROFILE_DATA_MODEL_REVIEW.md`
+- `CUSTOMER_ACCOUNT_PROFILE_MIGRATION_DESIGN.md`
 - `reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`
 
 Documentos históricos:
@@ -172,6 +173,7 @@ Documentos históricos:
 - Spec oficial do Support Workspace criada em `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`.
 - Spec oficial do perfil operacional do cliente B2B criada em `docs/CUSTOMER_ACCOUNT_PROFILE_SPEC.md`.
 - Revisão oficial do modelo mínimo do perfil operacional do cliente B2B criada em `docs/CUSTOMER_ACCOUNT_PROFILE_DATA_MODEL_REVIEW.md`.
+- Desenho técnico pré-migration do perfil operacional do cliente B2B criado em `docs/CUSTOMER_ACCOUNT_PROFILE_MIGRATION_DESIGN.md`.
 - Read models oficiais do Support Workspace materializados com authz restrita a `platform_admin` e roles globais de suporte com membership ativo no tenant.
 - O detalhe do Support Workspace agora prioriza conversa e composer como fluxo principal, mantendo eventos tecnicos e controles avancados em camadas secundarias.
 - Relatório oficial do inventário legado criado em `docs/reports/KNOWLEDGE_LEGACY_INVENTORY_REPORT.md`.
@@ -465,9 +467,7 @@ Documentos históricos:
 - Não permitir leitura do Admin Console fora das views `vw_admin_*`.
 
 ## Próxima prioridade
-Evoluir o Support Workspace com vínculos operacionais entre tickets, Knowledge
-Base e backlog de engenharia, além de paginação explícita sob demanda para
-timeline e customer context quando o recorte recente já não for suficiente,
-preservando a simplificação estrutural do cockpit operacional e evitando
-regressão para layouts genéricos,
-densos ou administrativos por conveniência.
+Materializar o backend mínimo do Customer Account Profile na Fase 6.8, seguindo
+o desenho aprovado de enums, tabelas, RLS, views, RPCs administrativas e
+auditoria, sem abrir CRM genérico nem vazar contexto interno para superfícies
+de suporte ou portal por conveniência.

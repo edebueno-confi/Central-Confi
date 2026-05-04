@@ -631,3 +631,38 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - ajuda a estruturar futura documentação interna sobre contexto operacional do cliente
   - prepara base para explicar produto, stack, módulos e alertas sem misturar isso com ticket ou CRM comercial
+
+### Fase 6.7 - Customer Account Profile Migration Design
+- fase: `6.7`
+- commit: `pending`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: desenha a migration do Customer Account Profile antes da materialização do backend, fixando enums, tabelas, constraints, authz, views, RPCs administrativas, auditoria e plano de testes.
+- docs alterados:
+  - `docs/CUSTOMER_ACCOUNT_PROFILE_MIGRATION_DESIGN.md`
+  - `docs/README.md`
+  - `docs/DATA_MODEL_STRATEGY.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend nesta fase
+  - propostas futuras:
+    - `vw_support_customer_account_context`
+    - `vw_admin_customer_account_profiles`
+    - `rpc_admin_upsert_customer_account_profile`
+    - `rpc_admin_add_customer_integration`
+    - `rpc_admin_update_customer_integration`
+    - `rpc_admin_add_customer_customization`
+    - `rpc_admin_update_customer_customization`
+    - `rpc_admin_add_customer_account_alert`
+    - `rpc_admin_archive_customer_account_alert`
+- telas afetadas:
+  - nenhuma implementacao nesta fase
+- riscos restantes:
+  - `account_tier`, `provider` e `source` ainda dependem de governanca de catalogo antes da migration
+  - a Fase 6.8 precisa bloquear segredo por schema, RPC e pgTAP sem empurrar essa responsabilidade ao frontend
+  - o futuro portal B2B ainda exigira contrato proprio para nao vazar contexto interno por conveniencia
+- impacto na FAQ futura:
+  - prepara a futura explicacao interna de como o suporte enxerga produto, stack, customizacoes e alertas do cliente B2B
+  - fixa a fronteira entre contexto operacional interno e o subconjunto seguro que um portal B2B podera ver no futuro
