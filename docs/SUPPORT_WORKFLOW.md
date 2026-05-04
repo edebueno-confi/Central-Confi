@@ -79,12 +79,13 @@
   - contatos por finalidade
 - esse contexto deve apoiar a tratativa sem transformar a tela em CRM generico
 
-## Boundary previsto para a Fase 6.8
+## Boundary materializado na Fase 6.8
 - o suporte continua lendo apenas por read models contratuais, nunca por tabela-base do perfil do cliente
-- o primeiro read model futuro desse dominio sera `vw_support_customer_account_context`
-- a manutencao do perfil operacional ficara em RPCs administrativas dedicadas
-- `platform_admin` sera o write actor garantido no primeiro corte
+- o primeiro read model executável desse dominio agora e `vw_support_customer_account_context`
+- a manutencao do perfil operacional passou a existir apenas por RPCs administrativas dedicadas
+- `platform_admin` continua como write actor garantido do primeiro corte
 - `support_manager` e `support_agent` continuam apenas com leitura controlada por tenant no MVP do dominio
+- o workspace atual ainda nao foi expandido para mostrar todo esse contexto; a estabilizacao visual e a calibracao do payload continuam separadas da materializacao backend
 
 ## Superficie minima ja implementada
 - `/support` redireciona para a fila oficial `/support/queue`

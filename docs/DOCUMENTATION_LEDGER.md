@@ -666,3 +666,36 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - prepara a futura explicacao interna de como o suporte enxerga produto, stack, customizacoes e alertas do cliente B2B
   - fixa a fronteira entre contexto operacional interno e o subconjunto seguro que um portal B2B podera ver no futuro
+
+### Fase 6.8 - Customer Account Profile Backend Materialization
+- fase: `6.8`
+- commit: `pending`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: o backend mínimo do perfil operacional do cliente B2B foi materializado com enums, tabelas próprias, helpers privados de authz e segurança, views contratuais de leitura e RPCs administrativas auditadas.
+- docs alterados:
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/DATA_MODEL_STRATEGY.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - `vw_support_customer_account_context`
+  - `vw_admin_customer_account_profiles`
+  - `rpc_admin_upsert_customer_account_profile`
+  - `rpc_admin_add_customer_integration`
+  - `rpc_admin_update_customer_integration`
+  - `rpc_admin_add_customer_customization`
+  - `rpc_admin_update_customer_customization`
+  - `rpc_admin_add_customer_account_alert`
+  - `rpc_admin_archive_customer_account_alert`
+- telas afetadas:
+  - nenhuma UI nova nesta fase
+  - fixture local enriquecida para inspeção geral de `/support/queue`, `/support/tickets/:ticketId`, `/support/customers/:tenantId`, `/admin/knowledge` e `/help/genius`
+- riscos restantes:
+  - o Support Workspace ainda nao consome todo o contexto novo; a calibracao visual e de payload continua para fase posterior
+  - `feature_key`, `provider`, `source` e `account_tier` ainda dependem de governanca operacional de catalogo
+  - `ticket -> KB`, `ticket -> engenharia` e SLA seguem fora do dominio materializado
+- impacto na FAQ futura:
+  - cria a base backend oficial para futura documentacao interna sobre stack, modulos e alertas do cliente B2B
+  - separa com mais rigor o que e contexto operacional interno do que podera aparecer no portal B2B no futuro

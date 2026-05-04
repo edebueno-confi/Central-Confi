@@ -184,6 +184,26 @@ Fase 6.4:
   - o customer context operacional passa a consumir recortes recentes separados para tickets e eventos;
   - a primeira tela deixa de depender de historico infinito ou arrays longas no payload principal.
 
+Fase 6.8:
+- O backend do Customer Account Profile agora foi materializado como dominio proprio, separado de ticketing, KB e portal.
+- O app autenticado continua sem qualquer leitura direta em tabela-base desse dominio.
+- A leitura contratual disponivel passa a existir por:
+  - `vw_support_customer_account_context`
+  - `vw_admin_customer_account_profiles`
+- A escrita administrativa passa a existir apenas por:
+  - `rpc_admin_upsert_customer_account_profile`
+  - `rpc_admin_add_customer_integration`
+  - `rpc_admin_update_customer_integration`
+  - `rpc_admin_add_customer_customization`
+  - `rpc_admin_update_customer_customization`
+  - `rpc_admin_add_customer_account_alert`
+  - `rpc_admin_archive_customer_account_alert`
+- Regras:
+  - `tenant_id` e obrigatorio em todas as tabelas;
+  - suporte e CS internos leem apenas o contexto operacional autorizado por tenant;
+  - `platform_admin` continua sendo o write actor garantido do primeiro corte;
+  - o dominio bloqueia tokens, senhas, chaves, payloads sigilosos e endpoints sensiveis antes de persistir ou auditar.
+
 ## Views contratuais vigentes
 
 ### `vw_tickets_list`
@@ -779,6 +799,7 @@ Fase 6.4:
   - `vw_support_ticket_timeline`
   - `vw_support_ticket_timeline_recent`
   - `vw_support_customer_360`
+  - `vw_support_customer_account_context`
   - `vw_support_customer_recent_tickets`
   - `vw_support_customer_recent_events`
   - `vw_support_assignable_agents`
@@ -799,6 +820,7 @@ Fase 6.4:
   - `vw_admin_knowledge_articles_list_v2`
   - `vw_admin_knowledge_article_detail_v2`
   - `vw_admin_knowledge_article_review_advisories`
+  - `vw_admin_customer_account_profiles`
 - O app público/autenticado lê a Central de Ajuda futura apenas por:
   - `vw_public_knowledge_space_resolver`
   - `vw_public_knowledge_navigation`
@@ -829,6 +851,14 @@ Fase 6.4:
   - `rpc_admin_archive_knowledge_article_v2`
   - `rpc_admin_update_knowledge_article_review_status`
   - `rpc_admin_mark_knowledge_article_reviewed`
+- O app autenticado escreve o Customer Account Profile apenas por:
+  - `rpc_admin_upsert_customer_account_profile`
+  - `rpc_admin_add_customer_integration`
+  - `rpc_admin_update_customer_integration`
+  - `rpc_admin_add_customer_customization`
+  - `rpc_admin_update_customer_customization`
+  - `rpc_admin_add_customer_account_alert`
+  - `rpc_admin_archive_customer_account_alert`
 
 ## Fase 6.2 - Support Workspace UI Minimum
 

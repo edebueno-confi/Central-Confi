@@ -45,8 +45,8 @@ select is(
       and p.prosecdef
       and p.proname like 'rpc_%'
   ),
-  29,
-  'as 29 RPCs expostas existem como funcoes SECURITY DEFINER controladas'
+  36,
+  'as 36 RPCs expostas existem como funcoes SECURITY DEFINER controladas'
 );
 
 select is(
@@ -78,6 +78,8 @@ select is(
         'can_view_internal_ticket_content',
         'can_assign_ticket',
         'can_access_support_workspace',
+        'can_read_customer_account_context',
+        'can_read_customer_account_admin',
         'can_manage_knowledge_base',
         'can_manage_multi_brand_foundation',
         'can_read_knowledge_article'
@@ -148,9 +150,9 @@ select is(
     )
     select count(distinct proname)::integer
     from grants
-    where grantee = (select oid from pg_roles where rolname = 'authenticated')
+      where grantee = (select oid from pg_roles where rolname = 'authenticated')
   ),
-  29,
+  36,
   'authenticated recebe execute em todas as RPCs expostas e somente por grant explicito'
 );
 

@@ -46,6 +46,67 @@ const FIXTURE = {
         phone: '+55 11 91000-0001',
         jobTitle: 'Coordenacao de Operacoes',
       },
+      customerAccount: {
+        productLine: 'genius_returns',
+        operationalStatus: 'active',
+        accountTier: 'enterprise',
+        internalNotes:
+          'Conta com acompanhamento operacional proximo e fluxo sensivel de devolucoes.',
+        operationalFlags: {
+          high_touch_account: true,
+          custom_operational_flow: true,
+          integration_sensitive_account: true,
+        },
+        integrations: [
+          {
+            integrationType: 'erp',
+            provider: 'totvs',
+            status: 'active',
+            environment: 'production',
+            notes: 'Integra pedidos, devolucoes e conciliacao financeira do tenant.',
+          },
+          {
+            integrationType: 'carrier',
+            provider: 'correios',
+            status: 'active',
+            environment: 'production',
+            notes: 'Operacao principal de coleta e tracking contratada pelo tenant.',
+          },
+        ],
+        features: [
+          {
+            featureKey: 'returns_portal',
+            enabled: true,
+            source: 'contract',
+            notes: 'Portal principal de operacao habilitado.',
+          },
+          {
+            featureKey: 'refund_manual_review',
+            enabled: true,
+            source: 'operations',
+            notes: 'CS valida casos de estorno com revisao humana.',
+          },
+        ],
+        customizations: [
+          {
+            title: 'Fluxo prioritario de coleta',
+            description:
+              'Coletas de alto valor seguem janela dedicada e retorno manual do suporte.',
+            riskLevel: 'high',
+            operationalNote:
+              'Antes de responder, conferir janela combinada e fila operacional dedicada.',
+            status: 'active',
+          },
+        ],
+        alerts: [
+          {
+            severity: 'warning',
+            title: 'Janela de ERP reduzida',
+            description:
+              'Evitar respostas conclusivas fora da janela homologada de sincronizacao do ERP.',
+          },
+        ],
+      },
     },
     {
       slug: 'support-qa-b',
@@ -56,6 +117,52 @@ const FIXTURE = {
         email: 'rafael.integracoes@support-qa-b.local',
         phone: '+55 11 91000-0002',
         jobTitle: 'Analista de Integracoes',
+      },
+      customerAccount: {
+        productLine: 'after_sale',
+        operationalStatus: 'limited',
+        accountTier: 'growth',
+        internalNotes:
+          'Tenant B opera com stack mais simples e depende de apoio tecnico pontual.',
+        operationalFlags: {
+          restricted_support_window: true,
+        },
+        integrations: [
+          {
+            integrationType: 'ecommerce_platform',
+            provider: 'shopify',
+            status: 'active',
+            environment: 'production',
+            notes: 'Plataforma de ecommerce principal do tenant B.',
+          },
+        ],
+        features: [
+          {
+            featureKey: 'basic_returns_flow',
+            enabled: true,
+            source: 'contract',
+            notes: 'Fluxo basico ativo para operacao do tenant B.',
+          },
+        ],
+        customizations: [
+          {
+            title: 'Motivo customizado de homologacao',
+            description:
+              'Tenant B depende de motivo especial durante ajustes de onboarding estendido.',
+            riskLevel: 'medium',
+            operationalNote:
+              'Se o ticket tocar homologacao, responder com cautela e revisar a regra ativa.',
+            status: 'active',
+          },
+        ],
+        alerts: [
+          {
+            severity: 'info',
+            title: 'Onboarding estendido',
+            description:
+              'Acompanhar chamados do tenant B considerando a fase atual de onboarding assistido.',
+          },
+        ],
       },
     },
   ],
@@ -601,6 +708,261 @@ function ensureTenant(adminUserId, tenant) {
   return tenantId;
 }
 
+function ensureCustomerAccountProfile(adminUserId, tenantId, customerAccount) {
+  const existing = runSupabaseDbQuery(`
+    select id::text as id
+    from public.customer_account_profiles
+    where tenant_id = '${sqlEscape(tenantId)}'::uuid
+    limit 1;
+  `);
+
+  const internalNotesSql = customerAccount.internalNotes
+    ? `'${sqlEscape(customerAccount.internalNotes)}'`
+    : 'null';
+  const flagsSql = `'${sqlEscape(JSON.stringify(customerAccount.operationalFlags ?? {}))}'::jsonb`;
+
+  if (existing.rows?.[0]?.id) {
+    runSupabaseDbQuery(`
+      update public.customer_account_profiles
+      set
+        product_line = '${customerAccount.productLine}'::public.customer_product_line,
+        operational_status = '${customerAccount.operationalStatus}'::public.customer_operational_status,
+        account_tier = '${sqlEscape(customerAccount.accountTier)}',
+        internal_notes = ${internalNotesSql},
+        operational_flags = ${flagsSql},
+        updated_by_user_id = '${sqlEscape(adminUserId)}'::uuid
+      where tenant_id = '${sqlEscape(tenantId)}'::uuid;
+    `);
+
+    return existing.rows[0].id;
+  }
+
+  const created = runSupabaseDbQuery(`
+    insert into public.customer_account_profiles (
+      tenant_id,
+      product_line,
+      operational_status,
+      account_tier,
+      internal_notes,
+      operational_flags,
+      created_by_user_id,
+      updated_by_user_id
+    )
+    values (
+      '${sqlEscape(tenantId)}'::uuid,
+      '${customerAccount.productLine}'::public.customer_product_line,
+      '${customerAccount.operationalStatus}'::public.customer_operational_status,
+      '${sqlEscape(customerAccount.accountTier)}',
+      ${internalNotesSql},
+      ${flagsSql},
+      '${sqlEscape(adminUserId)}'::uuid,
+      '${sqlEscape(adminUserId)}'::uuid
+    )
+    returning id::text as id;
+  `);
+
+  return created.rows?.[0]?.id ?? null;
+}
+
+function ensureCustomerAccountIntegrations(adminUserId, tenantId, customerAccount) {
+  for (const integration of customerAccount.integrations ?? []) {
+    const existing = runSupabaseDbQuery(`
+      select id::text as id
+      from public.customer_account_integrations
+      where tenant_id = '${sqlEscape(tenantId)}'::uuid
+        and integration_type = '${integration.integrationType}'::public.customer_integration_type
+        and lower(provider) = lower('${sqlEscape(integration.provider)}')
+        and environment = '${integration.environment}'::public.customer_integration_environment
+      limit 1;
+    `);
+
+    const notesSql = integration.notes ? `'${sqlEscape(integration.notes)}'` : 'null';
+
+    if (existing.rows?.[0]?.id) {
+      runSupabaseDbQuery(`
+        update public.customer_account_integrations
+        set
+          status = '${integration.status}'::public.customer_integration_status,
+          notes = ${notesSql},
+          updated_by_user_id = '${sqlEscape(adminUserId)}'::uuid
+        where id = '${sqlEscape(existing.rows[0].id)}'::uuid;
+      `);
+      continue;
+    }
+
+    runSupabaseDbQuery(`
+      insert into public.customer_account_integrations (
+        tenant_id,
+        integration_type,
+        provider,
+        status,
+        environment,
+        notes,
+        created_by_user_id,
+        updated_by_user_id
+      )
+      values (
+        '${sqlEscape(tenantId)}'::uuid,
+        '${integration.integrationType}'::public.customer_integration_type,
+        '${sqlEscape(integration.provider)}',
+        '${integration.status}'::public.customer_integration_status,
+        '${integration.environment}'::public.customer_integration_environment,
+        ${notesSql},
+        '${sqlEscape(adminUserId)}'::uuid,
+        '${sqlEscape(adminUserId)}'::uuid
+      );
+    `);
+  }
+}
+
+function ensureCustomerAccountFeatures(adminUserId, tenantId, customerAccount) {
+  for (const feature of customerAccount.features ?? []) {
+    const existing = runSupabaseDbQuery(`
+      select id::text as id
+      from public.customer_account_features
+      where tenant_id = '${sqlEscape(tenantId)}'::uuid
+        and lower(feature_key) = lower('${sqlEscape(feature.featureKey)}')
+      limit 1;
+    `);
+
+    const notesSql = feature.notes ? `'${sqlEscape(feature.notes)}'` : 'null';
+    const enabledSql = feature.enabled ? 'true' : 'false';
+
+    if (existing.rows?.[0]?.id) {
+      runSupabaseDbQuery(`
+        update public.customer_account_features
+        set
+          enabled = ${enabledSql},
+          source = '${sqlEscape(feature.source)}',
+          notes = ${notesSql},
+          updated_by_user_id = '${sqlEscape(adminUserId)}'::uuid
+        where id = '${sqlEscape(existing.rows[0].id)}'::uuid;
+      `);
+      continue;
+    }
+
+    runSupabaseDbQuery(`
+      insert into public.customer_account_features (
+        tenant_id,
+        feature_key,
+        enabled,
+        source,
+        notes,
+        created_by_user_id,
+        updated_by_user_id
+      )
+      values (
+        '${sqlEscape(tenantId)}'::uuid,
+        '${sqlEscape(feature.featureKey)}',
+        ${enabledSql},
+        '${sqlEscape(feature.source)}',
+        ${notesSql},
+        '${sqlEscape(adminUserId)}'::uuid,
+        '${sqlEscape(adminUserId)}'::uuid
+      );
+    `);
+  }
+}
+
+function ensureCustomerAccountCustomizations(adminUserId, tenantId, customerAccount) {
+  for (const customization of customerAccount.customizations ?? []) {
+    const existing = runSupabaseDbQuery(`
+      select id::text as id
+      from public.customer_account_customizations
+      where tenant_id = '${sqlEscape(tenantId)}'::uuid
+        and lower(title) = lower('${sqlEscape(customization.title)}')
+      limit 1;
+    `);
+
+    const noteSql = customization.operationalNote
+      ? `'${sqlEscape(customization.operationalNote)}'`
+      : 'null';
+
+    if (existing.rows?.[0]?.id) {
+      runSupabaseDbQuery(`
+        update public.customer_account_customizations
+        set
+          description = '${sqlEscape(customization.description)}',
+          risk_level = '${customization.riskLevel}'::public.customer_customization_risk_level,
+          operational_note = ${noteSql},
+          status = '${sqlEscape(customization.status)}',
+          updated_by_user_id = '${sqlEscape(adminUserId)}'::uuid
+        where id = '${sqlEscape(existing.rows[0].id)}'::uuid;
+      `);
+      continue;
+    }
+
+    runSupabaseDbQuery(`
+      insert into public.customer_account_customizations (
+        tenant_id,
+        title,
+        description,
+        risk_level,
+        operational_note,
+        status,
+        created_by_user_id,
+        updated_by_user_id
+      )
+      values (
+        '${sqlEscape(tenantId)}'::uuid,
+        '${sqlEscape(customization.title)}',
+        '${sqlEscape(customization.description)}',
+        '${customization.riskLevel}'::public.customer_customization_risk_level,
+        ${noteSql},
+        '${sqlEscape(customization.status)}',
+        '${sqlEscape(adminUserId)}'::uuid,
+        '${sqlEscape(adminUserId)}'::uuid
+      );
+    `);
+  }
+}
+
+function ensureCustomerAccountAlerts(adminUserId, tenantId, customerAccount) {
+  for (const alert of customerAccount.alerts ?? []) {
+    const existing = runSupabaseDbQuery(`
+      select id::text as id
+      from public.customer_account_alerts
+      where tenant_id = '${sqlEscape(tenantId)}'::uuid
+        and lower(title) = lower('${sqlEscape(alert.title)}')
+      limit 1;
+    `);
+
+    if (existing.rows?.[0]?.id) {
+      runSupabaseDbQuery(`
+        update public.customer_account_alerts
+        set
+          severity = '${alert.severity}'::public.customer_alert_severity,
+          description = '${sqlEscape(alert.description)}',
+          active = true,
+          updated_by_user_id = '${sqlEscape(adminUserId)}'::uuid
+        where id = '${sqlEscape(existing.rows[0].id)}'::uuid;
+      `);
+      continue;
+    }
+
+    runSupabaseDbQuery(`
+      insert into public.customer_account_alerts (
+        tenant_id,
+        severity,
+        title,
+        description,
+        active,
+        created_by_user_id,
+        updated_by_user_id
+      )
+      values (
+        '${sqlEscape(tenantId)}'::uuid,
+        '${alert.severity}'::public.customer_alert_severity,
+        '${sqlEscape(alert.title)}',
+        '${sqlEscape(alert.description)}',
+        true,
+        '${sqlEscape(adminUserId)}'::uuid,
+        '${sqlEscape(adminUserId)}'::uuid
+      );
+    `);
+  }
+}
+
 function ensureContact(adminUserId, tenantId, contact) {
   const existing = runSupabaseDbQuery(`
     select id::text as id
@@ -963,6 +1325,11 @@ async function main() {
     const tenantId = ensureTenant(profile.id, tenant);
     tenantMap.set(tenant.slug, tenantId);
     contactMap.set(tenant.slug, ensureContact(profile.id, tenantId, tenant.contact));
+    ensureCustomerAccountProfile(profile.id, tenantId, tenant.customerAccount);
+    ensureCustomerAccountIntegrations(profile.id, tenantId, tenant.customerAccount);
+    ensureCustomerAccountFeatures(profile.id, tenantId, tenant.customerAccount);
+    ensureCustomerAccountCustomizations(profile.id, tenantId, tenant.customerAccount);
+    ensureCustomerAccountAlerts(profile.id, tenantId, tenant.customerAccount);
     ensureTenantMembership({
       actorUserId: profile.id,
       tenantId,
@@ -1061,6 +1428,14 @@ async function main() {
         tenants: FIXTURE.tenants.map((tenant) => ({
           slug: tenant.slug,
           id: tenantMap.get(tenant.slug),
+        })),
+        customer_accounts: FIXTURE.tenants.map((tenant) => ({
+          tenant_slug: tenant.slug,
+          product_line: tenant.customerAccount.productLine,
+          integrations: tenant.customerAccount.integrations.length,
+          features: tenant.customerAccount.features.length,
+          customizations: tenant.customerAccount.customizations.length,
+          alerts: tenant.customerAccount.alerts.length,
         })),
         tickets: createdTickets,
       },

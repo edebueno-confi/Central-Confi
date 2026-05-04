@@ -45,7 +45,7 @@ Expansão futura aprovada em revisão documental:
 - `customer_account_customizations`
 - `customer_account_alerts`
 
-Responsabilidade futura:
+Responsabilidade:
 - contexto operacional persistente do cliente B2B;
 - resumo de produto, plano, stack e customizações;
 - alertas operacionais para suporte e CS;
@@ -154,6 +154,24 @@ Campos-base esperados quando aplicável:
 - nenhuma tabela-base desse domínio deve ser lida diretamente pelo app; suporte e administração leem apenas por views contratuais futuras
 - a escrita prevista para a Fase 6.8 continua exclusivamente em RPCs administrativas auditadas
 - o bloqueio de dados sensíveis não deve depender de regex solta no frontend: ele nasce da combinação de schema estreito, validação de RPC e testes pgTAP
+
+## Materialização da Fase 6.8
+- o domínio `customer_account_*` agora existe fisicamente no backend
+- os enums fortes materializados foram:
+  - `customer_product_line`
+  - `customer_operational_status`
+  - `customer_integration_type`
+  - `customer_integration_status`
+  - `customer_integration_environment`
+  - `customer_customization_risk_level`
+  - `customer_alert_severity`
+- `customer_account_profiles` continua com um perfil principal por `tenant_id`
+- `customer_account_integrations`, `customer_account_features`, `customer_account_customizations` e `customer_account_alerts` nascem como tabelas filhas auditadas do mesmo tenant
+- `operational_flags` permaneceu como o unico `jsonb` permitido do MVP e segue validado por allowlist de chaves booleanas
+- o write path do domínio ficou restrito a RPCs administrativas; o app autenticado continua sem `SELECT` direto nas tabelas-base
+- o primeiro read boundary executável do domínio ficou separado em:
+  - `vw_support_customer_account_context`
+  - `vw_admin_customer_account_profiles`
 
 ## Histórico
 Nunca sobrescrever histórico relevante.

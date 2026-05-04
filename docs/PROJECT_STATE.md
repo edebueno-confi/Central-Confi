@@ -81,6 +81,7 @@ Documentos históricos:
 - Migration oficial do advisory persistente de revisão editorial da Knowledge Base `supabase/migrations/20260503204209_phase5_3_knowledge_review_advisory_contract.sql`.
 - Migration oficial dos read models do Support Workspace e revisão de authz `supabase/migrations/20260504004500_phase6_1_support_workspace_read_models.sql`.
 - Migration oficial do diretório de agentes atribuíveis do Support Workspace `supabase/migrations/20260504043000_phase6_3_support_assignable_agents.sql`.
+- Migration oficial do backend mínimo do Customer Account Profile `supabase/migrations/20260504195833_phase6_8_customer_account_profile_backend.sql`.
 - Teste local de banco em `supabase/tests/001_phase1_identity_tenancy_rls.sql`.
 - Teste local de hardening em `supabase/tests/002_phase1_1_hardening.sql`.
 - Teste local de control plane administrativo em `supabase/tests/003_phase1_2_admin_control_plane.sql`.
@@ -99,6 +100,7 @@ Documentos históricos:
 - Teste local do advisory persistente de revisão editorial em `supabase/tests/016_phase5_3_knowledge_review_advisory_contract.sql`.
 - Teste local dos read models do Support Workspace em `supabase/tests/017_phase6_1_support_workspace_read_models.sql`.
 - Teste local do diretório de agentes atribuíveis do Support Workspace em `supabase/tests/018_phase6_3_support_assignable_agents.sql`.
+- Teste local do backend do Customer Account Profile em `supabase/tests/020_phase6_8_customer_account_profile_backend.sql`.
 - Seed separado em `supabase/seeds/` e desabilitado por padrão.
 - Fluxo de bootstrap seguro do primeiro `platform_admin` em `supabase/bootstrap/`.
 - Núcleo Fase 1 implementado com `profiles`, `user_global_roles`, `tenants`, `tenant_memberships`, `tenant_contacts` e `audit.audit_logs`.
@@ -119,10 +121,12 @@ Documentos históricos:
 - Views contratuais públicas endurecidas materializadas em `vw_public_knowledge_space_resolver`, `vw_public_knowledge_navigation`, `vw_public_knowledge_articles_list` e `vw_public_knowledge_article_detail`.
 - Views contratuais do Support Workspace materializadas em `vw_support_tickets_queue`, `vw_support_ticket_detail`, `vw_support_ticket_timeline`, `vw_support_ticket_timeline_recent`, `vw_support_customer_360`, `vw_support_customer_recent_tickets` e `vw_support_customer_recent_events`.
 - Diretório contratual de agentes atribuíveis do Support Workspace materializado em `vw_support_assignable_agents`.
+- Views contratuais do Customer Account Profile materializadas em `vw_support_customer_account_context` e `vw_admin_customer_account_profiles`.
 - RPCs contratuais de escrita materializadas em `rpc_create_ticket`, `rpc_update_ticket_status`, `rpc_assign_ticket`, `rpc_add_ticket_message`, `rpc_add_internal_ticket_note`, `rpc_close_ticket` e `rpc_reopen_ticket`.
 - RPCs contratuais administrativas de Knowledge Base materializadas em `rpc_admin_create_knowledge_category`, `rpc_admin_create_knowledge_article_draft`, `rpc_admin_update_knowledge_article_draft`, `rpc_admin_submit_knowledge_article_for_review`, `rpc_admin_publish_knowledge_article` e `rpc_admin_archive_knowledge_article`.
 - RPCs contratuais administrativas v2 space-aware materializadas em `rpc_admin_create_knowledge_category_v2`, `rpc_admin_create_knowledge_article_draft_v2`, `rpc_admin_update_knowledge_article_draft_v2`, `rpc_admin_submit_knowledge_article_for_review_v2`, `rpc_admin_publish_knowledge_article_v2` e `rpc_admin_archive_knowledge_article_v2`.
 - RPCs contratuais advisory materializadas em `rpc_admin_update_knowledge_article_review_status` e `rpc_admin_mark_knowledge_article_reviewed`.
+- RPCs administrativas do Customer Account Profile materializadas em `rpc_admin_upsert_customer_account_profile`, `rpc_admin_add_customer_integration`, `rpc_admin_update_customer_integration`, `rpc_admin_add_customer_customization`, `rpc_admin_update_customer_customization`, `rpc_admin_add_customer_account_alert` e `rpc_admin_archive_customer_account_alert`.
 - `authenticated` não possui `SELECT`, `INSERT`, `UPDATE` nem `DELETE` direto nas tabelas base de ticketing; o app lê via views e escreve via RPCs.
 - Pacote `packages/contracts` materializado com tipos TypeScript para views e RPCs de ticketing.
 - Pacote `packages/contracts` agora também materializa tipos TypeScript para os read models do Support Workspace.
@@ -176,6 +180,7 @@ Documentos históricos:
 - Desenho técnico pré-migration do perfil operacional do cliente B2B criado em `docs/CUSTOMER_ACCOUNT_PROFILE_MIGRATION_DESIGN.md`.
 - Read models oficiais do Support Workspace materializados com authz restrita a `platform_admin` e roles globais de suporte com membership ativo no tenant.
 - O detalhe do Support Workspace agora prioriza conversa e composer como fluxo principal, mantendo eventos tecnicos e controles avancados em camadas secundarias.
+- O backend do Customer Account Profile agora materializa perfil operacional, stack resumida, features, customizacoes e alertas por tenant, com bloqueio de conteudo sensivel antes de persistir ou auditar.
 - Relatório oficial do inventário legado criado em `docs/reports/KNOWLEDGE_LEGACY_INVENTORY_REPORT.md`.
 - Backlog versionado oficial de curadoria legado criado em `docs/reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`.
 - O inventário atual da base legada em `raw_knowledge/octadesk_export/latest/articles/` identificou 58 artigos, 3 categorias-raiz, 1 grupo de duplicidade por `source_hash` e múltiplos candidatos sensíveis/restritos.
@@ -467,7 +472,6 @@ Documentos históricos:
 - Não permitir leitura do Admin Console fora das views `vw_admin_*`.
 
 ## Próxima prioridade
-Materializar o backend mínimo do Customer Account Profile na Fase 6.8, seguindo
-o desenho aprovado de enums, tabelas, RLS, views, RPCs administrativas e
-auditoria, sem abrir CRM genérico nem vazar contexto interno para superfícies
-de suporte ou portal por conveniência.
+Abrir a fase de consumo controlado do Customer Account Profile no Support
+Workspace, usando `vw_support_customer_account_context` com criterio
+operacional e sem inflar a tratativa do ticket com payload demais.
