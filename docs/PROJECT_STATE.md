@@ -85,6 +85,7 @@ Documentos históricos:
 - Migration oficial dos read models do Support Workspace e revisão de authz `supabase/migrations/20260504004500_phase6_1_support_workspace_read_models.sql`.
 - Migration oficial do diretório de agentes atribuíveis do Support Workspace `supabase/migrations/20260504043000_phase6_3_support_assignable_agents.sql`.
 - Migration oficial do backend mínimo do Customer Account Profile `supabase/migrations/20260504195833_phase6_8_customer_account_profile_backend.sql`.
+- Migration oficial do backend mínimo do vínculo ticket -> Knowledge Base `supabase/migrations/20260505015350_phase6_15_ticket_knowledge_linking_backend.sql`.
 - Teste local de banco em `supabase/tests/001_phase1_identity_tenancy_rls.sql`.
 - Teste local de hardening em `supabase/tests/002_phase1_1_hardening.sql`.
 - Teste local de control plane administrativo em `supabase/tests/003_phase1_2_admin_control_plane.sql`.
@@ -104,6 +105,7 @@ Documentos históricos:
 - Teste local dos read models do Support Workspace em `supabase/tests/017_phase6_1_support_workspace_read_models.sql`.
 - Teste local do diretório de agentes atribuíveis do Support Workspace em `supabase/tests/018_phase6_3_support_assignable_agents.sql`.
 - Teste local do backend do Customer Account Profile em `supabase/tests/020_phase6_8_customer_account_profile_backend.sql`.
+- Teste local do backend do vínculo ticket -> Knowledge Base em `supabase/tests/021_phase6_15_ticket_knowledge_linking_backend.sql`.
 - Seed separado em `supabase/seeds/` e desabilitado por padrão.
 - Fluxo de bootstrap seguro do primeiro `platform_admin` em `supabase/bootstrap/`.
 - Núcleo Fase 1 implementado com `profiles`, `user_global_roles`, `tenants`, `tenant_memberships`, `tenant_contacts` e `audit.audit_logs`.
@@ -125,11 +127,13 @@ Documentos históricos:
 - Views contratuais do Support Workspace materializadas em `vw_support_tickets_queue`, `vw_support_ticket_detail`, `vw_support_ticket_timeline`, `vw_support_ticket_timeline_recent`, `vw_support_customer_360`, `vw_support_customer_recent_tickets` e `vw_support_customer_recent_events`.
 - Diretório contratual de agentes atribuíveis do Support Workspace materializado em `vw_support_assignable_agents`.
 - Views contratuais do Customer Account Profile materializadas em `vw_support_customer_account_context` e `vw_admin_customer_account_profiles`.
+- Views contratuais do vínculo ticket -> Knowledge Base materializadas em `vw_support_ticket_knowledge_links`, `vw_support_knowledge_article_picker` e `vw_customer_portal_ticket_knowledge_links`.
 - RPCs contratuais de escrita materializadas em `rpc_create_ticket`, `rpc_update_ticket_status`, `rpc_assign_ticket`, `rpc_add_ticket_message`, `rpc_add_internal_ticket_note`, `rpc_close_ticket` e `rpc_reopen_ticket`.
 - RPCs contratuais administrativas de Knowledge Base materializadas em `rpc_admin_create_knowledge_category`, `rpc_admin_create_knowledge_article_draft`, `rpc_admin_update_knowledge_article_draft`, `rpc_admin_submit_knowledge_article_for_review`, `rpc_admin_publish_knowledge_article` e `rpc_admin_archive_knowledge_article`.
 - RPCs contratuais administrativas v2 space-aware materializadas em `rpc_admin_create_knowledge_category_v2`, `rpc_admin_create_knowledge_article_draft_v2`, `rpc_admin_update_knowledge_article_draft_v2`, `rpc_admin_submit_knowledge_article_for_review_v2`, `rpc_admin_publish_knowledge_article_v2` e `rpc_admin_archive_knowledge_article_v2`.
 - RPCs contratuais advisory materializadas em `rpc_admin_update_knowledge_article_review_status` e `rpc_admin_mark_knowledge_article_reviewed`.
 - RPCs administrativas do Customer Account Profile materializadas em `rpc_admin_upsert_customer_account_profile`, `rpc_admin_add_customer_integration`, `rpc_admin_update_customer_integration`, `rpc_admin_add_customer_customization`, `rpc_admin_update_customer_customization`, `rpc_admin_add_customer_account_alert` e `rpc_admin_archive_customer_account_alert`.
+- RPCs contratuais do vínculo ticket -> Knowledge Base materializadas em `rpc_support_link_ticket_article`, `rpc_support_archive_ticket_article_link`, `rpc_support_mark_documentation_gap` e `rpc_support_mark_article_needs_update`.
 - `authenticated` não possui `SELECT`, `INSERT`, `UPDATE` nem `DELETE` direto nas tabelas base de ticketing; o app lê via views e escreve via RPCs.
 - Pacote `packages/contracts` materializado com tipos TypeScript para views e RPCs de ticketing.
 - Pacote `packages/contracts` agora também materializa tipos TypeScript para os read models do Support Workspace.
@@ -503,6 +507,21 @@ Documentos históricos:
     - views futuras de suporte e portal
     - RPCs futuras de create/archive/gap/needs_update
     - plano pgTAP e ordem de implementacao da fase materializavel
+- Fase 6.15: Ticket Knowledge Linking Backend Materialization concluida localmente.
+  - O backend minimo do vinculo ticket -> Knowledge Base foi materializado com enum, tabela, helpers privados, views contratuais, RPCs de escrita e pgTAP dedicado.
+  - O contrato executavel agora garante:
+    - `sent_to_customer` apenas para artigo `public` + `published`
+    - bloqueio de `internal` e `restricted` no envio ao cliente
+    - `documentation_gap` e `suggested_article` funcionando sem `article_id`
+    - arquivamento logico append-only e auditavel
+    - bloqueio de `SELECT` direto em `ticket_knowledge_links`
+    - sanitizacao de `note` contra vazamento tecnico e sensivel
+  - A fixture local de suporte agora tambem reidrata:
+    - artigo `public`
+    - artigo `internal`
+    - artigo `restricted`
+    - vinculos permitidos reais por RPC
+  - Nenhuma UI de ticket -> KB foi aberta nesta fase; o escopo ficou estritamente no backend.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -524,6 +543,6 @@ Documentos históricos:
 - Não permitir leitura do Admin Console fora das views `vw_admin_*`.
 
 ## Próxima prioridade
-Abrir a fase de materializacao backend minima do vinculo ticket -> Knowledge Base,
-seguindo o desenho tecnico aprovado para enum, tabela, helpers privados, views,
-RPCs e pgTAP antes de qualquer UI assistiva.
+Abrir a primeira UI minima assistiva de ticket -> Knowledge Base,
+consumindo apenas `vw_support_ticket_knowledge_links` e `vw_support_knowledge_article_picker`,
+sem competir com a conversa do ticket, sem automacao e sem abrir fluxo editorial no suporte.

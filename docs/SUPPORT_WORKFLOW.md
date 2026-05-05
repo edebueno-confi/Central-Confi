@@ -201,8 +201,16 @@
 - artigo `restricted` ou `internal` nunca pode ser tratado como link ao cliente
 - a especificacao oficial desta ponte fica em `TICKET_KNOWLEDGE_LINKING_SPEC.md`
 - o modelo minimo revisado desta ponte fica em `TICKET_KNOWLEDGE_LINKING_DATA_MODEL_REVIEW.md`
-- a proxima fase materializavel deve manter o vinculo como append-only auditavel, com arquivamento logico e sem duplicar conteudo do artigo dentro do ticket
 - o desenho tecnico pre-migration dessa ponte fica consolidado em `TICKET_KNOWLEDGE_LINKING_MIGRATION_DESIGN.md`
+- a fase 6.15 materializa o backend minimo dessa ponte com:
+  - `vw_support_ticket_knowledge_links`
+  - `vw_support_knowledge_article_picker`
+  - `rpc_support_link_ticket_article`
+  - `rpc_support_archive_ticket_article_link`
+  - `rpc_support_mark_documentation_gap`
+  - `rpc_support_mark_article_needs_update`
+- o vinculo passa a ser append-only auditavel, com arquivamento logico e sem duplicar conteudo do artigo dentro do ticket
+- o portal B2B futuro continua restrito a uma view propria que so pode expor `sent_to_customer` de artigos `public` + `published`
 
 ## Fora de escopo do workspace
 - atendimento a shopper final

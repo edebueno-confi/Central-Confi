@@ -204,6 +204,27 @@ Fase 6.8:
   - `platform_admin` continua sendo o write actor garantido do primeiro corte;
   - o dominio bloqueia tokens, senhas, chaves, payloads sigilosos e endpoints sensiveis antes de persistir ou auditar.
 
+Fase 6.15:
+- O backend minimo do vinculo ticket -> Knowledge Base agora foi materializado como dominio auditavel proprio, sem abrir tabela-base ao frontend.
+- O app autenticado continua sem `SELECT` direto em `ticket_knowledge_links`.
+- A leitura contratual disponivel passa a existir por:
+  - `vw_support_ticket_knowledge_links`
+  - `vw_support_knowledge_article_picker`
+- A leitura futura segura de portal foi reservada por:
+  - `vw_customer_portal_ticket_knowledge_links`
+- A escrita contratual passa a existir apenas por:
+  - `rpc_support_link_ticket_article`
+  - `rpc_support_archive_ticket_article_link`
+  - `rpc_support_mark_documentation_gap`
+  - `rpc_support_mark_article_needs_update`
+- Regras:
+  - `sent_to_customer` exige artigo `public` + `published`;
+  - artigo `internal` ou `restricted` nunca pode entrar no fluxo de envio ao cliente;
+  - `documentation_gap` e `suggested_article` podem existir sem `article_id`;
+  - o vinculo e append-only com arquivamento logico, sem delete fisico;
+  - o backend nao duplica `body_md` nem publica artigo automaticamente;
+  - `note` passa por bloqueio de termos tecnicos e sensiveis antes de persistir.
+
 ## Views contratuais vigentes
 
 ### `vw_tickets_list`

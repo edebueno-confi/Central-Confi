@@ -304,6 +304,88 @@ const FIXTURE = {
         'Aguardando retorno do cliente com o mapeamento final dos motivos aprovados.',
     },
   ],
+  knowledgeBase: {
+    categories: [
+      {
+        tenantSlug: 'support-qa-a',
+        name: 'Suporte publico tenant A',
+        slug: 'support-publico-tenant-a',
+        description: 'Base publica segura para respostas de suporte ao tenant A.',
+        visibility: 'public',
+      },
+      {
+        tenantSlug: 'support-qa-a',
+        name: 'Suporte interno tenant A',
+        slug: 'support-interno-tenant-a',
+        description: 'Playbooks internos operacionais do tenant A.',
+        visibility: 'internal',
+      },
+      {
+        tenantSlug: 'support-qa-a',
+        name: 'Suporte restrito tenant A',
+        slug: 'support-restrito-tenant-a',
+        description: 'Referencias restritas do tenant A.',
+        visibility: 'restricted',
+      },
+    ],
+    articles: [
+      {
+        tenantSlug: 'support-qa-a',
+        categorySlug: 'support-publico-tenant-a',
+        title: 'Webhook ERP: checklist publico de retorno',
+        slug: 'webhook-erp-checklist-publico',
+        summary: 'Checklist publico para validar o retorno do webhook ERP com o cliente.',
+        bodyMd:
+          '1. Confirmar endpoint configurado.\n2. Validar ultima chamada recebida.\n3. Compartilhar checklist publico com o cliente.',
+        visibility: 'public',
+      },
+      {
+        tenantSlug: 'support-qa-a',
+        categorySlug: 'support-interno-tenant-a',
+        title: 'ERP: diagnostico interno de webhook',
+        slug: 'erp-diagnostico-interno-webhook',
+        summary: 'Passo a passo interno para diagnosticar timeouts e retries do webhook.',
+        bodyMd:
+          'Uso interno do suporte: revisar janela do ERP, retries, payload e eventuais bloqueios operacionais.',
+        visibility: 'internal',
+      },
+      {
+        tenantSlug: 'support-qa-a',
+        categorySlug: 'support-restrito-tenant-a',
+        title: 'ERP: observacoes restritas do rollout',
+        slug: 'erp-observacoes-restritas-rollout',
+        summary: 'Anotacoes restritas do rollout do tenant A.',
+        bodyMd:
+          'Conteudo restrito da operacao. Nao compartilhar com cliente final nem replicar em area publica.',
+        visibility: 'restricted',
+      },
+    ],
+    links: [
+      {
+        ticketTitle: 'QA Support | Webhook sem retorno na integracao ERP',
+        ticketTenantSlug: 'support-qa-a',
+        actorKey: 'support-manager-a',
+        linkType: 'sent_to_customer',
+        articleSlug: 'webhook-erp-checklist-publico',
+        note: 'Artigo publico preparado para orientar o cliente sobre a validacao inicial.',
+      },
+      {
+        ticketTitle: 'QA Support | Webhook sem retorno na integracao ERP',
+        ticketTenantSlug: 'support-qa-a',
+        actorKey: 'support-manager-a',
+        linkType: 'reference_internal',
+        articleSlug: 'erp-diagnostico-interno-webhook',
+        note: 'Referencia interna para diagnostico antes de responder o cliente.',
+      },
+      {
+        ticketTitle: 'QA Support | Divergencia na regra de expedicao',
+        ticketTenantSlug: 'support-qa-a',
+        actorKey: 'support-manager-a',
+        linkType: 'documentation_gap',
+        note: 'Falta uma pagina dedicada explicando a divergencia de expedicao aprovada no rollout.',
+      },
+    ],
+  },
 };
 
 function fail(message) {
@@ -377,21 +459,23 @@ function assertLocalOnly(envMap) {
   const apiUrl = envMap.get('API_URL') ?? '';
   const dbUrl = envMap.get('DB_URL') ?? '';
   const serviceRoleKey = envMap.get('SERVICE_ROLE_KEY') ?? '';
+  const anonKey = envMap.get('ANON_KEY') ?? '';
 
   const isLocalApi =
     apiUrl.startsWith('http://127.0.0.1:') ||
     apiUrl.startsWith('http://localhost:');
   const isLocalDb = dbUrl.includes('@127.0.0.1:') || dbUrl.includes('@localhost:');
 
-  if (!isLocalApi || !isLocalDb || !serviceRoleKey) {
+  if (!isLocalApi || !isLocalDb || !serviceRoleKey || !anonKey) {
     fail(
-      'Fixture de suporte bloqueada: este script so pode rodar contra o Supabase local com API_URL/DB_URL locais e SERVICE_ROLE_KEY local.',
+      'Fixture de suporte bloqueada: este script so pode rodar contra o Supabase local com API_URL/DB_URL locais e chaves locais validas.',
     );
   }
 
   return {
     apiUrl,
     serviceRoleKey,
+    anonKey,
   };
 }
 
@@ -452,6 +536,56 @@ function runSupabaseDbQuery(sql) {
     );
   } finally {
     rmSync(tempDir, { recursive: true, force: true });
+  }
+}
+
+async function signInLocalUser({ apiUrl, anonKey, email, password }) {
+  const response = await fetch(`${apiUrl}/auth/v1/token?grant_type=password`, {
+    method: 'POST',
+    headers: {
+      apikey: anonKey,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email,
+      password,
+    }),
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    fail(`Falha ao autenticar fixture local ${email}: ${response.status} ${detail}`);
+  }
+
+  return response.json();
+}
+
+async function callRpcAsUser({ apiUrl, anonKey, accessToken, rpcName, body }) {
+  const response = await fetch(`${apiUrl}/rest/v1/rpc/${rpcName}`, {
+    method: 'POST',
+    headers: {
+      apikey: anonKey,
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    fail(`Falha ao executar RPC ${rpcName}: ${response.status} ${detail}`);
+  }
+
+  const text = await response.text();
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
   }
 }
 
@@ -1025,6 +1159,172 @@ function queryExistingSupportTicket(tenantId, title) {
   return result.rows?.[0]?.id ?? null;
 }
 
+function queryKnowledgeCategoryBySlug(slug) {
+  const result = runSupabaseDbQuery(`
+    select id::text as id
+    from public.knowledge_categories
+    where slug = '${sqlEscape(slug)}'
+    limit 1;
+  `);
+
+  return result.rows?.[0]?.id ?? null;
+}
+
+async function ensureKnowledgeCategory(adminSession, tenantId, category) {
+  const existingId = queryKnowledgeCategoryBySlug(category.slug);
+  if (existingId) {
+    return existingId;
+  }
+
+  await callRpcAsUser({
+    apiUrl: adminSession.apiUrl,
+    anonKey: adminSession.anonKey,
+    accessToken: adminSession.accessToken,
+    rpcName: 'rpc_admin_create_knowledge_category',
+    body: {
+      p_name: category.name,
+      p_slug: category.slug,
+      p_description: category.description,
+      p_visibility: category.visibility,
+      p_parent_category_id: null,
+      p_tenant_id: tenantId,
+    },
+  });
+
+  return queryKnowledgeCategoryBySlug(category.slug);
+}
+
+function queryKnowledgeArticleBySlug(slug) {
+  const result = runSupabaseDbQuery(`
+    select
+      id::text as id,
+      status::text as status
+    from public.knowledge_articles
+    where slug = '${sqlEscape(slug)}'
+    limit 1;
+  `);
+
+  return result.rows?.[0] ?? null;
+}
+
+async function ensureKnowledgeArticlePublished(adminSession, tenantId, article, categoryId) {
+  let existing = queryKnowledgeArticleBySlug(article.slug);
+
+  if (!existing?.id) {
+    await callRpcAsUser({
+      apiUrl: adminSession.apiUrl,
+      anonKey: adminSession.anonKey,
+      accessToken: adminSession.accessToken,
+      rpcName: 'rpc_admin_create_knowledge_article_draft',
+      body: {
+        p_title: article.title,
+        p_slug: article.slug,
+        p_summary: article.summary,
+        p_body_md: article.bodyMd,
+        p_category_id: categoryId,
+        p_visibility: article.visibility,
+        p_tenant_id: tenantId,
+        p_source_path: null,
+        p_source_hash: null,
+      },
+    });
+
+    existing = queryKnowledgeArticleBySlug(article.slug);
+  }
+
+  if (!existing?.id) {
+    fail(`Nao foi possivel materializar o artigo ${article.slug}.`);
+  }
+
+  if (existing.status === 'draft') {
+    await callRpcAsUser({
+      apiUrl: adminSession.apiUrl,
+      anonKey: adminSession.anonKey,
+      accessToken: adminSession.accessToken,
+      rpcName: 'rpc_admin_submit_knowledge_article_for_review',
+      body: {
+        p_article_id: existing.id,
+      },
+    });
+    existing = queryKnowledgeArticleBySlug(article.slug);
+  }
+
+  if (existing?.status === 'review') {
+    await callRpcAsUser({
+      apiUrl: adminSession.apiUrl,
+      anonKey: adminSession.anonKey,
+      accessToken: adminSession.accessToken,
+      rpcName: 'rpc_admin_publish_knowledge_article',
+      body: {
+        p_article_id: existing.id,
+      },
+    });
+    existing = queryKnowledgeArticleBySlug(article.slug);
+  }
+
+  return existing?.id ?? null;
+}
+
+function queryTicketKnowledgeLink(ticketId, linkType, articleSlug = null) {
+  const articlePredicate = articleSlug
+    ? `and article_slug = '${sqlEscape(articleSlug)}'`
+    : 'and article_id is null';
+
+  const result = runSupabaseDbQuery(`
+    select ticket_knowledge_link_id::text as id
+    from public.vw_support_ticket_knowledge_links
+    where ticket_id = '${sqlEscape(ticketId)}'::uuid
+      and link_type = '${linkType}'::public.ticket_knowledge_link_type
+      ${articlePredicate}
+    limit 1;
+  `);
+
+  return result.rows?.[0]?.id ?? null;
+}
+
+async function ensureTicketKnowledgeLink({ actorSession, ticketId, link }) {
+  const existingId = queryTicketKnowledgeLink(ticketId, link.linkType, link.articleSlug ?? null);
+  if (existingId) {
+    return existingId;
+  }
+
+  if (link.linkType === 'documentation_gap') {
+    const created = await callRpcAsUser({
+      apiUrl: actorSession.apiUrl,
+      anonKey: actorSession.anonKey,
+      accessToken: actorSession.accessToken,
+      rpcName: 'rpc_support_mark_documentation_gap',
+      body: {
+        p_ticket_id: ticketId,
+        p_note: link.note,
+        p_article_id: null,
+      },
+    });
+
+    return created?.id ?? queryTicketKnowledgeLink(ticketId, link.linkType, null);
+  }
+
+  const article = queryKnowledgeArticleBySlug(link.articleSlug);
+  if (!article?.id) {
+    fail(`Artigo de fixture nao encontrado para o vinculo ${link.linkType}: ${link.articleSlug}.`);
+  }
+
+  const created = await callRpcAsUser({
+    apiUrl: actorSession.apiUrl,
+    anonKey: actorSession.anonKey,
+    accessToken: actorSession.accessToken,
+    rpcName: 'rpc_support_link_ticket_article',
+    body: {
+      p_ticket_id: ticketId,
+      p_article_id: article.id,
+      p_link_type: link.linkType,
+      p_note: link.note,
+    },
+  });
+
+  return created?.id ?? queryTicketKnowledgeLink(ticketId, link.linkType, link.articleSlug);
+}
+
 function createSupportTicket({ actorUserId, tenantId, contactId, ticket }) {
   const existingTicketId = queryExistingSupportTicket(tenantId, ticket.title);
   if (existingTicketId) {
@@ -1303,7 +1603,7 @@ function clearFixtureTickets() {
 
 async function main() {
   const envMap = runSupabaseStatusEnv();
-  const { apiUrl, serviceRoleKey } = assertLocalOnly(envMap);
+  const { apiUrl, serviceRoleKey, anonKey } = assertLocalOnly(envMap);
 
   const qaAdmin = await createOrUpdateAuthUser({
     apiUrl,
@@ -1338,6 +1638,18 @@ async function main() {
   }
 
   const operatorMap = new Map([['qa-admin', profile.id]]);
+  const sessionConfigByKey = new Map([
+    [
+      'qa-admin',
+      {
+        apiUrl,
+        anonKey,
+        email: FIXTURE.qaAdmin.email,
+        password: FIXTURE.qaAdmin.password,
+      },
+    ],
+  ]);
+  const sessionCache = new Map();
 
   for (const agent of FIXTURE.agents) {
     const authUser = await createOrUpdateAuthUser({
@@ -1372,11 +1684,18 @@ async function main() {
     operatorMap.set(agent.key, agentProfile.id);
     operatorMap.set(agent.email, agentProfile.id);
     operatorMap.set(authUser.id, agentProfile.id);
+    sessionConfigByKey.set(agent.key, {
+      apiUrl,
+      anonKey,
+      email: agent.email,
+      password: agent.password,
+    });
   }
 
   clearFixtureTickets();
 
   const createdTickets = [];
+  const ticketMap = new Map();
   for (const ticket of FIXTURE.tickets) {
     const tenantId = tenantMap.get(ticket.tenantSlug);
     const contactId = contactMap.get(ticket.tenantSlug);
@@ -1404,6 +1723,86 @@ async function main() {
       title: ticket.title,
       tenant_slug: ticket.tenantSlug,
       status: ticket.status,
+    });
+    ticketMap.set(`${ticket.tenantSlug}::${ticket.title}`, ticketId);
+  }
+
+  const knowledgeCategoryMap = new Map();
+  const createdKnowledgeArticles = [];
+  const createdKnowledgeLinks = [];
+  const getSessionForKey = async (key) => {
+    if (sessionCache.has(key)) {
+      return sessionCache.get(key);
+    }
+
+    const config = sessionConfigByKey.get(key);
+    if (!config) {
+      fail(`Sessao local ausente para ${key}.`);
+    }
+
+    const authSession = await signInLocalUser(config);
+    const session = {
+      apiUrl: config.apiUrl,
+      anonKey: config.anonKey,
+      accessToken: authSession.access_token,
+    };
+    sessionCache.set(key, session);
+    return session;
+  };
+  const adminSession = await getSessionForKey('qa-admin');
+
+  for (const category of FIXTURE.knowledgeBase.categories ?? []) {
+    const tenantId = tenantMap.get(category.tenantSlug);
+    if (!tenantId) {
+      fail(`Tenant ausente para a categoria de conhecimento ${category.slug}.`);
+    }
+
+    const categoryId = await ensureKnowledgeCategory(adminSession, tenantId, category);
+    knowledgeCategoryMap.set(category.slug, categoryId);
+  }
+
+  for (const article of FIXTURE.knowledgeBase.articles ?? []) {
+    const tenantId = tenantMap.get(article.tenantSlug);
+    const categoryId = knowledgeCategoryMap.get(article.categorySlug);
+
+    if (!tenantId || !categoryId) {
+      fail(`Tenant ou categoria ausente para o artigo ${article.slug}.`);
+    }
+
+    const articleId = await ensureKnowledgeArticlePublished(
+      adminSession,
+      tenantId,
+      article,
+      categoryId,
+    );
+    createdKnowledgeArticles.push({
+      slug: article.slug,
+      id: articleId,
+      tenant_slug: article.tenantSlug,
+      visibility: article.visibility,
+    });
+  }
+
+  for (const link of FIXTURE.knowledgeBase.links ?? []) {
+    const ticketId = ticketMap.get(`${link.ticketTenantSlug}::${link.ticketTitle}`);
+    const actorSession = await getSessionForKey(link.actorKey);
+
+    if (!ticketId) {
+      fail(`Ticket ausente para vinculo de conhecimento: ${link.ticketTitle}.`);
+    }
+
+    const linkId = await ensureTicketKnowledgeLink({
+      actorSession,
+      ticketId,
+      link,
+    });
+
+    createdKnowledgeLinks.push({
+      id: linkId,
+      ticket_title: link.ticketTitle,
+      ticket_tenant_slug: link.ticketTenantSlug,
+      link_type: link.linkType,
+      article_slug: link.articleSlug ?? null,
     });
   }
 
@@ -1437,6 +1836,8 @@ async function main() {
           customizations: tenant.customerAccount.customizations.length,
           alerts: tenant.customerAccount.alerts.length,
         })),
+        knowledge_articles: createdKnowledgeArticles,
+        knowledge_links: createdKnowledgeLinks,
         tickets: createdTickets,
       },
       null,

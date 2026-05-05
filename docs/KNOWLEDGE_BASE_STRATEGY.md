@@ -310,7 +310,7 @@ Metadados brutos observados em `article.json`:
 - Evoluir a curadoria administrativa space-aware sem romper os contratos atuais do Admin Console.
 - Consumir a superfície pública apenas quando a UI da Central Pública for criada sobre as views endurecidas já aprovadas.
 - Evoluir After Sale como segundo `knowledge_space` oficial apenas quando a operação estiver pronta.
-- Materializar uma ponte assistiva e auditável entre tickets e artigos, sem IA e sem automação, conforme `TICKET_KNOWLEDGE_LINKING_SPEC.md`.
+- Evoluir a ponte ticket -> KB a partir do backend ja materializado, adicionando UI minima sem competir com a conversa do suporte.
 - Usar `PLATFORM_FAQ_STRATEGY.md` e `DOCUMENTATION_LEDGER.md` como trilha oficial para transformar funcionalidades já validadas em FAQ pública ou interna.
 
 ## Relacao com tickets
@@ -321,8 +321,17 @@ Metadados brutos observados em `article.json`:
 - a especificacao oficial dessa ponte fica em `TICKET_KNOWLEDGE_LINKING_SPEC.md`
 - o corte minimo implementavel dessa ponte fica revisado em `TICKET_KNOWLEDGE_LINKING_DATA_MODEL_REVIEW.md`
 - o desenho tecnico pre-migration dessa ponte fica em `TICKET_KNOWLEDGE_LINKING_MIGRATION_DESIGN.md`
+- o backend minimo dessa ponte agora foi materializado com:
+  - `vw_support_ticket_knowledge_links`
+  - `vw_support_knowledge_article_picker`
+  - `vw_customer_portal_ticket_knowledge_links`
+  - `rpc_support_link_ticket_article`
+  - `rpc_support_archive_ticket_article_link`
+  - `rpc_support_mark_documentation_gap`
+  - `rpc_support_mark_article_needs_update`
 - artigo `public` pode ser enviado ao cliente B2B
 - artigo `internal` e `restricted` so podem existir como referencia interna autorizada
+- o contrato continua proibindo snapshot do corpo do artigo dentro do ticket e qualquer publicacao automatica
 
 ## O que continua bloqueado
 - publicacao automatica ou em massa do legado
