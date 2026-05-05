@@ -332,6 +332,14 @@ Metadados brutos observados em `article.json`:
 - artigo `public` pode ser enviado ao cliente B2B
 - artigo `internal` e `restricted` so podem existir como referencia interna autorizada
 - o contrato continua proibindo snapshot do corpo do artigo dentro do ticket e qualquer publicacao automatica
+- a primeira UI assistiva do suporte agora consome apenas:
+  - `vw_support_ticket_knowledge_links`
+  - `vw_support_knowledge_article_picker`
+  - `rpc_support_link_ticket_article`
+  - `rpc_support_archive_ticket_article_link`
+  - `rpc_support_mark_documentation_gap`
+  - `rpc_support_mark_article_needs_update`
+- essa UI fica no rail do ticket, como apoio operacional recolhivel, sem competir com a conversa nem abrir fluxo editorial dentro do suporte
 
 ## O que continua bloqueado
 - publicacao automatica ou em massa do legado

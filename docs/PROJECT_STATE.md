@@ -522,6 +522,16 @@ Documentos históricos:
     - artigo `restricted`
     - vinculos permitidos reais por RPC
   - Nenhuma UI de ticket -> KB foi aberta nesta fase; o escopo ficou estritamente no backend.
+- Fase 6.16: Ticket Knowledge Assistive UI concluida localmente.
+  - `/support/tickets/:ticketId` agora consome `vw_support_ticket_knowledge_links` e `vw_support_knowledge_article_picker` em um painel recolhivel `Conhecimento relacionado`.
+  - O painel permite:
+    - registrar `Referencia interna`
+    - registrar `Link enviado ao cliente` apenas quando o picker sinaliza envio permitido
+    - marcar `Lacuna de documentacao`
+    - marcar `Precisa revisao`
+    - arquivar vinculos ativos
+  - A conversa e o composer continuam no fluxo principal; a KB entra apenas como apoio operacional no rail do ticket.
+  - O frontend continua sem acesso a `ticket_knowledge_links` diretamente e sem exibir UUID, nomes de views/RPCs ou metadata tecnica no fluxo principal.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.

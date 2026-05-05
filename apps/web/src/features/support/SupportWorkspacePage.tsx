@@ -36,6 +36,7 @@ import { classifyAdminError } from '../admin/admin-errors';
 import {
   addInternalTicketNote,
   addTicketMessage,
+  archiveSupportTicketArticleLink,
   assignTicket,
   closeTicket,
   getSupportCustomerAccountContext,
@@ -43,9 +44,14 @@ import {
   getSupportCustomerRecentEvents,
   getSupportCustomerRecentTickets,
   getSupportTicketDetail,
+  getSupportTicketKnowledgeLinks,
   getSupportTicketTimelineRecent,
+  linkSupportTicketArticle,
   listSupportAssignableAgents,
+  listSupportKnowledgeArticlePicker,
   listSupportCustomers360,
+  markSupportArticleNeedsUpdate,
+  markSupportDocumentationGap,
   listSupportTicketsQueue,
   reopenTicket,
   updateTicketStatus,
@@ -54,6 +60,8 @@ import {
   TICKET_PRIORITIES,
   TICKET_SEVERITIES,
   TICKET_STATUSES,
+  type KnowledgeArticleStatus,
+  type KnowledgeArticleVisibility,
   type SupportAssignableAgent,
   type SupportCustomerAccountAlert,
   type SupportCustomerAccountContext,
@@ -66,10 +74,13 @@ import {
   type SupportCustomerRecentTicketsWindow,
   type SupportCustomer360RecentEvent,
   type SupportCustomer360RecentTicket,
+  type SupportKnowledgeArticlePickerItem,
   type SupportTicketDetail,
+  type SupportTicketKnowledgeLink,
   type SupportTicketQueueItem,
   type SupportTicketTimelineItem,
   type SupportTicketTimelineRecentWindow,
+  type TicketKnowledgeLinkType,
   type TicketPriority,
   type TicketSeverity,
   type TicketStatus,
@@ -80,6 +91,7 @@ import {
 type PagePhase = 'loading' | 'ready' | 'contract-unavailable' | 'error';
 type DetailPhase = 'idle' | 'loading' | 'ready' | 'contract-unavailable' | 'error';
 type AgentsPhase = 'idle' | 'loading' | 'ready' | 'contract-unavailable' | 'error';
+type KnowledgePhase = 'idle' | 'loading' | 'ready' | 'contract-unavailable' | 'error';
 type WorkspaceVariant = 'queue' | 'tickets';
 type ComposerMode = 'public' | 'internal';
 
@@ -141,6 +153,71 @@ function humanizeStatus(status: TicketStatus) {
 
 function humanizeCustomerValue(value: string) {
   return humanizeToken(value).replaceAll('_', ' ');
+}
+
+function humanizeKnowledgeVisibility(visibility: KnowledgeArticleVisibility) {
+  if (visibility === 'public') {
+    return 'Publico';
+  }
+
+  if (visibility === 'internal') {
+    return 'Interno';
+  }
+
+  return 'Restrito';
+}
+
+function humanizeKnowledgeStatus(status: KnowledgeArticleStatus) {
+  if (status === 'draft') {
+    return 'Rascunho';
+  }
+
+  if (status === 'review') {
+    return 'Em revisao';
+  }
+
+  if (status === 'published') {
+    return 'Publicado';
+  }
+
+  if (status === 'archived') {
+    return 'Arquivado';
+  }
+
+  return humanizeToken(status).replaceAll('_', ' ');
+}
+
+function humanizeKnowledgeLinkType(linkType: TicketKnowledgeLinkType) {
+  switch (linkType) {
+    case 'reference_internal':
+      return 'Referencia interna';
+    case 'sent_to_customer':
+      return 'Link enviado ao cliente';
+    case 'documentation_gap':
+      return 'Lacuna de documentacao';
+    case 'needs_update':
+      return 'Precisa revisao';
+    case 'suggested_article':
+      return 'Artigo sugerido';
+    default:
+      return humanizeToken(linkType).replaceAll('_', ' ');
+  }
+}
+
+function toneForKnowledgeLinkType(linkType: TicketKnowledgeLinkType) {
+  if (linkType === 'sent_to_customer') {
+    return 'positive' as const;
+  }
+
+  if (linkType === 'documentation_gap' || linkType === 'needs_update') {
+    return 'warning' as const;
+  }
+
+  if (linkType === 'suggested_article') {
+    return 'accent' as const;
+  }
+
+  return 'default' as const;
 }
 
 function toneForAlertSeverity(severity: SupportCustomerAccountAlert['severity']) {
@@ -232,6 +309,14 @@ function emptyCustomerRecentEventsWindow(): SupportCustomerRecentEventsWindow {
     recentLimit: 8,
     hasMore: false,
   };
+}
+
+function emptyTicketKnowledgeLinks(): SupportTicketKnowledgeLink[] {
+  return [];
+}
+
+function emptyKnowledgeArticlePicker(): SupportKnowledgeArticlePickerItem[] {
+  return [];
 }
 
 function buildStatusChoices(currentStatus: TicketStatus) {
@@ -388,6 +473,303 @@ function SupportConversation({
         )}
       </details>
     </div>
+  );
+}
+
+function SupportKnowledgeLinkCard({
+  link,
+  disabled,
+  onArchive,
+}: {
+  link: SupportTicketKnowledgeLink;
+  disabled: boolean;
+  onArchive: (linkId: Uuid) => void;
+}) {
+  const title =
+    link.articleTitle ??
+    (link.linkType === 'documentation_gap'
+      ? 'Lacuna registrada sem artigo'
+      : 'Vinculo sem artigo associado');
+
+  return (
+    <article className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusPill tone={toneForKnowledgeLinkType(link.linkType)}>
+              {humanizeKnowledgeLinkType(link.linkType)}
+            </StatusPill>
+            {link.articleVisibility ? (
+              <StatusPill>{humanizeKnowledgeVisibility(link.articleVisibility)}</StatusPill>
+            ) : null}
+            {link.articleStatus ? (
+              <StatusPill>{humanizeKnowledgeStatus(link.articleStatus)}</StatusPill>
+            ) : null}
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-[color:var(--color-ink)]">{title}</p>
+            <p className="text-xs leading-5 text-[color:var(--color-muted)]">
+              Registrado por {link.createdByFullName ?? 'Operador nao identificado'} em{' '}
+              {formatDateTime(link.createdAt)}
+            </p>
+          </div>
+          {link.note ? (
+            <p className="line-clamp-3 text-sm leading-6 text-[color:var(--color-muted)]">
+              {link.note}
+            </p>
+          ) : null}
+        </div>
+        <GhostButton
+          className="min-h-10 px-3 text-sm"
+          disabled={disabled}
+          onClick={() => onArchive(link.ticketKnowledgeLinkId)}
+          type="button"
+        >
+          Arquivar
+        </GhostButton>
+      </div>
+    </article>
+  );
+}
+
+function SupportKnowledgePickerCard({
+  article,
+  disabled,
+  onLinkInternal,
+  onNeedsUpdate,
+  onSendToCustomer,
+}: {
+  article: SupportKnowledgeArticlePickerItem;
+  disabled: boolean;
+  onLinkInternal: (articleId: Uuid) => void;
+  onNeedsUpdate: (articleId: Uuid) => void;
+  onSendToCustomer: (articleId: Uuid) => void;
+}) {
+  return (
+    <article className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+      <div className="space-y-3">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusPill>{humanizeKnowledgeVisibility(article.articleVisibility)}</StatusPill>
+            <StatusPill>{humanizeKnowledgeStatus(article.articleStatus)}</StatusPill>
+            {article.categoryName ? <StatusPill tone="accent">{article.categoryName}</StatusPill> : null}
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-[color:var(--color-ink)]">
+              {article.articleTitle}
+            </p>
+            <p className="line-clamp-3 text-sm leading-6 text-[color:var(--color-muted)]">
+              {article.articleSummary?.trim() || 'Resumo ainda nao informado para este artigo.'}
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-xs leading-5 text-[color:var(--color-muted)]">
+            {article.isCustomerSendAllowed
+              ? 'Este artigo pode ser usado como link publico ao cliente.'
+              : 'Este artigo fica restrito ao uso interno do time.'}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <GhostButton
+              className="min-h-10 px-3 text-sm"
+              disabled={disabled}
+              onClick={() => onLinkInternal(article.articleId)}
+              type="button"
+            >
+              Referencia interna
+            </GhostButton>
+            {article.isCustomerSendAllowed ? (
+              <AppButton
+                className="min-h-10 px-4"
+                disabled={disabled}
+                onClick={() => onSendToCustomer(article.articleId)}
+                type="button"
+              >
+                Marcar como link ao cliente
+              </AppButton>
+            ) : null}
+            <GhostButton
+              className="min-h-10 px-3 text-sm"
+              disabled={disabled}
+              onClick={() => onNeedsUpdate(article.articleId)}
+              type="button"
+            >
+              Precisa revisao
+            </GhostButton>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function SupportKnowledgePanel({
+  articles,
+  links,
+  loading,
+  noteDraft,
+  onArchive,
+  onLinkInternal,
+  onMarkGap,
+  onNeedsUpdate,
+  onNoteChange,
+  onSearchChange,
+  onSendToCustomer,
+  phase,
+  search,
+  message,
+}: {
+  articles: SupportKnowledgeArticlePickerItem[];
+  links: SupportTicketKnowledgeLink[];
+  loading: boolean;
+  noteDraft: string;
+  onArchive: (linkId: Uuid) => void;
+  onLinkInternal: (articleId: Uuid) => void;
+  onMarkGap: () => void;
+  onNeedsUpdate: (articleId: Uuid) => void;
+  onNoteChange: (value: string) => void;
+  onSearchChange: (value: string) => void;
+  onSendToCustomer: (articleId: Uuid) => void;
+  phase: KnowledgePhase;
+  search: string;
+  message: string | null;
+}) {
+  return (
+    <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]" open>
+      <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+        Conhecimento relacionado
+      </summary>
+      <div className="mt-3 space-y-4">
+        <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+          Use artigos da base como apoio da resposta sem tirar o foco da conversa.
+        </p>
+
+        {phase === 'contract-unavailable' ? (
+          <InlineNotice tone="warning">
+            {message ?? 'O contrato de conhecimento ainda nao ficou disponivel neste ambiente.'}
+          </InlineNotice>
+        ) : phase === 'error' ? (
+          <InlineNotice tone="critical">
+            {message ?? 'Nao foi possivel carregar o conhecimento relacionado deste ticket.'}
+          </InlineNotice>
+        ) : phase === 'loading' ? (
+          <LoadingState
+            title="Carregando conhecimento"
+            description="Estamos preparando os vinculos e os artigos disponiveis para este ticket."
+          />
+        ) : (
+          <>
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h4 className="text-sm font-semibold text-[color:var(--color-ink)]">
+                  Vinculos ativos
+                </h4>
+                <p className="text-xs leading-5 text-[color:var(--color-muted)]">
+                  {links.length === 0
+                    ? 'Nenhum vinculo aberto'
+                    : `${links.length} vinculo(s) em acompanhamento`}
+                </p>
+              </div>
+              {links.length === 0 ? (
+                <InlineNotice>
+                  Nenhum artigo foi relacionado a este ticket ainda. Use a busca abaixo ou registre uma lacuna.
+                </InlineNotice>
+              ) : (
+                <div className="space-y-2">
+                  {links.map((link) => (
+                    <SupportKnowledgeLinkCard
+                      disabled={loading}
+                      key={link.ticketKnowledgeLinkId}
+                      link={link}
+                      onArchive={onArchive}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-3 border-t border-[color:var(--color-border)] pt-4">
+              <div className="space-y-1">
+                <h4 className="text-sm font-semibold text-[color:var(--color-ink)]">
+                  Buscar artigo de apoio
+                </h4>
+                <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                  A busca usa apenas os artigos permitidos para este ticket. O fluxo ao cliente fica restrito ao que e publico e publicado.
+                </p>
+              </div>
+
+              <Field
+                label="Buscar por titulo, resumo ou categoria"
+                description="Os detalhes tecnicos do artigo continuam fora desta tela."
+              >
+                <TextInput
+                  onChange={(event) => onSearchChange(event.target.value)}
+                  placeholder="Ex.: webhook ERP, correios, regra por motivo"
+                  value={search}
+                />
+              </Field>
+
+              <Field
+                label="Observacao opcional"
+                description="Use quando o vinculo precisa de um contexto curto para o proximo operador."
+              >
+                <TextareaInput
+                  onChange={(event) => onNoteChange(event.target.value)}
+                  placeholder="Ex.: artigo usado para orientar checklist do cliente ou documentar uma lacuna."
+                  value={noteDraft}
+                />
+              </Field>
+
+              <div className="rounded-[18px] border border-dashed border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-[color:var(--color-ink)]">
+                      Sem artigo aderente?
+                    </p>
+                    <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                      Registre a lacuna para a base evoluir sem transformar o ticket em backlog editorial.
+                    </p>
+                  </div>
+                  <AppButton
+                    className="min-h-11 px-5"
+                    disabled={loading}
+                    onClick={onMarkGap}
+                    type="button"
+                  >
+                    Marcar lacuna de documentacao
+                  </AppButton>
+                </div>
+              </div>
+
+              {articles.length === 0 ? (
+                <InlineNotice tone="warning">
+                  Nenhum artigo permitido apareceu para este filtro. Tente outro termo ou registre a lacuna diretamente.
+                </InlineNotice>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-xs leading-5 text-[color:var(--color-muted)]">
+                    Mostrando {articles.length} artigo(s) permitidos para este ticket.
+                  </p>
+                  <div className="space-y-2">
+                    {articles.map((article) => (
+                      <SupportKnowledgePickerCard
+                        article={article}
+                        disabled={loading}
+                        key={article.articleId}
+                        onLinkInternal={onLinkInternal}
+                        onNeedsUpdate={onNeedsUpdate}
+                        onSendToCustomer={onSendToCustomer}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </details>
   );
 }
 
@@ -1347,6 +1729,15 @@ function SupportWorkspaceView({
     useState<SupportCustomerRecentTicketsWindow>(emptyCustomerRecentTicketsWindow());
   const [customerRecentEvents, setCustomerRecentEvents] =
     useState<SupportCustomerRecentEventsWindow>(emptyCustomerRecentEventsWindow());
+  const [knowledgeLinks, setKnowledgeLinks] =
+    useState<SupportTicketKnowledgeLink[]>(emptyTicketKnowledgeLinks());
+  const [knowledgeArticlePicker, setKnowledgeArticlePicker] =
+    useState<SupportKnowledgeArticlePickerItem[]>(emptyKnowledgeArticlePicker());
+  const [knowledgePhase, setKnowledgePhase] = useState<KnowledgePhase>('idle');
+  const [knowledgeMessage, setKnowledgeMessage] = useState<string | null>(null);
+  const [knowledgeSearch, setKnowledgeSearch] = useState('');
+  const [knowledgeNoteDraft, setKnowledgeNoteDraft] = useState('');
+  const [knowledgeSubmitting, setKnowledgeSubmitting] = useState(false);
   const [assignableAgents, setAssignableAgents] = useState<SupportAssignableAgent[]>([]);
   const [agentsPhase, setAgentsPhase] = useState<AgentsPhase>('idle');
   const [agentsMessage, setAgentsMessage] = useState<string | null>(null);
@@ -1409,6 +1800,8 @@ function SupportWorkspaceView({
     setDetailMessage(null);
     setAgentsPhase('loading');
     setAgentsMessage(null);
+    setKnowledgePhase('loading');
+    setKnowledgeMessage(null);
 
     try {
       const [detail, timelineRecent] = await Promise.all([
@@ -1424,6 +1817,9 @@ function SupportWorkspaceView({
         setCustomer(null);
         setCustomerRecentTickets(emptyCustomerRecentTicketsWindow());
         setCustomerRecentEvents(emptyCustomerRecentEventsWindow());
+        setKnowledgeLinks(emptyTicketKnowledgeLinks());
+        setKnowledgeArticlePicker(emptyKnowledgeArticlePicker());
+        setKnowledgePhase('idle');
         setDetailPhase('error');
       setDetailMessage('Nao foi possivel abrir o detalhe do ticket selecionado.');
         return;
@@ -1445,6 +1841,8 @@ function SupportWorkspaceView({
       setStatusDraft(buildStatusChoices(detail.status)[0] ?? 'triage');
       setAssignDraft(detail.assignedToUserId ?? '');
       setComposerMode(detail.canAddMessage ? 'public' : detail.canAddInternalNote ? 'internal' : 'public');
+      setKnowledgeSearch('');
+      setKnowledgeNoteDraft('');
 
       try {
         const agentRows = await listSupportAssignableAgents(detail.tenantId);
@@ -1464,6 +1862,33 @@ function SupportWorkspaceView({
         setAssignableAgents([]);
         setAgentsMessage(classified.message);
         setAgentsPhase(
+          classified.kind === 'contract-unavailable' ? 'contract-unavailable' : 'error',
+        );
+      }
+
+      try {
+        const [ticketKnowledgeLinks, articlePickerRows] = await Promise.all([
+          getSupportTicketKnowledgeLinks(detail.id),
+          listSupportKnowledgeArticlePicker(detail.id),
+        ]);
+        setKnowledgeLinks(ticketKnowledgeLinks);
+        setKnowledgeArticlePicker(articlePickerRows);
+        setKnowledgePhase('ready');
+      } catch (error) {
+        const classified = classifyAdminError(
+          error,
+          'Falha ao carregar o painel de conhecimento relacionado.',
+        );
+
+        if (classified.kind === 'session-expired') {
+          markSessionExpired();
+          return;
+        }
+
+        setKnowledgeLinks(emptyTicketKnowledgeLinks());
+        setKnowledgeArticlePicker(emptyKnowledgeArticlePicker());
+        setKnowledgeMessage(classified.message);
+        setKnowledgePhase(
           classified.kind === 'contract-unavailable' ? 'contract-unavailable' : 'error',
         );
       }
@@ -1489,6 +1914,10 @@ function SupportWorkspaceView({
       setCustomerAccountContext(null);
       setCustomerRecentTickets(emptyCustomerRecentTicketsWindow());
       setCustomerRecentEvents(emptyCustomerRecentEventsWindow());
+      setKnowledgeLinks(emptyTicketKnowledgeLinks());
+      setKnowledgeArticlePicker(emptyKnowledgeArticlePicker());
+      setKnowledgePhase('idle');
+      setKnowledgeMessage(null);
       setAssignableAgents([]);
       setAgentsPhase('idle');
       setDetailMessage(classified.message);
@@ -1527,6 +1956,10 @@ function SupportWorkspaceView({
       setCustomerAccountContext(null);
       setCustomerRecentTickets(emptyCustomerRecentTicketsWindow());
       setCustomerRecentEvents(emptyCustomerRecentEventsWindow());
+      setKnowledgeLinks(emptyTicketKnowledgeLinks());
+      setKnowledgeArticlePicker(emptyKnowledgeArticlePicker());
+      setKnowledgePhase('idle');
+      setKnowledgeMessage(null);
       setAssignableAgents([]);
       setAgentsPhase('idle');
       setAgentsMessage(null);
@@ -1576,6 +2009,27 @@ function SupportWorkspaceView({
 
   const selectedTicketSummary =
     tickets.find((ticket) => ticket.id === selectedTicketId) ?? null;
+  const filteredKnowledgeArticles = useMemo(() => {
+    const term = knowledgeSearch.trim().toLocaleLowerCase('pt-BR');
+
+    if (term.length === 0) {
+      return knowledgeArticlePicker.slice(0, 6);
+    }
+
+    return knowledgeArticlePicker
+      .filter((article) => {
+        const haystack = [
+          article.articleTitle,
+          article.articleSummary ?? '',
+          article.categoryName ?? '',
+        ]
+          .join(' ')
+          .toLocaleLowerCase('pt-BR');
+
+        return haystack.includes(term);
+      })
+      .slice(0, 8);
+  }, [knowledgeArticlePicker, knowledgeSearch]);
   const currentAssignedAgent =
     ticketDetail?.assignedToUserId
       ? assignableAgents.find((agent) => agent.userId === ticketDetail.assignedToUserId) ?? null
@@ -1640,6 +2094,142 @@ function SupportWorkspaceView({
 
   async function refreshDetail(ticketId: string) {
     await Promise.all([loadQueue(ticketId), loadDetail(ticketId)]);
+  }
+
+  function optionalKnowledgeNote() {
+    const trimmed = knowledgeNoteDraft.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+
+  async function handleArchiveKnowledgeLink(linkId: Uuid) {
+    if (!ticketDetail) {
+      return;
+    }
+
+    setKnowledgeSubmitting(true);
+    setDetailNotice(null);
+
+    try {
+      await archiveSupportTicketArticleLink({
+        ticketKnowledgeLinkId: linkId,
+      });
+      await refreshDetail(ticketDetail.id);
+      applySuccess('Vinculo de conhecimento arquivado com sucesso.');
+    } catch (error) {
+      const classified = classifyAdminError(
+        error,
+        'Falha ao arquivar o vinculo de conhecimento.',
+      );
+      if (classified.kind === 'session-expired') {
+        markSessionExpired();
+        return;
+      }
+      applyFailure(classified.message);
+    } finally {
+      setKnowledgeSubmitting(false);
+    }
+  }
+
+  async function handleLinkKnowledgeArticle(
+    articleId: Uuid,
+    linkType: Extract<TicketKnowledgeLinkType, 'reference_internal' | 'sent_to_customer'>,
+  ) {
+    if (!ticketDetail) {
+      return;
+    }
+
+    setKnowledgeSubmitting(true);
+    setDetailNotice(null);
+
+    try {
+      await linkSupportTicketArticle({
+        ticketId: ticketDetail.id,
+        articleId,
+        linkType,
+        note: optionalKnowledgeNote(),
+      });
+      await refreshDetail(ticketDetail.id);
+      applySuccess(
+        linkType === 'sent_to_customer'
+          ? 'Link publico relacionado ao ticket com sucesso.'
+          : 'Referencia interna relacionada ao ticket com sucesso.',
+      );
+    } catch (error) {
+      const classified = classifyAdminError(
+        error,
+        linkType === 'sent_to_customer'
+          ? 'Falha ao registrar o link publico para o cliente.'
+          : 'Falha ao relacionar a referencia interna.',
+      );
+      if (classified.kind === 'session-expired') {
+        markSessionExpired();
+        return;
+      }
+      applyFailure(classified.message);
+    } finally {
+      setKnowledgeSubmitting(false);
+    }
+  }
+
+  async function handleMarkDocumentationGap() {
+    if (!ticketDetail) {
+      return;
+    }
+
+    setKnowledgeSubmitting(true);
+    setDetailNotice(null);
+
+    try {
+      await markSupportDocumentationGap({
+        ticketId: ticketDetail.id,
+        note: optionalKnowledgeNote(),
+      });
+      await refreshDetail(ticketDetail.id);
+      applySuccess('Lacuna de documentacao registrada com sucesso.');
+    } catch (error) {
+      const classified = classifyAdminError(
+        error,
+        'Falha ao registrar a lacuna de documentacao.',
+      );
+      if (classified.kind === 'session-expired') {
+        markSessionExpired();
+        return;
+      }
+      applyFailure(classified.message);
+    } finally {
+      setKnowledgeSubmitting(false);
+    }
+  }
+
+  async function handleMarkKnowledgeNeedsUpdate(articleId: Uuid) {
+    if (!ticketDetail) {
+      return;
+    }
+
+    setKnowledgeSubmitting(true);
+    setDetailNotice(null);
+
+    try {
+      await markSupportArticleNeedsUpdate({
+        ticketId: ticketDetail.id,
+        articleId,
+        note: optionalKnowledgeNote(),
+      });
+      await refreshDetail(ticketDetail.id);
+      applySuccess('Artigo marcado para revisao com sucesso.');
+    } catch (error) {
+      const classified = classifyAdminError(
+        error,
+        'Falha ao marcar que o artigo precisa de revisao.',
+      );
+      if (classified.kind === 'session-expired') {
+        markSessionExpired();
+        return;
+      }
+      applyFailure(classified.message);
+    } finally {
+      setKnowledgeSubmitting(false);
+    }
   }
 
   async function handleUpdateStatus(event: FormEvent<HTMLFormElement>) {
@@ -1822,6 +2412,7 @@ function SupportWorkspaceView({
 
   const canUsePublicComposer = ticketDetail?.canAddMessage ?? false;
   const canUseInternalComposer = ticketDetail?.canAddInternalNote ?? false;
+  const knowledgeBusy = knowledgeSubmitting;
   const selectedQueueTicket =
     tickets.find((ticket) => ticket.id === selectedTicketId) ?? null;
   const previewTicket = ticketDetail ?? null;
@@ -2207,6 +2798,27 @@ function SupportWorkspaceView({
                     recentTicketsWindow={customerRecentTickets}
                   />
                 </section>
+
+                <SupportKnowledgePanel
+                  articles={filteredKnowledgeArticles}
+                  links={knowledgeLinks}
+                  loading={knowledgeBusy}
+                  message={knowledgeMessage}
+                  noteDraft={knowledgeNoteDraft}
+                  onArchive={(linkId) => void handleArchiveKnowledgeLink(linkId)}
+                  onLinkInternal={(articleId) =>
+                    void handleLinkKnowledgeArticle(articleId, 'reference_internal')
+                  }
+                  onMarkGap={() => void handleMarkDocumentationGap()}
+                  onNeedsUpdate={(articleId) => void handleMarkKnowledgeNeedsUpdate(articleId)}
+                  onNoteChange={setKnowledgeNoteDraft}
+                  onSearchChange={setKnowledgeSearch}
+                  onSendToCustomer={(articleId) =>
+                    void handleLinkKnowledgeArticle(articleId, 'sent_to_customer')
+                  }
+                  phase={knowledgePhase}
+                  search={knowledgeSearch}
+                />
 
                 <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
                   <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">

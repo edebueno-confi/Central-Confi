@@ -6,6 +6,8 @@ import type {
   CustomerIntegrationType,
   CustomerOperationalStatus,
   CustomerProductLine,
+  KnowledgeArticleStatus,
+  KnowledgeArticleVisibility,
   RpcAddInternalTicketNotePayload,
   RpcAddInternalTicketNoteResponse,
   RpcAddTicketMessagePayload,
@@ -18,6 +20,14 @@ import type {
   RpcCreateTicketResponse,
   RpcReopenTicketPayload,
   RpcReopenTicketResponse,
+  RpcSupportArchiveTicketArticleLinkPayload,
+  RpcSupportArchiveTicketArticleLinkResponse,
+  RpcSupportLinkTicketArticlePayload,
+  RpcSupportLinkTicketArticleResponse,
+  RpcSupportMarkArticleNeedsUpdatePayload,
+  RpcSupportMarkArticleNeedsUpdateResponse,
+  RpcSupportMarkDocumentationGapPayload,
+  RpcSupportMarkDocumentationGapResponse,
   RpcUpdateTicketStatusPayload,
   RpcUpdateTicketStatusResponse,
   SupportAssignableAgent,
@@ -27,9 +37,11 @@ import type {
   SupportCustomerAccountFeature,
   SupportCustomerAccountIntegration,
   SupportCustomer360,
+  SupportKnowledgeArticlePickerItem,
   SupportCustomerRecentEventsWindow,
   SupportCustomerRecentTicketsWindow,
   SupportTicketDetail,
+  SupportTicketKnowledgeLink,
   SupportTicketQueueItem,
   SupportTicketTimelineItem,
   SupportTicketTimelineRecentWindow,
@@ -337,6 +349,41 @@ function mapCustomerAccountContext(
   };
 }
 
+function mapTicketKnowledgeLink(row: Record<string, unknown>): SupportTicketKnowledgeLink {
+  return {
+    ticketKnowledgeLinkId: String(row.ticket_knowledge_link_id),
+    ticketId: String(row.ticket_id),
+    linkType: row.link_type as SupportTicketKnowledgeLink['linkType'],
+    note: (row.note as string | null) ?? null,
+    createdAt: String(row.created_at),
+    createdByUserId: String(row.created_by_user_id),
+    createdByFullName: (row.created_by_full_name as string | null) ?? null,
+    articleId: (row.article_id as string | null) ?? null,
+    articleTitle: (row.article_title as string | null) ?? null,
+    articleSlug: (row.article_slug as string | null) ?? null,
+    articleVisibility:
+      (row.article_visibility as KnowledgeArticleVisibility | null) ?? null,
+    articleStatus: (row.article_status as KnowledgeArticleStatus | null) ?? null,
+    isCustomerSendAllowed: Boolean(row.is_customer_send_allowed),
+  };
+}
+
+function mapKnowledgeArticlePickerItem(
+  row: Record<string, unknown>,
+): SupportKnowledgeArticlePickerItem {
+  return {
+    ticketId: String(row.ticket_id),
+    articleId: String(row.article_id),
+    articleTitle: String(row.article_title),
+    articleSlug: String(row.article_slug),
+    articleSummary: (row.article_summary as string | null) ?? null,
+    categoryName: (row.category_name as string | null) ?? null,
+    articleVisibility: row.article_visibility as KnowledgeArticleVisibility,
+    articleStatus: row.article_status as KnowledgeArticleStatus,
+    isCustomerSendAllowed: Boolean(row.is_customer_send_allowed),
+  };
+}
+
 function mapRecentWindowMeta(row: Record<string, unknown> | null | undefined) {
   return {
     totalAvailableCount: Number(row?.total_available_count ?? 0),
@@ -538,6 +585,39 @@ export async function listSupportAssignableAgents(tenantId: Uuid) {
   return (data ?? []).map((row) => mapAssignableAgent(row as Record<string, unknown>));
 }
 
+export async function getSupportTicketKnowledgeLinks(ticketId: Uuid) {
+  const client = requireClient();
+  const { data, error } = await client
+    .from('vw_support_ticket_knowledge_links')
+    .select('*')
+    .eq('ticket_id', ticketId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw toAppError(error, 'Falha ao carregar o conhecimento relacionado deste ticket.');
+  }
+
+  return (data ?? []).map((row) => mapTicketKnowledgeLink(row as Record<string, unknown>));
+}
+
+export async function listSupportKnowledgeArticlePicker(ticketId: Uuid) {
+  const client = requireClient();
+  const { data, error } = await client
+    .from('vw_support_knowledge_article_picker')
+    .select('*')
+    .eq('ticket_id', ticketId)
+    .order('is_customer_send_allowed', { ascending: false })
+    .order('article_title', { ascending: true });
+
+  if (error) {
+    throw toAppError(error, 'Falha ao carregar os artigos disponiveis para este ticket.');
+  }
+
+  return (data ?? []).map((row) =>
+    mapKnowledgeArticlePickerItem(row as Record<string, unknown>),
+  );
+}
+
 export async function createTicket(payload: RpcCreateTicketPayload) {
   const client = requireClient();
   const { data, error } = await client.rpc('rpc_create_ticket', {
@@ -642,4 +722,71 @@ export async function reopenTicket(payload: RpcReopenTicketPayload) {
   }
 
   return data as RpcReopenTicketResponse;
+}
+
+export async function linkSupportTicketArticle(
+  payload: RpcSupportLinkTicketArticlePayload,
+) {
+  const client = requireClient();
+  const { data, error } = await client.rpc('rpc_support_link_ticket_article', {
+    p_ticket_id: payload.ticketId,
+    p_article_id: payload.articleId ?? null,
+    p_link_type: payload.linkType ?? 'reference_internal',
+    p_note: payload.note ?? null,
+  });
+
+  if (error) {
+    throw toAppError(error, 'Falha ao relacionar o artigo a este ticket.');
+  }
+
+  return data as RpcSupportLinkTicketArticleResponse;
+}
+
+export async function archiveSupportTicketArticleLink(
+  payload: RpcSupportArchiveTicketArticleLinkPayload,
+) {
+  const client = requireClient();
+  const { data, error } = await client.rpc('rpc_support_archive_ticket_article_link', {
+    p_ticket_knowledge_link_id: payload.ticketKnowledgeLinkId,
+  });
+
+  if (error) {
+    throw toAppError(error, 'Falha ao arquivar este vinculo de conhecimento.');
+  }
+
+  return data as RpcSupportArchiveTicketArticleLinkResponse;
+}
+
+export async function markSupportDocumentationGap(
+  payload: RpcSupportMarkDocumentationGapPayload,
+) {
+  const client = requireClient();
+  const { data, error } = await client.rpc('rpc_support_mark_documentation_gap', {
+    p_ticket_id: payload.ticketId,
+    p_note: payload.note ?? null,
+    p_article_id: payload.articleId ?? null,
+  });
+
+  if (error) {
+    throw toAppError(error, 'Falha ao registrar a lacuna de documentacao.');
+  }
+
+  return data as RpcSupportMarkDocumentationGapResponse;
+}
+
+export async function markSupportArticleNeedsUpdate(
+  payload: RpcSupportMarkArticleNeedsUpdatePayload,
+) {
+  const client = requireClient();
+  const { data, error } = await client.rpc('rpc_support_mark_article_needs_update', {
+    p_ticket_id: payload.ticketId,
+    p_article_id: payload.articleId,
+    p_note: payload.note ?? null,
+  });
+
+  if (error) {
+    throw toAppError(error, 'Falha ao marcar que este artigo precisa de revisao.');
+  }
+
+  return data as RpcSupportMarkArticleNeedsUpdateResponse;
 }

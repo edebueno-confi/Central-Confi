@@ -212,6 +212,27 @@
 - o vinculo passa a ser append-only auditavel, com arquivamento logico e sem duplicar conteudo do artigo dentro do ticket
 - o portal B2B futuro continua restrito a uma view propria que so pode expor `sent_to_customer` de artigos `public` + `published`
 
+## Superficie assistiva da fase 6.16
+- `/support/tickets/:ticketId` agora abre um painel recolhivel `Conhecimento relacionado` dentro do rail operacional
+- a conversa e o composer continuam no eixo principal; o conhecimento fica como apoio sob demanda
+- a leitura desse painel ocorre apenas por:
+  - `vw_support_ticket_knowledge_links`
+  - `vw_support_knowledge_article_picker`
+- a escrita desse painel ocorre apenas por:
+  - `rpc_support_link_ticket_article`
+  - `rpc_support_archive_ticket_article_link`
+  - `rpc_support_mark_documentation_gap`
+  - `rpc_support_mark_article_needs_update`
+- labels operacionais consolidadas no fluxo:
+  - `Referencia interna`
+  - `Link enviado ao cliente`
+  - `Lacuna de documentacao`
+  - `Precisa revisao`
+  - `Artigo sugerido`
+- `public` + `published` continua sendo pre-requisito de backend para qualquer envio ao cliente
+- artigos `internal` e `restricted` aparecem apenas como apoio interno autorizado
+- o painel nao expõe UUID, nomes de views/RPCs nem metadata tecnica no fluxo principal
+
 ## Fora de escopo do workspace
 - atendimento a shopper final
 - omnichannel B2C

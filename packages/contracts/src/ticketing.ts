@@ -61,7 +61,19 @@ export type TicketEventType = (typeof TICKET_EVENT_TYPES)[number];
 export const TICKET_TIMELINE_ENTRY_TYPES = ['message', 'event'] as const;
 export type TicketTimelineEntryType = (typeof TICKET_TIMELINE_ENTRY_TYPES)[number];
 
+export const TICKET_KNOWLEDGE_LINK_TYPES = [
+  'reference_internal',
+  'sent_to_customer',
+  'suggested_article',
+  'documentation_gap',
+  'needs_update',
+] as const;
+export type TicketKnowledgeLinkType = (typeof TICKET_KNOWLEDGE_LINK_TYPES)[number];
+
 export type TicketStatusUpdateTarget = Exclude<TicketStatus, 'closed'>;
+
+export type KnowledgeArticleVisibility = 'public' | 'internal' | 'restricted';
+export type KnowledgeArticleStatus = 'draft' | 'review' | 'published' | 'archived';
 
 export interface TicketRecord {
   id: Uuid;
@@ -468,6 +480,47 @@ export interface SupportCustomerAccountContext {
   activeAlerts: SupportCustomerAccountAlert[];
 }
 
+export interface TicketKnowledgeLinkRecord {
+  id: Uuid;
+  tenantId: Uuid;
+  ticketId: Uuid;
+  articleId: Uuid | null;
+  linkType: TicketKnowledgeLinkType;
+  note: string | null;
+  createdByUserId: Uuid;
+  createdAt: IsoTimestamp;
+  archivedAt: IsoTimestamp | null;
+  archivedByUserId: Uuid | null;
+}
+
+export interface SupportTicketKnowledgeLink {
+  ticketKnowledgeLinkId: Uuid;
+  ticketId: Uuid;
+  linkType: TicketKnowledgeLinkType;
+  note: string | null;
+  createdAt: IsoTimestamp;
+  createdByUserId: Uuid;
+  createdByFullName: string | null;
+  articleId: Uuid | null;
+  articleTitle: string | null;
+  articleSlug: string | null;
+  articleVisibility: KnowledgeArticleVisibility | null;
+  articleStatus: KnowledgeArticleStatus | null;
+  isCustomerSendAllowed: boolean;
+}
+
+export interface SupportKnowledgeArticlePickerItem {
+  ticketId: Uuid;
+  articleId: Uuid;
+  articleTitle: string;
+  articleSlug: string;
+  articleSummary: string | null;
+  categoryName: string | null;
+  articleVisibility: KnowledgeArticleVisibility;
+  articleStatus: KnowledgeArticleStatus;
+  isCustomerSendAllowed: boolean;
+}
+
 export interface RpcCreateTicketPayload {
   tenantId: Uuid;
   title: string;
@@ -515,3 +568,30 @@ export interface RpcReopenTicketPayload {
   reopenReason?: string | null;
 }
 export type RpcReopenTicketResponse = TicketRecord;
+
+export interface RpcSupportLinkTicketArticlePayload {
+  ticketId: Uuid;
+  articleId?: Uuid | null;
+  linkType?: TicketKnowledgeLinkType;
+  note?: string | null;
+}
+export type RpcSupportLinkTicketArticleResponse = TicketKnowledgeLinkRecord;
+
+export interface RpcSupportArchiveTicketArticleLinkPayload {
+  ticketKnowledgeLinkId: Uuid;
+}
+export type RpcSupportArchiveTicketArticleLinkResponse = TicketKnowledgeLinkRecord;
+
+export interface RpcSupportMarkDocumentationGapPayload {
+  ticketId: Uuid;
+  note?: string | null;
+  articleId?: Uuid | null;
+}
+export type RpcSupportMarkDocumentationGapResponse = TicketKnowledgeLinkRecord;
+
+export interface RpcSupportMarkArticleNeedsUpdatePayload {
+  ticketId: Uuid;
+  articleId: Uuid;
+  note?: string | null;
+}
+export type RpcSupportMarkArticleNeedsUpdateResponse = TicketKnowledgeLinkRecord;
