@@ -1138,3 +1138,27 @@ Cada registro deve informar:
   - screenshot final em `.tmp/phase6-21-public-article/public-article-final.png`
 - impacto na FAQ futura:
   - formaliza o shell canonico de leitura publica de artigo sem reutilizar a sidebar de navegacao da home da central
+
+### Fase 6.22 - Detalhe do Cliente Blueprint
+- fase: `6.22`
+- branch: `codex/phase6-22-support-customer-detail-blueprint`
+- data: `2026-05-05`
+- resumo funcional: a rota `/support/customers/:tenantId` foi reconstruida como cockpit operacional B2B, com header compacto, tabs de contexto, preview navy da conta, resumo operacional central e rail direito de saude, migracao e contexto complementar.
+- docs alterados:
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- telas afetadas:
+  - `/support/customers/:tenantId`
+- views/RPCs afetadas:
+  - nenhuma alteracao de backend
+  - nenhuma view ou RPC nova
+- riscos restantes:
+  - a rota base `/support/customers` segue sem hub proprio nesta fase; o acesso ao detalhe continua a partir de links validos da fixture e do workspace
+  - os CTAs do detalhe ficaram limitados a acoes ja existentes no produto, entao a blueprint foi adaptada sem inventar `editar contexto` ou `nova nota`
+- validacao final:
+  - `npm run contracts:typecheck`
+  - `npm run web:typecheck`
+  - `npm run web:build`
+  - screenshot final em `phase6-22-support-customer-detail-final.png`
+- impacto na FAQ futura:
+  - fixa o padrao de detalhe de cliente como superficie operacional de suporte B2B, nao como CRUD generico herdado do shell anterior

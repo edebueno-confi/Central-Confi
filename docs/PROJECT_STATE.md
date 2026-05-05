@@ -594,6 +594,19 @@ Documentos históricos:
     - `npm run web:typecheck`
     - `npm run web:build`
   - QA visual local final gerada em `.tmp/phase6-21-public-article/public-article-final.png`, com leitura publica em 3 colunas e sem scroll horizontal.
+- Fase 6.22: Detalhe do Cliente Blueprint concluida localmente.
+  - `/support/customers/:tenantId` deixou de usar o `PageHeader + subsidebar` generico e passou a operar como cockpit operacional B2B alinhado a blueprint aprovada:
+    - header compacto do cliente com metadados em linha
+    - tabs de contexto na propria superficie
+    - card navy de preview da conta
+    - resumo operacional, tickets recentes e timeline na coluna central
+    - saude, migracao e contexto complementar no rail direito
+  - A fase preservou os contratos atuais de customer context sem alterar backend, Supabase, schema, migrations, RPCs, contracts ou fixtures.
+  - Validacoes locais da fase:
+    - `npm run contracts:typecheck`
+    - `npm run web:typecheck`
+    - `npm run web:build`
+  - QA visual local final gerada em `phase6-22-support-customer-detail-final.png`, sem scroll horizontal e com login validado ate a rota final da fixture atual.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.

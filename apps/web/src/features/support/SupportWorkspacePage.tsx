@@ -1,5 +1,6 @@
 import {
   type FormEvent,
+  type ReactNode,
   useEffect,
   useEffectEvent,
   useMemo,
@@ -3894,6 +3895,205 @@ export function SupportTicketPage() {
   return <SupportWorkspaceView focusTicketId={ticketId ?? null} variant="tickets" />;
 }
 
+function readCountFromJson(counts: Record<string, unknown>, key: string) {
+  const value = counts[key];
+
+  return typeof value === 'number' ? value : 0;
+}
+
+function displayCustomerValue(value: string | null | undefined) {
+  if (!value || value.trim().length === 0) {
+    return 'Indisponível';
+  }
+
+  return value;
+}
+
+function resolveSupportCustomerOwner(
+  customer: SupportCustomer360,
+  recentTicketsWindow: SupportCustomerRecentTicketsWindow,
+) {
+  return (
+    recentTicketsWindow.tickets.find((ticket) => ticket.assignedToFullName)?.assignedToFullName ??
+    primaryContactFromCustomer(customer)?.fullName ??
+    null
+  );
+}
+
+function resolveLatestCustomerActivity(
+  customer: SupportCustomer360,
+  recentTicketsWindow: SupportCustomerRecentTicketsWindow,
+  recentEventsWindow: SupportCustomerRecentEventsWindow,
+) {
+  const candidates = [
+    customer.tenantUpdatedAt,
+    recentTicketsWindow.tickets[0]?.updatedAt ?? null,
+    recentEventsWindow.events[0]?.occurredAt ?? null,
+  ].filter((value): value is string => Boolean(value));
+
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  return candidates.sort((left, right) => right.localeCompare(left))[0] ?? null;
+}
+
+function resolveCustomerRiskProfile(accountContext: SupportCustomerAccountContext | null) {
+  if (!accountContext || !accountContext.profileId) {
+    return {
+      label: 'Sem contexto',
+      tone: 'default' as const,
+      healthLabel: 'Contexto em aberto',
+      accentClassName: 'bg-slate-200',
+    };
+  }
+
+  const criticalAlerts = accountContext.activeAlerts.filter(
+    (alert) => alert.severity === 'critical' || alert.severity === 'high',
+  ).length;
+  const riskyCustomizations = accountContext.activeCustomizations.filter(
+    (customization) =>
+      customization.riskLevel === 'critical' || customization.riskLevel === 'high',
+  ).length;
+
+  if (criticalAlerts > 0 || riskyCustomizations > 1) {
+    return {
+      label: 'Risco alto',
+      tone: 'critical' as const,
+      healthLabel: 'Atencao imediata',
+      accentClassName: 'bg-rose-500',
+    };
+  }
+
+  if (accountContext.operationalStatus === 'limited' || accountContext.activeAlerts.length > 0) {
+    return {
+      label: 'Em atencao',
+      tone: 'warning' as const,
+      healthLabel: 'Monitoramento ativo',
+      accentClassName: 'bg-amber-500',
+    };
+  }
+
+  return {
+    label: 'Operacao estavel',
+    tone: 'positive' as const,
+    healthLabel: 'Saude controlada',
+    accentClassName: 'bg-emerald-500',
+  };
+}
+
+function resolveMigrationCard(accountContext: SupportCustomerAccountContext | null) {
+  if (!accountContext || !accountContext.profileId) {
+    return {
+      phase: 'Indisponível',
+      accentTone: 'default' as const,
+      steps: [
+        { label: 'Descoberta', state: 'pending' as const },
+        { label: 'Planejamento', state: 'pending' as const },
+        { label: 'Execucao', state: 'pending' as const },
+        { label: 'Validacao', state: 'pending' as const },
+      ],
+    };
+  }
+
+  if (accountContext.operationalStatus === 'onboarding') {
+    return {
+      phase: 'Em migracao',
+      accentTone: 'warning' as const,
+      steps: [
+        { label: 'Descoberta', state: 'done' as const },
+        { label: 'Planejamento', state: 'active' as const },
+        { label: 'Execucao', state: 'pending' as const },
+        { label: 'Validacao', state: 'pending' as const },
+      ],
+    };
+  }
+
+  if (accountContext.operationalStatus === 'limited') {
+    return {
+      phase: 'Execucao',
+      accentTone: 'warning' as const,
+      steps: [
+        { label: 'Descoberta', state: 'done' as const },
+        { label: 'Planejamento', state: 'done' as const },
+        { label: 'Execucao', state: 'active' as const },
+        { label: 'Validacao', state: 'pending' as const },
+      ],
+    };
+  }
+
+  return {
+    phase: 'Operacao ativa',
+    accentTone: 'positive' as const,
+    steps: [
+      { label: 'Descoberta', state: 'done' as const },
+      { label: 'Planejamento', state: 'done' as const },
+      { label: 'Execucao', state: 'done' as const },
+      { label: 'Validacao', state: 'active' as const },
+    ],
+  };
+}
+
+function SupportCustomerDetailCard({
+  title,
+  description,
+  children,
+  className,
+  actions,
+}: {
+  title: string;
+  description?: string;
+  children: ReactNode;
+  className?: string;
+  actions?: ReactNode;
+}) {
+  return (
+    <section
+      className={cx(
+        'rounded-[26px] border border-[color:var(--color-border)] bg-white/94 px-5 py-5 shadow-[0_16px_34px_rgba(16,30,74,0.08)]',
+        className,
+      )}
+    >
+      <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-1">
+          <h2 className="text-[1.04rem] font-semibold tracking-[-0.035em] text-[color:var(--color-ink)]">
+            {title}
+          </h2>
+          {description ? (
+            <p className="text-sm leading-6 text-[color:var(--color-muted)]">{description}</p>
+          ) : null}
+        </div>
+        {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+      </header>
+      {children}
+    </section>
+  );
+}
+
+function SupportCustomerMetricTile({
+  label,
+  value,
+  helper,
+}: {
+  label: string;
+  value: string;
+  helper?: string;
+}) {
+  return (
+    <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+        {label}
+      </p>
+      <p className="mt-2 text-[1.9rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
+        {value}
+      </p>
+      {helper ? (
+        <p className="mt-1 text-xs leading-5 text-[color:var(--color-muted)]">{helper}</p>
+      ) : null}
+    </div>
+  );
+}
+
 export function SupportCustomerPage() {
   const { markSessionExpired } = useAuthContext();
   const { tenantId } = useParams();
@@ -3904,7 +4104,6 @@ export function SupportCustomerPage() {
   const [customer, setCustomer] = useState<SupportCustomer360 | null>(null);
   const [accountContext, setAccountContext] =
     useState<SupportCustomerAccountContext | null>(null);
-  const [customers, setCustomers] = useState<SupportCustomer360[]>([]);
   const [recentTicketsWindow, setRecentTicketsWindow] =
     useState<SupportCustomerRecentTicketsWindow>(emptyCustomerRecentTicketsWindow());
   const [recentEventsWindow, setRecentEventsWindow] =
@@ -3914,7 +4113,6 @@ export function SupportCustomerPage() {
     if (!tenantId) {
       setCustomer(null);
       setAccountContext(null);
-      setCustomers([]);
       setRecentTicketsWindow(emptyCustomerRecentTicketsWindow());
       setRecentEventsWindow(emptyCustomerRecentEventsWindow());
       setPhase('error');
@@ -3923,10 +4121,9 @@ export function SupportCustomerPage() {
     }
 
     try {
-      const [detail, context, rows, recentTickets, recentEvents] = await Promise.all([
+      const [detail, context, recentTickets, recentEvents] = await Promise.all([
         getSupportCustomer360(tenantId),
         getSupportCustomerAccountContext(tenantId),
-        listSupportCustomers360(),
         getSupportCustomerRecentTickets(tenantId),
         getSupportCustomerRecentEvents(tenantId),
       ]);
@@ -3934,7 +4131,6 @@ export function SupportCustomerPage() {
       setBackendDenied(false);
       setCustomer(detail);
       setAccountContext(context);
-      setCustomers(rows);
       setRecentTicketsWindow(recentTickets);
       setRecentEventsWindow(recentEvents);
       setMessage(null);
@@ -3957,7 +4153,6 @@ export function SupportCustomerPage() {
 
       setCustomer(null);
       setAccountContext(null);
-      setCustomers([]);
       setRecentTicketsWindow(emptyCustomerRecentTicketsWindow());
       setRecentEventsWindow(emptyCustomerRecentEventsWindow());
       setMessage(classified.message);
@@ -3987,42 +4182,41 @@ export function SupportCustomerPage() {
   if (phase === 'loading') {
     return (
       <div className="space-y-5">
-        <PageHeader
-          eyebrow="Support Workspace"
-          title="Contexto do cliente"
-          description="O shell continua montado enquanto o resumo operacional do cliente termina de sincronizar."
-        />
+        <div className="space-y-3 rounded-[28px] border border-[color:var(--color-border)] bg-white/94 px-6 py-6 shadow-[0_16px_34px_rgba(16,30,74,0.08)]">
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusPill tone="accent">Clientes</StatusPill>
+            <StatusPill>Resumo</StatusPill>
+          </div>
+          <div className="space-y-2">
+            <LoadingBlock className="h-7 w-56" />
+            <LoadingBlock className="h-4 w-[420px] max-w-full" />
+          </div>
+          <LoadingBlock className="h-20 rounded-[22px]" />
+          <div className="flex flex-wrap gap-3">
+            <LoadingBlock className="h-11 w-24 rounded-full" />
+            <LoadingBlock className="h-11 w-24 rounded-full" />
+            <LoadingBlock className="h-11 w-24 rounded-full" />
+            <LoadingBlock className="h-11 w-24 rounded-full" />
+          </div>
+        </div>
 
-        <WorkspaceSplit
-          layoutClassName="xl:grid-cols-[292px_minmax(0,1fr)]"
-          sidebar={
-            <ContextSubsidebar
-              description="Atalhos e troca de cliente permanecem na lateral para a leitura nao perder a estrutura."
-              title="Ferramentas do cliente"
-            >
-              <ContextSubsidebarSection
-                description="A lista de clientes acessiveis aparece aqui assim que o contexto terminar de carregar."
-                title="Carregando atalhos"
-              >
-                <div className="space-y-3">
-                  <LoadingBlock className="h-20" />
-                  <LoadingBlock className="h-20" />
-                  <LoadingBlock className="h-20" />
-                </div>
-              </ContextSubsidebarSection>
-            </ContextSubsidebar>
-          }
-          main={
-            <div className="space-y-5">
-              <LoadingBlock className="h-40 rounded-[28px]" />
-              <LoadingBlock className="h-72 rounded-[28px]" />
-              <div className="grid gap-5 lg:grid-cols-2">
-                <LoadingBlock className="h-56 rounded-[28px]" />
-                <LoadingBlock className="h-56 rounded-[28px]" />
-              </div>
-            </div>
-          }
-        />
+        <div className="grid gap-5 xl:grid-cols-[294px_minmax(0,1.28fr)_318px]">
+          <div className="space-y-5">
+            <LoadingBlock className="h-[318px] rounded-[26px]" />
+            <LoadingBlock className="h-[190px] rounded-[26px]" />
+            <LoadingBlock className="h-[172px] rounded-[26px]" />
+          </div>
+          <div className="space-y-5">
+            <LoadingBlock className="h-[184px] rounded-[26px]" />
+            <LoadingBlock className="h-[272px] rounded-[26px]" />
+            <LoadingBlock className="h-[286px] rounded-[26px]" />
+          </div>
+          <div className="space-y-5">
+            <LoadingBlock className="h-[178px] rounded-[26px]" />
+            <LoadingBlock className="h-[224px] rounded-[26px]" />
+            <LoadingBlock className="h-[204px] rounded-[26px]" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -4049,211 +4243,508 @@ export function SupportCustomerPage() {
     );
   }
 
+  const primaryContact = primaryContactFromCustomer(customer);
+  const primaryPlatform = primaryPlatformFromContext(accountContext);
+  const ownerName = resolveSupportCustomerOwner(customer, recentTicketsWindow);
+  const latestActivity = resolveLatestCustomerActivity(
+    customer,
+    recentTicketsWindow,
+    recentEventsWindow,
+  );
+  const riskProfile = resolveCustomerRiskProfile(accountContext);
+  const migrationCard = resolveMigrationCard(accountContext);
+  const openWaitingCount =
+    readCountFromJson(customer.ticketStatusCounts as Record<string, unknown>, 'waiting_customer') +
+    readCountFromJson(customer.ticketStatusCounts as Record<string, unknown>, 'waiting_support') +
+    readCountFromJson(customer.ticketStatusCounts as Record<string, unknown>, 'waiting_engineering');
+  const criticalSignals =
+    accountContext?.activeAlerts.filter(
+      (alert) => alert.severity === 'critical' || alert.severity === 'high',
+    ).length ?? 0;
+  const highRiskCustomizations = visibleRiskCustomizations(accountContext, 3);
+  const visibleFeatures = visibleFeatureSlice(accountContext, 5);
+  const visibleAlerts = visibleAlertSlice(accountContext, 3);
+  const visibleIntegrations = visibleOperationalIntegrations(accountContext, 4);
+  const customerLabel =
+    customer.tenantDisplayName ?? customer.tenantLegalName ?? customer.tenantSlug;
+  const customerTabs = [
+    { id: 'resumo', label: 'Resumo' },
+    { id: 'contatos', label: 'Contatos' },
+    { id: 'tickets', label: 'Tickets' },
+    { id: 'migracao', label: 'Migracao' },
+    { id: 'saude', label: 'Saude' },
+    { id: 'atividade', label: 'Atividade' },
+  ];
+
   return (
     <div className="space-y-5">
-      <PageHeader
-        eyebrow="Support Workspace"
-        title="Contexto do cliente"
-        description="Sidebar global para navegar, subsidebar para trocar de cliente e atalhos, area principal para o contexto operacional real."
-      />
+      <section className="rounded-[30px] border border-[color:var(--color-border)] bg-white/95 px-6 py-6 shadow-[0_18px_40px_rgba(16,30,74,0.09)]">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0 space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusPill tone="accent">Clientes</StatusPill>
+              <StatusPill>{displayCustomerValue(accountContext?.productLine ? humanizeCustomerValue(accountContext.productLine) : null)}</StatusPill>
+              <StatusPill tone={riskProfile.tone}>{riskProfile.label}</StatusPill>
+            </div>
+            <div className="space-y-1">
+              <h1 className="text-[2.25rem] font-semibold tracking-[-0.06em] text-[color:var(--color-ink)]">
+                {customerLabel}
+              </h1>
+              <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                Contexto operacional completo da conta, contatos, tickets e sinais de saude.
+              </p>
+            </div>
+          </div>
 
-      <WorkspaceSplit
-        layoutClassName="xl:grid-cols-[292px_minmax(0,1fr)]"
-        sidebar={
-          <ContextSubsidebar
-            description="Clientes acessiveis e atalhos de navegacao ficam aqui para nao roubar espaco do contexto principal."
-            title="Ferramentas do cliente"
-          >
-            <ContextSubsidebarSection
-              description="Troque de cliente sem sair do workspace de suporte."
-              title="Outros clientes acessiveis"
+          <div className="flex flex-wrap gap-2">
+            <GhostButton className="min-h-11 px-4" onClick={() => window.history.back()}>
+              Voltar
+            </GhostButton>
+            <Link
+              className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--color-brand-blue)]"
+              to="/support/queue"
             >
-              <div className="space-y-3">
-                {customers.map((row) => {
-                  const isSelected = row.tenantId === customer.tenantId;
-                  return (
-                    <Link
-                      className={cx(
-                        'block rounded-[18px] border px-4 py-3 transition',
-                        isSelected
-                          ? 'border-[rgba(48,127,226,0.42)] bg-[rgba(48,127,226,0.08)]'
-                          : 'border-[color:var(--color-border)] bg-white hover:border-[rgba(48,127,226,0.28)] hover:bg-[color:var(--color-surface)]',
-                      )}
-                      key={row.tenantId}
-                      to={`/support/customers/${row.tenantId}`}
-                    >
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-medium text-[color:var(--color-ink)]">
-                          {row.tenantDisplayName ?? row.tenantLegalName ?? row.tenantSlug}
-                        </p>
-                        <StatusPill>{row.tenantStatus}</StatusPill>
-                      </div>
-                      <p className="mt-1 text-xs text-[color:var(--color-muted)]">
-                        {row.activeContactsCount} contatos ativos · {row.openTicketCount} tickets abertos
-                      </p>
-                    </Link>
-                  );
-                })}
-              </div>
-            </ContextSubsidebarSection>
+              Abrir fila
+            </Link>
+          </div>
+        </div>
 
-            <ContextSubsidebarSection
-              description="Atalhos uteis para voltar rapidamente ao fluxo de atendimento."
-              title="Atalhos"
-            >
-              <GhostButton className="min-h-11 w-full px-4" onClick={() => window.history.back()}>
-                Voltar
-              </GhostButton>
-              <Link
-                className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold text-[color:var(--color-brand-blue)]"
-                to="/support/queue"
+        <div className="mt-5 rounded-[22px] border border-[color:var(--color-border)] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-4 py-4">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            {[
+              { label: 'Slug', value: displayCustomerValue(customer.tenantSlug) },
+              {
+                label: 'Produto',
+                value: displayCustomerValue(
+                  accountContext?.productLine ? humanizeCustomerValue(accountContext.productLine) : null,
+                ),
+              },
+              {
+                label: 'Plataforma',
+                value: displayCustomerValue(primaryPlatform?.provider ?? null),
+              },
+              {
+                label: 'Plano',
+                value: displayCustomerValue(accountContext?.accountTier),
+              },
+              {
+                label: 'Responsavel',
+                value: displayCustomerValue(ownerName),
+              },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-3"
               >
-                Abrir fila
-              </Link>
-            </ContextSubsidebarSection>
-          </ContextSubsidebar>
-        }
-        main={
-          <div className="space-y-5">
-            <Panel
-              title="Resumo operacional do cliente"
-              description="Visao rapida do cliente atendido, com foco em continuidade de suporte e retorno rapido ao ticket."
-            >
-              <div className="space-y-4">
-                <div className="flex flex-wrap items-start justify-between gap-3 rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-4">
-                  <div className="min-w-0 space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <StatusPill>{customer.tenantStatus}</StatusPill>
-                      <StatusPill tone="accent">{customer.tenantSlug}</StatusPill>
-                      {accountContext?.productLine ? (
-                        <StatusPill>{humanizeCustomerValue(accountContext.productLine)}</StatusPill>
-                      ) : null}
-                    </div>
-                    <h3 className="text-xl font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
-                      {customer.tenantDisplayName ?? customer.tenantLegalName ?? customer.tenantSlug}
-                    </h3>
-                    <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                      {customer.tenantLegalName ?? 'Razao social nao resolvida'}
-                    </p>
-                  </div>
-                  <Link
-                    className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold text-[color:var(--color-brand-blue)]"
-                    to="/support/queue"
-                  >
-                    Voltar para fila
-                  </Link>
-                </div>
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                  {item.label}
+                </p>
+                <p className="mt-2 text-sm font-semibold text-[color:var(--color-ink)]">
+                  {item.value}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
 
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    {
-                      label: 'Abertos',
-                      value: String(customer.openTicketCount),
-                    },
-                    {
-                      label: 'Contatos',
-                      value: String(customer.activeContactsCount),
-                    },
-                    {
-                      label: 'Tickets totais',
-                      value: String(customer.totalTicketCount),
-                    },
-                  ].map((item) => (
-                    <div
-                      className="inline-flex items-center gap-2 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2"
-                      key={item.label}
-                    >
-                      <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
-                        {item.label}
-                      </span>
-                      <span className="text-sm font-semibold text-[color:var(--color-ink)]">
-                        {item.value}
-                      </span>
+        <nav className="mt-5 flex flex-wrap gap-2 border-b border-[color:var(--color-border)] pb-2">
+          {customerTabs.map((tab) => (
+            <a
+              className={cx(
+                'inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold transition',
+                tab.id === 'resumo'
+                  ? 'bg-[rgba(48,127,226,0.1)] text-[color:var(--color-brand-blue)] shadow-[inset_0_-2px_0_var(--color-brand-blue)]'
+                  : 'text-[color:var(--color-muted)] hover:bg-[color:var(--color-surface)] hover:text-[color:var(--color-ink)]',
+              )}
+              href={`#${tab.id}`}
+              key={tab.id}
+            >
+              {tab.label}
+            </a>
+          ))}
+        </nav>
+      </section>
+
+      <div className="grid gap-5 xl:grid-cols-[294px_minmax(0,1.28fr)_318px]">
+        <aside className="space-y-5">
+          <section className="overflow-hidden rounded-[28px] bg-[linear-gradient(180deg,#071942_0%,#0b235b_58%,#103071_100%)] px-4 py-5 text-white shadow-[0_22px_42px_rgba(8,22,61,0.28)]">
+            <div className="space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-3">
+                  <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-white/92 text-lg font-semibold text-[color:var(--color-brand-blue)]">
+                    {customerLabel
+                      .split(' ')
+                      .slice(0, 2)
+                      .map((chunk) => chunk[0]?.toUpperCase() ?? '')
+                      .join('')}
+                  </div>
+                  <div className="space-y-1">
+                    <h2 className="text-[1.55rem] font-semibold tracking-[-0.05em]">{customerLabel}</h2>
+                    <div className="flex flex-wrap gap-2">
+                      <StatusPill tone={customer.tenantStatus === 'active' ? 'positive' : 'warning'}>
+                        {displayCustomerValue(humanizeCustomerValue(customer.tenantStatus))}
+                      </StatusPill>
+                      <StatusPill tone={migrationCard.accentTone}>{migrationCard.phase}</StatusPill>
                     </div>
-                  ))}
+                  </div>
                 </div>
               </div>
-            </Panel>
 
-            <Panel
-              title="Produto, stack e tickets recentes"
-              description="Contexto operacional do perfil do cliente e retorno rapido para tickets deste mesmo cliente."
-            >
-            <div className="space-y-5">
-              <SupportAccountContextOverview
-                accountContext={accountContext}
-                customer={customer}
-              />
+              <StatusPill tone={riskProfile.tone}>{riskProfile.label}</StatusPill>
 
-              <div className="border-t border-[color:var(--color-border)] pt-4">
-                <div className="mb-3 space-y-1">
-                  <h3 className="text-base font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
-                    Tickets recentes
-                  </h3>
-                  <p className="text-xs leading-5 text-[color:var(--color-muted)]">
-                    Mostrando {recentTicketsWindow.tickets.length} de {recentTicketsWindow.totalAvailableCount} tickets recentes.
-                  </p>
-                </div>
-                {recentTicketsWindow.tickets.length === 0 ? (
-                  <EmptyState
-                    title="Sem tickets recentes"
-                    description="Nenhum ticket recente apareceu para este cliente."
-                  />
-                ) : (
-                  <div className="space-y-2">
-                    {recentTicketsWindow.tickets.map((ticket) => (
-                      <SupportRecentTicketCard key={ticket.id} ticket={ticket} />
-                    ))}
+              <dl className="space-y-3 text-sm">
+                {[
+                  {
+                    label: 'Plataforma',
+                    value: displayCustomerValue(primaryPlatform?.provider ?? null),
+                  },
+                  {
+                    label: 'Produto',
+                    value: displayCustomerValue(
+                      accountContext?.productLine ? humanizeCustomerValue(accountContext.productLine) : null,
+                    ),
+                  },
+                  {
+                    label: 'Responsavel',
+                    value: displayCustomerValue(ownerName),
+                  },
+                  {
+                    label: 'Ultima atividade',
+                    value: latestActivity ? formatDateTime(latestActivity) : 'Indisponível',
+                  },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className="flex flex-wrap items-start justify-between gap-3 border-b border-white/10 pb-3 last:border-b-0 last:pb-0"
+                  >
+                    <dt className="text-white/68">{item.label}</dt>
+                    <dd className="text-right font-medium text-white">{item.value}</dd>
                   </div>
-                )}
+                ))}
+              </dl>
+
+              <div className="space-y-2 pt-1">
+                <Link
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-[16px] bg-[linear-gradient(135deg,#1e63ff,#2e7cf5)] px-4 py-2 text-sm font-semibold text-white shadow-[0_16px_28px_rgba(18,81,213,0.35)]"
+                  to="/support/queue"
+                >
+                  Abrir tickets
+                </Link>
+                <button
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-[16px] border border-white/18 bg-transparent px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/8"
+                  onClick={() => window.history.back()}
+                  type="button"
+                >
+                  Voltar para a conta anterior
+                </button>
               </div>
             </div>
-          </Panel>
+          </section>
 
-          <Panel
-            title="Contatos ativos"
-            description="Somente os contatos que ajudam a continuar o atendimento atual."
+          <SupportCustomerDetailCard
+            className="px-4 py-4"
+            description="Contato operacional mais confiavel para continuar a tratativa."
+            title="Contato principal"
           >
-            {customer.activeContacts.length === 0 ? (
-              <EmptyState
-                title="Sem contatos ativos"
-                description="Nenhum contato ativo ficou disponivel para este cliente."
-              />
+            {primaryContact ? (
+              <div className="space-y-3">
+                <div className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                  <p className="font-semibold text-[color:var(--color-ink)]">{primaryContact.fullName}</p>
+                  <p className="mt-1 break-all text-sm text-[color:var(--color-muted)]">
+                    {displayCustomerValue(primaryContact.email)}
+                  </p>
+                </div>
+                <div className="grid gap-2 text-sm leading-6 text-[color:var(--color-muted)]">
+                  <p>
+                    Vinculo principal: {primaryContact.isPrimary ? 'Sim' : 'Indisponível'}
+                  </p>
+                  <p>Usuario vinculado: {primaryContact.linkedUserId ? 'Ativo' : 'Indisponível'}</p>
+                </div>
+              </div>
             ) : (
-              <div className="space-y-2">
-                {customer.activeContacts.map((contact) => (
-                  <SupportContactCard contact={contact} key={contact.id} />
+              <InlineNotice tone="warning">
+                Nenhum contato principal foi resolvido para esta conta.
+              </InlineNotice>
+            )}
+          </SupportCustomerDetailCard>
+
+          <SupportCustomerDetailCard
+            className="px-4 py-4"
+            description="Tags uteis para lembrar o stack e o contexto da conta."
+            title="Sinais da conta"
+          >
+            <div className="flex flex-wrap gap-2">
+              <StatusPill tone="positive">
+                {displayCustomerValue(primaryPlatform?.provider ?? null)}
+              </StatusPill>
+              <StatusPill tone="accent">
+                {displayCustomerValue(
+                  accountContext?.productLine ? humanizeCustomerValue(accountContext.productLine) : null,
+                )}
+              </StatusPill>
+              <StatusPill>
+                {displayCustomerValue(accountContext?.accountTier)}
+              </StatusPill>
+              <StatusPill tone={migrationCard.accentTone}>{migrationCard.phase}</StatusPill>
+            </div>
+          </SupportCustomerDetailCard>
+        </aside>
+
+        <div className="space-y-5">
+          <div id="resumo">
+            <SupportCustomerDetailCard
+              title="Resumo operacional"
+              description="Os indicadores que mais ajudam o suporte e o CS a decidir o proximo passo."
+            >
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                <SupportCustomerMetricTile
+                  helper="Tickets ativos neste tenant."
+                  label="Tickets abertos"
+                  value={String(customer.openTicketCount)}
+                />
+                <SupportCustomerMetricTile
+                  helper="Itens aguardando retorno ou acao."
+                  label="Em espera"
+                  value={String(openWaitingCount)}
+                />
+                <SupportCustomerMetricTile
+                  helper="Contatos ativos na leitura atual."
+                  label="Contatos ativos"
+                  value={String(customer.activeContactsCount)}
+                />
+                <SupportCustomerMetricTile
+                  helper="Alertas criticos e sinais fortes de risco."
+                  label="Sinais criticos"
+                  value={String(criticalSignals)}
+                />
+              </div>
+            </SupportCustomerDetailCard>
+          </div>
+
+          <div id="tickets">
+            <SupportCustomerDetailCard
+              actions={
+                <Link
+                  className="text-sm font-semibold text-[color:var(--color-brand-blue)]"
+                  to="/support/queue"
+                >
+                  Ver fila
+                </Link>
+              }
+              description={`Mostrando ${recentTicketsWindow.tickets.length} de ${recentTicketsWindow.totalAvailableCount} tickets recentes.`}
+              title="Tickets recentes"
+            >
+              {recentTicketsWindow.tickets.length === 0 ? (
+                <InlineNotice>Nenhum ticket recente apareceu para esta conta.</InlineNotice>
+              ) : (
+                <div className="overflow-hidden rounded-[20px] border border-[color:var(--color-border)]">
+                  <div className="hidden grid-cols-[122px_minmax(0,1.35fr)_minmax(140px,0.9fr)_148px] gap-3 border-b border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)] md:grid">
+                    <span>Status</span>
+                    <span>Ticket</span>
+                    <span>Responsavel</span>
+                    <span>Atualizacao</span>
+                  </div>
+                  <div className="divide-y divide-[color:var(--color-border)]">
+                    {recentTicketsWindow.tickets.map((ticket) => (
+                      <Link
+                        className="grid gap-3 px-4 py-4 transition hover:bg-[color:var(--color-surface)] md:grid-cols-[122px_minmax(0,1.35fr)_minmax(140px,0.9fr)_148px]"
+                        key={ticket.id}
+                        to={`/support/tickets/${ticket.id}`}
+                      >
+                        <div className="min-w-0">
+                          <StatusPill tone={toneForTicketStatus(ticket.status)}>
+                            {humanizeStatus(ticket.status)}
+                          </StatusPill>
+                        </div>
+                        <div className="min-w-0 space-y-1">
+                          <p className="line-clamp-2 text-sm font-semibold text-[color:var(--color-ink)]">
+                            {ticket.title}
+                          </p>
+                          <p className="text-xs uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
+                            {humanizeToken(ticket.priority)} · {humanizeToken(ticket.severity)}
+                          </p>
+                        </div>
+                        <div className="min-w-0 text-sm text-[color:var(--color-muted)]">
+                          {displayCustomerValue(ticket.assignedToFullName)}
+                        </div>
+                        <div className="text-sm text-[color:var(--color-muted)]">
+                          {formatDateTime(ticket.updatedAt)}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </SupportCustomerDetailCard>
+          </div>
+
+          <SupportCustomerDetailCard
+            description={`Mostrando ${recentEventsWindow.events.length} de ${recentEventsWindow.totalAvailableCount} registros recentes.`}
+            title="Timeline operacional"
+          >
+            {recentEventsWindow.events.length === 0 ? (
+              <InlineNotice>Nenhuma atividade operacional recente ficou disponivel.</InlineNotice>
+            ) : (
+              <div className="space-y-4" id="atividade">
+                {recentEventsWindow.events.map((event, index) => (
+                  <div className="grid gap-3 md:grid-cols-[28px_minmax(0,1fr)_164px]" key={`${event.ticketId}-${event.occurredAt}-${event.eventType}`}>
+                    <div className="relative flex justify-center">
+                      <span className="mt-2 inline-flex h-3.5 w-3.5 rounded-full bg-[color:var(--color-brand-blue)]" />
+                      {index < recentEventsWindow.events.length - 1 ? (
+                        <span className="absolute top-5 h-[calc(100%+0.5rem)] w-px bg-[rgba(48,127,226,0.28)]" />
+                      ) : null}
+                    </div>
+                    <div className="min-w-0 space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-semibold text-[color:var(--color-ink)]">
+                          {humanizeToken(event.eventType)}
+                        </p>
+                        <StatusPill tone={event.visibility === 'internal' ? 'warning' : 'accent'}>
+                          {humanizeVisibility(event.visibility)}
+                        </StatusPill>
+                      </div>
+                      <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                        {event.ticketTitle}
+                      </p>
+                    </div>
+                    <div className="text-sm text-[color:var(--color-muted)]">
+                      {formatDateTime(event.occurredAt)}
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
-          </Panel>
+          </SupportCustomerDetailCard>
+        </div>
 
-          <details className="rounded-[22px] border border-[color:var(--color-border)] bg-white px-5 py-4">
-            <summary className="cursor-pointer text-base font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
-              Eventos recentes e detalhes extras
-            </summary>
-            <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
-              Mostrando {recentEventsWindow.events.length} de {recentEventsWindow.totalAvailableCount} registros recentes.
-            </p>
-            <div className="mt-3 space-y-2">
-                {recentEventsWindow.events.length === 0 ? (
-                <EmptyState
-                  title="Sem eventos recentes"
-                  description="Nenhum evento recente apareceu para este cliente."
+        <aside className="space-y-5">
+          <SupportCustomerDetailCard
+            className="px-4 py-4"
+            description="Leitura curta da conta para decidir se a tratativa pede atencao extra."
+            title="Saude da conta"
+          >
+            <div className="space-y-4" id="saude">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-medium text-[color:var(--color-ink)]">Saude geral</p>
+                <StatusPill tone={riskProfile.tone}>{riskProfile.healthLabel}</StatusPill>
+              </div>
+              <div className="h-3 overflow-hidden rounded-full bg-slate-200">
+                <div
+                  className={cx(
+                    'h-full rounded-full',
+                    riskProfile.accentClassName,
+                    riskProfile.tone === 'positive' && 'w-[28%]',
+                    riskProfile.tone === 'warning' && 'w-[64%]',
+                    riskProfile.tone === 'critical' && 'w-[82%]',
+                    riskProfile.tone === 'default' && 'w-[44%]',
+                  )}
                 />
-              ) : (
-                recentEventsWindow.events.map((event) => (
-                  <SupportRecentEventCard
-                    event={event}
-                    key={`${event.ticketId}-${event.occurredAt}-${event.eventType}`}
-                  />
-                ))
-              )}
+              </div>
+              <div className="space-y-2 text-sm leading-6 text-[color:var(--color-muted)]">
+                <p>{visibleAlerts.length} alerta(s) ativo(s) na leitura operacional.</p>
+                <p>{highRiskCustomizations.length} customizacao(oes) com atencao operacional.</p>
+                <p>{customer.openTicketCount} ticket(s) ainda em aberto para esta conta.</p>
+              </div>
             </div>
-          </details>
-          </div>
-        }
-      />
+          </SupportCustomerDetailCard>
+
+          <SupportCustomerDetailCard
+            className="px-4 py-4"
+            description="Passos e sinais que mostram o momento operacional da conta."
+            title="Migracao"
+          >
+            <div className="space-y-4" id="migracao">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-medium text-[color:var(--color-ink)]">Fase atual</p>
+                <StatusPill tone={migrationCard.accentTone}>{migrationCard.phase}</StatusPill>
+              </div>
+              <div className="space-y-3">
+                {migrationCard.steps.map((step) => (
+                  <div className="flex items-center gap-3" key={step.label}>
+                    <span
+                      className={cx(
+                        'inline-flex h-4 w-4 rounded-full border',
+                        step.state === 'done' && 'border-emerald-500 bg-emerald-500',
+                        step.state === 'active' && 'border-[color:var(--color-brand-blue)] bg-[color:var(--color-brand-blue)]',
+                        step.state === 'pending' && 'border-slate-300 bg-white',
+                      )}
+                    />
+                    <p
+                      className={cx(
+                        'text-sm',
+                        step.state === 'pending'
+                          ? 'text-[color:var(--color-muted)]'
+                          : 'font-medium text-[color:var(--color-ink)]',
+                      )}
+                    >
+                      {step.label}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <div className="grid gap-2 text-sm leading-6 text-[color:var(--color-muted)]">
+                <p>Integracoes operacionais: {visibleIntegrations.length}</p>
+                <p>Features ativas: {visibleFeatures.length}</p>
+                <p>Ultima consolidacao: {latestActivity ? formatDateTime(latestActivity) : 'Indisponível'}</p>
+              </div>
+            </div>
+          </SupportCustomerDetailCard>
+
+          <SupportCustomerDetailCard
+            className="px-4 py-4"
+            description="Tickets, contatos e sinais que ajudam a seguir a conta sem trocar de tela."
+            title="Contexto complementar"
+          >
+            <div className="space-y-4">
+              <div className="space-y-2" id="contatos">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                  Contatos ativos
+                </p>
+                {customer.activeContacts.length === 0 ? (
+                  <p className="text-sm leading-6 text-[color:var(--color-muted)]">Indisponível</p>
+                ) : (
+                  customer.activeContacts.slice(0, 3).map((contact) => (
+                    <div
+                      className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3"
+                      key={contact.id}
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-medium text-[color:var(--color-ink)]">
+                          {contact.fullName}
+                        </p>
+                        {contact.isPrimary ? <StatusPill tone="accent">principal</StatusPill> : null}
+                      </div>
+                      <p className="mt-1 break-all text-sm text-[color:var(--color-muted)]">
+                        {displayCustomerValue(contact.email)}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                  Sinais da conta
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {visibleFeatures.length > 0 ? (
+                    visibleFeatures.map((feature) => (
+                      <StatusPill key={feature.featureKey}>
+                        {humanizeCustomerValue(feature.featureKey)}
+                      </StatusPill>
+                    ))
+                  ) : (
+                    <StatusPill>Indisponível</StatusPill>
+                  )}
+                  {visibleIntegrations.map((integration) => (
+                    <StatusPill key={integration.id}>{integration.provider}</StatusPill>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </SupportCustomerDetailCard>
+        </aside>
+      </div>
     </div>
   );
 }
