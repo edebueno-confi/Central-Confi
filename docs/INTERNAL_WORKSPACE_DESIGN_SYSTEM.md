@@ -15,6 +15,7 @@ Fixar um mini design system para superficies operacionais internas do Genius Sup
 - sessao atual deve ser compacta quando expandida e minima quando recolhida
 - sidebars internas nao devem conter cards textuais longos
 - o shell deve liberar largura real para a superficie principal
+- quando a tela exigir contexto constante, usar subsidebar contextual entre a sidebar global e a area principal
 
 ## Sidebar
 - labels de acao simples e curtas
@@ -30,6 +31,21 @@ Fixar um mini design system para superficies operacionais internas do Genius Sup
   - Access
   - System
 - estado recolhido nao pode quebrar navegacao
+
+## Subsidebar contextual
+- funciona como coluna operacional leve, nunca como painel pesado
+- pode ser fixa ou recolhivel, conforme o dominio
+- serve para:
+  - filtros da tela
+  - atalhos de fila ou recortes rapidos
+  - contexto auxiliar
+  - ferramentas do dominio
+- nao deve carregar:
+  - narrativa longa
+  - checklist extenso aberto por padrao
+  - historico tecnico completo
+  - blocos redundantes da area principal
+- a subsidebar precisa continuar usavel em notebook sem empurrar a area principal para uma largura desconfortavel
 
 ## Density
 - densidade media por padrao
@@ -89,19 +105,19 @@ Fixar um mini design system para superficies operacionais internas do Genius Sup
 ## Aplicacao inicial por dominio
 
 ### Support
-- queue: toolbar + resumo compacto + lista dominante + preview curto
-- ticket: cabecalho + composer + conversa + rail de operacao + historico tecnico recolhido
-- customers: resumo curto + stack + tickets recentes + contatos + eventos recolhidos
+- queue: subsidebar com filtros, filas rapidas e atalhos; area principal com fila dominante e preview curto
+- ticket: subsidebar com status, responsavel, cliente, conhecimento relacionado e historico tecnico recolhido; area principal com conversa e composer
+- customers: subsidebar com clientes acessiveis e atalhos; area principal com stack, alertas, tickets recentes e contatos
 
 ### Knowledge
-- toolbar editorial
-- lista de artigos em master/detail
-- revisao do artigo como foco
-- advisory resumido, checklist recolhido e origem tecnica secundaria
+- subsidebar editorial com knowledge space, filtros e itens recolhidos de checklist/advisory
+- lista de artigos compacta em master/detail
+- revisao do artigo como foco dominante da area principal
+- origem tecnica secundaria e recolhida
 
 ### Admin
-- toolbars por dominio
-- leitura administrativa clara
+- subsidebar por dominio com filtros e acoes recorrentes
+- leitura administrativa clara na area principal
 - detalhes tecnicos sempre recolhidos
 - auditoria so expande quando o operador precisa investigar
 

@@ -9,11 +9,13 @@ Registrar o backlog oficial de polimento e evolucao de UX das superficies intern
 - calibrar ainda mais o rail do ticket para crescimento futuro de contexto
 - revisar densidade da conversa com volume real maior
 - garantir que nenhum estado vazio ou erro volte a usar linguagem tecnica
+- avaliar um destino global melhor para `Customers` na sidebar quando nao houver tenant ja em foco
 
 ### 2. Polimento do Admin/Knowledge
 - revisar peso visual entre lista editorial e detalhe em datasets maiores
 - calibrar checklist, advisory e trilha de origem para revisoes longas
 - reduzir ainda mais o ruido visual em estados de publicacao e arquivamento
+- revisar se a subsidebar editorial precisa de recolhimento independente em notebooks menores
 
 ### 3. Customer Account Profile UI de edicao futura
 - definir superficie administrativa de manutencao do perfil operacional
@@ -33,6 +35,10 @@ Registrar o backlog oficial de polimento e evolucao de UX das superficies intern
 
 ### 8. Portal B2B do cliente
 - definir superficie separada e segura para leitura do proprio cliente
+
+### 12. Navegacao contextual entre shells internos
+- revisar como Support, Admin e Knowledge compartilham atalhos sem misturar navegacao global com contexto de rota
+- decidir quando uma subsidebar precisa de memoria local de ultimo contexto valido
 
 ### 9. Historico tecnico paginavel sob demanda
 - abrir camada de navegacao adicional para timeline completa sem carregar tudo na primeira tela

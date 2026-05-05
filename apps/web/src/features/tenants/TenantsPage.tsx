@@ -28,6 +28,9 @@ import {
 } from '../../components/states';
 import {
   AppButton,
+  ContextSubsidebar,
+  ContextSubsidebarSection,
+  cx,
   Field,
   GhostButton,
   InlineNotice,
@@ -38,6 +41,7 @@ import {
   SummaryStrip,
   SummaryStripItem,
   TextInput,
+  WorkspaceSplit,
 } from '../../components/ui';
 import {
   TENANT_STATUSES,
@@ -451,15 +455,47 @@ export function TenantsPage() {
         }
       />
 
-      <SummaryStrip>
-        <SummaryStripItem helper="base atual" label="Tenants" value={String(totalTenants)} />
-        <SummaryStripItem helper="em operacao" label="Ativos" tone="positive" value={String(activeTenants)} />
-        <SummaryStripItem helper="pedem atencao" label="Suspensos" tone="warning" value={String(suspendedTenants)} />
-        <SummaryStripItem helper="prontos para contato" label="Contatos ativos" value={String(totalContacts)} />
-      </SummaryStrip>
+      <WorkspaceSplit
+        layoutClassName="xl:grid-cols-[292px_minmax(0,1fr)]"
+        sidebar={
+          <ContextSubsidebar
+            description="Filtros, indicadores e criacao do cliente ficam fora da area principal para manter lista e detalhe mais utilizaveis."
+            title="Ferramentas de tenants"
+          >
+            <ContextSubsidebarSection
+              description="Pulso rapido da base atual."
+              title="Resumo"
+            >
+              <SummaryStrip className="border-0 bg-transparent px-0 py-0 shadow-none">
+                <SummaryStripItem helper="base atual" label="Tenants" value={String(totalTenants)} />
+                <SummaryStripItem helper="em operacao" label="Ativos" tone="positive" value={String(activeTenants)} />
+                <SummaryStripItem helper="pedem atencao" label="Suspensos" tone="warning" value={String(suspendedTenants)} />
+                <SummaryStripItem helper="prontos para contato" label="Contatos ativos" value={String(totalContacts)} />
+              </SummaryStrip>
+            </ContextSubsidebarSection>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(420px,0.92fr)] 2xl:grid-cols-[minmax(0,1.14fr)_minmax(480px,0.86fr)]">
-        <div className="space-y-6">
+            <ContextSubsidebarSection
+              description="Localize o cliente sem ocupar o cabecalho da lista."
+              title="Busca e atalhos"
+            >
+              <Field label="Buscar tenant">
+                <TextInput
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Buscar por nome, slug ou contato primario"
+                  value={query}
+                />
+              </Field>
+              <GhostButton className="min-h-11 w-full px-4" onClick={() => void loadTenants(selectedTenantId)}>
+                Recarregar
+              </GhostButton>
+              <AppButton className="min-h-11 w-full px-4" onClick={() => setShowCreateTenant((current) => !current)}>
+                {showCreateTenant ? 'Fechar criacao' : 'Criar tenant'}
+              </AppButton>
+            </ContextSubsidebarSection>
+          </ContextSubsidebar>
+        }
+        main={
+          <div className="space-y-6">
           {showCreateTenant ? (
             <Panel
               title="Criar tenant"
@@ -545,19 +581,7 @@ export function TenantsPage() {
 
           <Panel
             title="Base de tenants"
-            description="Lista principal para localizar o cliente, conferir o estado atual e abrir o contexto do tenant selecionado."
-            actions={
-              <>
-                <TextInput
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Buscar por nome, slug ou contato primario"
-                  value={query}
-                />
-                <GhostButton onClick={() => void loadTenants(selectedTenantId)}>
-                  Recarregar
-                </GhostButton>
-              </>
-            }
+            description="Lista principal para localizar o cliente, conferir o estado atual e abrir o contexto operacional do tenant selecionado."
           >
             {tenants.length === 0 ? (
               <EmptyState
@@ -570,67 +594,47 @@ export function TenantsPage() {
                 description="Ajuste o termo de busca para recuperar um tenant ja existente."
               />
             ) : (
-              <div className="overflow-hidden rounded-[24px] border border-[color:var(--color-border)]">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-left text-sm">
-                    <thead className="bg-[color:var(--color-surface)] text-[color:var(--color-muted)]">
-                      <tr>
-                        <th className="px-4 py-3 font-medium">Tenant</th>
-                        <th className="px-4 py-3 font-medium">Status</th>
-                        <th className="px-4 py-3 font-medium">Memberships</th>
-                        <th className="px-4 py-3 font-medium">Contato primario</th>
-                        <th className="px-4 py-3 font-medium">Atualizado</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredTenants.map((tenant) => {
-                        const isSelected = tenant.id === selectedTenantId;
+              <div className="space-y-3">
+                {filteredTenants.map((tenant) => {
+                  const isSelected = tenant.id === selectedTenantId;
 
-                        return (
-                          <tr
-                            key={tenant.id}
-                            className={isSelected ? 'bg-[rgba(48,127,226,0.08)]' : 'bg-white'}
-                          >
-                            <td className="px-4 py-3">
-                              <button
-                                className="flex w-full flex-col items-start gap-1 rounded-2xl text-left outline-none focus:ring-2 focus:ring-[color:var(--color-brand-blue)]/25"
-                                onClick={() => setSelectedTenantId(tenant.id)}
-                                type="button"
-                              >
-                                <span className="font-medium text-[color:var(--color-ink)]">
-                                  {tenant.display_name}
-                                </span>
-                                <span className="text-xs text-[color:var(--color-muted)]">
-                                  {tenant.slug} · {tenant.legal_name}
-                                </span>
-                              </button>
-                            </td>
-                            <td className="px-4 py-3">
-                              <StatusPill tone={toneForTenantStatus(tenant.status)}>
-                                {tenant.status}
-                              </StatusPill>
-                            </td>
-                            <td className="px-4 py-3 text-[color:var(--color-ink)]">
-                              {tenant.active_membership_count}/{tenant.membership_count}
-                            </td>
-                            <td className="px-4 py-3 text-[color:var(--color-muted)]">
-                              {tenant.primary_contact_full_name ?? '—'}
-                            </td>
-                            <td className="px-4 py-3 text-[color:var(--color-muted)]">
-                              {formatDateTime(tenant.updated_at)}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                  return (
+                    <button
+                      className={cx(
+                        'flex w-full flex-col gap-3 rounded-[22px] border px-4 py-4 text-left transition',
+                        isSelected
+                          ? 'border-[rgba(48,127,226,0.42)] bg-[rgba(48,127,226,0.08)] shadow-[0_10px_24px_rgba(19,33,79,0.06)]'
+                          : 'border-[color:var(--color-border)] bg-white hover:border-[rgba(48,127,226,0.24)]',
+                      )}
+                      key={tenant.id}
+                      onClick={() => setSelectedTenantId(tenant.id)}
+                      type="button"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <StatusPill tone={toneForTenantStatus(tenant.status)}>
+                          {tenant.status}
+                        </StatusPill>
+                        <StatusPill>{tenant.active_membership_count}/{tenant.membership_count} memberships</StatusPill>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-semibold text-[color:var(--color-ink)]">
+                          {tenant.display_name}
+                        </p>
+                        <p className="text-sm text-[color:var(--color-muted)]">
+                          {tenant.slug} · {tenant.legal_name}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[color:var(--color-muted)]">
+                        <span>Contato principal: {tenant.primary_contact_full_name ?? '—'}</span>
+                        <span>Atualizado em {formatDateTime(tenant.updated_at)}</span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </Panel>
-        </div>
 
-        <div className="space-y-6">
           <Panel
             title="Tenant selecionado"
             description="Resumo do cliente ativo para decidir o proximo ajuste operacional."
@@ -928,8 +932,9 @@ export function TenantsPage() {
               </div>
             )}
           </Panel>
-        </div>
-      </div>
+          </div>
+        }
+      />
     </div>
   );
 }

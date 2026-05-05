@@ -30,6 +30,10 @@
 
 ## Regra de layout
 - menos cards e mais superficies de trabalho
+- shell interno opera em 3 camadas quando necessario:
+  - sidebar principal para navegacao global
+  - subsidebar contextual para filtros, tools, atalhos e contexto auxiliar
+  - area principal para a tarefa real
 - toolbar por dominio sempre que houver triagem, filtro ou acoes recorrentes
 - no maximo 2 zonas principais por tela na maior parte dos casos
 - rails laterais servem apoio operacional e podem ser recolhidos
@@ -45,6 +49,7 @@
 - tokens de cor
 - primitives de formulario, painel e estado
 - comportamento de sidebar colapsavel em ambientes internos
+- primitives de subsidebar contextual, desde que o conteudo continue sendo especifico do dominio
 
 ## O que nao deve ser compartilhado por inercia
 - layout principal de pagina
@@ -89,8 +94,21 @@
 - superficies operacionais nao podem abrir com muitos blocos equivalentes competindo ao mesmo tempo
 - a maior area util deve pertencer ao fluxo principal da tarefa
 - contexto secundario nao pode esmagar lista, conversa ou revisao
+- subsidebars devem reduzir carga cognitiva, nunca criar uma terceira coluna pesada
 - badges devem existir apenas quando ajudam a decidir ou priorizar
 - acoes de excecao devem ser rebaixadas ou recolhidas
+
+## Regra de subsidebar contextual
+- a sidebar principal nunca carrega contexto detalhado da tela
+- a subsidebar contextual muda por dominio e rota
+- a subsidebar concentra:
+  - filtros
+  - filas rapidas
+  - atalhos
+  - contexto auxiliar
+  - ferramentas operacionais
+- a subsidebar deve ser compacta, escaneavel e colapsavel quando a largura precisar voltar para a area principal
+- detalhe tecnico, trilha de auditoria e historico longo continuam em accordion ou drawer, nao na camada inicial da subsidebar
 
 ## Regra de decisao para futuras fases
 - antes de reutilizar um layout existente, validar se a operacao real do dominio e a mesma

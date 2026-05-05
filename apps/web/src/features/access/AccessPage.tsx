@@ -28,6 +28,9 @@ import {
 } from '../../components/states';
 import {
   AppButton,
+  ContextSubsidebar,
+  ContextSubsidebarSection,
+  cx,
   Field,
   GhostButton,
   InlineNotice,
@@ -38,6 +41,7 @@ import {
   SummaryStrip,
   SummaryStripItem,
   TextInput,
+  WorkspaceSplit,
 } from '../../components/ui';
 import {
   MEMBERSHIP_STATUSES,
@@ -391,39 +395,54 @@ export function AccessPage() {
           description="Gerencie quem entra em cada cliente operacional, com foco em convite, funcao e continuidade segura de acesso."
         />
 
-      <SummaryStrip>
-        <SummaryStripItem helper="base atual" label="Acessos" value={String(totalMemberships)} />
-        <SummaryStripItem helper="operando hoje" label="Ativos" tone="positive" value={String(activeMemberships)} />
-        <SummaryStripItem helper="aguardando aceite" label="Convidados" tone="warning" value={String(invitedMemberships)} />
-        <SummaryStripItem helper="fora de operacao" label="Revogados" tone="critical" value={String(revokedMemberships)} />
-      </SummaryStrip>
+      <WorkspaceSplit
+        layoutClassName="xl:grid-cols-[292px_minmax(0,1fr)]"
+        sidebar={
+          <ContextSubsidebar
+            description="Tenant, filtros e indicadores ficam fora da area principal para deixar a gestao de acesso mais direta."
+            title="Ferramentas de acesso"
+          >
+            <ContextSubsidebarSection description="Pulso atual da governanca de acesso." title="Resumo">
+              <SummaryStrip className="border-0 bg-transparent px-0 py-0 shadow-none">
+                <SummaryStripItem helper="base atual" label="Acessos" value={String(totalMemberships)} />
+                <SummaryStripItem helper="operando hoje" label="Ativos" tone="positive" value={String(activeMemberships)} />
+                <SummaryStripItem helper="aguardando aceite" label="Convidados" tone="warning" value={String(invitedMemberships)} />
+                <SummaryStripItem helper="fora de operacao" label="Revogados" tone="critical" value={String(revokedMemberships)} />
+              </SummaryStrip>
+            </ContextSubsidebarSection>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(420px,0.92fr)] 2xl:grid-cols-[minmax(0,1.14fr)_minmax(500px,0.86fr)]">
-        <div className="space-y-6">
-          <Panel
-            title="Acessos por cliente"
-            description="Lista principal para localizar quem esta com acesso, em qual cliente e em qual funcao."
-            actions={
-              <>
+            <ContextSubsidebarSection description="Recorte por cliente e busca operacional." title="Filtros">
+              <Field label="Cliente">
                 <SelectInput
                   onChange={(event) => setSelectedTenantFilter(event.target.value)}
                   value={selectedTenantFilter}
                 >
-                    <option value="all">Todos os clientes</option>
+                  <option value="all">Todos os clientes</option>
                   {tenants.map((tenant) => (
                     <option key={tenant.id} value={tenant.id}>
                       {tenant.display_name}
                     </option>
                   ))}
                 </SelectInput>
+              </Field>
+              <Field label="Buscar">
                 <TextInput
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Buscar por cliente, nome, email ou funcao"
                   value={query}
                 />
-                <GhostButton onClick={() => void loadSurface()}>Recarregar</GhostButton>
-              </>
-            }
+              </Field>
+              <GhostButton className="min-h-11 w-full px-4" onClick={() => void loadSurface()}>
+                Recarregar
+              </GhostButton>
+            </ContextSubsidebarSection>
+          </ContextSubsidebar>
+        }
+        main={
+          <div className="space-y-6">
+          <Panel
+            title="Acessos por cliente"
+            description="Lista principal para localizar quem esta com acesso, em qual cliente e em qual funcao."
           >
             {memberships.length === 0 ? (
               <EmptyState
@@ -436,67 +455,47 @@ export function AccessPage() {
                 description="Ajuste o tenant selecionado ou o termo de busca."
               />
             ) : (
-              <div className="overflow-hidden rounded-[24px] border border-[color:var(--color-border)]">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-left text-sm">
-                    <thead className="bg-[color:var(--color-surface)] text-[color:var(--color-muted)]">
-                      <tr>
-                        <th className="px-4 py-3 font-medium">Membro</th>
-                        <th className="px-4 py-3 font-medium">Cliente</th>
-                        <th className="px-4 py-3 font-medium">Role</th>
-                        <th className="px-4 py-3 font-medium">Status</th>
-                        <th className="px-4 py-3 font-medium">Atualizado</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredMemberships.map((membership) => {
-                        const isSelected = membership.id === selectedMembershipId;
+              <div className="space-y-3">
+                {filteredMemberships.map((membership) => {
+                  const isSelected = membership.id === selectedMembershipId;
 
-                        return (
-                          <tr
-                            key={membership.id}
-                            className={isSelected ? 'bg-[rgba(48,127,226,0.08)]' : 'bg-white'}
-                          >
-                            <td className="px-4 py-3">
-                              <button
-                                className="flex w-full flex-col items-start gap-1 rounded-2xl text-left outline-none focus:ring-2 focus:ring-[color:var(--color-brand-blue)]/25"
-                                onClick={() => setSelectedMembershipId(membership.id)}
-                                type="button"
-                              >
-                                <span className="font-medium text-[color:var(--color-ink)]">
-                                  {membership.user_full_name ?? 'Usuario sem nome'}
-                                </span>
-                                <span className="text-xs text-[color:var(--color-muted)]">
-                                  {membership.user_email ?? membership.user_id}
-                                </span>
-                              </button>
-                            </td>
-                            <td className="px-4 py-3 text-[color:var(--color-muted)]">
-                              {membership.tenant_display_name}
-                            </td>
-                            <td className="px-4 py-3 text-[color:var(--color-ink)]">
-                              {membership.role}
-                            </td>
-                            <td className="px-4 py-3">
-                              <StatusPill tone={toneForMembershipStatus(membership.status)}>
-                                {humanMembershipStatus(membership.status)}
-                              </StatusPill>
-                            </td>
-                            <td className="px-4 py-3 text-[color:var(--color-muted)]">
-                              {formatDateTime(membership.updated_at)}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                  return (
+                    <button
+                      className={cx(
+                        'flex w-full flex-col gap-3 rounded-[22px] border px-4 py-4 text-left transition',
+                        isSelected
+                          ? 'border-[rgba(48,127,226,0.42)] bg-[rgba(48,127,226,0.08)] shadow-[0_10px_24px_rgba(19,33,79,0.06)]'
+                          : 'border-[color:var(--color-border)] bg-white hover:border-[rgba(48,127,226,0.24)]',
+                      )}
+                      key={membership.id}
+                      onClick={() => setSelectedMembershipId(membership.id)}
+                      type="button"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <StatusPill tone={toneForMembershipStatus(membership.status)}>
+                          {humanMembershipStatus(membership.status)}
+                        </StatusPill>
+                        <StatusPill>{membership.role}</StatusPill>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-semibold text-[color:var(--color-ink)]">
+                          {membership.user_full_name ?? 'Usuario sem nome'}
+                        </p>
+                        <p className="text-sm text-[color:var(--color-muted)]">
+                          {membership.user_email ?? membership.user_id}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[color:var(--color-muted)]">
+                        <span>Cliente: {membership.tenant_display_name}</span>
+                        <span>Atualizado em {formatDateTime(membership.updated_at)}</span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </Panel>
-        </div>
 
-        <div className="space-y-6">
           <Panel
             title="Adicionar acesso"
             description="Convide ou vincule uma pessoa a um cliente operacional sem tirar o foco da operacao."
@@ -787,8 +786,9 @@ export function AccessPage() {
               </div>
             )}
           </Panel>
-        </div>
-      </div>
+          </div>
+        }
+      />
     </div>
   );
 }

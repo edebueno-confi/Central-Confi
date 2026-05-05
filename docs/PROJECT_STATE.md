@@ -541,6 +541,19 @@ Documentos históricos:
     - manter a decisao de `can_send_to_customer` e de `public_article_path` no backend
     - evitar concatenacao fragil de `/help/:spaceSlug/articles/:articleSlug` no frontend
   - O proximo contrato candidato dessa ponte passa a ser `vw_support_knowledge_public_link_candidates`.
+- Fase 6.18: Contextual Subsidebar UX Pattern concluida localmente.
+  - O shell interno passou a formalizar 3 camadas de operacao:
+    - sidebar global
+    - subsidebar contextual
+    - area principal de trabalho
+  - Support, Admin, Knowledge e Central Publica foram auditados contra esse contrato.
+  - O frontend agora usa primitives compartilhadas de subsidebar para:
+    - filtros e filas rapidas no suporte
+    - operacao do ticket fora da conversa principal
+    - stack e atalhos no customer context
+    - filtros editoriais no Knowledge
+    - filtros e acoes recorrentes em Tenants, Access e System
+  - A fixture local de suporte tambem passou a garantir a central publica `genius` com artigo publicado de smoke, evitando falso positivo de link quebrado em `/help/genius`.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.

@@ -20,6 +20,8 @@ import {
 } from '../../components/states';
 import {
   AppButton,
+  ContextSubsidebar,
+  ContextSubsidebarSection,
   Field,
   GhostButton,
   InlineNotice,
@@ -29,6 +31,7 @@ import {
   StatusPill,
   TextInput,
   TextareaInput,
+  WorkspaceSplit,
   cx,
 } from '../../components/ui';
 import { useAuthContext } from '../auth/auth-context';
@@ -472,6 +475,33 @@ function SupportConversation({
           </div>
         )}
       </details>
+    </div>
+  );
+}
+
+function SupportTechnicalHistory({
+  window,
+}: {
+  window: SupportTicketTimelineRecentWindow;
+}) {
+  const eventEntries = window.entries.filter((entry) => entry.entryType === 'event');
+
+  if (eventEntries.length === 0) {
+    return (
+      <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+        Nenhum registro tecnico adicional apareceu nesta janela recente.
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs leading-5 text-[color:var(--color-muted)]">
+        Mostrando {eventEntries.length} registro(s) de apoio dentro de {window.totalAvailableCount} itens recentes.
+      </p>
+      {eventEntries.map((entry) => (
+        <TechnicalTimelineRow key={entry.timelineEntryId} entry={entry} />
+      ))}
     </div>
   );
 }
@@ -952,15 +982,17 @@ function SupportQueueToolbar({
   assigneeOptions,
   onChange,
   onRefresh,
+  embedded = false,
 }: {
   filters: QueueFilters;
   tenantOptions: Array<{ id: string; label: string }>;
   assigneeOptions: Array<{ id: string; label: string }>;
   onChange: (next: QueueFilters) => void;
   onRefresh: () => void;
+  embedded?: boolean;
 }) {
-  return (
-    <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
+  const content = (
+    <>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1">
           <p className="text-sm font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
@@ -973,7 +1005,7 @@ function SupportQueueToolbar({
         <GhostButton onClick={onRefresh}>Recarregar</GhostButton>
       </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+      <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-1">
         <Field label="Status">
           <SelectInput
             onChange={(event) => onChange({ ...filters, status: event.target.value as QueueFilters['status'] })}
@@ -1054,6 +1086,16 @@ function SupportQueueToolbar({
           </SelectInput>
         </Field>
       </div>
+    </>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
+  return (
+    <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
+      {content}
     </div>
   );
 }
@@ -2416,91 +2458,181 @@ function SupportWorkspaceView({
   const selectedQueueTicket =
     tickets.find((ticket) => ticket.id === selectedTicketId) ?? null;
   const previewTicket = ticketDetail ?? null;
+  const queueShortcuts = [
+    {
+      key: 'mine',
+      label: 'Meus tickets',
+      helper: 'fila pessoal',
+      active:
+        filters.assignedToUserId !== 'all' &&
+        currentUserAssignableAgent?.userId != null &&
+        filters.assignedToUserId === currentUserAssignableAgent.userId,
+      apply: () =>
+        setFilters({
+          ...filters,
+          assignedToUserId: currentUserAssignableAgent?.userId ?? 'all',
+        }),
+      disabled: !currentUserAssignableAgent?.userId,
+    },
+    {
+      key: 'unassigned',
+      label: 'Nao atribuidos',
+      helper: 'pedem dono',
+      active: filters.assignedToUserId === 'unassigned',
+      apply: () => setFilters({ ...filters, assignedToUserId: 'unassigned' }),
+      disabled: false,
+    },
+    {
+      key: 'urgent',
+      label: 'Urgentes',
+      helper: 'alta prioridade',
+      active: filters.priority === 'urgent' || filters.severity === 'critical',
+      apply: () =>
+        setFilters({ ...filters, priority: 'urgent', severity: 'all' }),
+      disabled: false,
+    },
+    {
+      key: 'waiting-customer',
+      label: 'Aguardando cliente',
+      helper: 'retorno externo',
+      active: filters.status === 'waiting_customer',
+      apply: () => setFilters({ ...filters, status: 'waiting_customer' }),
+      disabled: false,
+    },
+  ] as const;
 
   return (
     <div className="space-y-5">
       <PageHeader
         eyebrow="Support Workspace"
-        title={variant === 'queue' ? 'Fila operacional' : 'Cockpit de tickets'}
+        title={variant === 'queue' ? 'Fila operacional' : 'Ticket workspace'}
         description={
           variant === 'queue'
-            ? 'Triagem enxuta para decidir rapidamente qual ticket entra em atendimento.'
-            : 'Tratativa do ticket em fluxo continuo: resposta, nota interna, status, timeline e contexto do cliente.'
+            ? 'Sidebar global para navegar, subsidebar para triagem e area principal para decidir o proximo atendimento.'
+            : 'Sidebar global para navegar, subsidebar para operar o ticket e area principal reservada para conversa e resposta.'
         }
       />
 
       {variant === 'queue' ? (
-        <div className="space-y-4">
-          <div className="space-y-3 rounded-[24px] border border-[color:var(--color-border)] bg-white/92 px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
-            <SupportQueueToolbar
-              assigneeOptions={assigneeOptions}
-              filters={filters}
-              onChange={setFilters}
-              onRefresh={() => void loadQueue(focusTicketId ?? null)}
-              tenantOptions={tenantOptions}
-            />
-
-            <SupportSummaryStrip
-              highAttention={highAttention}
-              totalOpen={totalOpen}
-              unassigned={unassigned}
-              waitingCustomer={waitingCustomer}
-            />
-          </div>
-
-          <div className="grid gap-5 xl:grid-cols-[minmax(0,0.72fr)_minmax(320px,0.28fr)]">
-            <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-5 py-5 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
-              <div className="mb-4 space-y-1">
-                <h2 className="text-lg font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
-                  Fila de tickets
-                </h2>
-                <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                  Lista dominante para decidir o proximo atendimento sem excesso de metadados.
-                </p>
-              </div>
-              {tickets.length === 0 ? (
-                <EmptyState
-                  title="Sem tickets para esta combinacao de filtros"
-                  description="Nenhum ticket apareceu com esse recorte. Ajuste os filtros ou recarregue a fila."
-                />
-              ) : (
-                <div className="space-y-3">
-                  {tickets.map((ticket) => (
-                    <SupportQueueItem
-                      isSelected={ticket.id === selectedTicketId}
-                      key={ticket.id}
-                      onSelect={() => handleSelectTicket(ticket.id)}
-                      ticket={ticket}
-                    />
+        <WorkspaceSplit
+          layoutClassName="xl:grid-cols-[292px_minmax(0,1fr)]"
+          sidebar={
+            <ContextSubsidebar
+              description="Filtros, filas rapidas e atalhos ficam aqui para deixar a lista principal livre para a triagem."
+              title="Triagem da fila"
+            >
+              <ContextSubsidebarSection
+                description="Recortes operacionais para chegar mais rapido ao proximo ticket."
+                title="Filas rapidas"
+              >
+                <div className="grid gap-2">
+                  {queueShortcuts.map((shortcut) => (
+                    <button
+                      className={cx(
+                        'flex min-h-12 items-center justify-between gap-3 rounded-[18px] border px-4 py-3 text-left transition',
+                        shortcut.active
+                          ? 'border-[rgba(48,127,226,0.42)] bg-[rgba(48,127,226,0.08)] text-[color:var(--color-brand-blue)]'
+                          : 'border-[color:var(--color-border)] bg-white text-[color:var(--color-ink)] hover:border-[rgba(48,127,226,0.28)] hover:bg-white',
+                        shortcut.disabled && 'cursor-not-allowed opacity-50',
+                      )}
+                      disabled={shortcut.disabled}
+                      key={shortcut.key}
+                      onClick={shortcut.apply}
+                      type="button"
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold">{shortcut.label}</span>
+                        <span className="block text-xs text-[color:var(--color-muted)]">
+                          {shortcut.helper}
+                        </span>
+                      </span>
+                      <span className="text-xs font-semibold uppercase tracking-[0.16em]">
+                        abrir
+                      </span>
+                    </button>
                   ))}
                 </div>
-              )}
-            </section>
+              </ContextSubsidebarSection>
 
-            <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-5 py-5 shadow-[0_14px_28px_rgba(19,33,79,0.08)] xl:sticky xl:top-4">
-              <div className="mb-4 space-y-1">
-                <h2 className="text-lg font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
-                  Ticket selecionado
-                </h2>
-                <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                  Preview curto antes de entrar na tratativa completa.
-                </p>
-              </div>
-              {detailPhase === 'loading' ? (
-                <LoadingState
-                  title="Carregando previa"
-                  description="Estamos preparando a previa do ticket selecionado."
+              <ContextSubsidebarSection
+                description="Ajuste o recorte sem ocupar a area de trabalho principal."
+                title="Filtros"
+              >
+                <SupportQueueToolbar
+                  assigneeOptions={assigneeOptions}
+                  embedded
+                  filters={filters}
+                  onChange={setFilters}
+                  onRefresh={() => void loadQueue(focusTicketId ?? null)}
+                  tenantOptions={tenantOptions}
                 />
-              ) : detailPhase === 'contract-unavailable' ? (
-                <ContractUnavailableState contractName="previa operacional do ticket" />
-              ) : detailPhase === 'error' ? (
-                <ErrorState description={detailMessage ?? 'A previa do ticket nao ficou disponivel.'} />
-              ) : (
-                <SupportTicketPreview customer={customer} detail={previewTicket} ticket={selectedQueueTicket} />
-              )}
-            </section>
-          </div>
-        </div>
+              </ContextSubsidebarSection>
+            </ContextSubsidebar>
+          }
+          main={
+            <div className="space-y-4">
+              <SupportSummaryStrip
+                highAttention={highAttention}
+                totalOpen={totalOpen}
+                unassigned={unassigned}
+                waitingCustomer={waitingCustomer}
+              />
+
+              <div className="grid gap-5 xl:grid-cols-[minmax(0,0.72fr)_minmax(320px,0.28fr)]">
+                <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-5 py-5 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
+                  <div className="mb-4 space-y-1">
+                    <h2 className="text-lg font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+                      Fila dominante
+                    </h2>
+                    <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                      A fila continua no centro da decisao. O preview lateral so confirma o contexto antes da tratativa.
+                    </p>
+                  </div>
+                  {tickets.length === 0 ? (
+                    <EmptyState
+                      title="Sem tickets para esta combinacao de filtros"
+                      description="Nenhum ticket apareceu com esse recorte. Ajuste os filtros ou recarregue a fila."
+                    />
+                  ) : (
+                    <div className="space-y-3">
+                      {tickets.map((ticket) => (
+                        <SupportQueueItem
+                          isSelected={ticket.id === selectedTicketId}
+                          key={ticket.id}
+                          onSelect={() => handleSelectTicket(ticket.id)}
+                          ticket={ticket}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </section>
+
+                <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-5 py-5 shadow-[0_14px_28px_rgba(19,33,79,0.08)] xl:sticky xl:top-4">
+                  <div className="mb-4 space-y-1">
+                    <h2 className="text-lg font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+                      Preview do ticket
+                    </h2>
+                    <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                      Leitura curta antes de abrir o atendimento completo.
+                    </p>
+                  </div>
+                  {detailPhase === 'loading' ? (
+                    <LoadingState
+                      title="Carregando previa"
+                      description="Estamos preparando a previa do ticket selecionado."
+                    />
+                  ) : detailPhase === 'contract-unavailable' ? (
+                    <ContractUnavailableState contractName="previa operacional do ticket" />
+                  ) : detailPhase === 'error' ? (
+                    <ErrorState description={detailMessage ?? 'A previa do ticket nao ficou disponivel.'} />
+                  ) : (
+                    <SupportTicketPreview customer={customer} detail={previewTicket} ticket={selectedQueueTicket} />
+                  )}
+                </section>
+              </div>
+            </div>
+          }
+        />
       ) : detailPhase === 'idle' ? (
         <Panel
           className="bg-white"
@@ -2568,7 +2700,7 @@ function SupportWorkspaceView({
                   className="min-h-11 px-4"
                   onClick={() => setTicketRailOpen((current) => !current)}
                 >
-                  {ticketRailOpen ? 'Recolher operacao' : 'Mostrar operacao'}
+                  {ticketRailOpen ? 'Recolher contexto lateral' : 'Mostrar contexto lateral'}
                 </GhostButton>
               </div>
             </div>
@@ -2576,191 +2708,105 @@ function SupportWorkspaceView({
 
           {detailNotice ? <InlineNotice tone={detailNoticeTone}>{detailNotice}</InlineNotice> : null}
 
-          <div
-            className={cx(
-              'grid gap-5',
-              ticketRailOpen ? 'xl:grid-cols-[minmax(0,1fr)_340px]' : 'xl:grid-cols-1',
-            )}
-          >
-            <div className="space-y-5">
-              <Panel
-                className="bg-white"
-                title="Atendimento em andamento"
-                description="A conversa fica no centro da tratativa. Resposta publica e nota interna usam o mesmo fluxo, sem desviar para formularios tecnicos."
-              >
-                <div className="space-y-4">
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      className={cx(
-                        'inline-flex min-h-11 items-center justify-center rounded-full border px-5 py-2 text-sm font-semibold transition',
-                        composerMode === 'public'
-                          ? 'border-[rgba(48,127,226,0.28)] bg-[rgba(48,127,226,0.1)] text-[color:var(--color-brand-blue)]'
-                          : 'border-[color:var(--color-border)] bg-white text-[color:var(--color-muted)]',
-                      )}
-                      disabled={!canUsePublicComposer}
-                      onClick={() => setComposerMode('public')}
-                      type="button"
-                    >
-                      Resposta publica
-                    </button>
-                    <button
-                      className={cx(
-                        'inline-flex min-h-11 items-center justify-center rounded-full border px-5 py-2 text-sm font-semibold transition',
-                        composerMode === 'internal'
-                          ? 'border-[color:var(--color-danger-border)] bg-[color:var(--color-danger-surface)] text-[color:var(--color-danger-ink)]'
-                          : 'border-[color:var(--color-border)] bg-white text-[color:var(--color-muted)]',
-                      )}
-                      disabled={!canUseInternalComposer}
-                      onClick={() => setComposerMode('internal')}
-                      type="button"
-                    >
-                      Nota interna
-                    </button>
-                  </div>
+          {ticketRailOpen ? (
+            <WorkspaceSplit
+              layoutClassName="xl:grid-cols-[300px_minmax(0,1fr)]"
+              sidebar={
+                <ContextSubsidebar
+                  description="Operacao essencial, contexto do cliente e conhecimento de apoio ficam fora da conversa principal."
+                  title="Ferramentas do ticket"
+                >
+                  <ContextSubsidebarSection
+                    description="Status atual, prioridade e dono do ticket."
+                    title="Operacao"
+                  >
+                    <div className="flex flex-wrap gap-2">
+                      <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>{humanizeStatus(ticketDetail.status)}</StatusPill>
+                      <StatusPill tone={toneForPriority(ticketDetail.priority)}>{ticketDetail.priority}</StatusPill>
+                      <StatusPill tone={toneForSeverity(ticketDetail.severity)}>{ticketDetail.severity}</StatusPill>
+                    </div>
+                    <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                      {formatAssignedAgentSummary(currentAssignedAgent)
+                        ?? ticketDetail.assignedToFullName
+                        ?? 'Ticket sem agente atribuido no momento.'}
+                    </p>
+                  </ContextSubsidebarSection>
 
-                  <InlineNotice tone={composerMode === 'public' ? 'default' : 'critical'}>
-                    {composerMode === 'public'
-                      ? 'Modo resposta publica: a devolutiva abaixo sera visivel ao cliente B2B.'
-                      : 'Modo nota interna: este registro fica restrito ao time interno autorizado.'}
-                  </InlineNotice>
-
-                  <form className="space-y-4" onSubmit={handleSubmitComposer}>
-                    <Field
-                      label={composerMode === 'public' ? 'Responder cliente' : 'Registrar nota interna'}
-                    >
-                      <TextareaInput
-                        onChange={(event) =>
-                          composerMode === 'public'
-                            ? setMessageDraft(event.target.value)
-                            : setNoteDraft(event.target.value)
-                        }
-                        placeholder={
-                          composerMode === 'public'
-                            ? 'Escreva a devolutiva tecnico-operacional ao cliente B2B.'
-                            : 'Registre contexto interno, proximo passo, handoff ou observacao de suporte.'
-                        }
-                        value={composerDraft}
-                      />
-                    </Field>
-                    <AppButton
-                      className={
-                        composerMode === 'internal'
-                          ? 'min-h-12 bg-[linear-gradient(135deg,#7c2648,#b63f76)] px-6'
-                          : 'min-h-12 px-6'
-                      }
-                      disabled={composerDisabled}
-                      type="submit"
-                    >
-                      {submitting
-                        ? 'Salvando...'
-                        : composerMode === 'public'
-                          ? 'Enviar resposta publica'
-                          : 'Registrar nota interna'}
-                    </AppButton>
-                  </form>
-                  <div className="border-t border-[color:var(--color-border)] pt-4">
-                    <div className="mb-3 space-y-1">
-                      <h4 className="text-base font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
-                        Conversa recente
-                      </h4>
+                  <ContextSubsidebarSection
+                    description="Atribuicao segura para manter a tratativa com responsavel claro."
+                    title="Responsavel"
+                  >
+                    {agentsPhase === 'contract-unavailable' ? (
+                      <InlineNotice tone="critical">
+                        {agentsMessage ?? 'A lista de agentes nao ficou disponivel neste ambiente.'}
+                      </InlineNotice>
+                    ) : agentsPhase === 'error' ? (
+                      <InlineNotice tone="critical">
+                        {agentsMessage ?? 'Nao foi possivel carregar o diretorio de agentes atribuiveis.'}
+                      </InlineNotice>
+                    ) : agentsPhase === 'loading' ? (
                       <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                        Mensagens e notas internas ficam no fluxo principal. O historico tecnico fica recolhido sob demanda.
+                        Carregando agentes disponiveis para este cliente...
                       </p>
-                    </div>
-                    <SupportConversation window={timelineWindow} />
-                  </div>
-                </div>
-              </Panel>
-            </div>
+                    ) : assignableAgents.length === 0 ? (
+                      <InlineNotice tone="warning">
+                        Nenhum agente ativo ficou disponivel para este cliente. Use o fallback manual apenas se necessario.
+                      </InlineNotice>
+                    ) : (
+                      <form className="space-y-3" onSubmit={handleAssign}>
+                        <Field label="Selecionar agente">
+                          <SelectInput
+                            onChange={(event) => setAssignDraft(event.target.value)}
+                            value={assignDraft}
+                          >
+                            <option value="">Sem responsavel</option>
+                            {assignableAgents.map((agent) => (
+                              <option key={`${agent.tenantId}:${agent.userId}`} value={agent.userId}>
+                                {formatAssignableAgentLabel(agent)}
+                              </option>
+                            ))}
+                          </SelectInput>
+                        </Field>
+                        <AppButton
+                          className="min-h-12 w-full px-5"
+                          disabled={submitting || !ticketDetail.canAssign}
+                          type="submit"
+                        >
+                          {submitting ? 'Salvando...' : 'Salvar responsavel'}
+                        </AppButton>
+                        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+                          <GhostButton
+                            className="min-h-11 px-4"
+                            disabled={
+                              submitting ||
+                              !ticketDetail.canAssign ||
+                              !currentUserAssignableAgent
+                            }
+                            onClick={() =>
+                              void runAssignment(currentUserAssignableAgent?.userId ?? null)
+                            }
+                            type="button"
+                          >
+                            Atribuir a mim
+                          </GhostButton>
+                          <GhostButton
+                            className="min-h-11 px-4"
+                            disabled={submitting || !ticketDetail.canAssign || !ticketDetail.assignedToUserId}
+                            onClick={() => void runAssignment(null)}
+                            type="button"
+                          >
+                            Desatribuir
+                          </GhostButton>
+                        </div>
+                      </form>
+                    )}
+                  </ContextSubsidebarSection>
 
-            {ticketRailOpen ? (
-              <aside className="space-y-4 xl:sticky xl:top-4 xl:self-start">
-                <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <p className="text-sm font-semibold text-[color:var(--color-ink)]">Operacao do ticket</p>
-                      <div className="flex flex-wrap gap-2">
-                        <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>{humanizeStatus(ticketDetail.status)}</StatusPill>
-                        <StatusPill tone={toneForPriority(ticketDetail.priority)}>{ticketDetail.priority}</StatusPill>
-                        <StatusPill tone={toneForSeverity(ticketDetail.severity)}>{ticketDetail.severity}</StatusPill>
-                      </div>
-                      <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                        {formatAssignedAgentSummary(currentAssignedAgent)
-                          ?? ticketDetail.assignedToFullName
-                          ?? 'Ticket sem agente atribuido no momento.'}
-                      </p>
-                    </div>
-
-                    <div className="space-y-3 border-t border-[color:var(--color-border)] pt-4">
-                      {agentsPhase === 'contract-unavailable' ? (
-                        <InlineNotice tone="critical">
-                          {agentsMessage ?? 'A lista de agentes nao ficou disponivel neste ambiente.'}
-                        </InlineNotice>
-                      ) : agentsPhase === 'error' ? (
-                        <InlineNotice tone="critical">
-                          {agentsMessage ?? 'Nao foi possivel carregar o diretorio de agentes atribuiveis.'}
-                        </InlineNotice>
-                      ) : agentsPhase === 'loading' ? (
-                        <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                          Carregando agentes disponiveis para este cliente...
-                        </p>
-                      ) : assignableAgents.length === 0 ? (
-                        <InlineNotice tone="warning">
-                          Nenhum agente ativo ficou disponivel para este cliente. Use o fallback manual apenas se necessario.
-                        </InlineNotice>
-                      ) : (
-                        <form className="space-y-3" onSubmit={handleAssign}>
-                          <Field label="Selecionar agente">
-                            <SelectInput
-                              onChange={(event) => setAssignDraft(event.target.value)}
-                              value={assignDraft}
-                            >
-                              <option value="">Sem responsavel</option>
-                              {assignableAgents.map((agent) => (
-                                <option key={`${agent.tenantId}:${agent.userId}`} value={agent.userId}>
-                                  {formatAssignableAgentLabel(agent)}
-                                </option>
-                              ))}
-                            </SelectInput>
-                          </Field>
-                          <div className="grid gap-2">
-                            <AppButton
-                              className="min-h-12 px-5"
-                              disabled={submitting || !ticketDetail.canAssign}
-                              type="submit"
-                            >
-                              {submitting ? 'Salvando...' : 'Salvar responsavel'}
-                            </AppButton>
-                            <div className="flex flex-wrap gap-2">
-                              <GhostButton
-                                className="min-h-11 px-4"
-                                disabled={
-                                  submitting ||
-                                  !ticketDetail.canAssign ||
-                                  !currentUserAssignableAgent
-                                }
-                                onClick={() =>
-                                  void runAssignment(currentUserAssignableAgent?.userId ?? null)
-                                }
-                                type="button"
-                              >
-                                Atribuir a mim
-                              </GhostButton>
-                              <GhostButton
-                                className="min-h-11 px-4"
-                                disabled={submitting || !ticketDetail.canAssign || !ticketDetail.assignedToUserId}
-                                onClick={() => void runAssignment(null)}
-                                type="button"
-                              >
-                                Desatribuir
-                              </GhostButton>
-                            </div>
-                          </div>
-                        </form>
-                      )}
-                    </div>
-
-                    <form className="space-y-3 border-t border-[color:var(--color-border)] pt-4" onSubmit={handleUpdateStatus}>
+                  <ContextSubsidebarSection
+                    description="Mova o ticket sem tirar a conversa do foco principal."
+                    title="Status"
+                  >
+                    <form className="space-y-3" onSubmit={handleUpdateStatus}>
                       <Field label="Mover status">
                         <SelectInput
                           onChange={(event) =>
@@ -2782,49 +2828,55 @@ function SupportWorkspaceView({
                           value={statusNote}
                         />
                       </Field>
-                      <AppButton className="min-h-12 px-5" disabled={submitting || !ticketDetail.canUpdateStatus} type="submit">
+                      <AppButton
+                        className="min-h-12 w-full px-5"
+                        disabled={submitting || !ticketDetail.canUpdateStatus}
+                        type="submit"
+                      >
                         {submitting ? 'Atualizando...' : 'Salvar status'}
                       </AppButton>
                     </form>
-                  </div>
-                </section>
+                  </ContextSubsidebarSection>
 
-                <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
-                  <SupportCustomerRail
-                    accountContext={customerAccountContext}
-                    compact
-                    customer={customer}
-                    recentEventsWindow={customerRecentEvents}
-                    recentTicketsWindow={customerRecentTickets}
+                  <ContextSubsidebarSection
+                    description="Stack, alertas e contatos uteis para responder sem abrir outra tela."
+                    title="Cliente B2B"
+                  >
+                    <SupportCustomerRail
+                      accountContext={customerAccountContext}
+                      compact
+                      customer={customer}
+                      recentEventsWindow={customerRecentEvents}
+                      recentTicketsWindow={customerRecentTickets}
+                    />
+                  </ContextSubsidebarSection>
+
+                  <SupportKnowledgePanel
+                    articles={filteredKnowledgeArticles}
+                    links={knowledgeLinks}
+                    loading={knowledgeBusy}
+                    message={knowledgeMessage}
+                    noteDraft={knowledgeNoteDraft}
+                    onArchive={(linkId) => void handleArchiveKnowledgeLink(linkId)}
+                    onLinkInternal={(articleId) =>
+                      void handleLinkKnowledgeArticle(articleId, 'reference_internal')
+                    }
+                    onMarkGap={() => void handleMarkDocumentationGap()}
+                    onNeedsUpdate={(articleId) => void handleMarkKnowledgeNeedsUpdate(articleId)}
+                    onNoteChange={setKnowledgeNoteDraft}
+                    onSearchChange={setKnowledgeSearch}
+                    onSendToCustomer={(articleId) =>
+                      void handleLinkKnowledgeArticle(articleId, 'sent_to_customer')
+                    }
+                    phase={knowledgePhase}
+                    search={knowledgeSearch}
                   />
-                </section>
 
-                <SupportKnowledgePanel
-                  articles={filteredKnowledgeArticles}
-                  links={knowledgeLinks}
-                  loading={knowledgeBusy}
-                  message={knowledgeMessage}
-                  noteDraft={knowledgeNoteDraft}
-                  onArchive={(linkId) => void handleArchiveKnowledgeLink(linkId)}
-                  onLinkInternal={(articleId) =>
-                    void handleLinkKnowledgeArticle(articleId, 'reference_internal')
-                  }
-                  onMarkGap={() => void handleMarkDocumentationGap()}
-                  onNeedsUpdate={(articleId) => void handleMarkKnowledgeNeedsUpdate(articleId)}
-                  onNoteChange={setKnowledgeNoteDraft}
-                  onSearchChange={setKnowledgeSearch}
-                  onSendToCustomer={(articleId) =>
-                    void handleLinkKnowledgeArticle(articleId, 'sent_to_customer')
-                  }
-                  phase={knowledgePhase}
-                  search={knowledgeSearch}
-                />
-
-                <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
-                  <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                    Controles tecnicos e acoes de excecao
-                  </summary>
-                  <div className="mt-4 space-y-4">
+                  <ContextSubsidebarSection
+                    collapsible
+                    description="Fallback manual, historico tecnico e acoes de excecao ficam fora da primeira camada."
+                    title="Historico tecnico e avancado"
+                  >
                     <form className="space-y-3" onSubmit={handleAssign}>
                       <Field
                         label="Responsavel manual"
@@ -2832,11 +2884,15 @@ function SupportWorkspaceView({
                       >
                         <TextInput
                           onChange={(event) => setAssignDraft(event.target.value)}
-                          placeholder="00000000-0000-0000-0000-000000000000"
+                          placeholder="Cole o identificador manual apenas em excecao"
                           value={assignDraft}
                         />
                       </Field>
-                      <AppButton className="min-h-11 px-5" disabled={submitting || !ticketDetail.canAssign} type="submit">
+                      <AppButton
+                        className="min-h-11 w-full px-5"
+                        disabled={submitting || !ticketDetail.canAssign}
+                        type="submit"
+                      >
                         {submitting ? 'Salvando...' : 'Salvar responsavel'}
                       </AppButton>
                     </form>
@@ -2853,7 +2909,7 @@ function SupportWorkspaceView({
                               />
                             </Field>
                             <AppButton
-                              className="min-h-11 bg-[linear-gradient(135deg,#8b1e3f,#c3365e)] px-5"
+                              className="min-h-11 w-full bg-[linear-gradient(135deg,#8b1e3f,#c3365e)] px-5"
                               disabled={submitting || closeReason.trim().length === 0}
                               type="submit"
                             >
@@ -2871,18 +2927,201 @@ function SupportWorkspaceView({
                                 value={reopenReason}
                               />
                             </Field>
-                            <GhostButton className="min-h-11 px-4" disabled={submitting} type="submit">
+                            <GhostButton className="min-h-11 w-full px-4" disabled={submitting} type="submit">
                               {submitting ? 'Reabrindo...' : 'Reabrir ticket'}
                             </GhostButton>
                           </form>
                         ) : null}
                       </div>
                     ) : null}
+
+                    <details className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-3">
+                      <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                        Historico tecnico recente
+                      </summary>
+                      <div className="mt-3 space-y-2">
+                        <SupportTechnicalHistory window={timelineWindow} />
+                      </div>
+                    </details>
+                  </ContextSubsidebarSection>
+                </ContextSubsidebar>
+              }
+              main={
+                <Panel
+                  className="bg-white"
+                  title="Conversa em andamento"
+                  description="A conversa fica no centro da tratativa. Resposta publica e nota interna usam o mesmo fluxo, sem desviar para formularios tecnicos."
+                >
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        className={cx(
+                          'inline-flex min-h-11 items-center justify-center rounded-full border px-5 py-2 text-sm font-semibold transition',
+                          composerMode === 'public'
+                            ? 'border-[rgba(48,127,226,0.28)] bg-[rgba(48,127,226,0.1)] text-[color:var(--color-brand-blue)]'
+                            : 'border-[color:var(--color-border)] bg-white text-[color:var(--color-muted)]',
+                        )}
+                        disabled={!canUsePublicComposer}
+                        onClick={() => setComposerMode('public')}
+                        type="button"
+                      >
+                        Resposta publica
+                      </button>
+                      <button
+                        className={cx(
+                          'inline-flex min-h-11 items-center justify-center rounded-full border px-5 py-2 text-sm font-semibold transition',
+                          composerMode === 'internal'
+                            ? 'border-[color:var(--color-danger-border)] bg-[color:var(--color-danger-surface)] text-[color:var(--color-danger-ink)]'
+                            : 'border-[color:var(--color-border)] bg-white text-[color:var(--color-muted)]',
+                        )}
+                        disabled={!canUseInternalComposer}
+                        onClick={() => setComposerMode('internal')}
+                        type="button"
+                      >
+                        Nota interna
+                      </button>
+                    </div>
+
+                    <InlineNotice tone={composerMode === 'public' ? 'default' : 'critical'}>
+                      {composerMode === 'public'
+                        ? 'Modo resposta publica: a devolutiva abaixo sera visivel ao cliente B2B.'
+                        : 'Modo nota interna: este registro fica restrito ao time interno autorizado.'}
+                    </InlineNotice>
+
+                    <form className="space-y-4" onSubmit={handleSubmitComposer}>
+                      <Field
+                        label={composerMode === 'public' ? 'Responder cliente' : 'Registrar nota interna'}
+                      >
+                        <TextareaInput
+                          onChange={(event) =>
+                            composerMode === 'public'
+                              ? setMessageDraft(event.target.value)
+                              : setNoteDraft(event.target.value)
+                          }
+                          placeholder={
+                            composerMode === 'public'
+                              ? 'Escreva a devolutiva tecnico-operacional ao cliente B2B.'
+                              : 'Registre contexto interno, proximo passo, handoff ou observacao de suporte.'
+                          }
+                          value={composerDraft}
+                        />
+                      </Field>
+                      <AppButton
+                        className={
+                          composerMode === 'internal'
+                            ? 'min-h-12 px-6 bg-[linear-gradient(135deg,#7c2648,#b63f76)]'
+                            : 'min-h-12 px-6'
+                        }
+                        disabled={composerDisabled}
+                        type="submit"
+                      >
+                        {submitting
+                          ? 'Salvando...'
+                          : composerMode === 'public'
+                            ? 'Enviar resposta publica'
+                            : 'Registrar nota interna'}
+                      </AppButton>
+                    </form>
+
+                    <div className="border-t border-[color:var(--color-border)] pt-4">
+                      <div className="mb-3 space-y-1">
+                        <h4 className="text-base font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+                          Conversa recente
+                        </h4>
+                        <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                          Mensagens e notas internas ficam no fluxo principal. O historico tecnico e os eventos repetitivos ficam sob demanda na lateral.
+                        </p>
+                      </div>
+                      <SupportConversation window={timelineWindow} />
+                    </div>
                   </div>
-                </details>
-              </aside>
-            ) : null}
-          </div>
+                </Panel>
+              }
+            />
+          ) : (
+            <Panel
+              className="bg-white"
+              title="Conversa em andamento"
+              description="Reabra o contexto lateral quando precisar ajustar status, responsavel ou consultar o cliente."
+            >
+              <div className="space-y-4">
+                <InlineNotice>
+                  O contexto lateral esta recolhido. A conversa continua ocupando toda a largura util.
+                </InlineNotice>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    className={cx(
+                      'inline-flex min-h-11 items-center justify-center rounded-full border px-5 py-2 text-sm font-semibold transition',
+                      composerMode === 'public'
+                        ? 'border-[rgba(48,127,226,0.28)] bg-[rgba(48,127,226,0.1)] text-[color:var(--color-brand-blue)]'
+                        : 'border-[color:var(--color-border)] bg-white text-[color:var(--color-muted)]',
+                    )}
+                    disabled={!canUsePublicComposer}
+                    onClick={() => setComposerMode('public')}
+                    type="button"
+                  >
+                    Resposta publica
+                  </button>
+                  <button
+                    className={cx(
+                      'inline-flex min-h-11 items-center justify-center rounded-full border px-5 py-2 text-sm font-semibold transition',
+                      composerMode === 'internal'
+                        ? 'border-[color:var(--color-danger-border)] bg-[color:var(--color-danger-surface)] text-[color:var(--color-danger-ink)]'
+                        : 'border-[color:var(--color-border)] bg-white text-[color:var(--color-muted)]',
+                    )}
+                    disabled={!canUseInternalComposer}
+                    onClick={() => setComposerMode('internal')}
+                    type="button"
+                  >
+                    Nota interna
+                  </button>
+                </div>
+                <form className="space-y-4" onSubmit={handleSubmitComposer}>
+                  <Field label={composerMode === 'public' ? 'Responder cliente' : 'Registrar nota interna'}>
+                    <TextareaInput
+                      onChange={(event) =>
+                        composerMode === 'public'
+                          ? setMessageDraft(event.target.value)
+                          : setNoteDraft(event.target.value)
+                      }
+                      placeholder={
+                        composerMode === 'public'
+                          ? 'Escreva a devolutiva tecnico-operacional ao cliente B2B.'
+                          : 'Registre contexto interno, proximo passo, handoff ou observacao de suporte.'
+                      }
+                      value={composerDraft}
+                    />
+                  </Field>
+                  <AppButton
+                    className={
+                      composerMode === 'internal'
+                        ? 'min-h-12 px-6 bg-[linear-gradient(135deg,#7c2648,#b63f76)]'
+                        : 'min-h-12 px-6'
+                    }
+                    disabled={composerDisabled}
+                    type="submit"
+                  >
+                    {submitting
+                      ? 'Salvando...'
+                      : composerMode === 'public'
+                        ? 'Enviar resposta publica'
+                        : 'Registrar nota interna'}
+                  </AppButton>
+                </form>
+                <div className="border-t border-[color:var(--color-border)] pt-4">
+                  <div className="mb-3 space-y-1">
+                    <h4 className="text-base font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+                      Conversa recente
+                    </h4>
+                    <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                      Reabra o contexto lateral apenas quando precisar consultar operacao, cliente ou conhecimento.
+                    </p>
+                  </div>
+                  <SupportConversation window={timelineWindow} />
+                </div>
+              </div>
+            </Panel>
+          )}
         </div>
       )}
     </div>
@@ -3024,70 +3263,126 @@ export function SupportCustomerPage() {
       <PageHeader
         eyebrow="Support Workspace"
         title="Contexto do cliente"
-        description="Visao operacional sintetica para apoiar a tratativa sem transformar a tela em CRM ou dashboard."
+        description="Sidebar global para navegar, subsidebar para trocar de cliente e atalhos, area principal para o contexto operacional real."
       />
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,0.74fr)_300px]">
-        <div className="space-y-5">
+      <WorkspaceSplit
+        layoutClassName="xl:grid-cols-[292px_minmax(0,1fr)]"
+        sidebar={
+          <ContextSubsidebar
+            description="Clientes acessiveis e atalhos de navegacao ficam aqui para nao roubar espaco do contexto principal."
+            title="Ferramentas do cliente"
+          >
+            <ContextSubsidebarSection
+              description="Troque de cliente sem sair do workspace de suporte."
+              title="Outros clientes acessiveis"
+            >
+              <div className="space-y-3">
+                {customers.map((row) => {
+                  const isSelected = row.tenantId === customer.tenantId;
+                  return (
+                    <Link
+                      className={cx(
+                        'block rounded-[18px] border px-4 py-3 transition',
+                        isSelected
+                          ? 'border-[rgba(48,127,226,0.42)] bg-[rgba(48,127,226,0.08)]'
+                          : 'border-[color:var(--color-border)] bg-white hover:border-[rgba(48,127,226,0.28)] hover:bg-[color:var(--color-surface)]',
+                      )}
+                      key={row.tenantId}
+                      to={`/support/customers/${row.tenantId}`}
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-medium text-[color:var(--color-ink)]">
+                          {row.tenantDisplayName ?? row.tenantLegalName ?? row.tenantSlug}
+                        </p>
+                        <StatusPill>{row.tenantStatus}</StatusPill>
+                      </div>
+                      <p className="mt-1 text-xs text-[color:var(--color-muted)]">
+                        {row.activeContactsCount} contatos ativos · {row.openTicketCount} tickets abertos
+                      </p>
+                    </Link>
+                  );
+                })}
+              </div>
+            </ContextSubsidebarSection>
+
+            <ContextSubsidebarSection
+              description="Atalhos uteis para voltar rapidamente ao fluxo de atendimento."
+              title="Atalhos"
+            >
+              <GhostButton className="min-h-11 w-full px-4" onClick={() => window.history.back()}>
+                Voltar
+              </GhostButton>
+              <Link
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold text-[color:var(--color-brand-blue)]"
+                to="/support/queue"
+              >
+                Abrir fila
+              </Link>
+            </ContextSubsidebarSection>
+          </ContextSubsidebar>
+        }
+        main={
+          <div className="space-y-5">
             <Panel
               title="Resumo operacional do cliente"
               description="Visao rapida do cliente atendido, com foco em continuidade de suporte e retorno rapido ao ticket."
-          >
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-start justify-between gap-3 rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-4">
-                <div className="min-w-0 space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <StatusPill>{customer.tenantStatus}</StatusPill>
-                    <StatusPill tone="accent">{customer.tenantSlug}</StatusPill>
-                    {accountContext?.productLine ? (
-                      <StatusPill>{humanizeCustomerValue(accountContext.productLine)}</StatusPill>
-                    ) : null}
+            >
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-start justify-between gap-3 rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusPill>{customer.tenantStatus}</StatusPill>
+                      <StatusPill tone="accent">{customer.tenantSlug}</StatusPill>
+                      {accountContext?.productLine ? (
+                        <StatusPill>{humanizeCustomerValue(accountContext.productLine)}</StatusPill>
+                      ) : null}
+                    </div>
+                    <h3 className="text-xl font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
+                      {customer.tenantDisplayName ?? customer.tenantLegalName ?? customer.tenantSlug}
+                    </h3>
+                    <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                      {customer.tenantLegalName ?? 'Razao social nao resolvida'}
+                    </p>
                   </div>
-                  <h3 className="text-xl font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
-                    {customer.tenantDisplayName ?? customer.tenantLegalName ?? customer.tenantSlug}
-                  </h3>
-                  <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                    {customer.tenantLegalName ?? 'Razao social nao resolvida'}
-                  </p>
-                </div>
-                <Link
-                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold text-[color:var(--color-brand-blue)]"
-                  to="/support/queue"
-                >
-                  Voltar para fila
-                </Link>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {[
-                  {
-                    label: 'Abertos',
-                    value: String(customer.openTicketCount),
-                  },
-                  {
-                    label: 'Contatos',
-                    value: String(customer.activeContactsCount),
-                  },
-                  {
-                    label: 'Tickets totais',
-                    value: String(customer.totalTicketCount),
-                  },
-                ].map((item) => (
-                  <div
-                    className="inline-flex items-center gap-2 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2"
-                    key={item.label}
+                  <Link
+                    className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold text-[color:var(--color-brand-blue)]"
+                    to="/support/queue"
                   >
-                    <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
-                      {item.label}
-                    </span>
-                    <span className="text-sm font-semibold text-[color:var(--color-ink)]">
-                      {item.value}
-                    </span>
-                  </div>
-                ))}
+                    Voltar para fila
+                  </Link>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    {
+                      label: 'Abertos',
+                      value: String(customer.openTicketCount),
+                    },
+                    {
+                      label: 'Contatos',
+                      value: String(customer.activeContactsCount),
+                    },
+                    {
+                      label: 'Tickets totais',
+                      value: String(customer.totalTicketCount),
+                    },
+                  ].map((item) => (
+                    <div
+                      className="inline-flex items-center gap-2 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2"
+                      key={item.label}
+                    >
+                      <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
+                        {item.label}
+                      </span>
+                      <span className="text-sm font-semibold text-[color:var(--color-ink)]">
+                        {item.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          </Panel>
+            </Panel>
 
             <Panel
               title="Produto, stack e tickets recentes"
@@ -3150,11 +3445,11 @@ export function SupportCustomerPage() {
               Mostrando {recentEventsWindow.events.length} de {recentEventsWindow.totalAvailableCount} registros recentes.
             </p>
             <div className="mt-3 space-y-2">
-              {recentEventsWindow.events.length === 0 ? (
-              <EmptyState
-                title="Sem eventos recentes"
-                description="Nenhum evento recente apareceu para este cliente."
-              />
+                {recentEventsWindow.events.length === 0 ? (
+                <EmptyState
+                  title="Sem eventos recentes"
+                  description="Nenhum evento recente apareceu para este cliente."
+                />
               ) : (
                 recentEventsWindow.events.map((event) => (
                   <SupportRecentEventCard
@@ -3165,45 +3460,9 @@ export function SupportCustomerPage() {
               )}
             </div>
           </details>
-        </div>
-
-        <aside className="space-y-5">
-          <div className="xl:sticky xl:top-4">
-            <Panel
-              title="Outros clientes acessiveis"
-              description="Lista utilitaria para trocar de cliente sem tirar o foco do atendimento."
-            >
-              <div className="space-y-3">
-                {customers.map((row) => {
-                  const isSelected = row.tenantId === customer.tenantId;
-                  return (
-                    <Link
-                      className={cx(
-                        'block rounded-[22px] border px-4 py-3 transition',
-                        isSelected
-                          ? 'border-[rgba(48,127,226,0.42)] bg-[rgba(48,127,226,0.08)]'
-                          : 'border-[color:var(--color-border)] bg-white hover:border-[rgba(48,127,226,0.28)] hover:bg-[color:var(--color-surface)]',
-                      )}
-                      key={row.tenantId}
-                      to={`/support/customers/${row.tenantId}`}
-                    >
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-medium text-[color:var(--color-ink)]">
-                          {row.tenantDisplayName ?? row.tenantLegalName ?? row.tenantSlug}
-                        </p>
-                        <StatusPill>{row.tenantStatus}</StatusPill>
-                      </div>
-                      <p className="mt-1 text-xs text-[color:var(--color-muted)]">
-                        {row.activeContactsCount} contatos ativos · {row.openTicketCount} tickets abertos
-                      </p>
-                    </Link>
-                  );
-                })}
-              </div>
-            </Panel>
           </div>
-        </aside>
-      </div>
+        }
+      />
     </div>
   );
 }

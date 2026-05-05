@@ -386,6 +386,11 @@ const FIXTURE = {
       },
     ],
   },
+  publicHelpCenter: {
+    categoryId: '73000000-0000-4000-8000-000000000001',
+    articleId: '74000000-0000-4000-8000-000000000001',
+    articleSlug: 'visao-geral-da-central-genius',
+  },
 };
 
 function fail(message) {
@@ -540,24 +545,44 @@ function runSupabaseDbQuery(sql) {
 }
 
 async function signInLocalUser({ apiUrl, anonKey, email, password }) {
-  const response = await fetch(`${apiUrl}/auth/v1/token?grant_type=password`, {
-    method: 'POST',
-    headers: {
-      apikey: anonKey,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      email,
-      password,
-    }),
-  });
+  let lastError = null;
 
-  if (!response.ok) {
-    const detail = await response.text();
-    fail(`Falha ao autenticar fixture local ${email}: ${response.status} ${detail}`);
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    try {
+      const response = await fetch(`${apiUrl}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: {
+          apikey: anonKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      if (!response.ok) {
+        const detail = await response.text();
+        fail(`Falha ao autenticar fixture local ${email}: ${response.status} ${detail}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      lastError = error;
+
+      if (attempt === 5) {
+        break;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+    }
   }
 
-  return response.json();
+  fail(
+    lastError instanceof Error
+      ? `Falha ao autenticar fixture local ${email}: ${lastError.message}`
+      : `Falha ao autenticar fixture local ${email}.`,
+  );
 }
 
 async function callRpcAsUser({ apiUrl, anonKey, accessToken, rpcName, body }) {
@@ -1267,14 +1292,17 @@ async function ensureKnowledgeArticlePublished(adminSession, tenantId, article, 
 
 function queryTicketKnowledgeLink(ticketId, linkType, articleSlug = null) {
   const articlePredicate = articleSlug
-    ? `and article_slug = '${sqlEscape(articleSlug)}'`
-    : 'and article_id is null';
+    ? `and ka.slug = '${sqlEscape(articleSlug)}'`
+    : 'and tkl.article_id is null';
 
   const result = runSupabaseDbQuery(`
-    select ticket_knowledge_link_id::text as id
-    from public.vw_support_ticket_knowledge_links
-    where ticket_id = '${sqlEscape(ticketId)}'::uuid
-      and link_type = '${linkType}'::public.ticket_knowledge_link_type
+    select tkl.id::text as id
+    from public.ticket_knowledge_links as tkl
+    left join public.knowledge_articles as ka
+      on ka.id = tkl.article_id
+    where tkl.ticket_id = '${sqlEscape(ticketId)}'::uuid
+      and tkl.link_type = '${linkType}'::public.ticket_knowledge_link_type
+      and tkl.archived_at is null
       ${articlePredicate}
     limit 1;
   `);
@@ -1601,6 +1629,142 @@ function clearFixtureTickets() {
   return null;
 }
 
+function ensurePublicHelpCenterFixture() {
+  runSupabaseDbQuery(`
+    update public.knowledge_spaces
+    set status = 'active'
+    where slug = 'genius';
+  `);
+
+  runSupabaseDbQuery(`
+    insert into public.brand_settings (
+      knowledge_space_id,
+      brand_name,
+      logo_asset_url,
+      theme_tokens,
+      seo_defaults,
+      support_contacts
+    )
+    values (
+      (select id from public.knowledge_spaces where slug = 'genius'),
+      'Genius Returns',
+      '/brand-assets/genius-returns-help.svg',
+      jsonb_build_object(
+        'surface', '#f7fbff',
+        'accent', '#1459c7',
+        'hero', 'linear-gradient(135deg, #141f47, #307fe2 58%, #74d2e7)',
+        'orbA', 'rgba(116,210,231,0.18)',
+        'orbB', 'rgba(20,31,71,0.16)'
+      ),
+      jsonb_build_object(
+        'title', 'Genius Returns Help Center',
+        'description', 'Documentacao tecnica oficial para operacao B2B.',
+        'imageUrl', 'https://cdn.example.com/help-center-og.png'
+      ),
+      jsonb_build_object(
+        'email', 'support@geniusreturns.com.br',
+        'websiteUrl', 'https://geniusreturns.com.br',
+        'statusPageUrl', 'https://status.geniusreturns.com.br',
+        'docsUrl', 'https://geniusreturns.com.br/help'
+      )
+    )
+    on conflict (knowledge_space_id) do update
+    set brand_name = excluded.brand_name,
+        logo_asset_url = excluded.logo_asset_url,
+        theme_tokens = excluded.theme_tokens,
+        seo_defaults = excluded.seo_defaults,
+        support_contacts = excluded.support_contacts;
+  `);
+
+  runSupabaseDbQuery(`
+    insert into public.knowledge_categories (
+      id,
+      knowledge_space_id,
+      visibility,
+      name,
+      slug,
+      description
+    )
+    values (
+      '${FIXTURE.publicHelpCenter.categoryId}'::uuid,
+      (select id from public.knowledge_spaces where slug = 'genius'),
+      'public',
+      'Primeiros passos Genius',
+      'primeiros-passos-genius',
+      'Categoria publica minima para validacao local da central Genius.'
+    )
+    on conflict (id) do update
+    set knowledge_space_id = excluded.knowledge_space_id,
+        visibility = excluded.visibility,
+        name = excluded.name,
+        slug = excluded.slug,
+        description = excluded.description;
+  `);
+
+  runSupabaseDbQuery(`
+    update public.knowledge_articles
+    set knowledge_space_id = (select id from public.knowledge_spaces where slug = 'genius'),
+        category_id = '${FIXTURE.publicHelpCenter.categoryId}'::uuid,
+        visibility = 'public',
+        status = 'published',
+        title = 'Visao geral da Central Genius',
+        slug = '${FIXTURE.publicHelpCenter.articleSlug}',
+        summary = 'Guia publico minimo para validar a leitura da central e orientar o cliente B2B.',
+        body_md = '# Visao geral da Central Genius
+
+Esta central publica organiza orientacoes seguras para clientes B2B da Genius.
+
+- encontre artigos publicados
+- valide orientacoes operacionais
+- compartilhe apenas conteudo publico',
+        current_revision_number = 1,
+        published_at = timezone('utc', now()),
+        updated_at = timezone('utc', now())
+    where slug = '${FIXTURE.publicHelpCenter.articleSlug}';
+  `);
+
+  runSupabaseDbQuery(`
+    insert into public.knowledge_articles (
+      id,
+      knowledge_space_id,
+      category_id,
+      visibility,
+      status,
+      title,
+      slug,
+      summary,
+      body_md,
+      current_revision_number,
+      published_at,
+      updated_at
+    )
+    select
+      '${FIXTURE.publicHelpCenter.articleId}'::uuid,
+      (select id from public.knowledge_spaces where slug = 'genius'),
+      '${FIXTURE.publicHelpCenter.categoryId}'::uuid,
+      'public',
+      'published',
+      'Visao geral da Central Genius',
+      '${FIXTURE.publicHelpCenter.articleSlug}',
+      'Guia publico minimo para validar a leitura da central e orientar o cliente B2B.',
+      '# Visao geral da Central Genius
+
+Esta central publica organiza orientacoes seguras para clientes B2B da Genius.
+
+- encontre artigos publicados
+- valide orientacoes operacionais
+- compartilhe apenas conteudo publico',
+      1,
+      timezone('utc', now()),
+      timezone('utc', now())
+    where not exists (
+      select 1
+      from public.knowledge_articles
+      where slug = '${FIXTURE.publicHelpCenter.articleSlug}'
+    );
+  `);
+}
+
 async function main() {
   const envMap = runSupabaseStatusEnv();
   const { apiUrl, serviceRoleKey, anonKey } = assertLocalOnly(envMap);
@@ -1806,6 +1970,8 @@ async function main() {
     });
   }
 
+  ensurePublicHelpCenterFixture();
+
   console.log(
     JSON.stringify(
       {
@@ -1838,6 +2004,10 @@ async function main() {
         })),
         knowledge_articles: createdKnowledgeArticles,
         knowledge_links: createdKnowledgeLinks,
+        public_help_center: {
+          space_slug: 'genius',
+          article_slug: FIXTURE.publicHelpCenter.articleSlug,
+        },
         tickets: createdTickets,
       },
       null,

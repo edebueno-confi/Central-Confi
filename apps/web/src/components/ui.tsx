@@ -224,6 +224,124 @@ export function SummaryStripItem({
   );
 }
 
+export function WorkspaceSplit({
+  sidebar,
+  main,
+  className,
+  layoutClassName = 'xl:grid-cols-[280px_minmax(0,1fr)]',
+}: {
+  sidebar: ReactNode;
+  main: ReactNode;
+  className?: string;
+  layoutClassName?: string;
+}) {
+  return (
+    <div className={cx('grid gap-5 items-start', layoutClassName, className)}>
+      <div className="min-w-0">{sidebar}</div>
+      <div className="min-w-0">{main}</div>
+    </div>
+  );
+}
+
+export function ContextSubsidebar({
+  title,
+  description,
+  actions,
+  children,
+  className,
+  sticky = true,
+}: {
+  title: string;
+  description?: string;
+  actions?: ReactNode;
+  children: ReactNode;
+  className?: string;
+  sticky?: boolean;
+}) {
+  return (
+    <aside
+      className={cx(
+        sticky && 'xl:sticky xl:top-4',
+        className,
+      )}
+    >
+      <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white/94 px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
+        <header className="space-y-3">
+          <div className="space-y-1">
+            <h2 className="text-base font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+              {title}
+            </h2>
+            {description ? (
+              <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                {description}
+              </p>
+            ) : null}
+          </div>
+          {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+        </header>
+        <div className="mt-4 space-y-3">{children}</div>
+      </section>
+    </aside>
+  );
+}
+
+export function ContextSubsidebarSection({
+  title,
+  description,
+  children,
+  className,
+  collapsible = false,
+  defaultOpen = false,
+}: {
+  title: string;
+  description?: string;
+  children: ReactNode;
+  className?: string;
+  collapsible?: boolean;
+  defaultOpen?: boolean;
+}) {
+  if (collapsible) {
+    return (
+      <details
+        className={cx(
+          'rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3',
+          className,
+        )}
+        open={defaultOpen}
+      >
+        <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+          {title}
+        </summary>
+        {description ? (
+          <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
+            {description}
+          </p>
+        ) : null}
+        <div className="mt-3 space-y-3">{children}</div>
+      </details>
+    );
+  }
+
+  return (
+    <section
+      className={cx(
+        'rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4',
+        className,
+      )}
+    >
+      <div className="space-y-1">
+        <h3 className="text-sm font-semibold text-[color:var(--color-ink)]">{title}</h3>
+        {description ? (
+          <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+            {description}
+          </p>
+        ) : null}
+      </div>
+      <div className="mt-3 space-y-3">{children}</div>
+    </section>
+  );
+}
+
 export function Field({
   label,
   description,

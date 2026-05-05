@@ -22,6 +22,8 @@ import {
 } from '../../components/states';
 import {
   AppButton,
+  ContextSubsidebar,
+  ContextSubsidebarSection,
   PageHeader,
   Panel,
   SelectInput,
@@ -29,6 +31,7 @@ import {
   SummaryStrip,
   SummaryStripItem,
   TextInput,
+  WorkspaceSplit,
 } from '../../components/ui';
 import { useAuthContext } from '../auth/auth-context';
 
@@ -158,38 +161,56 @@ export function SystemPage() {
         description="Acompanhe os principais registros administrativos e abra detalhes de auditoria apenas quando precisar investigar uma mudanca."
       />
 
-      <SummaryStrip>
-        <SummaryStripItem helper="clientes em operacao" label="Tenants ativos" tone="positive" value={String(activeTenants)} />
-        <SummaryStripItem helper="acessos operando" label="Memberships ativas" value={String(activeMemberships)} />
-        <SummaryStripItem helper="janela atual" label="Eventos carregados" value={String(auditFeed.length)} />
-        <SummaryStripItem helper={latestEventAt ? formatDateTime(latestEventAt) : 'sem atividade recente'} label="Ultima atividade" value={latestEventAt ? 'recente' : 'vazia'} />
-      </SummaryStrip>
+      <WorkspaceSplit
+        layoutClassName="xl:grid-cols-[292px_minmax(0,1fr)]"
+        sidebar={
+          <ContextSubsidebar
+            description="Filtros e contexto resumido da auditoria ficam fora do feed principal."
+            title="Ferramentas do sistema"
+          >
+            <ContextSubsidebarSection description="Pulso operacional atual." title="Resumo">
+              <SummaryStrip className="border-0 bg-transparent px-0 py-0 shadow-none">
+                <SummaryStripItem helper="clientes em operacao" label="Tenants ativos" tone="positive" value={String(activeTenants)} />
+                <SummaryStripItem helper="acessos operando" label="Memberships ativas" value={String(activeMemberships)} />
+                <SummaryStripItem helper="janela atual" label="Eventos carregados" value={String(auditFeed.length)} />
+                <SummaryStripItem helper={latestEventAt ? formatDateTime(latestEventAt) : 'sem atividade recente'} label="Ultima atividade" value={latestEventAt ? 'recente' : 'vazia'} />
+              </SummaryStrip>
+            </ContextSubsidebarSection>
 
-      <Panel
-        title="Feed administrativo"
-        description="Linha do tempo administrativa para entender quem mudou o que e quando."
-        actions={
-          <>
-            <SelectInput
-              onChange={(event) => setEntityFilter(event.target.value)}
-              value={entityFilter}
-            >
-              <option value="all">Todas as entidades</option>
-              {distinctEntities.map((entity) => (
-                <option key={entity} value={entity}>
-                  {entity}
-                </option>
-              ))}
-            </SelectInput>
-            <TextInput
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Buscar por pessoa, cliente, acao ou area"
-              value={query}
-            />
-            <AppButton onClick={() => void loadSurface()}>Recarregar</AppButton>
-          </>
+            <ContextSubsidebarSection description="Recorte o feed antes de entrar na linha do tempo." title="Filtros">
+              <label className="grid gap-2">
+                <span className="text-sm font-medium text-[color:var(--color-ink)]">Area</span>
+                <SelectInput
+                  onChange={(event) => setEntityFilter(event.target.value)}
+                  value={entityFilter}
+                >
+                  <option value="all">Todas as entidades</option>
+                  {distinctEntities.map((entity) => (
+                    <option key={entity} value={entity}>
+                      {entity}
+                    </option>
+                  ))}
+                </SelectInput>
+              </label>
+              <label className="grid gap-2">
+                <span className="text-sm font-medium text-[color:var(--color-ink)]">Buscar</span>
+                <TextInput
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Buscar por pessoa, cliente, acao ou area"
+                  value={query}
+                />
+              </label>
+              <AppButton className="min-h-11 w-full px-4" onClick={() => void loadSurface()}>
+                Recarregar
+              </AppButton>
+            </ContextSubsidebarSection>
+          </ContextSubsidebar>
         }
-      >
+        main={
+          <Panel
+            title="Feed administrativo"
+            description="Linha do tempo administrativa para entender quem mudou o que e quando."
+          >
         {auditFeed.length === 0 ? (
           <EmptyState
             title="Nenhum evento administrativo"
@@ -269,7 +290,9 @@ export function SystemPage() {
             ))}
           </div>
         )}
-      </Panel>
+          </Panel>
+        }
+      />
     </div>
   );
 }

@@ -9,6 +9,8 @@ import { Navigate } from 'react-router-dom';
 import { formatDateTime } from '../../app/format';
 import {
   AppButton,
+  ContextSubsidebar,
+  ContextSubsidebarSection,
   cx,
   Field,
   GhostButton,
@@ -19,6 +21,7 @@ import {
   StatusPill,
   TextInput,
   TextareaInput,
+  WorkspaceSplit,
 } from '../../components/ui';
 import {
   ContractUnavailableState,
@@ -1256,169 +1259,182 @@ export function KnowledgePage() {
         }
       />
 
-      <div className="space-y-4 rounded-[24px] border border-[color:var(--color-border)] bg-white p-4 shadow-[0_12px_28px_rgba(19,33,79,0.06)]">
-        <div className="flex flex-wrap items-center gap-2 text-sm text-[color:var(--color-muted)]">
-          <span className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2">
-            {draftArticleCount} drafts
-          </span>
-          <span className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2">
-            {reviewArticleCount} em review
-          </span>
-          <span className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2">
-            {legacyArticleCount} do legado
-          </span>
-          <span className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2">
-            {restrictedArticleCount} restritos
-          </span>
-          <span className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2">
-            {duplicateHashGroupCount} grupos duplicados
-          </span>
-        </div>
-
-        <div className="grid gap-4 xl:grid-cols-3 2xl:grid-cols-6">
-          <Field label="Central">
-            <SelectInput
-              onChange={(event) => setSelectedSpaceId(event.target.value || null)}
-              value={selectedSpaceId ?? ''}
+      <WorkspaceSplit
+        layoutClassName="xl:grid-cols-[292px_minmax(0,1fr)]"
+        sidebar={
+          <ContextSubsidebar
+            description="Filtros e sinais editoriais ficam fora da area principal para deixar a revisao do artigo com mais espaco."
+            title="Ferramentas editoriais"
+          >
+            <ContextSubsidebarSection
+              description="Selecione a central e ajuste o recorte editorial."
+              title="Escopo e filtros"
             >
-              {spaces.map((space) => (
-                <option key={space.id} value={space.id}>
-                  {space.display_name} ({space.slug})
-                </option>
-              ))}
-            </SelectInput>
-          </Field>
+              <Field label="Central">
+                <SelectInput
+                  onChange={(event) => setSelectedSpaceId(event.target.value || null)}
+                  value={selectedSpaceId ?? ''}
+                >
+                  {spaces.map((space) => (
+                    <option key={space.id} value={space.id}>
+                      {space.display_name} ({space.slug})
+                    </option>
+                  ))}
+                </SelectInput>
+              </Field>
 
-          <Field label="Filtro por status">
-            <SelectInput
-              onChange={(event) =>
-                setStatusFilter(event.target.value as ArticleStatusFilter)
-              }
-              value={statusFilter}
+              <Field label="Status">
+                <SelectInput
+                  onChange={(event) =>
+                    setStatusFilter(event.target.value as ArticleStatusFilter)
+                  }
+                  value={statusFilter}
+                >
+                  <option value="all">Todos</option>
+                  {KNOWLEDGE_ARTICLE_STATUSES.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </SelectInput>
+              </Field>
+
+              <Field label="Visibilidade">
+                <SelectInput
+                  onChange={(event) =>
+                    setVisibilityFilter(event.target.value as ArticleVisibilityFilter)
+                  }
+                  value={visibilityFilter}
+                >
+                  <option value="all">Todas</option>
+                  {KNOWLEDGE_VISIBILITIES.map((visibility) => (
+                    <option key={visibility} value={visibility}>
+                      {visibility}
+                    </option>
+                  ))}
+                </SelectInput>
+              </Field>
+
+              <Field label="Origem">
+                <SelectInput
+                  onChange={(event) =>
+                    setOriginFilter(event.target.value as ArticleOriginFilter)
+                  }
+                  value={originFilter}
+                >
+                  <option value="all">Todas</option>
+                  <option value="legacy">Somente legado</option>
+                  <option value="manual">Somente manual</option>
+                </SelectInput>
+              </Field>
+
+              <Field label="Duplicidade">
+                <SelectInput
+                  onChange={(event) =>
+                    setDuplicateFilter(event.target.value as ArticleDuplicateFilter)
+                  }
+                  value={duplicateFilter}
+                >
+                  <option value="all">Todos</option>
+                  <option value="duplicates">Somente duplicados</option>
+                  <option value="unique">Somente unicos</option>
+                </SelectInput>
+              </Field>
+
+              <Field label="Classificacao sugerida">
+                <SelectInput
+                  onChange={(event) =>
+                    setClassificationFilter(
+                      event.target.value as ArticleClassificationFilter,
+                    )
+                  }
+                  value={classificationFilter}
+                >
+                  <option value="all">Todas</option>
+                  {KNOWLEDGE_ADVISORY_CLASSIFICATIONS.map((classification) => (
+                    <option key={classification} value={classification}>
+                      {classification}
+                    </option>
+                  ))}
+                  <option value="without-advisory">Sem advisory</option>
+                </SelectInput>
+              </Field>
+
+              <GhostButton
+                className="min-h-11 w-full px-4"
+                disabled={!selectedSpaceId}
+                onClick={() => {
+                  if (selectedSpaceId) {
+                    void refreshSelectedSpace();
+                  }
+                }}
+              >
+                Recarregar artigos
+              </GhostButton>
+            </ContextSubsidebarSection>
+
+            <ContextSubsidebarSection
+              description="Sinais compactos para priorizar a curadoria sem virar dashboard."
+              title="Janela atual"
             >
-              <option value="all">Todos</option>
-              {KNOWLEDGE_ARTICLE_STATUSES.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </SelectInput>
-          </Field>
-
-          <Field label="Visibilidade">
-            <SelectInput
-              onChange={(event) =>
-                setVisibilityFilter(event.target.value as ArticleVisibilityFilter)
-              }
-              value={visibilityFilter}
-            >
-              <option value="all">Todas</option>
-              {KNOWLEDGE_VISIBILITIES.map((visibility) => (
-                <option key={visibility} value={visibility}>
-                  {visibility}
-                </option>
-              ))}
-            </SelectInput>
-          </Field>
-
-          <Field label="Origem">
-            <SelectInput
-              onChange={(event) =>
-                setOriginFilter(event.target.value as ArticleOriginFilter)
-              }
-              value={originFilter}
-            >
-              <option value="all">Todas</option>
-              <option value="legacy">Somente legado</option>
-              <option value="manual">Somente manual</option>
-            </SelectInput>
-          </Field>
-
-          <Field label="Duplicidade de origem">
-            <SelectInput
-              onChange={(event) =>
-                setDuplicateFilter(event.target.value as ArticleDuplicateFilter)
-              }
-              value={duplicateFilter}
-            >
-              <option value="all">Todos</option>
-              <option value="duplicates">Somente duplicados</option>
-              <option value="unique">Somente unicos</option>
-            </SelectInput>
-          </Field>
-
-          <Field label="Classificacao sugerida">
-            <SelectInput
-              onChange={(event) =>
-                setClassificationFilter(
-                  event.target.value as ArticleClassificationFilter,
-                )
-              }
-              value={classificationFilter}
-            >
-              <option value="all">Todas</option>
-              {KNOWLEDGE_ADVISORY_CLASSIFICATIONS.map((classification) => (
-                <option key={classification} value={classification}>
-                  {classification}
-                </option>
-              ))}
-              <option value="without-advisory">Sem advisory</option>
-            </SelectInput>
-          </Field>
-
-          <div className="flex items-end xl:col-span-3 2xl:col-span-1">
-            <GhostButton
-              disabled={!selectedSpaceId}
-              onClick={() => {
-                if (selectedSpaceId) {
-                  void refreshSelectedSpace();
-                }
-              }}
-            >
-              Recarregar artigos
-            </GhostButton>
-          </div>
-        </div>
-
-        {selectedSpace ? (
-          <div className="grid gap-3 rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)]">
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <StatusPill tone={toneForSpaceStatus(selectedSpace.status)}>
-                  {selectedSpace.status}
-                </StatusPill>
-                <StatusPill tone="accent">{selectedSpace.organization_display_name}</StatusPill>
-                <StatusPill>{selectedSpace.default_locale}</StatusPill>
+              <div className="grid gap-2">
+                {[
+                  `${draftArticleCount} drafts`,
+                  `${reviewArticleCount} em review`,
+                  `${legacyArticleCount} do legado`,
+                  `${restrictedArticleCount} restritos`,
+                  `${duplicateHashGroupCount} grupos duplicados`,
+                ].map((item) => (
+                  <div
+                    className="rounded-[16px] border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm text-[color:var(--color-ink)]"
+                    key={item}
+                  >
+                    {item}
+                  </div>
+                ))}
               </div>
-              <div className="space-y-1">
-                <h2 className="text-lg font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
+            </ContextSubsidebarSection>
+
+            {selectedSpace ? (
+              <ContextSubsidebarSection
+                description="Resumo curto da central ativa. Checklist e advisory detalhados ficam no artigo."
+                title="Central ativa"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusPill tone={toneForSpaceStatus(selectedSpace.status)}>
+                    {selectedSpace.status}
+                  </StatusPill>
+                  <StatusPill tone="accent">{selectedSpace.organization_display_name}</StatusPill>
+                  <StatusPill>{selectedSpace.default_locale}</StatusPill>
+                </div>
+                <p className="text-sm font-semibold text-[color:var(--color-ink)]">
                   {selectedSpace.display_name}
-                </h2>
-                <p className="text-sm text-[color:var(--color-muted)]">
+                </p>
+                <p className="text-sm leading-6 text-[color:var(--color-muted)]">
                   {selectedSpace.brand_name ? `${selectedSpace.brand_name} · ` : ''}
                   locale {selectedSpace.default_locale}
-                  {selectedSpace.primary_domain_host
-                    ? ` · dominio publicado ${selectedSpace.primary_domain_host}${selectedSpace.primary_domain_path_prefix ?? ''}`
-                    : ''}
                 </p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                Esta area continua interna. Publicar um artigo aqui nao libera a leitura publica sem o fluxo editorial completo.
-              </p>
-              <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                {selectedSpace.owner_tenant_id
-                  ? `Central vinculada a ${selectedSpace.owner_tenant_display_name ?? selectedSpace.owner_tenant_slug} para compatibilidade do legado.`
-                  : 'Esta central ainda nao tem um cliente dono vinculado para a compatibilidade do legado.'}
-              </p>
-            </div>
-          </div>
-        ) : null}
-      </div>
-
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,0.45fr)_minmax(0,0.55fr)]">
+                <details className="rounded-[16px] border border-[color:var(--color-border)] bg-white px-4 py-3">
+                  <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                    Contexto adicional
+                  </summary>
+                  <div className="mt-3 space-y-3 text-sm leading-6 text-[color:var(--color-muted)]">
+                    <p>
+                      Esta area continua interna. Publicar um artigo aqui nao libera a leitura publica sem o fluxo editorial completo.
+                    </p>
+                    <p>
+                      {selectedSpace.owner_tenant_id
+                        ? `Central vinculada a ${selectedSpace.owner_tenant_display_name ?? selectedSpace.owner_tenant_slug} para compatibilidade do legado.`
+                        : 'Esta central ainda nao tem um cliente dono vinculado para a compatibilidade do legado.'}
+                    </p>
+                  </div>
+                </details>
+              </ContextSubsidebarSection>
+            ) : null}
+          </ContextSubsidebar>
+        }
+        main={
+          <div className="grid gap-5 xl:grid-cols-[minmax(320px,0.38fr)_minmax(0,0.62fr)]">
         <Panel
           title="Artigos"
           description="Lista dominante de curadoria com sinais suficientes para decidir qual artigo entra em revisao."
@@ -2204,7 +2220,9 @@ export function KnowledgePage() {
             </div>
           )}
         </Panel>
-      </div>
+          </div>
+        }
+      />
     </div>
   );
 }

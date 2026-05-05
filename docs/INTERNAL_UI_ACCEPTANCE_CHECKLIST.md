@@ -24,6 +24,7 @@ Checklist obrigatorio para qualquer superficie interna nova ou refatorada do Gen
 - nao existe texto vazando
 - botoes principais sao confortaveis para clique
 - a tela continua utilizavel em notebook
+- se houver subsidebar, ela ajuda a limpar a area principal e nao vira coluna pesada
 
 ## Hierarquia
 - existe uma acao principal evidente
@@ -35,6 +36,8 @@ Checklist obrigatorio para qualquer superficie interna nova ou refatorada do Gen
 - sidebar pode recolher e expandir
 - estado recolhido continua navegavel
 - a sidebar liberou largura real para a area de trabalho
+- a sidebar global nao carrega contexto detalhado da tela
+- a subsidebar contextual concentra filtros, atalhos e contexto auxiliar do dominio
 
 ## Support
 - fila domina a triagem
@@ -42,17 +45,20 @@ Checklist obrigatorio para qualquer superficie interna nova ou refatorada do Gen
 - rail lateral nao compete com a tratativa
 - historico tecnico fica sob demanda
 - customer context e sintetico
+- filtros e filas rapidas ficam na subsidebar, nao espalhados na area principal
 
 ## Knowledge
 - a lista e a revisao usam bem a largura
 - a revisao do artigo e o foco
 - advisory e checklist nao ficam espremidos
 - bloco tecnico da origem fica recolhido
+- filtros editoriais ficam em subsidebar ou toolbar leve, nao esmagando a revisao
 
 ## Admin
 - a toolbar deixa clara a operacao principal
 - feed, lista ou detalhe nao parecem dashboard generico
 - auditoria tecnica e detalhes internos ficam rebaixados
+- filtros do dominio vivem na subsidebar quando isso melhora a largura util da lista ou detalhe
 
 ## Central Publica
 - a leitura parece documentacao

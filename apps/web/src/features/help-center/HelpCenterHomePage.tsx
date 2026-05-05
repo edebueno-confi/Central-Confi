@@ -169,11 +169,11 @@ export function HelpCenterHomePage() {
                 Como esta camada funciona
               </p>
               <p className="mt-3 text-sm leading-7 text-[var(--help-ink)]">
-                A leitura desta tela sai somente dos read models publicos aprovados. O backend continua como source of truth para status, visibilidade e activity do knowledge space.
+                Esta central mostra apenas orientacoes publicas e aprovadas. O conteudo visivel aqui foi organizado para facilitar configuracao, uso e integracao sem expor material interno.
               </p>
             </div>
             <InlineNotice>
-              O artigo publico sempre nasce de `body_md` com Markdown seguro. HTML legado continua fora da experiencia de leitura.
+              Cada artigo desta central passa por revisao antes de aparecer aqui. Conteudo interno ou rascunhos continuam fora da experiencia publica.
             </InlineNotice>
             {supportContacts.email || supportContacts.docsUrl || supportContacts.statusPageUrl ? (
               <div className="grid gap-2 text-sm">
@@ -221,7 +221,7 @@ export function HelpCenterHomePage() {
               Procurar artigos publicados
             </h3>
             <p className="max-w-3xl text-sm leading-7 text-[var(--help-muted)]">
-              A busca usa apenas `rpc_public_search_knowledge_articles`, sem IA, sem embeddings e sem acesso do frontend a tabelas-base.
+              Use a busca para encontrar rapidamente orientacoes publicas desta central sem sair do fluxo principal.
             </p>
           </div>
           {activeQuery ? (
@@ -234,19 +234,22 @@ export function HelpCenterHomePage() {
         <div className="mt-5">
           {searchPhase === 'idle' ? (
             <div className="rounded-[24px] border border-dashed border-[var(--help-border)] bg-white/56 px-5 py-5 text-sm leading-7 text-[var(--help-muted)]">
-              Digite pelo menos 2 caracteres para procurar configuracoes, fluxos e integracoes publicadas neste space.
+              Digite pelo menos 2 caracteres para procurar configuracoes, fluxos e integracoes publicadas nesta central.
             </div>
           ) : null}
 
           {searchPhase === 'loading' ? (
             <LoadingState
               title="Buscando artigos publicados"
-              description="A RPC publica esta consultando apenas conteudo publicado e visivel para este knowledge space."
+              description="Estamos consultando apenas conteudo publico e aprovado desta central."
             />
           ) : null}
 
           {searchPhase === 'contract-unavailable' ? (
-            <ContractUnavailableState contractName="RPC publica de busca da Knowledge Base" />
+            <ErrorState
+              title="Busca publica indisponivel"
+              description="A busca desta central nao ficou disponivel neste ambiente agora."
+            />
           ) : null}
 
           {searchPhase === 'error' ? (
