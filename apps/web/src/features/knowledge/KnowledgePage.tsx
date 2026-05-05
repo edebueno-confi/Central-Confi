@@ -9,19 +9,14 @@ import { Navigate } from 'react-router-dom';
 import { formatDateTime } from '../../app/format';
 import {
   AppButton,
-  ContextSubsidebar,
-  ContextSubsidebarSection,
   cx,
   Field,
   GhostButton,
   InlineNotice,
-  PageHeader,
-  Panel,
   SelectInput,
   StatusPill,
   TextInput,
   TextareaInput,
-  WorkspaceSplit,
 } from '../../components/ui';
 import {
   ContractUnavailableState,
@@ -73,6 +68,8 @@ type ArticleOriginFilter = 'all' | 'legacy' | 'manual';
 type ArticleDuplicateFilter = 'all' | 'duplicates' | 'unique';
 type ArticleClassificationFilter = KnowledgeAdvisoryClassification | 'all' | 'without-advisory';
 type EditorialChecklistTone = 'default' | 'positive' | 'warning' | 'critical' | 'accent';
+type KnowledgeListSort = 'recent' | 'oldest' | 'title';
+type KnowledgeDateFilter = 'all' | '90' | '30' | '7';
 
 interface EditorialChecklistItem {
   label: string;
@@ -305,6 +302,54 @@ function toneForVisibility(visibility: KnowledgeVisibility) {
   return 'accent' as const;
 }
 
+function displayArticleStatus(status: KnowledgeArticleStatus) {
+  if (status === 'published') {
+    return 'Publicado';
+  }
+
+  if (status === 'review') {
+    return 'Em revisao';
+  }
+
+  if (status === 'archived') {
+    return 'Arquivado';
+  }
+
+  return 'Rascunho';
+}
+
+function displayVisibility(visibility: KnowledgeVisibility) {
+  if (visibility === 'public') {
+    return 'Publico na central de ajuda';
+  }
+
+  if (visibility === 'restricted') {
+    return 'Restrito';
+  }
+
+  return 'Interno';
+}
+
+function articleContributorName(article: AdminKnowledgeArticleListItemV2Row) {
+  return (
+    article.updated_by_full_name ??
+    article.created_by_full_name ??
+    'Indisponivel'
+  );
+}
+
+function articleContributorNameFromDetail(article: AdminKnowledgeArticleDetailV2Row) {
+  return (
+    article.updated_by_full_name ??
+    article.created_by_full_name ??
+    'Indisponivel'
+  );
+}
+
+function formatOptionalDate(value: string | null) {
+  return value ? formatDateTime(value) : 'Indisponivel';
+}
+
 function categoryDisplayName(category: AdminKnowledgeCategoryV2Row) {
   return category.parent_name
     ? `${category.parent_name} / ${category.name}`
@@ -495,6 +540,14 @@ export function KnowledgePage() {
   const [articles, setArticles] = useState<AdminKnowledgeArticleListItemV2Row[]>([]);
   const [advisories, setAdvisories] = useState<AdminKnowledgeArticleReviewAdvisoryRow[]>([]);
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [listStatusFilter, setListStatusFilter] = useState<ArticleStatusFilter>('all');
+  const [selectedCategoryId, setSelectedCategoryId] = useState('all');
+  const [selectedAuthor, setSelectedAuthor] = useState('all');
+  const [selectedDateWindow, setSelectedDateWindow] =
+    useState<KnowledgeDateFilter>('90');
+  const [listSort, setListSort] = useState<KnowledgeListSort>('recent');
+  const [showAllCategories, setShowAllCategories] = useState(false);
   const [detailPhase, setDetailPhase] = useState<DetailPhase>('idle');
   const [detailMessage, setDetailMessage] = useState<string | null>(null);
   const [articleDetail, setArticleDetail] = useState<AdminKnowledgeArticleDetailV2Row | null>(null);
@@ -598,6 +651,84 @@ export function KnowledgePage() {
     : null;
   const persistedHumanChecklist = buildPersistedHumanChecklist(humanConfirmationsDraft);
   const advisoryRiskFlags = normalizeRiskFlags(selectedAdvisory?.risk_flags);
+  const statusCounts = {
+    all: filteredArticles.length,
+    published: filteredArticles.filter((article) => article.status === 'published').length,
+    draft: filteredArticles.filter((article) => article.status === 'draft').length,
+    review: filteredArticles.filter((article) => article.status === 'review').length,
+    archived: filteredArticles.filter((article) => article.status === 'archived').length,
+  };
+  const sortedCategories = [...categories].sort((left, right) => {
+    if (right.article_count !== left.article_count) {
+      return right.article_count - left.article_count;
+    }
+
+    return left.name.localeCompare(right.name, 'pt-BR');
+  });
+  const visibleCategories = showAllCategories
+    ? sortedCategories
+    : sortedCategories.slice(0, 5);
+  const availableAuthors = Array.from(
+    new Set(filteredArticles.map((article) => articleContributorName(article))),
+  ).sort((left, right) => left.localeCompare(right, 'pt-BR'));
+  const searchedArticles = filteredArticles.filter((article) => {
+    if (listStatusFilter !== 'all' && article.status !== listStatusFilter) {
+      return false;
+    }
+
+    if (selectedCategoryId !== 'all' && article.category_id !== selectedCategoryId) {
+      return false;
+    }
+
+    if (
+      selectedAuthor !== 'all' &&
+      articleContributorName(article) !== selectedAuthor
+    ) {
+      return false;
+    }
+
+    if (selectedDateWindow !== 'all') {
+      const days = Number(selectedDateWindow);
+      const updatedAtMs = Date.parse(article.updated_at);
+
+      if (Number.isFinite(updatedAtMs)) {
+        const ageInDays = (Date.now() - updatedAtMs) / (1000 * 60 * 60 * 24);
+
+        if (ageInDays > days) {
+          return false;
+        }
+      }
+    }
+
+    if (!searchQuery.trim()) {
+      return true;
+    }
+
+    const haystack = [
+      article.title,
+      article.summary ?? '',
+      article.category_name ?? '',
+      articleContributorName(article),
+    ]
+      .join(' ')
+      .toLowerCase();
+
+    return haystack.includes(searchQuery.trim().toLowerCase());
+  });
+  const displayArticles = [...searchedArticles].sort((left, right) => {
+    if (listSort === 'title') {
+      return left.title.localeCompare(right.title, 'pt-BR');
+    }
+
+    const leftTime = Date.parse(left.updated_at);
+    const rightTime = Date.parse(right.updated_at);
+
+    if (listSort === 'oldest') {
+      return leftTime - rightTime;
+    }
+
+    return rightTime - leftTime;
+  });
 
   const loadKnowledgeSpaces = useEffectEvent(
     async (preferredSpaceId?: string | null) => {
@@ -1219,11 +1350,20 @@ export function KnowledgePage() {
 
   if (spaces.length === 0) {
     return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Knowledge"
-          description="Curadoria editorial das centrais internas, com foco em revisar conteudo, classificar risco e publicar com seguranca."
-        />
+      <div className="space-y-5">
+        <section className="rounded-[28px] border border-[color:var(--color-border)] bg-white/94 px-6 py-6 shadow-[var(--shadow-panel)]">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="space-y-1">
+              <h1 className="text-[2rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
+                Knowledge
+              </h1>
+              <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                Gerencie artigos, categorias e publicacao na central de ajuda.
+              </p>
+            </div>
+            <AppButton disabled>Novo artigo</AppButton>
+          </div>
+        </section>
         <EmptyState
           title="Nenhuma central editorial disponivel"
           description="Ainda nao existe uma central pronta para curadoria neste ambiente."
@@ -1233,135 +1373,170 @@ export function KnowledgePage() {
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Knowledge"
-        description="Curadoria editorial com foco em revisar o artigo certo, decidir o proximo passo e publicar com seguranca."
-        action={
-          <div className="flex flex-wrap gap-2">
-            <GhostButton
-              onClick={() => {
-                void loadKnowledgeSpaces(selectedSpaceId);
-                if (selectedSpaceId) {
-                  void refreshSelectedSpace();
-                }
-              }}
-            >
-              Recarregar
-            </GhostButton>
-            <GhostButton disabled={!selectedSpace} onClick={openCreateCategory}>
-              Nova categoria
-            </GhostButton>
-            <AppButton disabled={!selectedSpace} onClick={openCreateArticle}>
-              Criar draft
-            </AppButton>
+    <div className="space-y-5">
+      <section className="rounded-[28px] border border-[color:var(--color-border)] bg-white/95 px-6 py-6 shadow-[var(--shadow-panel)]">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-[2rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
+              Knowledge
+            </h1>
+            <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+              Gerencie artigos, categorias e publicacao na central de ajuda.
+            </p>
           </div>
-        }
-      />
+          <AppButton disabled={!selectedSpace} onClick={openCreateArticle}>
+            + Novo artigo
+          </AppButton>
+        </div>
+      </section>
 
-      <WorkspaceSplit
-        layoutClassName="xl:grid-cols-[292px_minmax(0,1fr)]"
-        sidebar={
-          <ContextSubsidebar
-            description="Filtros e sinais editoriais ficam fora da area principal para deixar a revisao do artigo com mais espaco."
-            title="Ferramentas editoriais"
-          >
-            <ContextSubsidebarSection
-              description="Selecione a central e ajuste o recorte editorial."
-              title="Escopo e filtros"
-            >
-              <Field label="Central">
-                <SelectInput
-                  onChange={(event) => setSelectedSpaceId(event.target.value || null)}
-                  value={selectedSpaceId ?? ''}
+      <div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)_280px]">
+        <aside className="rounded-[24px] border border-[color:var(--color-border)] bg-white/94 px-4 py-4 shadow-[var(--shadow-panel)]">
+          <div className="space-y-5">
+            <div className="space-y-1">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-muted)]">
+                Filtros
+              </p>
+              <TextInput
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Buscar artigos..."
+                value={searchQuery}
+              />
+            </div>
+
+            <Field label="Central">
+              <SelectInput
+                onChange={(event) => setSelectedSpaceId(event.target.value || null)}
+                value={selectedSpaceId ?? ''}
+              >
+                {spaces.map((space) => (
+                  <option key={space.id} value={space.id}>
+                    {space.display_name}
+                  </option>
+                ))}
+              </SelectInput>
+            </Field>
+
+            <div className="space-y-3">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-muted)]">
+                Status
+              </p>
+              <div className="space-y-1">
+                {[
+                  ['all', 'Todos', statusCounts.all],
+                  ['published', 'Publicado', statusCounts.published],
+                  ['draft', 'Rascunho', statusCounts.draft],
+                  ['review', 'Em revisao', statusCounts.review],
+                  ['archived', 'Arquivado', statusCounts.archived],
+                ].map(([value, label, count]) => (
+                  <button
+                    className={cx(
+                      'flex w-full items-center justify-between rounded-[14px] px-3 py-2 text-left text-sm transition',
+                      listStatusFilter === value
+                        ? 'bg-[rgba(48,127,226,0.1)] font-medium text-[color:var(--color-brand-blue)]'
+                        : 'text-[color:var(--color-ink)] hover:bg-[color:var(--color-surface)]',
+                    )}
+                    key={value}
+                    onClick={() => setListStatusFilter(value as ArticleStatusFilter)}
+                    type="button"
+                  >
+                    <span>{label}</span>
+                    <span className="text-[color:var(--color-muted)]">{count}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-muted)]">
+                Categorias
+              </p>
+              <div className="space-y-1">
+                <button
+                  className={cx(
+                    'flex w-full items-center justify-between rounded-[14px] px-3 py-2 text-left text-sm transition',
+                    selectedCategoryId === 'all'
+                      ? 'bg-[rgba(48,127,226,0.1)] font-medium text-[color:var(--color-brand-blue)]'
+                      : 'text-[color:var(--color-ink)] hover:bg-[color:var(--color-surface)]',
+                  )}
+                  onClick={() => setSelectedCategoryId('all')}
+                  type="button"
                 >
-                  {spaces.map((space) => (
-                    <option key={space.id} value={space.id}>
-                      {space.display_name} ({space.slug})
-                    </option>
-                  ))}
-                </SelectInput>
-              </Field>
+                  <span>Todos</span>
+                  <span className="text-[color:var(--color-muted)]">{filteredArticles.length}</span>
+                </button>
+                {visibleCategories.map((category) => (
+                  <button
+                    className={cx(
+                      'flex w-full items-center justify-between rounded-[14px] px-3 py-2 text-left text-sm transition',
+                      selectedCategoryId === category.id
+                        ? 'bg-[rgba(48,127,226,0.1)] font-medium text-[color:var(--color-brand-blue)]'
+                        : 'text-[color:var(--color-ink)] hover:bg-[color:var(--color-surface)]',
+                    )}
+                    key={category.id}
+                    onClick={() => setSelectedCategoryId(category.id)}
+                    type="button"
+                  >
+                    <span className="truncate">{category.name}</span>
+                    <span className="pl-3 text-[color:var(--color-muted)]">{category.article_count}</span>
+                  </button>
+                ))}
+                {sortedCategories.length > 5 ? (
+                  <button
+                    className="rounded-[14px] px-3 py-2 text-left text-sm font-medium text-[color:var(--color-brand-blue)]"
+                    onClick={() => setShowAllCategories((current) => !current)}
+                    type="button"
+                  >
+                    {showAllCategories ? '− Ver menos' : '+ Ver todas'}
+                  </button>
+                ) : null}
+              </div>
+            </div>
 
-              <Field label="Status">
-                <SelectInput
-                  onChange={(event) =>
-                    setStatusFilter(event.target.value as ArticleStatusFilter)
-                  }
-                  value={statusFilter}
-                >
-                  <option value="all">Todos</option>
-                  {KNOWLEDGE_ARTICLE_STATUSES.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </SelectInput>
-              </Field>
+            <Field label="Autor">
+              <SelectInput
+                onChange={(event) => setSelectedAuthor(event.target.value)}
+                value={selectedAuthor}
+              >
+                <option value="all">Todos</option>
+                {availableAuthors.map((author) => (
+                  <option key={author} value={author}>
+                    {author}
+                  </option>
+                ))}
+              </SelectInput>
+            </Field>
 
-              <Field label="Visibilidade">
-                <SelectInput
-                  onChange={(event) =>
-                    setVisibilityFilter(event.target.value as ArticleVisibilityFilter)
-                  }
-                  value={visibilityFilter}
-                >
-                  <option value="all">Todas</option>
-                  {KNOWLEDGE_VISIBILITIES.map((visibility) => (
-                    <option key={visibility} value={visibility}>
-                      {visibility}
-                    </option>
-                  ))}
-                </SelectInput>
-              </Field>
+            <Field label="Data">
+              <SelectInput
+                onChange={(event) =>
+                  setSelectedDateWindow(event.target.value as KnowledgeDateFilter)
+                }
+                value={selectedDateWindow}
+              >
+                <option value="90">Ultimos 90 dias</option>
+                <option value="30">Ultimos 30 dias</option>
+                <option value="7">Ultimos 7 dias</option>
+                <option value="all">Todos os periodos</option>
+              </SelectInput>
+            </Field>
 
-              <Field label="Origem">
-                <SelectInput
-                  onChange={(event) =>
-                    setOriginFilter(event.target.value as ArticleOriginFilter)
-                  }
-                  value={originFilter}
-                >
-                  <option value="all">Todas</option>
-                  <option value="legacy">Somente legado</option>
-                  <option value="manual">Somente manual</option>
-                </SelectInput>
-              </Field>
+            <div className="space-y-2 rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-muted)]">
+                Janela atual
+              </p>
+              <div className="space-y-1 text-sm text-[color:var(--color-ink)]">
+                <p>{draftArticleCount} rascunhos</p>
+                <p>{reviewArticleCount} em revisao</p>
+                <p>{legacyArticleCount} do legado</p>
+                <p>{restrictedArticleCount} restritos</p>
+                <p>{duplicateHashGroupCount} grupos duplicados</p>
+              </div>
+            </div>
 
-              <Field label="Duplicidade">
-                <SelectInput
-                  onChange={(event) =>
-                    setDuplicateFilter(event.target.value as ArticleDuplicateFilter)
-                  }
-                  value={duplicateFilter}
-                >
-                  <option value="all">Todos</option>
-                  <option value="duplicates">Somente duplicados</option>
-                  <option value="unique">Somente unicos</option>
-                </SelectInput>
-              </Field>
-
-              <Field label="Classificacao sugerida">
-                <SelectInput
-                  onChange={(event) =>
-                    setClassificationFilter(
-                      event.target.value as ArticleClassificationFilter,
-                    )
-                  }
-                  value={classificationFilter}
-                >
-                  <option value="all">Todas</option>
-                  {KNOWLEDGE_ADVISORY_CLASSIFICATIONS.map((classification) => (
-                    <option key={classification} value={classification}>
-                      {classification}
-                    </option>
-                  ))}
-                  <option value="without-advisory">Sem advisory</option>
-                </SelectInput>
-              </Field>
-
+            <div className="flex flex-col gap-2 pt-1">
               <GhostButton
-                className="min-h-11 w-full px-4"
+                className="min-h-11 justify-start"
                 disabled={!selectedSpaceId}
                 onClick={() => {
                   if (selectedSpaceId) {
@@ -1369,619 +1544,590 @@ export function KnowledgePage() {
                   }
                 }}
               >
-                Recarregar artigos
+                Atualizar lista
               </GhostButton>
-            </ContextSubsidebarSection>
-
-            <ContextSubsidebarSection
-              description="Sinais compactos para priorizar a curadoria sem virar dashboard."
-              title="Janela atual"
-            >
-              <div className="grid gap-2">
-                {[
-                  `${draftArticleCount} drafts`,
-                  `${reviewArticleCount} em review`,
-                  `${legacyArticleCount} do legado`,
-                  `${restrictedArticleCount} restritos`,
-                  `${duplicateHashGroupCount} grupos duplicados`,
-                ].map((item) => (
-                  <div
-                    className="rounded-[16px] border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm text-[color:var(--color-ink)]"
-                    key={item}
-                  >
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </ContextSubsidebarSection>
-
-            {selectedSpace ? (
-              <ContextSubsidebarSection
-                description="Resumo curto da central ativa. Checklist e advisory detalhados ficam no artigo."
-                title="Central ativa"
+              <GhostButton
+                className="min-h-11 justify-start"
+                disabled={!selectedSpace}
+                onClick={openCreateCategory}
               >
-                <div className="flex flex-wrap items-center gap-2">
-                  <StatusPill tone={toneForSpaceStatus(selectedSpace.status)}>
-                    {selectedSpace.status}
-                  </StatusPill>
-                  <StatusPill tone="accent">{selectedSpace.organization_display_name}</StatusPill>
-                  <StatusPill>{selectedSpace.default_locale}</StatusPill>
-                </div>
-                <p className="text-sm font-semibold text-[color:var(--color-ink)]">
+                Nova categoria
+              </GhostButton>
+            </div>
+          </div>
+        </aside>
+
+        <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white/95 shadow-[var(--shadow-panel)]">
+          <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--color-border)] px-5 py-4">
+            <div>
+              <h2 className="text-[1.55rem] font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
+                Artigos ({displayArticles.length})
+              </h2>
+            </div>
+            <div className="flex items-center gap-2">
+              <SelectInput
+                onChange={(event) => setListSort(event.target.value as KnowledgeListSort)}
+                value={listSort}
+              >
+                <option value="recent">Mais recentes</option>
+                <option value="oldest">Mais antigos</option>
+                <option value="title">Titulo A-Z</option>
+              </SelectInput>
+            </div>
+          </header>
+
+          {contentPhase === 'idle' ? (
+            <div className="px-5 py-8">
+              <EmptyState
+                title="Selecione uma central"
+                description="Escolha a central no painel lateral para abrir a lista de artigos."
+              />
+            </div>
+          ) : contentPhase === 'loading' ? (
+            <div className="px-5 py-8">
+              <LoadingState
+                title="Carregando artigos"
+                description="Estamos preparando a lista e a pre-visualizacao desta central."
+              />
+            </div>
+          ) : contentPhase === 'contract-unavailable' ? (
+            <div className="px-5 py-8">
+              <ContractUnavailableState contractName="lista editorial de artigos e categorias" />
+            </div>
+          ) : contentPhase === 'error' ? (
+            <div className="px-5 py-8">
+              <ErrorState
+                description={
+                  contentMessage ?? 'Nao foi possivel carregar os artigos desta central.'
+                }
+                action={
+                  <AppButton onClick={() => selectedSpaceId && void refreshSelectedSpace()}>
+                    Tentar novamente
+                  </AppButton>
+                }
+              />
+            </div>
+          ) : displayArticles.length === 0 ? (
+            <div className="px-5 py-8">
+              <EmptyState
+                title="Nenhum artigo encontrado"
+                description="Ajuste os filtros ou crie um novo artigo para continuar."
+                action={<AppButton onClick={openCreateArticle}>Criar artigo</AppButton>}
+              />
+            </div>
+          ) : (
+            <>
+              <div className="overflow-hidden">
+                <table className="w-full table-fixed">
+                  <thead>
+                    <tr className="border-b border-[color:var(--color-border)] text-left text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                      <th className="px-5 py-4">Titulo</th>
+                      <th className="w-[112px] px-3 py-4">Categoria</th>
+                      <th className="w-[126px] px-3 py-4">Autor</th>
+                      <th className="w-[132px] px-3 py-4">Data</th>
+                      <th className="w-[108px] px-5 py-4">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {displayArticles.map((article) => {
+                      const isSelected = article.id === selectedArticleId;
+
+                      return (
+                        <tr
+                          className={cx(
+                            'cursor-pointer border-b border-[color:var(--color-border)] transition last:border-b-0',
+                            isSelected
+                              ? 'bg-[rgba(48,127,226,0.08)]'
+                              : 'hover:bg-[color:var(--color-surface)]',
+                          )}
+                          key={article.id}
+                          onClick={() => {
+                            setSelectedArticleId(article.id);
+                            setPanelMode('detail');
+                            setArticleFormMessage(null);
+                            setCategoryFormMessage(null);
+                            setArticleActionFeedback(null);
+                          }}
+                        >
+                          <td className="px-5 py-4 align-top">
+                            <div className="space-y-1">
+                              <p className="truncate text-[0.98rem] font-medium text-[color:var(--color-ink)]">
+                                {article.title || 'Indisponivel'}
+                              </p>
+                              <p className="line-clamp-2 text-sm leading-5 text-[color:var(--color-muted)]">
+                                {article.summary?.trim() || 'Indisponivel'}
+                              </p>
+                            </div>
+                          </td>
+                          <td className="px-3 py-4 align-top">
+                            <StatusPill tone="accent">
+                              <span className="max-w-[84px] truncate">
+                                {article.category_name ?? 'Indisponivel'}
+                              </span>
+                            </StatusPill>
+                          </td>
+                          <td className="px-3 py-4 align-top text-sm text-[color:var(--color-ink)]">
+                            <span className="line-clamp-2">
+                              {articleContributorName(article)}
+                            </span>
+                          </td>
+                          <td className="px-3 py-4 align-top text-sm text-[color:var(--color-ink)]">
+                            {formatDateTime(article.updated_at)}
+                          </td>
+                          <td className="px-5 py-4 align-top">
+                            <StatusPill tone={toneForArticleStatus(article.status)}>
+                              {displayArticleStatus(article.status)}
+                            </StatusPill>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--color-border)] px-5 py-4 text-sm text-[color:var(--color-muted)]">
+                <p>
+                  Mostrando 1-{displayArticles.length} de {filteredArticles.length} artigos
+                </p>
+                <p>Pagina unica no ambiente atual.</p>
+              </footer>
+            </>
+          )}
+        </section>
+
+        <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white/95 px-4 py-4 shadow-[var(--shadow-panel)]">
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-muted)]">
+                Pre-visualizacao
+              </p>
+              {selectedSpace ? (
+                <p className="text-sm text-[color:var(--color-muted)]">
                   {selectedSpace.display_name}
                 </p>
-                <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                  {selectedSpace.brand_name ? `${selectedSpace.brand_name} · ` : ''}
-                  locale {selectedSpace.default_locale}
-                </p>
-                <details className="rounded-[16px] border border-[color:var(--color-border)] bg-white px-4 py-3">
-                  <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                    Contexto adicional
-                  </summary>
-                  <div className="mt-3 space-y-3 text-sm leading-6 text-[color:var(--color-muted)]">
-                    <p>
-                      Esta area continua interna. Publicar um artigo aqui nao libera a leitura publica sem o fluxo editorial completo.
-                    </p>
-                    <p>
-                      {selectedSpace.owner_tenant_id
-                        ? `Central vinculada a ${selectedSpace.owner_tenant_display_name ?? selectedSpace.owner_tenant_slug} para compatibilidade do legado.`
-                        : 'Esta central ainda nao tem um cliente dono vinculado para a compatibilidade do legado.'}
-                    </p>
-                  </div>
-                </details>
-              </ContextSubsidebarSection>
-            ) : null}
-          </ContextSubsidebar>
-        }
-        main={
-          <div className="grid gap-5 xl:grid-cols-[minmax(320px,0.38fr)_minmax(0,0.62fr)]">
-        <Panel
-          title="Artigos"
-          description="Lista dominante de curadoria com sinais suficientes para decidir qual artigo entra em revisao."
-        >
-          {contentPhase === 'idle' ? (
-            <EmptyState
-              title="Selecione uma central"
-              description="Escolha uma central no topo para abrir a lista editorial."
-            />
-          ) : contentPhase === 'loading' ? (
-            <LoadingState
-              title="Carregando artigos"
-              description="Estamos preparando artigos, categorias e sinais editoriais desta central."
-            />
-          ) : contentPhase === 'contract-unavailable' ? (
-            <ContractUnavailableState contractName="lista editorial de artigos e categorias" />
-          ) : contentPhase === 'error' ? (
-            <ErrorState
-              description={
-                contentMessage ??
-                'Nao foi possivel carregar os artigos desta central.'
-              }
-              action={
-                <AppButton onClick={() => selectedSpaceId && void refreshSelectedSpace()}>
-                  Tentar novamente
-                </AppButton>
-              }
-            />
-          ) : filteredArticles.length === 0 ? (
-            <EmptyState
-              title="Nenhum artigo encontrado"
-              description="Nao existem artigos para esta central com os filtros escolhidos."
-              action={
-                <AppButton onClick={openCreateArticle}>
-                  Criar o primeiro draft
-                </AppButton>
-              }
-            />
-          ) : (
+              ) : null}
+            </div>
+
             <div className="space-y-3">
-              {filteredArticles.map((article) => {
-                const isSelected = article.id === selectedArticleId;
-                const articleAdvisory = advisoryMap.get(article.id);
-                const duplicateCount =
-                  articleAdvisory?.duplicate_group_article_count ??
-                  (article.source_hash ? sourceHashCounts.get(article.source_hash) ?? 0 : 0);
-                return (
-                  <button
-                    className={cx(
-                      'flex w-full flex-col gap-3 rounded-[22px] border px-4 py-4 text-left transition',
-                      isSelected
-                        ? 'border-[rgba(48,127,226,0.42)] bg-[rgba(48,127,226,0.08)] shadow-[0_10px_24px_rgba(19,33,79,0.06)]'
-                        : 'border-[color:var(--color-border)] bg-white hover:border-[rgba(48,127,226,0.24)]',
-                    )}
-                    key={article.id}
-                    onClick={() => {
-                      setSelectedArticleId(article.id);
-                      setPanelMode('detail');
-                      setArticleFormMessage(null);
-                      setCategoryFormMessage(null);
-                      setArticleActionFeedback(null);
-                    }}
-                    type="button"
-                  >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <StatusPill tone={toneForArticleStatus(article.status)}>{article.status}</StatusPill>
-                      <StatusPill tone={toneForVisibility(article.visibility)}>{article.visibility}</StatusPill>
-                      {articleAdvisory ? (
-                        <StatusPill tone={toneForAdvisoryClassification(articleAdvisory.suggested_classification)}>
-                          {articleAdvisory.suggested_classification}
-                        </StatusPill>
+              {panelMode === 'create-category' ? (
+                <form className="space-y-4" onSubmit={handleCreateCategory}>
+                  <Field label="Nome da categoria">
+                    <TextInput
+                      onChange={(event) =>
+                        setCategoryForm((current) => ({
+                          ...current,
+                          name: event.target.value,
+                          slug:
+                            current.slug === '' ||
+                            current.slug === slugify(current.name)
+                              ? slugify(event.target.value)
+                              : current.slug,
+                        }))
+                      }
+                      placeholder="Politicas de devolucao"
+                      required
+                      value={categoryForm.name}
+                    />
+                  </Field>
+
+                  <Field label="Slug">
+                    <TextInput
+                      onChange={(event) =>
+                        setCategoryForm((current) => ({
+                          ...current,
+                          slug: slugify(event.target.value),
+                        }))
+                      }
+                      placeholder="politicas-de-devolucao"
+                      required
+                      value={categoryForm.slug}
+                    />
+                  </Field>
+
+                  <Field label="Categoria pai">
+                    <SelectInput
+                      onChange={(event) =>
+                        setCategoryForm((current) => ({
+                          ...current,
+                          parentCategoryId: event.target.value,
+                        }))
+                      }
+                      value={categoryForm.parentCategoryId}
+                    >
+                      <option value="">Sem categoria pai</option>
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {categoryDisplayName(category)}
+                        </option>
+                      ))}
+                    </SelectInput>
+                  </Field>
+
+                  <Field label="Visibilidade">
+                    <SelectInput
+                      onChange={(event) =>
+                        setCategoryForm((current) => ({
+                          ...current,
+                          visibility: event.target.value as KnowledgeVisibility,
+                        }))
+                      }
+                      value={categoryForm.visibility}
+                    >
+                      {KNOWLEDGE_VISIBILITIES.map((visibility) => (
+                        <option key={visibility} value={visibility}>
+                          {visibility}
+                        </option>
+                      ))}
+                    </SelectInput>
+                  </Field>
+
+                  <Field label="Descricao">
+                    <TextareaInput
+                      onChange={(event) =>
+                        setCategoryForm((current) => ({
+                          ...current,
+                          description: event.target.value,
+                        }))
+                      }
+                      placeholder="Orienta a curadoria editorial deste grupo."
+                      value={categoryForm.description}
+                    />
+                  </Field>
+
+                  {categoryFormMessage ? (
+                    <InlineNotice
+                      tone={
+                        categoryFormMessage.includes('sucesso') ? 'warning' : 'critical'
+                      }
+                    >
+                      {categoryFormMessage}
+                    </InlineNotice>
+                  ) : null}
+
+                  <div className="flex flex-wrap gap-3">
+                    <AppButton disabled={categoryFormSubmitting} type="submit">
+                      {categoryFormSubmitting ? 'Salvando...' : 'Criar categoria'}
+                    </AppButton>
+                    <GhostButton
+                      disabled={categoryFormSubmitting}
+                      onClick={() => {
+                        setPanelMode('detail');
+                        setCategoryForm(emptyCategoryForm());
+                        setCategoryFormMessage(null);
+                      }}
+                    >
+                      Fechar
+                    </GhostButton>
+                  </div>
+                </form>
+              ) : panelMode === 'create-article' || panelMode === 'edit-article' ? (
+                <form className="space-y-4" onSubmit={handleSaveArticle}>
+                  <Field label="Titulo">
+                    <TextInput
+                      onChange={(event) =>
+                        setArticleForm((current) => ({
+                          ...current,
+                          title: event.target.value,
+                          slug:
+                            current.slug === '' ||
+                            current.slug === slugify(current.title)
+                              ? slugify(event.target.value)
+                              : current.slug,
+                        }))
+                      }
+                      placeholder="Como tratar devolucao com reembolso parcial"
+                      required
+                      value={articleForm.title}
+                    />
+                  </Field>
+
+                  <Field label="Slug">
+                    <TextInput
+                      onChange={(event) =>
+                        setArticleForm((current) => ({
+                          ...current,
+                          slug: slugify(event.target.value),
+                        }))
+                      }
+                      placeholder="como-tratar-devolucao-com-reembolso-parcial"
+                      required
+                      value={articleForm.slug}
+                    />
+                  </Field>
+
+                  <Field label="Resumo">
+                    <TextareaInput
+                      onChange={(event) =>
+                        setArticleForm((current) => ({
+                          ...current,
+                          summary: event.target.value,
+                        }))
+                      }
+                      placeholder="Resumo curto para orientar a leitura do artigo."
+                      value={articleForm.summary}
+                    />
+                  </Field>
+
+                  <Field label="Categoria">
+                    <SelectInput
+                      onChange={(event) =>
+                        setArticleForm((current) => ({
+                          ...current,
+                          categoryId: event.target.value,
+                        }))
+                      }
+                      value={articleForm.categoryId}
+                    >
+                      <option value="">Sem categoria</option>
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {categoryDisplayName(category)}
+                        </option>
+                      ))}
+                    </SelectInput>
+                  </Field>
+
+                  <Field label="Visibilidade">
+                    <SelectInput
+                      onChange={(event) =>
+                        setArticleForm((current) => ({
+                          ...current,
+                          visibility: event.target.value as KnowledgeVisibility,
+                        }))
+                      }
+                      value={articleForm.visibility}
+                    >
+                      {KNOWLEDGE_VISIBILITIES.map((visibility) => (
+                        <option key={visibility} value={visibility}>
+                          {visibility}
+                        </option>
+                      ))}
+                    </SelectInput>
+                  </Field>
+
+                  <Field label="Conteudo principal">
+                    <TextareaInput
+                      onChange={(event) =>
+                        setArticleForm((current) => ({
+                          ...current,
+                          bodyMd: event.target.value,
+                        }))
+                      }
+                      placeholder="Escreva ou revise o corpo principal do artigo."
+                      required
+                      value={articleForm.bodyMd}
+                    />
+                  </Field>
+
+                  <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                    <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                      Informacoes avancadas
+                    </summary>
+                    <div className="mt-4 space-y-4">
+                      <Field label="Caminho de origem">
+                        <TextInput
+                          onChange={(event) =>
+                            setArticleForm((current) => ({
+                              ...current,
+                              sourcePath: event.target.value,
+                            }))
+                          }
+                          placeholder="raw_knowledge/.../articles"
+                          value={articleForm.sourcePath}
+                        />
+                      </Field>
+
+                      <Field label="Hash de origem">
+                        <TextInput
+                          onChange={(event) =>
+                            setArticleForm((current) => ({
+                              ...current,
+                              sourceHash: event.target.value,
+                            }))
+                          }
+                          placeholder="sha256..."
+                          value={articleForm.sourceHash}
+                        />
+                      </Field>
+                    </div>
+                  </details>
+
+                  {articleFormMessage ? (
+                    <InlineNotice tone="critical">{articleFormMessage}</InlineNotice>
+                  ) : null}
+
+                  <div className="flex flex-wrap gap-3">
+                    <AppButton disabled={articleFormSubmitting} type="submit">
+                      {articleFormSubmitting
+                        ? 'Salvando...'
+                        : panelMode === 'edit-article'
+                          ? 'Salvar artigo'
+                          : 'Criar artigo'}
+                    </AppButton>
+                    <GhostButton
+                      disabled={articleFormSubmitting}
+                      onClick={() => {
+                        setPanelMode('detail');
+                        setArticleForm(emptyArticleForm());
+                        setArticleFormMessage(null);
+                      }}
+                    >
+                      Cancelar
+                    </GhostButton>
+                  </div>
+                </form>
+              ) : detailPhase === 'idle' ? (
+                <EmptyState
+                  title="Selecione um artigo"
+                  description="Escolha um item da lista para abrir a pre-visualizacao."
+                  action={<AppButton onClick={openCreateArticle}>Novo artigo</AppButton>}
+                />
+              ) : detailPhase === 'loading' ? (
+                <LoadingState
+                  title="Carregando pre-visualizacao"
+                  description="Estamos preparando os dados do artigo selecionado."
+                />
+              ) : detailPhase === 'contract-unavailable' ? (
+                <ContractUnavailableState contractName="detalhe editorial do artigo" />
+              ) : detailPhase === 'error' || !articleDetail || !selectedArticleSummary ? (
+                <ErrorState
+                  description={
+                    detailMessage ?? 'Nao foi possivel abrir o artigo selecionado.'
+                  }
+                  action={
+                    <AppButton
+                      onClick={() =>
+                        selectedArticleId && void refreshArticleDetail(selectedArticleId)
+                      }
+                    >
+                      Tentar novamente
+                    </AppButton>
+                  }
+                />
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-3 rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <h2 className="text-[1.55rem] font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
+                        {articleDetail.title || 'Indisponivel'}
+                      </h2>
+                      <StatusPill tone={toneForArticleStatus(articleDetail.status)}>
+                        {displayArticleStatus(articleDetail.status)}
+                      </StatusPill>
+                    </div>
+
+                    <dl className="space-y-4">
+                      <div className="space-y-1">
+                        <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                          Categoria
+                        </dt>
+                        <dd className="text-sm text-[color:var(--color-ink)]">
+                          {articleDetail.category_name ?? 'Indisponivel'}
+                        </dd>
+                      </div>
+                      <div className="space-y-1">
+                        <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                          Autor
+                        </dt>
+                        <dd className="text-sm text-[color:var(--color-ink)]">
+                          {articleContributorNameFromDetail(articleDetail)}
+                        </dd>
+                      </div>
+                      <div className="space-y-1">
+                        <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                          Atualizado em
+                        </dt>
+                        <dd className="text-sm text-[color:var(--color-ink)]">
+                          {formatOptionalDate(articleDetail.updated_at)}
+                        </dd>
+                      </div>
+                      <div className="space-y-1">
+                        <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                          Visibilidade
+                        </dt>
+                        <dd className="text-sm text-[color:var(--color-ink)]">
+                          {displayVisibility(articleDetail.visibility)}
+                        </dd>
+                      </div>
+                      <div className="space-y-1">
+                        <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                          Ultima publicacao
+                        </dt>
+                        <dd className="text-sm text-[color:var(--color-ink)]">
+                          {formatOptionalDate(articleDetail.published_at)}
+                        </dd>
+                      </div>
+                      <div className="space-y-1">
+                        <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                          Versao
+                        </dt>
+                        <dd className="text-sm text-[color:var(--color-ink)]">
+                          {articleDetail.current_revision_number ?? 'Indisponivel'}
+                        </dd>
+                      </div>
+                    </dl>
+
+                    <div className="border-t border-[color:var(--color-border)] pt-4">
+                      <p className="text-sm leading-6 text-[color:var(--color-ink)]">
+                        {articleDetail.summary?.trim() || 'Indisponivel'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {articleActionMessage ? (
+                    <InlineNotice
+                      tone={
+                        articleActionMessage.includes('sucesso') ? 'warning' : 'critical'
+                      }
+                    >
+                      {articleActionMessage}
+                    </InlineNotice>
+                  ) : null}
+
+                  {reviewAdvisoryMessage ? (
+                    <InlineNotice
+                      tone={
+                        reviewAdvisoryMessage.includes('sucesso') ||
+                        reviewAdvisoryMessage.includes('concluida')
+                          ? 'warning'
+                          : 'critical'
+                      }
+                    >
+                      {reviewAdvisoryMessage}
+                    </InlineNotice>
+                  ) : null}
+
+                  <div className="space-y-2">
+                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                      Acoes
+                    </p>
+                    <div className="grid gap-2">
+                      {(articleDetail.status === 'draft' || articleDetail.status === 'review') ? (
+                        <GhostButton className="min-h-11 justify-start" disabled={articleActionSubmitting} onClick={openEditArticle}>
+                          Editar
+                        </GhostButton>
+                      ) : null}
+                      {articleDetail.status === 'draft' ? (
+                        <GhostButton className="min-h-11 justify-start" disabled={articleActionSubmitting} onClick={() => void handleSubmitForReview()}>
+                          {articleActionSubmitting ? 'Enviando...' : 'Enviar para revisao'}
+                        </GhostButton>
+                      ) : null}
+                      {articleDetail.status === 'review' ? (
+                        <GhostButton className="min-h-11 justify-start" disabled={articleActionSubmitting} onClick={() => void handlePublish()}>
+                          {articleActionSubmitting ? 'Publicando...' : 'Publicar'}
+                        </GhostButton>
+                      ) : null}
+                      {articleDetail.status !== 'archived' ? (
+                        <GhostButton className="min-h-11 justify-start border-[color:var(--color-danger-border)] text-[color:var(--color-danger-ink)]" disabled={articleActionSubmitting} onClick={() => void handleArchive()}>
+                          {articleActionSubmitting ? 'Arquivando...' : 'Arquivar'}
+                        </GhostButton>
                       ) : null}
                     </div>
+                  </div>
 
-                    <div className="space-y-2">
-                      <h3 className="text-lg font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
-                        {article.title}
-                      </h3>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[color:var(--color-muted)]">
-                        <span>{article.category_name ?? 'Sem categoria'}</span>
-                        <span>{article.source_path ? 'Legado' : 'Manual'}</span>
-                        <span>{formatDateTime(article.updated_at)}</span>
-                        {duplicateCount > 1 ? <span>Duplicado x{duplicateCount}</span> : null}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </Panel>
-
-        <Panel
-          title={
-            panelMode === 'create-category'
-              ? 'Nova categoria'
-              : panelMode === 'create-article'
-                ? 'Criar draft'
-                : panelMode === 'edit-article'
-                  ? 'Editar draft'
-                  : 'Detalhe do artigo'
-          }
-          description={
-            panelMode === 'create-category'
-              ? 'Nova categoria para organizar a navegacao editorial desta central.'
-              : panelMode === 'create-article'
-                ? 'Novo rascunho editorial para revisao segura antes da publicacao.'
-                : panelMode === 'edit-article'
-                  ? 'Edicao do rascunho sem tirar o foco da revisao editorial.'
-                  : 'Revisao detalhada do artigo, com advisory e checklist sem poluir a leitura principal.'
-          }
-        >
-          {panelMode === 'create-category' ? (
-            <form className="space-y-4" onSubmit={handleCreateCategory}>
-              <Field label="Nome da categoria">
-                <TextInput
-                  onChange={(event) =>
-                    setCategoryForm((current) => ({
-                      ...current,
-                      name: event.target.value,
-                      slug:
-                        current.slug === '' ||
-                        current.slug === slugify(current.name)
-                          ? slugify(event.target.value)
-                          : current.slug,
-                    }))
-                  }
-                  placeholder="Politicas de devolucao"
-                  required
-                  value={categoryForm.name}
-                />
-              </Field>
-
-              <Field label="Slug">
-                <TextInput
-                  onChange={(event) =>
-                    setCategoryForm((current) => ({
-                      ...current,
-                      slug: slugify(event.target.value),
-                    }))
-                  }
-                  placeholder="politicas-de-devolucao"
-                  required
-                  value={categoryForm.slug}
-                />
-              </Field>
-
-              <Field label="Categoria pai">
-                <SelectInput
-                  onChange={(event) =>
-                    setCategoryForm((current) => ({
-                      ...current,
-                      parentCategoryId: event.target.value,
-                    }))
-                  }
-                  value={categoryForm.parentCategoryId}
-                >
-                  <option value="">Sem categoria pai</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {categoryDisplayName(category)}
-                    </option>
-                  ))}
-                </SelectInput>
-              </Field>
-
-              <Field label="Visibilidade">
-                <SelectInput
-                  onChange={(event) =>
-                    setCategoryForm((current) => ({
-                      ...current,
-                      visibility: event.target.value as KnowledgeVisibility,
-                    }))
-                  }
-                  value={categoryForm.visibility}
-                >
-                  {KNOWLEDGE_VISIBILITIES.map((visibility) => (
-                    <option key={visibility} value={visibility}>
-                      {visibility}
-                    </option>
-                  ))}
-                </SelectInput>
-              </Field>
-
-              <Field label="Descricao">
-                <TextareaInput
-                  onChange={(event) =>
-                    setCategoryForm((current) => ({
-                      ...current,
-                      description: event.target.value,
-                    }))
-                  }
-                  placeholder="Orienta a curadoria editorial deste grupo."
-                  value={categoryForm.description}
-                />
-              </Field>
-
-              {categoryFormMessage ? (
-                <InlineNotice
-                  tone={
-                    categoryFormMessage.includes('sucesso') ? 'warning' : 'critical'
-                  }
-                >
-                  {categoryFormMessage}
-                </InlineNotice>
-              ) : null}
-
-              <div className="flex flex-wrap gap-3">
-                <AppButton disabled={categoryFormSubmitting} type="submit">
-                  {categoryFormSubmitting ? 'Sincronizando...' : 'Criar categoria'}
-                </AppButton>
-                <GhostButton
-                  disabled={categoryFormSubmitting}
-                  onClick={() => {
-                    setPanelMode('detail');
-                    setCategoryForm(emptyCategoryForm());
-                    setCategoryFormMessage(null);
-                  }}
-                >
-                  Fechar
-                </GhostButton>
-              </div>
-            </form>
-          ) : panelMode === 'create-article' || panelMode === 'edit-article' ? (
-            <form className="space-y-4" onSubmit={handleSaveArticle}>
-              <Field label="Titulo">
-                <TextInput
-                  onChange={(event) =>
-                    setArticleForm((current) => ({
-                      ...current,
-                      title: event.target.value,
-                      slug:
-                        current.slug === '' ||
-                        current.slug === slugify(current.title)
-                          ? slugify(event.target.value)
-                          : current.slug,
-                    }))
-                  }
-                  placeholder="Como tratar devolucao com reembolso parcial"
-                  required
-                  value={articleForm.title}
-                />
-              </Field>
-
-              <Field label="Slug">
-                <TextInput
-                  onChange={(event) =>
-                    setArticleForm((current) => ({
-                      ...current,
-                      slug: slugify(event.target.value),
-                    }))
-                  }
-                  placeholder="como-tratar-devolucao-com-reembolso-parcial"
-                  required
-                  value={articleForm.slug}
-                />
-              </Field>
-
-              <Field label="Resumo">
-                <TextareaInput
-                  onChange={(event) =>
-                    setArticleForm((current) => ({
-                      ...current,
-                      summary: event.target.value,
-                    }))
-                  }
-                  placeholder="Resumo curto para orientar a curadoria e a futura experiencia publica."
-                  value={articleForm.summary}
-                />
-              </Field>
-
-              <Field label="Categoria">
-                <SelectInput
-                  onChange={(event) =>
-                    setArticleForm((current) => ({
-                      ...current,
-                      categoryId: event.target.value,
-                    }))
-                  }
-                  value={articleForm.categoryId}
-                >
-                  <option value="">Sem categoria</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {categoryDisplayName(category)}
-                    </option>
-                  ))}
-                </SelectInput>
-              </Field>
-
-              <Field label="Visibilidade">
-                <SelectInput
-                  onChange={(event) =>
-                    setArticleForm((current) => ({
-                      ...current,
-                      visibility: event.target.value as KnowledgeVisibility,
-                    }))
-                  }
-                  value={articleForm.visibility}
-                >
-                  {KNOWLEDGE_VISIBILITIES.map((visibility) => (
-                    <option key={visibility} value={visibility}>
-                      {visibility}
-                    </option>
-                  ))}
-                </SelectInput>
-              </Field>
-
-              <Field label="Conteudo principal">
-                <TextareaInput
-                  onChange={(event) =>
-                    setArticleForm((current) => ({
-                      ...current,
-                      bodyMd: event.target.value,
-                    }))
-                  }
-                  placeholder="Escreva ou revise o corpo principal sem depender de HTML legado."
-                  required
-                  value={articleForm.bodyMd}
-                />
-              </Field>
-
-              <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
-                <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                  Detalhes tecnicos da origem
-                </summary>
-                <div className="mt-4 space-y-4">
-                  <Field
-                    label="Caminho de origem"
-                    description="Opcional para curadoria manual. A importacao legada continua preenchendo isso automaticamente."
-                  >
-                    <TextInput
-                      onChange={(event) =>
-                        setArticleForm((current) => ({
-                          ...current,
-                          sourcePath: event.target.value,
-                        }))
-                      }
-                      placeholder="raw_knowledge/octadesk_export/latest/articles/..."
-                      value={articleForm.sourcePath}
-                    />
-                  </Field>
-
-                  <Field label="Hash de origem">
-                    <TextInput
-                      onChange={(event) =>
-                        setArticleForm((current) => ({
-                          ...current,
-                          sourceHash: event.target.value,
-                        }))
-                      }
-                      placeholder="sha256..."
-                      value={articleForm.sourceHash}
-                    />
-                  </Field>
-                </div>
-              </details>
-
-              {articleForm.sourcePath || articleForm.sourceHash ? (
-                <InlineNotice tone="warning">
-                  Conteudo com trilha legada nao sera publicado automaticamente.
-                  A curadoria humana continua obrigatoria.
-                </InlineNotice>
-              ) : null}
-
-              {articleFormMessage ? (
-                <InlineNotice tone="critical">{articleFormMessage}</InlineNotice>
-              ) : null}
-
-              <div className="flex flex-wrap gap-3">
-                <AppButton disabled={articleFormSubmitting} type="submit">
-                  {articleFormSubmitting
-                    ? 'Sincronizando...'
-                    : panelMode === 'edit-article'
-                      ? 'Salvar draft'
-                      : 'Criar draft'}
-                </AppButton>
-                <GhostButton
-                  disabled={articleFormSubmitting}
-                  onClick={() => {
-                    setPanelMode('detail');
-                    setArticleForm(emptyArticleForm());
-                    setArticleFormMessage(null);
-                  }}
-                >
-                  Cancelar
-                </GhostButton>
-              </div>
-            </form>
-          ) : detailPhase === 'idle' ? (
-            <EmptyState
-              title="Selecione um artigo"
-              description="O detalhe editorial so abre quando existe um artigo selecionado na lista."
-              action={
-                <AppButton onClick={openCreateArticle}>
-                  Criar novo draft
-                </AppButton>
-              }
-            />
-          ) : detailPhase === 'loading' ? (
-            <LoadingState
-              title="Carregando detalhe do artigo"
-              description="Estamos preparando a revisao detalhada deste artigo."
-            />
-          ) : detailPhase === 'contract-unavailable' ? (
-            <ContractUnavailableState contractName="detalhe editorial do artigo" />
-          ) : detailPhase === 'error' || !articleDetail || !selectedArticleSummary ? (
-            <ErrorState
-              description={
-                detailMessage ??
-                'Nao foi possivel abrir o detalhe deste artigo.'
-              }
-              action={
-                <AppButton
-                  onClick={() =>
-                    selectedArticleId && void refreshArticleDetail(selectedArticleId)
-                  }
-                >
-                  Tentar novamente
-                </AppButton>
-              }
-            />
-          ) : (
-            <div className="space-y-5">
-              <div className="space-y-3 rounded-[22px] border border-[color:var(--color-border)] bg-white px-5 py-5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <StatusPill tone={toneForArticleStatus(articleDetail.status)}>
-                    {articleDetail.status}
-                  </StatusPill>
-                  <StatusPill tone={toneForVisibility(articleDetail.visibility)}>
-                    {articleDetail.visibility}
-                  </StatusPill>
-                  {articleDetail.category_name ? <StatusPill>{articleDetail.category_name}</StatusPill> : null}
-                </div>
-                <div className="space-y-2">
-                  <h2 className="text-[1.7rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
-                    {articleDetail.title}
-                  </h2>
-                  <p className="text-sm text-[color:var(--color-muted)]">{articleDetail.slug}</p>
-                </div>
-              </div>
-
-              {articleDetail.source_path || articleDetail.source_hash ? (
-                <InlineNotice tone="warning">
-                  Conteudo importado do legado detectado. O artigo permanece sob
-                  curadoria humana antes de qualquer publicacao editorial.
-                </InlineNotice>
-              ) : null}
-
-              {articleDetail.visibility === 'restricted' ? (
-                <InlineNotice tone="critical">
-                  Artigo restrito. Revisar manualmente segredos, credenciais,
-                  integracoes e detalhes operacionais antes de qualquer
-                  promocao editorial.
-                </InlineNotice>
-              ) : articleDetail.visibility === 'internal' ? (
-                <InlineNotice tone="warning">
-                  Artigo interno. Confirmar se o conteudo deve permanecer restrito a
-                  operacao/CS/suporte ou se precisa de reescrita antes de evoluir.
-                </InlineNotice>
-              ) : null}
-
-              {selectedArticleDuplicateCount > 1 ? (
-                <InlineNotice tone="warning">
-                  Possivel duplicidade de origem detectada nesta central. Existe mais{' '}
-                  {selectedArticleDuplicateCount - 1} artigo com a mesma origem
-                  rastreada; consolidar antes de promover.
-                </InlineNotice>
-              ) : null}
-
-              {articleActionMessage ? (
-                <InlineNotice
-                  tone={
-                    articleActionMessage.includes('sucesso')
-                      ? 'warning'
-                      : 'critical'
-                  }
-                >
-                  {articleActionMessage}
-                </InlineNotice>
-              ) : null}
-
-              {reviewAdvisoryMessage ? (
-                <InlineNotice
-                  tone={
-                    reviewAdvisoryMessage.includes('sucesso') ||
-                    reviewAdvisoryMessage.includes('concluida')
-                      ? 'warning'
-                      : 'critical'
-                  }
-                >
-                  {reviewAdvisoryMessage}
-                </InlineNotice>
-              ) : null}
-
-              <div className="flex flex-wrap gap-3">
-                {(articleDetail.status === 'draft' || articleDetail.status === 'review') ? (
-                  <GhostButton
-                    disabled={articleActionSubmitting}
-                    onClick={openEditArticle}
-                  >
-                    Editar draft
-                  </GhostButton>
-                ) : null}
-
-                {articleDetail.status === 'draft' ? (
-                  <AppButton
-                    disabled={articleActionSubmitting}
-                    onClick={() => void handleSubmitForReview()}
-                  >
-                    {articleActionSubmitting ? 'Enviando...' : 'Enviar para revisao'}
-                  </AppButton>
-                ) : null}
-
-                {articleDetail.status === 'review' ? (
-                  <AppButton
-                    disabled={articleActionSubmitting}
-                    onClick={() => void handlePublish()}
-                  >
-                    {articleActionSubmitting ? 'Publicando...' : 'Publicar'}
-                  </AppButton>
-                ) : null}
-
-                {articleDetail.status !== 'archived' ? (
-                  <GhostButton
-                    disabled={articleActionSubmitting}
-                    onClick={() => void handleArchive()}
-                  >
-                    {articleActionSubmitting ? 'Arquivando...' : 'Arquivar'}
-                  </GhostButton>
-                ) : null}
-              </div>
-
-              <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4 text-sm text-[color:var(--color-muted)]">
-                <div className="flex flex-wrap gap-x-4 gap-y-1">
-                  <span>Central: {articleDetail.knowledge_space_display_name}</span>
-                  <span>Revisoes: {articleDetail.revisions.length}</span>
-                  <span>Atualizado: {formatDateTime(articleDetail.updated_at)}</span>
-                  {selectedAdvisory ? <span>Status da revisao: {selectedAdvisory.review_status}</span> : null}
-                </div>
-              </div>
-
-              {editorialChecklist ? (
-                <div className="space-y-3">
-                  <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4" open>
+                  <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
                     <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                      Advisory resumido
+                      Advisory e classificacao
                     </summary>
                     <div className="mt-3 space-y-3">
                       {selectedAdvisory ? (
@@ -1996,14 +2142,9 @@ export function KnowledgePage() {
                             <StatusPill tone={toneForReviewStatus(selectedAdvisory.review_status)}>
                               {selectedAdvisory.review_status}
                             </StatusPill>
-                            {selectedAdvisory.duplicate_group_key ? (
-                              <StatusPill tone="warning">
-                                duplicado x{selectedAdvisory.duplicate_group_article_count}
-                              </StatusPill>
-                            ) : null}
                           </div>
                           <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                            {selectedAdvisory.classification_reason}
+                            {selectedAdvisory.classification_reason || 'Indisponivel'}
                           </p>
                           {advisoryRiskFlags.length > 0 ? (
                             <div className="flex flex-wrap gap-2">
@@ -2017,20 +2158,20 @@ export function KnowledgePage() {
                         </>
                       ) : (
                         <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                          Este artigo ainda nao recebeu um advisory salvo.
+                          Indisponivel
                         </p>
                       )}
                     </div>
                   </details>
 
-                  <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
-                    <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                      Checklist editorial
-                    </summary>
-                    <div className="mt-4 space-y-4">
-                      <div className="space-y-2">
+                  {editorialChecklist ? (
+                    <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                      <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                        Checklist editorial
+                      </summary>
+                      <div className="mt-3 space-y-3">
                         {editorialChecklist.automated.map((item) => (
-                          <div key={item.label} className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3">
+                          <div key={item.label} className="rounded-[14px] border border-[color:var(--color-border)] bg-white px-3 py-3">
                             <div className="flex flex-wrap items-center gap-2">
                               <StatusPill tone={item.tone}>{item.label}</StatusPill>
                             </div>
@@ -2040,189 +2181,27 @@ export function KnowledgePage() {
                           </div>
                         ))}
                       </div>
+                    </details>
+                  ) : null}
 
-                      <div className="grid gap-3">
-                        {persistedHumanChecklist.map((item, index) => {
-                          const field = HUMAN_CONFIRMATION_FIELDS[index];
-                          const checked = humanConfirmationsDraft[field.key] === true;
-
-                          return (
-                            <label
-                              key={field.key}
-                              className="flex gap-3 rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3"
-                            >
-                              <input
-                                checked={checked}
-                                className="mt-1 h-4 w-4 rounded border-[color:var(--color-border)]"
-                                onChange={(event) =>
-                                  updateHumanConfirmation(field.key, event.target.checked)
-                                }
-                                type="checkbox"
-                              />
-                              <div className="space-y-1">
-                                <p className="font-medium text-[color:var(--color-ink)]">{item.label}</p>
-                                <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                                  {item.description}
-                                </p>
-                              </div>
-                            </label>
-                          );
-                        })}
-                      </div>
-
-                      <div className="grid gap-4 xl:grid-cols-[minmax(240px,0.6fr)_minmax(0,1.4fr)]">
-                        <Field label="Status da revisao editorial">
-                          <SelectInput
-                            onChange={(event) =>
-                              setReviewStatusDraft(event.target.value as KnowledgeArticleReviewStatus)
-                            }
-                            value={reviewStatusDraft}
-                          >
-                            {KNOWLEDGE_ARTICLE_REVIEW_STATUSES.map((status) => (
-                              <option key={status} value={status}>
-                                {status}
-                              </option>
-                            ))}
-                          </SelectInput>
-                        </Field>
-
-                        <Field label="Notas de revisao">
-                          <TextareaInput
-                            onChange={(event) => setReviewNotesDraft(event.target.value)}
-                            placeholder="Observacoes curtas da revisao humana."
-                            value={reviewNotesDraft}
-                          />
-                        </Field>
-                      </div>
-
-                      <div className="flex flex-wrap gap-3">
-                        <GhostButton
-                          disabled={!selectedAdvisory || reviewAdvisorySubmitting}
-                          onClick={() => void handleSaveReviewAdvisoryStatus()}
-                        >
-                          {reviewAdvisorySubmitting ? 'Salvando...' : 'Salvar revisao'}
-                        </GhostButton>
-                        <AppButton
-                          disabled={!selectedAdvisory || reviewAdvisorySubmitting}
-                          onClick={() => void handleMarkReviewAdvisoryReviewed()}
-                        >
-                          {reviewAdvisorySubmitting ? 'Marcando...' : 'Marcar revisado'}
-                        </AppButton>
-                      </div>
-                    </div>
-                  </details>
-
-                  <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+                  <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
                     <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                      Detalhes tecnicos da origem
+                      Informacoes avancadas
                     </summary>
-                    <div className="mt-3 space-y-2 text-sm leading-6 text-[color:var(--color-muted)]">
-                      <p>
-                        Origem:{' '}
-                        {articleDetail.source_path || articleDetail.source_hash ? 'importado do legado' : 'manual'}
-                      </p>
-                      {articleDetail.source_path ? <p>Caminho: {articleDetail.source_path}</p> : null}
-                      {articleDetail.source_hash ? <p>Hash: {articleDetail.source_hash}</p> : null}
+                    <div className="mt-3 space-y-3 text-sm leading-6 text-[color:var(--color-muted)]">
+                      <p>Central: {articleDetail.knowledge_space_display_name || 'Indisponivel'}</p>
+                      <p>Slug: {articleDetail.slug || 'Indisponivel'}</p>
+                      <p>Origem: {articleDetail.source_path || 'Indisponivel'}</p>
+                      <p>Hash: {articleDetail.source_hash || 'Indisponivel'}</p>
+                      <p>Revisoes: {articleDetail.revisions.length}</p>
                     </div>
                   </details>
                 </div>
-              ) : null}
-
-              <div className="space-y-2">
-                <h3 className="text-base font-semibold text-[color:var(--color-ink)]">
-                  Resumo editorial
-                </h3>
-                <div className="rounded-[24px] border border-[color:var(--color-border)] bg-white p-4">
-                  <p className="text-sm leading-6 text-[color:var(--color-ink)]">
-                    {articleDetail.summary?.trim() || 'Resumo ainda nao revisado.'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-base font-semibold text-[color:var(--color-ink)]">
-                  Corpo principal
-                </h3>
-                <div className="rounded-[24px] border border-[color:var(--color-border)] bg-white p-4">
-                  <pre className="whitespace-pre-wrap text-sm leading-6 text-[color:var(--color-ink)]">
-                    {articleDetail.body_md || 'Sem conteudo principal cadastrado.'}
-                  </pre>
-                </div>
-              </div>
-
-              <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
-                <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                  Trilha de origem
-                </summary>
-                <div className="mt-3 space-y-3">
-                  {articleDetail.sources.length === 0 ? (
-                    <EmptyState
-                      title="Sem fontes rastreadas"
-                      description="Este artigo ainda nao possui trilha de fonte agregada no detalhe."
-                    />
-                  ) : (
-                    articleDetail.sources.slice(0, 4).map((source) => (
-                      <div
-                        key={source.id}
-                        className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3"
-                      >
-                        <p className="font-medium text-[color:var(--color-ink)]">
-                          {source.source_title ?? source.source_kind}
-                        </p>
-                        <p className="mt-1 text-xs text-[color:var(--color-muted)]">
-                          {source.source_path}
-                        </p>
-                        <p className="mt-1 text-xs text-[color:var(--color-muted)]">
-                          origem {source.source_hash}
-                        </p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </details>
-
-              <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
-                <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                  Revisoes recentes
-                </summary>
-                <div className="mt-3 space-y-3">
-                  {articleDetail.revisions.length === 0 ? (
-                      <EmptyState
-                        title="Sem revisoes agregadas"
-                        description="Ainda nao existe historico recente de revisoes para este artigo."
-                      />
-                  ) : (
-                    articleDetail.revisions.slice(0, 4).map((revision) => (
-                      <div
-                        key={revision.id}
-                        className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3"
-                      >
-                        <div className="flex flex-wrap items-center gap-2">
-                          <StatusPill tone={toneForArticleStatus(revision.status_snapshot)}>
-                            {revision.status_snapshot}
-                          </StatusPill>
-                          <StatusPill tone={toneForVisibility(revision.visibility)}>
-                            {revision.visibility}
-                          </StatusPill>
-                          <StatusPill>rev {revision.revision_number}</StatusPill>
-                        </div>
-                        <p className="mt-2 text-sm font-medium text-[color:var(--color-ink)]">
-                          {revision.title}
-                        </p>
-                        <p className="mt-1 text-xs text-[color:var(--color-muted)]">
-                          {revision.change_note ?? 'Sem anotacao de mudanca'}
-                        </p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </details>
+              )}
             </div>
-          )}
-        </Panel>
           </div>
-        }
-      />
+        </section>
+      </div>
     </div>
   );
 }

@@ -19,6 +19,7 @@ export function AdminSidebar({
 }) {
   const location = useLocation();
   const { gate } = useAuthContext();
+  const compactKnowledgeMode = location.pathname === '/admin/knowledge';
 
   return (
     <aside
@@ -27,40 +28,74 @@ export function AdminSidebar({
         collapsed ? 'w-[96px] p-3' : 'w-[248px] p-4',
       )}
     >
-      <div
-        className={cx(
-          'flex items-center gap-3 rounded-[24px] border border-white/10 bg-white/6 py-3',
-          collapsed ? 'justify-center px-2' : 'px-3',
-        )}
-      >
-        <img alt="Mascote Genius" className="w-14" src={mascotUrl} />
-        {!collapsed ? (
-          <div className="space-y-1">
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-white/58">
-              Genius
-            </p>
-            <div>
-              <h1 className="text-lg font-semibold tracking-[-0.04em]">
-                Admin Console
-              </h1>
-              <p className="text-xs text-white/70">Operacao global de pos-venda</p>
-            </div>
-          </div>
-        ) : null}
-      </div>
-
-      <div className={cx('mt-3 flex', collapsed ? 'justify-center' : 'justify-end')}>
-        <button
+      {compactKnowledgeMode ? (
+        <div
           className={cx(
-            'inline-flex min-h-10 items-center justify-center rounded-full border border-white/16 bg-white/8 text-sm font-medium text-white transition hover:bg-white/12',
-            collapsed ? 'w-full px-0' : 'px-4',
+            'flex items-start justify-between gap-3',
+            collapsed ? 'px-1 py-1' : 'px-2 py-1',
           )}
-          onClick={onToggle}
-          type="button"
         >
-          {collapsed ? '>>' : '<<'}
-        </button>
-      </div>
+          <div className={cx('flex items-center gap-3', collapsed && 'justify-center')}>
+            <img alt="Mascote Genius" className="w-12" src={mascotUrl} />
+            {!collapsed ? (
+              <div className="space-y-1">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.26em] text-white/58">
+                  Genius Support OS
+                </p>
+                <p className="text-sm font-medium text-white/82">Admin Console</p>
+              </div>
+            ) : null}
+          </div>
+
+          <button
+            className={cx(
+              'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/16 bg-white/8 text-sm font-medium text-white transition hover:bg-white/12',
+              collapsed && 'mx-auto',
+            )}
+            onClick={onToggle}
+            type="button"
+          >
+            {collapsed ? '>>' : '<<'}
+          </button>
+        </div>
+      ) : (
+        <>
+          <div
+            className={cx(
+              'flex items-center gap-3 rounded-[24px] border border-white/10 bg-white/6 py-3',
+              collapsed ? 'justify-center px-2' : 'px-3',
+            )}
+          >
+            <img alt="Mascote Genius" className="w-14" src={mascotUrl} />
+            {!collapsed ? (
+              <div className="space-y-1">
+                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-white/58">
+                  Genius
+                </p>
+                <div>
+                  <h1 className="text-lg font-semibold tracking-[-0.04em]">
+                    Admin Console
+                  </h1>
+                  <p className="text-xs text-white/70">Operacao global de pos-venda</p>
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          <div className={cx('mt-3 flex', collapsed ? 'justify-center' : 'justify-end')}>
+            <button
+              className={cx(
+                'inline-flex min-h-10 items-center justify-center rounded-full border border-white/16 bg-white/8 text-sm font-medium text-white transition hover:bg-white/12',
+                collapsed ? 'w-full px-0' : 'px-4',
+              )}
+              onClick={onToggle}
+              type="button"
+            >
+              {collapsed ? '>>' : '<<'}
+            </button>
+          </div>
+        </>
+      )}
 
       <nav className="mt-5 grid gap-2">
         {navigation.map((item) => (
@@ -124,7 +159,7 @@ export function AdminSidebar({
               : (gate.actor?.profile.full_name ?? 'Platform Admin')}
           </p>
           {!collapsed ? <p className="text-xs text-white/68">{gate.actor?.profile.email}</p> : null}
-          {!collapsed ? (
+          {!collapsed && !compactKnowledgeMode ? (
             <p className="pt-2 text-xs leading-5 text-white/60">
               Controle institucional de tenants, acessos e rastreabilidade da operacao Genius.
             </p>
