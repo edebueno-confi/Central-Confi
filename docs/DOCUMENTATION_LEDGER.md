@@ -870,7 +870,7 @@ Cada registro deve informar:
 
 ### Fase 6.14 - Ticket Knowledge Linking Migration Design
 - fase: `6.14`
-- commit: `pending`
+- commit: `0c44d4f`
 - branch: `codex/phase6-14-ticket-knowledge-linking-migration-design`
 - data: `2026-05-04`
 - resumo funcional: o desenho tecnico pre-migration do vinculo ticket -> Knowledge Base foi fechado com enum, tabela futura, constraints, helpers privados, views, RPCs e plano pgTAP antes de materializar banco.
