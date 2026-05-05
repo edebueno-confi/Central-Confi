@@ -273,7 +273,6 @@ function SupportQuickNav() {
 function SupportTopbar() {
   const location = useLocation();
   const { runtimeConfig, signOut } = useAuthContext();
-  const copy = describeRoute(location.pathname);
   const isTicketRoute = location.pathname.startsWith('/support/tickets/');
 
   if (isTicketRoute) {
@@ -302,21 +301,11 @@ function SupportTopbar() {
   }
 
   return (
-    <header className="rounded-[22px] border border-[color:var(--color-border)] bg-white/92 px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)] backdrop-blur sm:px-5">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0 space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <StatusPill tone="accent">{runtimeConfig?.appEnv ?? 'development'}</StatusPill>
-            <StatusPill>agent workspace</StatusPill>
-          </div>
-          <div className="space-y-1">
-            <h2 className="text-xl font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
-              {copy.title}
-            </h2>
-            <p className="max-w-3xl text-sm leading-6 text-[color:var(--color-muted)]">
-              {copy.subtitle}
-            </p>
-          </div>
+    <header className="rounded-[22px] border border-[color:var(--color-border)] bg-white/92 px-4 py-3 shadow-[0_14px_28px_rgba(19,33,79,0.08)] backdrop-blur sm:px-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusPill tone="accent">{runtimeConfig?.appEnv ?? 'development'}</StatusPill>
+          <StatusPill>agent workspace</StatusPill>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -329,7 +318,7 @@ function SupportTopbar() {
         </div>
       </div>
 
-      <div className="mt-4">
+      <div className="mt-3">
         <SupportQuickNav />
       </div>
     </header>
