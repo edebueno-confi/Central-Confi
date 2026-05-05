@@ -39,6 +39,7 @@ Documentos prioritários:
 - `CUSTOMER_ACCOUNT_PROFILE_DATA_MODEL_REVIEW.md`
 - `CUSTOMER_ACCOUNT_PROFILE_MIGRATION_DESIGN.md`
 - `TICKET_KNOWLEDGE_LINKING_SPEC.md`
+- `TICKET_KNOWLEDGE_LINKING_DATA_MODEL_REVIEW.md`
 - `reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`
 
 Documentos históricos:
@@ -479,6 +480,17 @@ Documentos históricos:
     - lacuna de documentacao
     - artigo que precisa de atualizacao
   - Support e Knowledge agora possuem trilha documental comum para evoluir ticket -> KB sem misturar tratativa com curadoria editorial.
+- Fase 6.13: Ticket Knowledge Linking Data Model Review concluida localmente.
+  - O modelo minimo implementavel do vinculo ticket -> KB foi revisado em `docs/TICKET_KNOWLEDGE_LINKING_DATA_MODEL_REVIEW.md`.
+  - A fase consolidou:
+    - entidade `ticket_knowledge_links`
+    - enum `ticket_knowledge_link_type`
+    - regras de integridade por tenant, artigo e visibilidade
+    - boundary de authz/RLS e superficie contratual futura
+  - A revisao tambem fixou:
+    - `sent_to_customer` exige artigo `public` + `published`
+    - `documentation_gap` e `suggested_article` podem existir sem `article_id`
+    - o vinculo deve ser append-only com arquivamento logico, sem snapshot do artigo
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -500,6 +512,6 @@ Documentos históricos:
 - Não permitir leitura do Admin Console fora das views `vw_admin_*`.
 
 ## Próxima prioridade
-Abrir a próxima fase documental/técnica do vínculo ticket -> Knowledge Base,
-definindo modelo mínimo, constraints e boundary de permissões antes de
-materializar tabela, views ou RPCs.
+Abrir o design tecnico pre-migration do vinculo ticket -> Knowledge Base,
+definindo migration, constraints, helpers privados, views, RPCs e pgTAP
+antes de materializar a tabela no backend.

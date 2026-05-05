@@ -915,6 +915,20 @@ Fase 6.8:
 - o `user_id` tecnico permanece apenas como fallback recolhido para excecao operacional
 
 ## Próximos contratos planejados
+- Ticket -> Knowledge Base assistive linking:
+  - views candidatas:
+    - `vw_support_ticket_knowledge_links`
+    - `vw_support_knowledge_article_picker`
+    - `vw_customer_portal_ticket_knowledge_links`
+  - RPCs candidatas:
+    - `rpc_support_link_ticket_article`
+    - `rpc_support_archive_ticket_article_link`
+    - `rpc_support_mark_documentation_gap`
+    - `rpc_support_mark_article_needs_update`
+  - boundary esperado:
+    - frontend continua sem leitura de tabela-base
+    - `sent_to_customer` exige artigo `public` + `published`
+    - `reference_internal` pode apontar para `internal` e `restricted` apenas em superficie interna autorizada
 - Views e RPCs de intake para engenharia.
 - Roteamento frontend por domínio/`space_slug` sobre os contratos já materializados.
 - Branding público projetado explicitamente por read model quando `brand_settings` precisar sair do fallback seguro atual.

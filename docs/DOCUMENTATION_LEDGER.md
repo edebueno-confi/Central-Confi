@@ -830,3 +830,40 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - cria trilha oficial para registrar quando suporte usa ou envia artigo ao cliente B2B
   - prepara backlog rastreavel de lacunas e atualizacoes de documentacao a partir de tickets reais
+
+### Fase 6.13 - Ticket Knowledge Linking Data Model Review
+- fase: `6.13`
+- commit: `pending`
+- branch: `codex/phase6-13-ticket-knowledge-linking-data-model-review`
+- data: `2026-05-04`
+- resumo funcional: o modelo minimo implementavel do vinculo ticket -> Knowledge Base foi revisado antes de qualquer migration, fixando entidade, enum, regras de integridade e boundary de permissao.
+- docs alterados:
+  - `docs/TICKET_KNOWLEDGE_LINKING_DATA_MODEL_REVIEW.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+  - `docs/README.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao materializada de contrato backend
+  - views futuras propostas:
+    - `vw_support_ticket_knowledge_links`
+    - `vw_support_knowledge_article_picker`
+    - `vw_customer_portal_ticket_knowledge_links`
+  - RPCs futuras propostas:
+    - `rpc_support_link_ticket_article`
+    - `rpc_support_archive_ticket_article_link`
+    - `rpc_support_mark_documentation_gap`
+    - `rpc_support_mark_article_needs_update`
+- telas afetadas:
+  - nenhuma alteracao de UI nesta fase
+  - impacto futuro principal em `/support/tickets/:ticketId`
+  - impacto futuro secundario em `/admin/knowledge`
+- riscos restantes:
+  - o enforcement tenant/space ainda depende da fase de design tecnico e da materializacao backend
+  - a elegibilidade de artigo para `sent_to_customer` ainda precisa virar constraint/helper executavel
+  - o portal B2B futuro continua exigindo read model proprio para nao herdar referencias internas
+- impacto na FAQ futura:
+  - prepara a camada auditavel que vai registrar quando um artigo foi usado internamente ou enviado ao cliente
+  - separa backlog editorial de tratativa operacional sem misturar KB com comentario solto

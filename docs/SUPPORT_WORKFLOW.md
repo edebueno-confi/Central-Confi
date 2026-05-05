@@ -200,6 +200,8 @@
 - a KB continua sendo a source of truth do conteudo
 - artigo `restricted` ou `internal` nunca pode ser tratado como link ao cliente
 - a especificacao oficial desta ponte fica em `TICKET_KNOWLEDGE_LINKING_SPEC.md`
+- o modelo minimo revisado desta ponte fica em `TICKET_KNOWLEDGE_LINKING_DATA_MODEL_REVIEW.md`
+- a proxima fase materializavel deve manter o vinculo como append-only auditavel, com arquivamento logico e sem duplicar conteudo do artigo dentro do ticket
 
 ## Fora de escopo do workspace
 - atendimento a shopper final
