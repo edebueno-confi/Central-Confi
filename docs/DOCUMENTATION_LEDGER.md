@@ -970,7 +970,7 @@ Cada registro deve informar:
 
 ### Fase 6.17 - Ticket Knowledge Public Link Contract Review
 - fase: `6.17`
-- commit: `TBD`
+- commit: `ad8a4f6`
 - branch: `codex/phase6-17-ticket-knowledge-public-link-review`
 - data: `2026-05-05`
 - resumo funcional: review documental do contrato necessario para que o suporte copie ou envie um link publico seguro de artigo ao cliente sem montar rota fragil no frontend.
