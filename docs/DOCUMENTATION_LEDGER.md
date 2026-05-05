@@ -804,7 +804,7 @@ Cada registro deve informar:
 
 ### Fase 6.12 - Ticket -> Knowledge Base Assistive Linking Spec
 - fase: `6.12`
-- commit: `pending`
+- commit: `69a9b4c`
 - branch: `codex/phase6-12-ticket-knowledge-linking-spec`
 - data: `2026-05-04`
 - resumo funcional: o dominio de vinculo assistivo entre tickets e artigos da Knowledge Base foi especificado com foco em uso operacional do suporte, sem IA, sem automacao e sem misturar tratativa com curadoria editorial.
