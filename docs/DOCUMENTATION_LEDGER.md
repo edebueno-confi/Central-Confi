@@ -1,0 +1,1084 @@
+# DOCUMENTATION_LEDGER.md
+
+## Objetivo
+Registrar, por fase aprovada, o rastro documental minimo necessario para sustentar auditoria interna, continuidade de execucao e geracao futura da FAQ oficial da plataforma.
+
+## Estrutura do ledger
+Cada registro deve informar:
+- fase
+- commit
+- branch
+- data
+- resumo funcional
+- docs alterados
+- views/RPCs afetadas
+- telas afetadas
+- riscos restantes
+- impacto na FAQ futura
+
+## Registros
+
+### Fase 4.7 - Public Help Center Branding Contract
+- fase: `4.7`
+- commit: `68a44ea`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-03`
+- resumo funcional: branding publico sanitizado passou a ser exposto no resolver e aplicado com validacao no frontend da Central Publica.
+- docs alterados:
+  - `docs/PROJECT_STATE.md`
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/PRODUCT_VISION.md`
+- views/RPCs afetadas:
+  - `vw_public_knowledge_space_resolver`
+- telas afetadas:
+  - `/help`
+  - `/help/:spaceSlug`
+  - `/help/:spaceSlug/articles`
+  - `/help/:spaceSlug/articles/:articleSlug`
+- riscos restantes:
+  - `seo_defaults.imageUrl` ainda sem consumo pleno no frontend naquele momento
+  - busca, IA, chat e portal B2B continuavam bloqueados
+- impacto na FAQ futura:
+  - habilita responder como a marca publica da Central e derivada sem expor `brand_settings` bruto
+
+### Fase 4.9 - Public Help Center Search Contract
+- fase: `4.9`
+- commit: `7323421`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-03`
+- resumo funcional: busca publica textual minima entregue com RPC segura e UX basica na Central Publica.
+- docs alterados:
+  - `docs/PROJECT_STATE.md`
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+- views/RPCs afetadas:
+  - `rpc_public_search_knowledge_articles`
+- telas afetadas:
+  - `/help/:spaceSlug`
+- riscos restantes:
+  - busca ainda sem sinônimos, curadoria editorial de ranking ou IA
+  - sem roteamento publico dedicado por dominio
+- impacto na FAQ futura:
+  - habilita perguntas futuras sobre como localizar artigos publicados dentro de um knowledge space ativo
+
+### Fase 4.9.1 - Public Help Center UX Readability Polish + Documentation Ledger Strategy
+- fase: `4.9.1`
+- commit: `3b76961`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-03`
+- resumo funcional: polish visual da Central Publica para leitura B2B tecnica e criacao da estrategia oficial de FAQ/ledger documental da plataforma.
+- docs alterados:
+  - `docs/PLATFORM_FAQ_STRATEGY.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+  - `docs/README.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - consumo mantido em `vw_public_knowledge_space_resolver`
+  - consumo mantido em `vw_public_knowledge_navigation`
+  - consumo mantido em `vw_public_knowledge_articles_list`
+  - consumo mantido em `vw_public_knowledge_article_detail`
+  - consumo mantido em `rpc_public_search_knowledge_articles`
+- telas afetadas:
+  - `/help`
+  - `/help/:spaceSlug`
+  - `/help/:spaceSlug/articles`
+  - `/help/:spaceSlug/articles/:articleSlug`
+- riscos restantes:
+  - a FAQ oficial ainda nao foi escrita; so a estrategia e o ledger foram formalizados
+- impacto na FAQ futura:
+  - define o metodo oficial para transformar funcionalidade validada em pergunta/resposta rastreavel
+  - cria trilha minima para responder por ambiente, perfil autorizado e fonte documental
+
+### Fase 5.0 - Knowledge Content Curation Pipeline
+- fase: `5.0`
+- commit: `4e7f0a6`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-03`
+- resumo funcional: auditoria do corpus legado, definicao do plano editorial de curadoria e consolidacao do inventario oficial sem publicar conteudo automaticamente.
+- docs alterados:
+  - `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md`
+  - `docs/reports/KNOWLEDGE_LEGACY_INVENTORY_REPORT.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - uso documental do dry-run de `scripts/knowledge/import-octadesk-drafts.mjs`
+- telas afetadas:
+  - nenhuma
+- riscos restantes:
+  - a curadoria continua dependente de leitura humana artigo a artigo
+  - o banco local padrao segue sem o lote legado importado apos `supabase:verify`
+  - a classificacao desta fase e conservadora e heuristica, nao decisao editorial final
+- impacto na FAQ futura:
+  - define a regra de que conhecimento oficial so nasce de conteudo validado e curado
+  - separa o que pode virar FAQ publica do que deve permanecer interno ou restrito
+
+### Fase 5.1 - Legacy Knowledge Import Backlog + Controlled Draft Ingestion
+- fase: `5.1`
+- commit: `d3239ec`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-03`
+- resumo funcional: backlog versionado de curadoria legado criado, import Octadesk validado em dry-run e apply local controlado, e `/admin/knowledge` ajustado para evidenciar origem e hash do legado.
+- docs alterados:
+  - `docs/reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - consumo mantido em `vw_admin_knowledge_spaces`
+  - consumo mantido em `vw_admin_knowledge_categories_v2`
+  - consumo mantido em `vw_admin_knowledge_articles_list_v2`
+  - consumo mantido em `vw_admin_knowledge_article_detail_v2`
+  - uso operacional mantido em `rpc_admin_create_knowledge_article_draft_v2`
+  - uso operacional mantido em `rpc_admin_update_knowledge_article_draft_v2`
+- telas afetadas:
+  - `/admin/knowledge`
+- riscos restantes:
+  - o lote legado aplicado localmente nao persiste apos `supabase:verify`
+  - a classificacao do backlog continua heuristica e depende de revisao humana artigo a artigo
+  - todos os artigos legado continuam em `draft`, sem publicacao automatica
+- impacto na FAQ futura:
+  - cria backlog rastreavel para separar o que pode virar documentacao publica, playbook interno ou conteudo restrito
+  - formaliza de onde deve sair a futura FAQ operacional baseada no corpus legado curado
+
+### Fase 5.2 - Knowledge Editorial Review Workflow
+- fase: `5.2`
+- commit: `0f5ee25`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-03`
+- resumo funcional: workflow visual de revisao editorial reforcado no Admin Console com filtro de duplicidade, destaque cauteloso por visibility e checklist artigo a artigo sem alterar contratos backend.
+- docs alterados:
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+  - `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - consumo mantido em `vw_admin_knowledge_spaces`
+  - consumo mantido em `vw_admin_knowledge_categories_v2`
+  - consumo mantido em `vw_admin_knowledge_articles_list_v2`
+  - consumo mantido em `vw_admin_knowledge_article_detail_v2`
+  - escrita mantida em `rpc_admin_update_knowledge_article_draft_v2`
+  - escrita mantida em `rpc_admin_submit_knowledge_article_for_review_v2`
+  - escrita mantida em `rpc_admin_publish_knowledge_article_v2`
+- telas afetadas:
+  - `/admin/knowledge`
+- riscos restantes:
+  - a classificacao sugerida do backlog ainda nao esta projetada nas views/RPCs v2
+  - o checklist desta fase e visual e operacional, sem persistencia propria
+  - artigos legacy continuam dependentes de revisao humana antes de qualquer publish
+- impacto na FAQ futura:
+  - melhora a trilha de revisao artigo a artigo antes de transformar conteudo curado em documentacao oficial
+  - reforca a separacao entre sinal visual de curadoria e source of truth backend
+
+### Fase 5.3 - Knowledge Review Advisory Contract
+- fase: `5.3`
+- commit: `907458d`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-03`
+- resumo funcional: advisory persistente de revisao editorial materializado no backend, backlog legado convertido em input versionado seguro e `/admin/knowledge` atualizado para consumir classificacao sugerida, riscos e confirmacoes humanas persistidas.
+- docs alterados:
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - `vw_admin_knowledge_article_review_advisories`
+  - `rpc_admin_update_knowledge_article_review_status`
+  - `rpc_admin_mark_knowledge_article_reviewed`
+- telas afetadas:
+  - `/admin/knowledge`
+- riscos restantes:
+  - o advisory continua sendo apoio editorial e nao substitui decisao humana de publish
+  - o lote local de drafts/advisories segue operacional e nao persiste apos `supabase:verify`
+  - a navegacao visual autenticada artigo a artigo ainda pode ser repetida manualmente se for exigida evidencia UX mais forte
+- impacto na FAQ futura:
+  - fortalece a rastreabilidade entre backlog legado, revisao humana e documentacao oficial
+  - cria trilha persistente para saber quais artigos ja foram revisados antes de virar FAQ ou help content publico
+
+### Fase 5.4 - Knowledge Review QA + First Publish Candidate Flow
+- fase: `5.4`
+- commit: `2286fa4`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-03`
+- resumo funcional: fluxo editorial completo validado localmente com import controlado, review advisory persistido, filtro por classificacao sugerida em `/admin/knowledge` e publish controlado de ate 2 artigos candidatos a publico.
+- docs alterados:
+  - `docs/PROJECT_STATE.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - consumo mantido em `vw_admin_knowledge_spaces`
+  - consumo mantido em `vw_admin_knowledge_categories_v2`
+  - consumo mantido em `vw_admin_knowledge_articles_list_v2`
+  - consumo mantido em `vw_admin_knowledge_article_detail_v2`
+  - consumo mantido em `vw_admin_knowledge_article_review_advisories`
+  - escrita mantida em `rpc_admin_update_knowledge_article_draft_v2`
+  - escrita mantida em `rpc_admin_update_knowledge_article_review_status`
+  - escrita mantida em `rpc_admin_mark_knowledge_article_reviewed`
+  - escrita mantida em `rpc_admin_submit_knowledge_article_for_review_v2`
+  - escrita mantida em `rpc_admin_publish_knowledge_article_v2`
+  - leitura publica validada em `vw_public_knowledge_articles_list`
+  - leitura publica validada em `vw_public_knowledge_article_detail`
+  - busca publica validada em `rpc_public_search_knowledge_articles`
+- telas afetadas:
+  - `/admin/knowledge`
+  - `/help/genius`
+  - `/help/genius/articles`
+  - `/help/genius/articles/:articleSlug`
+- riscos restantes:
+  - o publish desta fase foi somente local e efemero; novo `supabase:verify` limpa os artigos curados
+  - o `knowledge_space` precisa estar `active` para qualquer exposicao publica, o que segue sendo um pre-requisito operacional
+  - a navegacao autenticada artigo a artigo no browser continua menos automatizada que o restante do stack
+- impacto na FAQ futura:
+  - confirma que artigos legacy podem virar documentacao publica apenas apos revisao humana persistida e publish explicito
+  - cria os primeiros exemplos concretos de artigo curado apto a alimentar FAQ tecnica B2B no futuro
+
+### Fase 5.5 - Publish Readiness Runbook + Content Operations Governance
+- fase: `5.5`
+- commit: `66fccdb`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-03`
+- resumo funcional: governanca operacional do publish publico formalizada com runbook de curadoria, checklist de publicacao, criterios de rollback e papeis claros de suporte, CS, engenharia/produto e plataforma.
+- docs alterados:
+  - `docs/PUBLIC_HELP_CENTER_PUBLISH_RUNBOOK.md`
+  - `docs/CONTENT_OPERATIONS_GOVERNANCE.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md`
+  - `docs/PLATFORM_FAQ_STRATEGY.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+  - `docs/README.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - governanca baseada no consumo ja existente de `vw_admin_knowledge_article_review_advisories`
+  - governanca baseada no consumo ja existente de `vw_public_knowledge_articles_list`
+  - governanca baseada no uso ja existente de `rpc_admin_publish_knowledge_article_v2`
+  - governanca baseada no uso ja existente de `rpc_admin_archive_knowledge_article_v2`
+- telas afetadas:
+  - nenhuma alteracao de frontend
+  - governanca aplicavel a `/admin/knowledge`
+  - governanca aplicavel a `/help/:spaceSlug`
+- riscos restantes:
+  - o runbook nao substitui revisao humana nem baseline remoto
+  - o publish legado continua dependente de lotes pequenos e curadoria artigo a artigo
+  - a FAQ da propria plataforma continua dependente de artigos curados adicionais
+- impacto na FAQ futura:
+  - define quando um artigo curado esta operacionalmente apto a alimentar FAQ tecnica B2B
+  - cria trilha de governanca para responder quem revisa, quem publica e como documentar cada mudanca
+
+### Fase 6.0 - Support Workspace Architecture Spec
+- fase: `6.0`
+- commit: `0e6c7a5`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-03`
+- resumo funcional: spec arquitetural do Support Workspace interno definida sobre o ticketing core existente, com escopo, rotas futuras, UX minima e lacunas mapeadas antes de qualquer UI.
+- docs alterados:
+  - `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/TICKET_LIFECYCLE.md`
+  - `docs/ROADMAP.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+  - `docs/README.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - contratos reutilizaveis mapeados:
+    - `vw_tickets_list`
+    - `vw_ticket_detail`
+    - `vw_ticket_timeline`
+    - `rpc_create_ticket`
+    - `rpc_update_ticket_status`
+    - `rpc_assign_ticket`
+    - `rpc_add_ticket_message`
+    - `rpc_add_internal_ticket_note`
+    - `rpc_close_ticket`
+    - `rpc_reopen_ticket`
+- telas afetadas:
+  - nenhuma implementacao de UI nesta fase
+  - rotas futuras propostas:
+    - `/support`
+    - `/support/tickets`
+    - `/support/tickets/:id`
+    - `/support/customers/:tenantId`
+    - `/support/queue`
+- riscos restantes:
+  - ainda faltam read models especificos de suporte antes da UI
+  - visao 360 do cliente B2B, vinculo com KB e vinculo com engenharia continuam sem contrato proprio
+  - SLA segue apenas como direcao arquitetural futura
+- impacto na FAQ futura:
+  - prepara a trilha documental para responder como o suporte interno B2B sera operado
+  - separa claramente o workspace interno de suporte da Central Publica e de qualquer experiencia B2C
+
+### Fase 6.1 - Support Workspace Backend Read Models + Authz Review
+- fase: `6.1`
+- commit: `fbf170c`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: read models especificos do Support Workspace foram materializados no backend, com queue/detail/timeline/customer 360 e authz revista antes de qualquer UI.
+- docs alterados:
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/TICKET_LIFECYCLE.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - `vw_support_tickets_queue`
+  - `vw_support_ticket_detail`
+  - `vw_support_ticket_timeline`
+  - `vw_support_customer_360`
+  - escrita mantida em `rpc_update_ticket_status`
+  - escrita mantida em `rpc_assign_ticket`
+  - escrita mantida em `rpc_add_ticket_message`
+  - escrita mantida em `rpc_add_internal_ticket_note`
+  - escrita mantida em `rpc_close_ticket`
+  - escrita mantida em `rpc_reopen_ticket`
+- telas afetadas:
+  - nenhuma implementacao de UI nesta fase
+  - superficie alvo futura: `/support`, `/support/tickets`, `/support/tickets/:id`, `/support/customers/:tenantId`, `/support/queue`
+- riscos restantes:
+  - ainda nao existe role dedicada de CS para operar o workspace sem reaproveitar roles de suporte
+  - engenharia continua fora desta superficie, apesar de ainda conseguir operar partes do ticketing core generico
+  - SLA, vinculo ticket -> KB e vinculo ticket -> work item de engenharia seguem como lacunas antes da UI
+- impacto na FAQ futura:
+  - prepara a trilha oficial para explicar como a fila de suporte interno enxerga tenants, tickets e notas internas
+  - fixa o boundary de autorizacao do workspace antes da camada visual
+
+### Fase 6.2 - Support Workspace UI Minimum
+- fase: `6.2`
+- commit: `c32035d`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: primeira UI interna minima do Support Workspace materializada sobre os read models da fase 6.1, com fila dominante, detalhe do ticket, timeline, composers e visao 360 minima do cliente B2B.
+- docs alterados:
+  - `docs/PROJECT_STATE.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/TICKET_LIFECYCLE.md`
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - leitura por `vw_support_tickets_queue`
+  - leitura por `vw_support_ticket_detail`
+  - leitura por `vw_support_ticket_timeline`
+  - leitura por `vw_support_customer_360`
+  - escrita por `rpc_update_ticket_status`
+  - escrita por `rpc_assign_ticket`
+  - escrita por `rpc_add_ticket_message`
+  - escrita por `rpc_add_internal_ticket_note`
+  - escrita por `rpc_close_ticket`
+  - escrita por `rpc_reopen_ticket`
+- telas afetadas:
+  - `/support`
+  - `/support/queue`
+  - `/support/tickets`
+  - `/support/tickets/:ticketId`
+  - `/support/customers/:tenantId`
+- riscos restantes:
+  - ainda nao existe vinculo ticket -> artigo de KB na superficie
+  - ainda nao existe vinculo ticket -> item de engenharia
+  - SLA continua fora da UI e do contrato operacional desta fase
+  - a fixture local de tickets e apenas operacional para QA, nao baseline persistente do banco local apos `supabase:verify`
+- impacto na FAQ futura:
+  - cria a trilha oficial para explicar a operacao minima do suporte interno B2B no produto
+  - separa claramente fila, detalhe, timeline e contexto do cliente de qualquer conceito de chat, portal B2B ou help center publico
+
+### Fase 6.2.1 - Support Workspace Operational UX Review
+- fase: `6.2.1`
+- commit: `59edfc2`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: o Support Workspace deixou de herdar a hierarquia visual do Admin Console e passou a operar como cockpit B2B de tickets, com fila dominante, painel de atendimento, composer unificado e contexto compacto do cliente.
+- docs alterados:
+  - `docs/UX_DIRECTION.md`
+  - `docs/README.md`
+  - `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - leitura mantida por `vw_support_tickets_queue`
+  - leitura mantida por `vw_support_ticket_detail`
+  - leitura mantida por `vw_support_ticket_timeline`
+  - leitura mantida por `vw_support_customer_360`
+  - escrita mantida por `rpc_update_ticket_status`
+  - escrita mantida por `rpc_assign_ticket`
+  - escrita mantida por `rpc_add_ticket_message`
+  - escrita mantida por `rpc_add_internal_ticket_note`
+  - escrita mantida por `rpc_close_ticket`
+  - escrita mantida por `rpc_reopen_ticket`
+- telas afetadas:
+  - `/support`
+  - `/support/queue`
+  - `/support/tickets/:ticketId`
+  - `/support/customers/:tenantId`
+- riscos restantes:
+  - atribuicao ainda depende de `user_id` tecnico, sem diretório proprio nesta superficie
+  - ainda nao existe vinculo ticket -> KB
+  - ainda nao existe vinculo ticket -> engenharia
+  - SLA continua fora do workspace
+- impacto na FAQ futura:
+  - fixa a leitura oficial do workspace como ferramenta de tratativa operacional B2B
+  - ajuda a documentar o fluxo real fila -> ticket -> resposta/nota -> status -> timeline -> contexto do cliente
+
+### Fase 6.2.2 - Domain-Specific UX Correction Gate
+- fase: `6.2.2`
+- commit: `c7d9eb7`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: suporte e curadoria editorial passaram por simplificacao estrutural por dominio, reduzindo cards, badges, metadados simultaneos e colunas espremidas para priorizar triagem, tratativa e revisao humana real.
+- docs alterados:
+  - `docs/UX_DIRECTION.md`
+  - `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - leitura mantida por `vw_support_tickets_queue`
+  - leitura mantida por `vw_support_ticket_detail`
+  - leitura mantida por `vw_support_ticket_timeline`
+  - leitura mantida por `vw_support_customer_360`
+  - leitura mantida por `vw_admin_knowledge_articles_list_v2`
+  - leitura mantida por `vw_admin_knowledge_article_detail_v2`
+  - leitura mantida por `vw_admin_knowledge_article_review_advisories`
+  - escrita mantida por `rpc_update_ticket_status`
+  - escrita mantida por `rpc_assign_ticket`
+  - escrita mantida por `rpc_add_ticket_message`
+  - escrita mantida por `rpc_add_internal_ticket_note`
+  - escrita mantida por `rpc_close_ticket`
+  - escrita mantida por `rpc_reopen_ticket`
+- telas afetadas:
+  - `/support/queue`
+  - `/support/tickets/:ticketId`
+  - `/support/customers/:tenantId`
+  - `/admin/knowledge`
+- riscos restantes:
+  - atribuicao continua dependente de `user_id` tecnico em area avancada
+  - timeline e customer context ainda dependem do volume e da qualidade dos dados retornados pelos contratos atuais
+  - vinculos ticket -> KB, ticket -> engenharia e SLA seguem fora do escopo funcional desta fase
+- impacto na FAQ futura:
+  - fixa o metodo oficial de simplificacao de superficies operacionais por dominio
+  - melhora a base para documentar o fluxo real de triagem e tratativa sem herdar linguagem de dashboard generico
+
+### Fase 6.3 - Support Workspace Agent Directory + Assignment UX
+- fase: `6.3`
+- commit: `032f76f`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: o Support Workspace passou a expor um diretório contratual de agentes atribuíveis por tenant e substituiu o fluxo principal de digitação manual de `user_id` por seletor operacional de agente, mantendo a escrita somente por `rpc_assign_ticket`.
+- docs alterados:
+  - `docs/PROJECT_STATE.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - leitura por `vw_support_assignable_agents`
+  - escrita mantida por `rpc_assign_ticket`
+- telas afetadas:
+  - `/support/queue`
+  - `/support/tickets/:ticketId`
+  - `/support/customers/:tenantId`
+- riscos restantes:
+  - atribuicao ainda preserva `user_id` tecnico apenas como fallback avancado
+  - o diretório depende das roles globais atuais (`platform_admin`, `support_agent`, `support_manager`) e ainda nao resolve uma role propria de CS
+  - timeline e customer context continuam dependentes de paginacao/recorte quando houver volume real
+- impacto na FAQ futura:
+  - formaliza como tickets passam a ser atribuídos por operador real sem UUID manual no fluxo principal
+  - melhora a futura documentacao de operacao do suporte com passo claro de triagem -> atribuicao -> tratativa
+
+### Fase 6.4 - Support Timeline Volume Guard + Customer Context Pagination
+- fase: `6.4`
+- commit: `e3acd8c`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: o Support Workspace passou a operar com recortes recentes explícitos para timeline e customer context, evitando primeira carga infinita e mantendo a leitura operacional enxuta em volume real.
+- docs alterados:
+  - `docs/PROJECT_STATE.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - leitura por `vw_support_ticket_timeline_recent`
+  - leitura por `vw_support_customer_recent_tickets`
+  - leitura por `vw_support_customer_recent_events`
+  - leitura ajustada em `vw_support_customer_360`
+  - escrita mantida por `rpc_update_ticket_status`
+  - escrita mantida por `rpc_assign_ticket`
+  - escrita mantida por `rpc_add_ticket_message`
+  - escrita mantida por `rpc_add_internal_ticket_note`
+  - escrita mantida por `rpc_close_ticket`
+  - escrita mantida por `rpc_reopen_ticket`
+- telas afetadas:
+  - `/support/queue`
+  - `/support/tickets/:ticketId`
+  - `/support/customers/:tenantId`
+- riscos restantes:
+  - ainda nao existe RPC paginavel para historico completo sob demanda
+  - timeline e customer context ainda vao precisar de segunda camada de navegacao se o volume operacional crescer alem do recorte atual
+  - vinculos ticket -> KB, ticket -> engenharia e SLA seguem fora do escopo funcional
+- impacto na FAQ futura:
+  - documenta que a leitura inicial do suporte usa janelas recentes controladas, nao historico infinito
+  - melhora a futura explicacao operacional de como agentes reentram rapidamente no contexto do ticket e do cliente
+
+### Fase 6.4.1 - Support Ticket Conversation UX Pass
+- fase: `6.4.1`
+- commit: `72dc31e`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: a tratativa do ticket passou a ser orientada por conversa, com composer e interacoes recentes no eixo principal, historico tecnico recolhido e customer context reduzido a apoio operacional.
+- docs alterados:
+  - `docs/UX_DIRECTION.md`
+  - `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - leitura mantida por `vw_support_ticket_detail`
+  - leitura mantida por `vw_support_ticket_timeline_recent`
+  - leitura mantida por `vw_support_customer_360`
+  - leitura mantida por `vw_support_customer_recent_tickets`
+  - leitura mantida por `vw_support_customer_recent_events`
+  - leitura mantida por `vw_support_assignable_agents`
+  - escrita mantida por `rpc_update_ticket_status`
+  - escrita mantida por `rpc_assign_ticket`
+  - escrita mantida por `rpc_add_ticket_message`
+  - escrita mantida por `rpc_add_internal_ticket_note`
+  - escrita mantida por `rpc_close_ticket`
+  - escrita mantida por `rpc_reopen_ticket`
+- telas afetadas:
+  - `/support/tickets/:ticketId`
+  - `/support/customers/:tenantId`
+  - `/support/queue`
+- riscos restantes:
+  - fallback tecnico por `user_id` permanece em area avancada
+  - historico tecnico completo continua sem RPC paginavel sob demanda
+  - customer context ainda depende de recorte adicional se houver crescimento forte de contatos e tickets
+- impacto na FAQ futura:
+  - melhora a futura documentacao do fluxo real de atendimento do suporte
+  - fixa a conversa como superficie principal do ticket e o contexto do cliente como apoio operacional
+
+### Fase 6.5 - Customer Account Profile / B2B CRM Context Spec
+- fase: `6.5`
+- commit: `4fab672`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: especifica o dominio de perfil operacional do cliente B2B para suporte e CS, separando identificacao, contrato, stack, customizacoes, contatos e observacoes internas sem inflar o produto para um CRM generico.
+- docs alterados:
+  - `docs/CUSTOMER_ACCOUNT_PROFILE_SPEC.md`
+  - `docs/README.md`
+  - `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - impacto futuro avaliado sobre `tenants`
+  - impacto futuro avaliado sobre `tenant_contacts`
+  - impacto futuro avaliado sobre `vw_support_customer_360`
+  - impacto futuro avaliado sobre Support Workspace, tickets, Knowledge Base e portal B2B
+- telas afetadas:
+  - nenhuma implementacao nesta fase
+- riscos restantes:
+  - ainda nao existe modelo de dados dedicado para contrato, stack e customizacoes do cliente
+  - `vw_support_customer_360` continua entregando apenas contexto minimo
+  - a futura implementacao precisa separar com rigor leitura interna, leitura do cliente e dados sensiveis
+- impacto na FAQ futura:
+  - cria a base documental para explicar contexto operacional do cliente B2B por produto, stack e restricoes
+  - ajuda a futura FAQ interna de suporte e CS a responder quem e o cliente e como ele opera antes da tratativa
+
+### Fase 6.6 - Customer Account Profile Minimum Data Model Review
+- fase: `6.6`
+- commit: `0d9dbbd`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: revisa o modelo mínimo implementável para Customer Account Profile, propondo tabelas dedicadas para profile, integrações, features, customizações e alertas, com bloqueios explícitos para dados sensíveis e sem abrir schema ainda.
+- docs alterados:
+  - `docs/CUSTOMER_ACCOUNT_PROFILE_DATA_MODEL_REVIEW.md`
+  - `docs/README.md`
+  - `docs/DATA_MODEL_STRATEGY.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - propostas futuras:
+    - `vw_support_customer_account_context`
+    - `vw_admin_customer_account_profiles`
+    - `vw_customer_portal_account_context`
+    - `rpc_admin_upsert_customer_account_profile`
+    - `rpc_admin_add_customer_integration`
+    - `rpc_admin_update_customer_integration`
+    - `rpc_admin_add_customer_customization`
+    - `rpc_admin_update_customer_customization`
+    - `rpc_admin_add_customer_account_alert`
+    - `rpc_admin_archive_customer_account_alert`
+- telas afetadas:
+  - nenhuma implementacao nesta fase
+- riscos restantes:
+  - `account_tier` e `provider` ainda dependem de decisão futura entre enum rígido e catálogo controlado
+  - a primeira implementação precisará evitar que `vw_support_customer_360` vire payload monolítico
+  - governança de edição por suporte/CS versus administração ainda precisa virar authz executável
+- impacto na FAQ futura:
+  - ajuda a estruturar futura documentação interna sobre contexto operacional do cliente
+  - prepara base para explicar produto, stack, módulos e alertas sem misturar isso com ticket ou CRM comercial
+
+### Fase 6.7 - Customer Account Profile Migration Design
+- fase: `6.7`
+- commit: `738e40b`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: desenha a migration do Customer Account Profile antes da materialização do backend, fixando enums, tabelas, constraints, authz, views, RPCs administrativas, auditoria e plano de testes.
+- docs alterados:
+  - `docs/CUSTOMER_ACCOUNT_PROFILE_MIGRATION_DESIGN.md`
+  - `docs/README.md`
+  - `docs/DATA_MODEL_STRATEGY.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend nesta fase
+  - propostas futuras:
+    - `vw_support_customer_account_context`
+    - `vw_admin_customer_account_profiles`
+    - `rpc_admin_upsert_customer_account_profile`
+    - `rpc_admin_add_customer_integration`
+    - `rpc_admin_update_customer_integration`
+    - `rpc_admin_add_customer_customization`
+    - `rpc_admin_update_customer_customization`
+    - `rpc_admin_add_customer_account_alert`
+    - `rpc_admin_archive_customer_account_alert`
+- telas afetadas:
+  - nenhuma implementacao nesta fase
+- riscos restantes:
+  - `account_tier`, `provider` e `source` ainda dependem de governanca de catalogo antes da migration
+  - a Fase 6.8 precisa bloquear segredo por schema, RPC e pgTAP sem empurrar essa responsabilidade ao frontend
+  - o futuro portal B2B ainda exigira contrato proprio para nao vazar contexto interno por conveniencia
+- impacto na FAQ futura:
+  - prepara a futura explicacao interna de como o suporte enxerga produto, stack, customizacoes e alertas do cliente B2B
+  - fixa a fronteira entre contexto operacional interno e o subconjunto seguro que um portal B2B podera ver no futuro
+
+### Fase 6.8 - Customer Account Profile Backend Materialization
+- fase: `6.8`
+- commit: `77dc8b0`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: o backend mínimo do perfil operacional do cliente B2B foi materializado com enums, tabelas próprias, helpers privados de authz e segurança, views contratuais de leitura e RPCs administrativas auditadas.
+- docs alterados:
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/DATA_MODEL_STRATEGY.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - `vw_support_customer_account_context`
+  - `vw_admin_customer_account_profiles`
+  - `rpc_admin_upsert_customer_account_profile`
+  - `rpc_admin_add_customer_integration`
+  - `rpc_admin_update_customer_integration`
+  - `rpc_admin_add_customer_customization`
+  - `rpc_admin_update_customer_customization`
+  - `rpc_admin_add_customer_account_alert`
+  - `rpc_admin_archive_customer_account_alert`
+- telas afetadas:
+  - nenhuma UI nova nesta fase
+  - fixture local enriquecida para inspeção geral de `/support/queue`, `/support/tickets/:ticketId`, `/support/customers/:tenantId`, `/admin/knowledge` e `/help/genius`
+- riscos restantes:
+  - o Support Workspace ainda nao consome todo o contexto novo; a calibracao visual e de payload continua para fase posterior
+  - `feature_key`, `provider`, `source` e `account_tier` ainda dependem de governanca operacional de catalogo
+  - `ticket -> KB`, `ticket -> engenharia` e SLA seguem fora do dominio materializado
+- impacto na FAQ futura:
+  - cria a base backend oficial para futura documentacao interna sobre stack, modulos e alertas do cliente B2B
+  - separa com mais rigor o que e contexto operacional interno do que podera aparecer no portal B2B no futuro
+
+### Fase 6.9 - Support Workspace Customer Account Context UI
+- fase: `6.9`
+- commit: `9916b23`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: o Support Workspace passou a consumir `vw_support_customer_account_context` para exibir o stack operacional do cliente B2B no ticket e na visao de cliente, mantendo conversa e composer como foco principal da tratativa.
+- docs alterados:
+  - `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - `vw_support_customer_account_context`
+- telas afetadas:
+  - `/support/tickets/:ticketId`
+  - `/support/customers/:tenantId`
+- riscos restantes:
+  - o contexto enriquecido ainda depende de governanca de catalogo para `account_tier`, `provider`, `source` e `feature_key`
+  - o rail do ticket continua deliberadamente resumido; qualquer expansao futura precisa preservar conversa/composer como foco
+  - `ticket -> KB`, `ticket -> engenharia` e SLA seguem fora do escopo
+- impacto na FAQ futura:
+  - consolida como suporte enxerga produto, stack, customizacoes e alertas do cliente B2B no fluxo real de atendimento
+
+### Fase 6.10 - Internal Workspace Shell + Agent UX System
+- fase: `6.10`
+- commit: `607204c`
+- branch: `codex/phase4-7-public-help-center-branding-contract`
+- data: `2026-05-04`
+- resumo funcional: o Support Workspace ganhou shell interno colapsavel, fila mais dominante, ticket workspace centrado na conversa e customer context mais sintetico, com mini design system oficial para superficies operacionais internas.
+- docs alterados:
+  - `docs/UX_DIRECTION.md`
+  - `docs/INTERNAL_WORKSPACE_DESIGN_SYSTEM.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/README.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - leitura mantida por `vw_support_tickets_queue`
+  - leitura mantida por `vw_support_ticket_detail`
+  - leitura mantida por `vw_support_ticket_timeline_recent`
+  - leitura mantida por `vw_support_customer_360`
+  - leitura mantida por `vw_support_customer_recent_tickets`
+  - leitura mantida por `vw_support_customer_recent_events`
+  - leitura mantida por `vw_support_customer_account_context`
+  - leitura mantida por `vw_support_assignable_agents`
+  - escrita mantida por `rpc_update_ticket_status`
+  - escrita mantida por `rpc_assign_ticket`
+  - escrita mantida por `rpc_add_ticket_message`
+  - escrita mantida por `rpc_add_internal_ticket_note`
+  - escrita mantida por `rpc_close_ticket`
+  - escrita mantida por `rpc_reopen_ticket`
+- telas afetadas:
+  - `/support/queue`
+  - `/support/tickets/:ticketId`
+  - `/support/customers/:tenantId`
+- riscos restantes:
+  - o workspace ainda depende de disciplina de catalogo para `feature_key`, `provider` e `account_tier`
+  - o historico tecnico completo continua recolhido e sem RPC paginavel sob demanda
+  - ticket -> KB, ticket -> engenharia e SLA seguem fora do escopo
+- impacto na FAQ futura:
+  - fixa a experiencia oficial do suporte interno como workspace operacional, nao painel administrativo
+  - ajuda a documentar como agentes navegam entre fila, ticket, contexto do cliente e conhecimento interno
+
+### Fase 6.11 - Internal UI System Refactor + Operational Design Enforcement
+- fase: `6.11`
+- commit: `2468dc6`
+- branch: `codex/phase6-11-internal-ui-system-refactor`
+- data: `2026-05-04`
+- resumo funcional: o contrato de UI interna foi endurecido e as principais superficies internas e publicas passaram por limpeza de linguagem, rebaixamento de metadados tecnicos e reforco de hierarquia operacional.
+- docs alterados:
+  - `docs/UX_DIRECTION.md`
+  - `docs/INTERNAL_WORKSPACE_DESIGN_SYSTEM.md`
+  - `docs/INTERNAL_UI_ACCEPTANCE_CHECKLIST.md`
+  - `docs/UI_REFACTOR_BACKLOG.md`
+  - `docs/README.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+  - `docs/ROADMAP.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - consumo mantido nas superficies administrativas, de suporte e da Central Publica ja existentes
+- telas afetadas:
+  - `/admin/tenants`
+  - `/admin/knowledge`
+  - `/admin/access`
+  - `/admin/system`
+  - `/support/queue`
+  - `/support/tickets/:ticketId`
+  - `/support/customers/:tenantId`
+  - `/help/genius`
+  - `/help/genius/articles/:articleSlug`
+- riscos restantes:
+  - o aceite visual humano continua sendo o gate final para micro-ajustes de conforto diario
+  - o Support Workspace ainda pode precisar de recorte adicional no rail se o contexto do cliente crescer
+  - edicao do Customer Account Profile, ticket -> KB, ticket -> engenharia, SLA e portal B2B seguem no backlog
+- impacto na FAQ futura:
+  - fixa a regra de que qualquer superficie interna deve esconder detalhes tecnicos do fluxo principal
+  - documenta o criterio oficial de aceite visual e operacional para futuras fases
+
+### Fase 6.12 - Ticket -> Knowledge Base Assistive Linking Spec
+- fase: `6.12`
+- commit: `69a9b4c`
+- branch: `codex/phase6-12-ticket-knowledge-linking-spec`
+- data: `2026-05-04`
+- resumo funcional: o dominio de vinculo assistivo entre tickets e artigos da Knowledge Base foi especificado com foco em uso operacional do suporte, sem IA, sem automacao e sem misturar tratativa com curadoria editorial.
+- docs alterados:
+  - `docs/TICKET_KNOWLEDGE_LINKING_SPEC.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+  - `docs/README.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao materializada de contrato backend
+  - leitura atual mantida no Support Workspace e na Knowledge Base
+  - tabela futura candidata: `ticket_knowledge_links`
+- telas afetadas:
+  - nenhuma alteracao de UI nesta fase
+  - impacto futuro principal em `/support/tickets/:ticketId`
+  - impacto futuro secundario em `/admin/knowledge`
+- riscos restantes:
+  - o dominio ainda precisa de review de modelo minimo antes de qualquer migration
+  - permissoes de uso interno vs envio ao cliente vao precisar de enforcement explicito em contrato futuro
+  - ticket -> engenharia e SLA continuam fora desta especificacao
+- impacto na FAQ futura:
+  - cria trilha oficial para registrar quando suporte usa ou envia artigo ao cliente B2B
+  - prepara backlog rastreavel de lacunas e atualizacoes de documentacao a partir de tickets reais
+
+### Fase 6.13 - Ticket Knowledge Linking Data Model Review
+- fase: `6.13`
+- commit: `dee338a`
+- branch: `codex/phase6-13-ticket-knowledge-linking-data-model-review`
+- data: `2026-05-04`
+- resumo funcional: o modelo minimo implementavel do vinculo ticket -> Knowledge Base foi revisado antes de qualquer migration, fixando entidade, enum, regras de integridade e boundary de permissao.
+- docs alterados:
+  - `docs/TICKET_KNOWLEDGE_LINKING_DATA_MODEL_REVIEW.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+  - `docs/README.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao materializada de contrato backend
+  - views futuras propostas:
+    - `vw_support_ticket_knowledge_links`
+    - `vw_support_knowledge_article_picker`
+    - `vw_customer_portal_ticket_knowledge_links`
+  - RPCs futuras propostas:
+    - `rpc_support_link_ticket_article`
+    - `rpc_support_archive_ticket_article_link`
+    - `rpc_support_mark_documentation_gap`
+    - `rpc_support_mark_article_needs_update`
+- telas afetadas:
+  - nenhuma alteracao de UI nesta fase
+  - impacto futuro principal em `/support/tickets/:ticketId`
+  - impacto futuro secundario em `/admin/knowledge`
+- riscos restantes:
+  - o enforcement tenant/space ainda depende da fase de design tecnico e da materializacao backend
+  - a elegibilidade de artigo para `sent_to_customer` ainda precisa virar constraint/helper executavel
+  - o portal B2B futuro continua exigindo read model proprio para nao herdar referencias internas
+- impacto na FAQ futura:
+  - prepara a camada auditavel que vai registrar quando um artigo foi usado internamente ou enviado ao cliente
+  - separa backlog editorial de tratativa operacional sem misturar KB com comentario solto
+
+### Fase 6.14 - Ticket Knowledge Linking Migration Design
+- fase: `6.14`
+- commit: `0c44d4f`
+- branch: `codex/phase6-14-ticket-knowledge-linking-migration-design`
+- data: `2026-05-04`
+- resumo funcional: o desenho tecnico pre-migration do vinculo ticket -> Knowledge Base foi fechado com enum, tabela futura, constraints, helpers privados, views, RPCs e plano pgTAP antes de materializar banco.
+- docs alterados:
+  - `docs/TICKET_KNOWLEDGE_LINKING_MIGRATION_DESIGN.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+  - `docs/README.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao materializada de contrato backend
+  - views futuras desenhadas:
+    - `vw_support_ticket_knowledge_links`
+    - `vw_support_knowledge_article_picker`
+    - `vw_customer_portal_ticket_knowledge_links`
+  - RPCs futuras desenhadas:
+    - `rpc_support_link_ticket_article`
+    - `rpc_support_archive_ticket_article_link`
+    - `rpc_support_mark_documentation_gap`
+    - `rpc_support_mark_article_needs_update`
+- telas afetadas:
+  - nenhuma alteracao de UI nesta fase
+  - impacto futuro principal em `/support/tickets/:ticketId`
+  - impacto futuro secundario em `/admin/knowledge`
+- riscos restantes:
+  - a validacao tenant/space ainda depende da fase materializada de helpers e pgTAP
+  - o helper de sanitizacao de `note` precisa nascer forte para nao abrir vazamento tecnico
+  - o portal B2B futuro continua exigindo view dedicada para nao herdar referencias internas
+- impacto na FAQ futura:
+  - prepara a camada executavel que vai registrar uso interno e envio publico de artigo com rastreabilidade
+  - fecha o boundary tecnico para evoluir ticket -> KB sem publicar artigo por acidente
+
+### Fase 6.15 - Ticket Knowledge Linking Backend Materialization
+- fase: `6.15`
+- commit: `cc4b030`
+- branch: `codex/phase6-15-ticket-knowledge-linking-backend`
+- data: `2026-05-05`
+- resumo funcional: o backend minimo do vinculo ticket -> Knowledge Base foi materializado com enum, tabela append-only, helpers privados, views contratuais, RPCs seguras, pgTAP dedicado e fixture local enriquecida.
+- docs alterados:
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - `vw_support_ticket_knowledge_links`
+  - `vw_support_knowledge_article_picker`
+  - `vw_customer_portal_ticket_knowledge_links`
+  - `rpc_support_link_ticket_article`
+  - `rpc_support_archive_ticket_article_link`
+  - `rpc_support_mark_documentation_gap`
+  - `rpc_support_mark_article_needs_update`
+- telas afetadas:
+  - nenhuma UI nova nesta fase
+  - fixture e QA preparadas para inspecao geral de:
+    - `/support/queue`
+    - `/support/tickets/:ticketId`
+    - `/admin/knowledge`
+    - `/help/genius`
+- riscos restantes:
+  - a primeira UI assistiva de ticket -> KB ainda nao foi aberta
+  - o portal B2B futuro continua exigindo contrato proprio para expor apenas `sent_to_customer`
+  - a heuristica de sanitizacao de `note` pode precisar de ajuste fino conforme uso real
+- impacto na FAQ futura:
+  - cria a trilha auditavel para explicar quando um artigo foi usado internamente, enviado ao cliente ou marcado como lacuna de documentacao
+  - prepara base executavel para futuras respostas oficiais sobre relacao entre tickets e base de conhecimento
+
+### Fase 6.16 - Ticket Knowledge Assistive UI
+- fase: `6.16`
+- commit: `7fed25c`
+- branch: `codex/phase6-16-ticket-knowledge-assistive-ui`
+- data: `2026-05-05`
+- resumo funcional: a primeira UI assistiva de ticket -> Knowledge Base foi aberta no Support Workspace com painel recolhivel, busca de artigos permitidos, registro de uso interno/publico e arquivamento logico de vinculos, sem competir com a conversa do ticket.
+- docs alterados:
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - `vw_support_ticket_knowledge_links`
+  - `vw_support_knowledge_article_picker`
+  - `rpc_support_link_ticket_article`
+  - `rpc_support_archive_ticket_article_link`
+  - `rpc_support_mark_documentation_gap`
+  - `rpc_support_mark_article_needs_update`
+- telas afetadas:
+  - `/support/tickets/:ticketId`
+- riscos restantes:
+  - a UI ainda nao oferece fluxo de copia segura de link publico por space, porque o contrato atual do picker nao expõe route metadata suficiente
+  - o painel pode pedir novo recorte visual se a quantidade de vinculos ativos crescer muito no mesmo ticket
+  - o fluxo editorial de criacao/atualizacao de artigo continua corretamente fora da tela de suporte
+- impacto na FAQ futura:
+  - registra o primeiro uso operacional real da ponte ticket -> KB no workspace de suporte
+  - prepara explicacoes futuras sobre referencia interna, envio ao cliente, lacuna de documentacao e revisao de artigo sem depender de IA
+
+### Fase 6.17 - Ticket Knowledge Public Link Contract Review
+- fase: `6.17`
+- commit: `ad8a4f6`
+- branch: `codex/phase6-17-ticket-knowledge-public-link-review`
+- data: `2026-05-05`
+- resumo funcional: review documental do contrato necessario para que o suporte copie ou envie um link publico seguro de artigo ao cliente sem montar rota fragil no frontend.
+- docs alterados:
+  - `docs/TICKET_KNOWLEDGE_PUBLIC_LINK_CONTRACT_REVIEW.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+  - `docs/README.md`
+- views/RPCs afetadas:
+  - auditoria de `vw_support_knowledge_article_picker`
+  - auditoria de `vw_public_knowledge_space_resolver`
+  - auditoria de `vw_public_knowledge_article_detail`
+  - auditoria de `rpc_support_link_ticket_article`
+  - view futura recomendada:
+    - `vw_support_knowledge_public_link_candidates`
+- telas afetadas:
+  - nenhuma alteracao de UI nesta fase
+  - impacto futuro principal em `/support/tickets/:ticketId`
+  - impacto futuro secundario em `/help/:spaceSlug/articles/:articleSlug`
+- riscos restantes:
+  - o contrato ainda nao foi materializado em backend
+  - a decisao entre caminho relativo e URL canonica completa ainda fica para a fase materializavel
+  - o portal B2B futuro continua exigindo superficie propria para nao herdar referencias internas por conveniencia
+- impacto na FAQ futura:
+  - prepara a trilha oficial para explicar como o suporte pode compartilhar artigo publico com seguranca
+  - reforca que permissao de envio e roteamento publico devem vir do backend, nao de heuristica no frontend
+
+### Fase 6.18 - Contextual Subsidebar UX Pattern
+- fase: `6.18`
+- commit: `7970fb2`
+- branch: `codex/phase6-18-contextual-subsidebar-ux-pattern`
+- data: `2026-05-05`
+- resumo funcional: o shell interno passou a formalizar sidebar global, subsidebar contextual e area principal de trabalho, com aplicacao real em Support, Admin, Knowledge e validacao da Central Publica local.
+- docs alterados:
+  - `docs/UX_DIRECTION.md`
+  - `docs/INTERNAL_WORKSPACE_DESIGN_SYSTEM.md`
+  - `docs/INTERNAL_UI_ACCEPTANCE_CHECKLIST.md`
+  - `docs/UI_REFACTOR_BACKLOG.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - nenhuma view ou RPC nova materializada
+- telas afetadas:
+  - `/support/queue`
+  - `/support/tickets/:ticketId`
+  - `/support/customers/:tenantId`
+  - `/admin/knowledge`
+  - `/admin/tenants`
+  - `/admin/access`
+  - `/admin/system`
+  - `/help/genius`
+  - `/help/genius/articles/visao-geral-da-central-genius`
+- riscos restantes:
+  - o item global `Customers` no shell de suporte ainda depende de um destino melhor quando nao existe tenant em foco
+  - o rail do ticket pode pedir novo recorte se o contexto do cliente crescer muito
+  - o polimento fino de densidade e conforto diario continua no backlog oficial
+- impacto na FAQ futura:
+  - formaliza um contrato de UX para futuras superficies internas sem reintroduzir layout generico do Admin Console
+  - cria baseline para decidir quando filtros, ferramentas e contexto pertencem a subsidebar ou a area principal
+
+### Ajuste complementar 6.18 - Ticket workspace guiado por blueprint operacional
+- fase: `6.18`
+- commit: `8021439`
+- branch: `codex/phase6-18-ticket-workspace-blueprint`
+- data: `2026-05-05`
+- resumo funcional: a tela `/support/tickets/:ticketId` foi refatorada para seguir um blueprint de tratativa operacional, com conversa central, toolbar util na propria superficie e rail direito compacto.
+- docs alterados:
+  - `docs/UX_DIRECTION.md`
+  - `docs/INTERNAL_WORKSPACE_DESIGN_SYSTEM.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de backend
+  - nenhuma view ou RPC nova
+- telas afetadas:
+  - `/support/tickets/:ticketId`
+  - `SupportWorkspaceShell` como ajuste neutro de sidebar
+- riscos restantes:
+  - o rail do ticket pode pedir novo recorte se o contexto do cliente continuar crescendo
+  - a copia segura de link publico de artigo continua dependente do contrato futuro da fase 6.17
+- impacto na FAQ futura:
+  - consolida o padrao de tratativa como superficie de conversa real, e nao como painel administrativo
+
+### Fase 6.18.3 - Ticket Workspace Blueprint Fidelity Pass
+- fase: `6.18.3`
+- commit: `a02f2db`
+- branch: `codex/phase6-18-3-ticket-workspace-blueprint-fidelity`
+- data: `2026-05-05`
+- resumo funcional: a tela `/support/tickets/:ticketId` recebeu um passe corretivo de fidelidade visual para se aproximar da blueprint aprovada, com header mais baixo, thread mais densa, composer mais encaixado e rail direito menos pesado.
+- docs alterados:
+  - `docs/UX_DIRECTION.md`
+  - `docs/INTERNAL_WORKSPACE_DESIGN_SYSTEM.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de backend
+  - nenhuma view ou RPC nova
+- telas afetadas:
+  - `/support/tickets/:ticketId`
+  - `SupportWorkspaceShell` como refinamento visual da sidebar do suporte
+- riscos restantes:
+  - a tela ficou mais proxima da blueprint, mas alguns detalhes finos ainda dependem das primitives atuais de pills, inputs e selects
+  - a copia segura de link publico de artigo continua dependente do contrato futuro revisado na fase 6.17
+- impacto na FAQ futura:
+  - registra que fidelidade de tratativa deve ser medida por densidade, hierarquia e continuidade operacional, nao so por reorganizacao de cards

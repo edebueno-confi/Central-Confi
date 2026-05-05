@@ -1,20 +1,40 @@
 ---
-name: Feature request
-about: Suggest an idea for this project
+name: Proposta de melhoria
+about: Propor melhoria alinhada ao Genius Support OS
 title: ''
 labels: ''
 assignees: ''
 
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+## Problema operacional
+Que dor real esta melhoria resolve.
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+## Domínio afetado
+- [ ] Auth
+- [ ] Tenant / contexto
+- [ ] Tickets
+- [ ] Base de conhecimento
+- [ ] Engenharia
+- [ ] Auditoria
+- [ ] IA
+- [ ] Outro
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+## Usuários impactados
+- [ ] Suporte
+- [ ] Gestão
+- [ ] Engenharia
+- [ ] Cliente
+- [ ] Operação interna
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+## Solução desejada
+Descreva o comportamento esperado.
+
+## Regras de negócio e permissão
+Explique tenant, papéis, acesso e auditoria necessários.
+
+## Alternativas consideradas
+Descreva opções descartadas ou tradeoffs.
+
+## Observações adicionais
+Inclua referências de documentação, tickets ou work items relacionados.

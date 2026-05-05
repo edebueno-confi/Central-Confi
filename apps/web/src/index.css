@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  font-family: 'Instrument Sans', 'Segoe UI', sans-serif;
+  --color-brand-navy: #141f47;
+  --color-brand-blue: #307fe2;
+  --color-brand-cyan: #74d2e7;
+  --color-brand-magenta: #e10098;
+  --color-surface: #f4f8ff;
+  --color-surface-strong: #ffffff;
+  --color-border: rgba(20, 31, 71, 0.12);
+  --color-ink: #15203f;
+  --color-muted: rgba(21, 32, 63, 0.72);
+  --color-success-surface: rgba(116, 210, 231, 0.18);
+  --color-success-border: rgba(48, 127, 226, 0.18);
+  --color-success-ink: #1f5a90;
+  --color-warning-surface: rgba(255, 212, 124, 0.22);
+  --color-warning-border: rgba(223, 160, 31, 0.28);
+  --color-warning-ink: #7d5612;
+  --color-danger-surface: rgba(225, 0, 152, 0.1);
+  --color-danger-border: rgba(225, 0, 152, 0.18);
+  --color-danger-ink: #8f0f67;
+  --shadow-panel: 0 24px 60px rgba(20, 31, 71, 0.08);
+  background-color: #eff5ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top right, rgba(48, 127, 226, 0.1), transparent 24%),
+    radial-gradient(circle at bottom left, rgba(225, 0, 152, 0.08), transparent 18%),
+    linear-gradient(180deg, #eef4ff 0%, #f8fbff 42%, #f3f6fb 100%);
+  color: var(--color-ink);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(20, 31, 71, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 31, 71, 0.02) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(180deg, rgba(255, 255, 255, 0.65), transparent 92%);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-family: 'Space Grotesk', 'Instrument Sans', sans-serif;
+}
+
+p {
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,2228 @@
+import {
+  type FormEvent,
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+} from 'react';
+import { Navigate } from 'react-router-dom';
+import { formatDateTime } from '../../app/format';
+import {
+  AppButton,
+  ContextSubsidebar,
+  ContextSubsidebarSection,
+  cx,
+  Field,
+  GhostButton,
+  InlineNotice,
+  PageHeader,
+  Panel,
+  SelectInput,
+  StatusPill,
+  TextInput,
+  TextareaInput,
+  WorkspaceSplit,
+} from '../../components/ui';
+import {
+  ContractUnavailableState,
+  EmptyState,
+  ErrorState,
+  LoadingState,
+} from '../../components/states';
+import {
+  archiveKnowledgeArticleV2,
+  createKnowledgeArticleDraftV2,
+  createKnowledgeCategoryV2,
+  getAdminKnowledgeArticleDetailV2,
+  listAdminKnowledgeArticleReviewAdvisories,
+  listAdminKnowledgeArticlesV2,
+  listAdminKnowledgeCategoriesV2,
+  listAdminKnowledgeSpaces,
+  markKnowledgeArticleReviewed,
+  publishKnowledgeArticleV2,
+  submitKnowledgeArticleForReviewV2,
+  updateKnowledgeArticleReviewStatus,
+  updateKnowledgeArticleDraftV2,
+  type AdminKnowledgeArticleReviewAdvisoryRow,
+  type AdminKnowledgeArticleDetailV2Row,
+  type AdminKnowledgeArticleListItemV2Row,
+  type AdminKnowledgeCategoryV2Row,
+  type AdminKnowledgeSpaceRow,
+  type KnowledgeAdvisoryClassification,
+  type KnowledgeArticleStatus,
+  type KnowledgeArticleReviewStatus,
+  type KnowledgeReviewHumanConfirmations,
+  type KnowledgeVisibility,
+} from '../admin/admin-api';
+import { classifyAdminError } from '../admin/admin-errors';
+import {
+  KNOWLEDGE_ADVISORY_CLASSIFICATIONS,
+  KNOWLEDGE_ARTICLE_STATUSES,
+  KNOWLEDGE_ARTICLE_REVIEW_STATUSES,
+  KNOWLEDGE_VISIBILITIES,
+} from '../../contracts/admin-contracts';
+import { useAuthContext } from '../auth/auth-context';
+
+type PagePhase = 'loading' | 'ready' | 'contract-unavailable' | 'error';
+type ContentPhase = 'idle' | 'loading' | 'ready' | 'contract-unavailable' | 'error';
+type DetailPhase = 'idle' | 'loading' | 'ready' | 'contract-unavailable' | 'error';
+type PanelMode = 'detail' | 'create-article' | 'edit-article' | 'create-category';
+type ArticleStatusFilter = KnowledgeArticleStatus | 'all';
+type ArticleVisibilityFilter = KnowledgeVisibility | 'all';
+type ArticleOriginFilter = 'all' | 'legacy' | 'manual';
+type ArticleDuplicateFilter = 'all' | 'duplicates' | 'unique';
+type ArticleClassificationFilter = KnowledgeAdvisoryClassification | 'all' | 'without-advisory';
+type EditorialChecklistTone = 'default' | 'positive' | 'warning' | 'critical' | 'accent';
+
+interface EditorialChecklistItem {
+  label: string;
+  tone: EditorialChecklistTone;
+  description: string;
+}
+
+interface HumanConfirmationDefinition {
+  key: keyof KnowledgeReviewHumanConfirmations;
+  label: string;
+  help: string;
+}
+
+interface ArticleFormState {
+  title: string;
+  slug: string;
+  summary: string;
+  bodyMd: string;
+  categoryId: string;
+  visibility: KnowledgeVisibility;
+  sourcePath: string;
+  sourceHash: string;
+}
+
+interface CategoryFormState {
+  name: string;
+  slug: string;
+  description: string;
+  visibility: KnowledgeVisibility;
+  parentCategoryId: string;
+}
+
+interface ArticleActionFeedback {
+  articleId: string;
+  message: string;
+}
+
+const HUMAN_CONFIRMATION_FIELDS: HumanConfirmationDefinition[] = [
+  {
+    key: 'title_reviewed',
+    label: 'Titulo revisado',
+    help: 'Confirma que o titulo editorial foi validado por um revisor humano.',
+  },
+  {
+    key: 'summary_reviewed',
+    label: 'Resumo revisado',
+    help: 'Confirma que o resumo ja esta claro para suporte/CS/cliente B2B.',
+  },
+  {
+    key: 'body_reviewed',
+    label: 'Conteudo em Markdown revisado',
+    help: 'Confirma que o corpo principal foi revisado em Markdown seguro.',
+  },
+  {
+    key: 'category_reviewed',
+    label: 'Categoria correta',
+    help: 'Confirma que a categoria atual representa bem o artigo.',
+  },
+  {
+    key: 'visibility_reviewed',
+    label: 'Visibilidade correta',
+    help: 'Confirma que o escopo public/internal/restricted foi validado manualmente.',
+  },
+  {
+    key: 'no_sensitive_data_exposed',
+    label: 'Nenhum segredo ou API sensivel exposto',
+    help: 'Confirma revisao humana de segredos, credenciais, integracoes e dados internos.',
+  },
+  {
+    key: 'ready_for_review',
+    label: 'Pronto para review',
+    help: 'Confirma que o artigo pode sair de draft e entrar em review editorial.',
+  },
+  {
+    key: 'ready_for_publish',
+    label: 'Pronto para publish',
+    help: 'Confirma que o artigo ja esta pronto para publicacao humana quando o status permitir.',
+  },
+];
+
+function emptyArticleForm(): ArticleFormState {
+  return {
+    title: '',
+    slug: '',
+    summary: '',
+    bodyMd: '',
+    categoryId: '',
+    visibility: 'internal',
+    sourcePath: '',
+    sourceHash: '',
+  };
+}
+
+function emptyCategoryForm(): CategoryFormState {
+  return {
+    name: '',
+    slug: '',
+    description: '',
+    visibility: 'internal',
+    parentCategoryId: '',
+  };
+}
+
+function emptyHumanConfirmations(): KnowledgeReviewHumanConfirmations {
+  return {};
+}
+
+function normalizeHumanConfirmations(
+  value: unknown,
+): KnowledgeReviewHumanConfirmations {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return emptyHumanConfirmations();
+  }
+
+  const record = value as Record<string, unknown>;
+  const result: KnowledgeReviewHumanConfirmations = {};
+
+  for (const field of HUMAN_CONFIRMATION_FIELDS) {
+    if (typeof record[field.key] === 'boolean') {
+      result[field.key] = record[field.key] as boolean;
+    }
+  }
+
+  return result;
+}
+
+function buildArticleForm(detail: AdminKnowledgeArticleDetailV2Row): ArticleFormState {
+  return {
+    title: detail.title,
+    slug: detail.slug,
+    summary: detail.summary ?? '',
+    bodyMd: detail.body_md,
+    categoryId: detail.category_id ?? '',
+    visibility: detail.visibility,
+    sourcePath: detail.source_path ?? '',
+    sourceHash: detail.source_hash ?? '',
+  };
+}
+
+function slugify(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-+|-+$)/g, '')
+    .replace(/-{2,}/g, '-');
+}
+
+function normalizeOptionalText(value: string) {
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function toneForSpaceStatus(status: AdminKnowledgeSpaceRow['status']) {
+  if (status === 'active') {
+    return 'positive' as const;
+  }
+
+  if (status === 'archived') {
+    return 'critical' as const;
+  }
+
+  return 'warning' as const;
+}
+
+function toneForArticleStatus(status: KnowledgeArticleStatus) {
+  if (status === 'published') {
+    return 'positive' as const;
+  }
+
+  if (status === 'review') {
+    return 'warning' as const;
+  }
+
+  if (status === 'archived') {
+    return 'critical' as const;
+  }
+
+  return 'default' as const;
+}
+
+function toneForReviewStatus(status: KnowledgeArticleReviewStatus) {
+  if (status === 'reviewed') {
+    return 'positive' as const;
+  }
+
+  if (status === 'ready_for_publish' || status === 'ready_for_review') {
+    return 'accent' as const;
+  }
+
+  if (status === 'needs_changes') {
+    return 'critical' as const;
+  }
+
+  if (status === 'in_review') {
+    return 'warning' as const;
+  }
+
+  return 'default' as const;
+}
+
+function toneForAdvisoryClassification(
+  classification: KnowledgeAdvisoryClassification,
+) {
+  if (classification === 'public') {
+    return 'positive' as const;
+  }
+
+  if (classification === 'internal') {
+    return 'accent' as const;
+  }
+
+  if (classification === 'obsolete' || classification === 'duplicate') {
+    return 'warning' as const;
+  }
+
+  return 'critical' as const;
+}
+
+function toneForVisibility(visibility: KnowledgeVisibility) {
+  if (visibility === 'public') {
+    return 'positive' as const;
+  }
+
+  if (visibility === 'restricted') {
+    return 'critical' as const;
+  }
+
+  return 'accent' as const;
+}
+
+function categoryDisplayName(category: AdminKnowledgeCategoryV2Row) {
+  return category.parent_name
+    ? `${category.parent_name} / ${category.name}`
+    : category.name;
+}
+
+function buildSourceHashCounts(articles: AdminKnowledgeArticleListItemV2Row[]) {
+  const counts = new Map<string, number>();
+
+  for (const article of articles) {
+    if (!article.source_hash) {
+      continue;
+    }
+
+    counts.set(article.source_hash, (counts.get(article.source_hash) ?? 0) + 1);
+  }
+
+  return counts;
+}
+
+function countDuplicateHashGroups(sourceHashCounts: Map<string, number>) {
+  let total = 0;
+
+  for (const count of sourceHashCounts.values()) {
+    if (count > 1) {
+      total += 1;
+    }
+  }
+
+  return total;
+}
+
+function containsLegacyHtml(value: string) {
+  return /<[^>]+>/.test(value);
+}
+
+function normalizeRiskFlags(value: unknown) {
+  if (!Array.isArray(value)) {
+    return [] as string[];
+  }
+
+  return value.filter((item): item is string => typeof item === 'string');
+}
+
+function buildPersistedHumanChecklist(
+  confirmations: KnowledgeReviewHumanConfirmations,
+): EditorialChecklistItem[] {
+  return HUMAN_CONFIRMATION_FIELDS.map((field) => {
+    const checked = confirmations[field.key] === true;
+
+    return {
+      label: field.label,
+      tone: checked ? 'positive' : 'warning',
+      description: checked
+        ? 'Confirmacao humana persistida para este item.'
+        : field.help,
+    } satisfies EditorialChecklistItem;
+  });
+}
+
+function buildEditorialChecklist(
+  article: AdminKnowledgeArticleDetailV2Row,
+  duplicateCount: number,
+) {
+  const titleReady = article.title.trim().length >= 8;
+  const summaryLength = article.summary?.trim().length ?? 0;
+  const summaryReady = summaryLength >= 24;
+  const bodyLength = article.body_md.trim().length;
+  const bodyHasLegacyHtml = containsLegacyHtml(article.body_md);
+  const bodyReady = bodyLength >= 80 && !bodyHasLegacyHtml;
+  const categoryReady = Boolean(article.category_id);
+  const automatedReady = titleReady && summaryReady && bodyReady && categoryReady;
+
+  const automated: EditorialChecklistItem[] = [
+    {
+      label: 'Titulo revisado',
+      tone: titleReady ? 'positive' : 'critical',
+      description: titleReady
+        ? 'Titulo com comprimento suficiente para revisao editorial.'
+        : 'Titulo ainda curto ou vazio para uma triagem segura.',
+    },
+    {
+      label: 'Resumo revisado',
+      tone: summaryReady ? 'positive' : 'warning',
+      description: summaryReady
+        ? 'Resumo presente e com densidade minima para orientar leitura.'
+        : 'Resumo ausente ou curto; vale revisar antes de promover o artigo.',
+    },
+    {
+      label: 'Markdown revisado',
+      tone: bodyReady ? 'positive' : bodyHasLegacyHtml ? 'critical' : 'warning',
+      description: bodyReady
+        ? 'Corpo principal em Markdown e sem sinal de HTML legado.'
+        : bodyHasLegacyHtml
+          ? 'Corpo ainda contem marca de HTML legado; revisar antes de avancar.'
+          : 'Corpo principal ainda curto para leitura editorial segura.',
+    },
+    {
+      label: 'Categoria correta',
+      tone: categoryReady ? 'positive' : 'critical',
+      description: categoryReady
+        ? 'Artigo ja esta vinculado a uma categoria editorial.'
+        : 'Categoria ainda nao definida; classificar antes de review.',
+    },
+  ];
+
+  const manual: EditorialChecklistItem[] = [
+    {
+      label: 'Visibilidade correta',
+      tone:
+        article.visibility === 'restricted'
+          ? 'critical'
+          : article.visibility === 'internal'
+            ? 'warning'
+            : 'accent',
+      description:
+        article.visibility === 'restricted'
+          ? 'Conteudo restrito exige leitura cautelosa antes de qualquer promocao.'
+          : article.visibility === 'internal'
+            ? 'Confirmar se o artigo deve permanecer interno ou evoluir para publico.'
+            : 'Confirmar se o recorte publico esta coerente com o risco real do artigo.',
+    },
+    {
+      label: 'Nenhum segredo ou API sensivel exposto',
+      tone: 'warning',
+      description:
+        'Confirmacao humana obrigatoria para garantir que nenhum dado sensivel apareca no artigo.',
+    },
+    {
+      label: 'Pronto para review',
+      tone:
+        automatedReady && article.status === 'draft'
+          ? 'positive'
+          : article.status === 'draft'
+            ? 'warning'
+            : 'default',
+      description:
+        automatedReady && article.status === 'draft'
+          ? 'Sinais objetivos minimos completos para envio a review humana.'
+          : article.status === 'draft'
+            ? 'Ainda faltam ajustes objetivos antes do envio para review.'
+            : 'O artigo ja saiu de draft; confirmar o contexto editorial antes de repetir a acao.',
+    },
+    {
+      label: 'Pronto para publish',
+      tone:
+        automatedReady && article.status === 'review'
+          ? 'positive'
+          : article.status === 'review'
+            ? 'warning'
+            : 'default',
+      description:
+        automatedReady && article.status === 'review'
+          ? 'Sinais objetivos completos; falta apenas a aprovacao humana final.'
+          : article.status === 'review'
+            ? 'O artigo esta em review, mas ainda precisa de ajuste antes de publish.'
+            : 'A publicacao continua bloqueada ate o artigo chegar a review com revisao humana concluida.',
+    },
+  ];
+
+  if (duplicateCount > 1) {
+    manual.unshift({
+      label: 'Possivel duplicidade de origem',
+      tone: 'warning',
+      description: `Existe mais ${duplicateCount - 1} artigo nesta central com a mesma origem rastreada. Consolidar antes de promover.`,
+    });
+  }
+
+  return {
+    automated,
+    manual,
+    automatedReady,
+    backlogClassificationAvailable: false,
+  };
+}
+
+export function KnowledgePage() {
+  const { markSessionExpired } = useAuthContext();
+  const didBootstrapRef = useRef(false);
+  const [backendDenied, setBackendDenied] = useState(false);
+  const [pagePhase, setPagePhase] = useState<PagePhase>('loading');
+  const [pageMessage, setPageMessage] = useState<string | null>(null);
+  const [spaces, setSpaces] = useState<AdminKnowledgeSpaceRow[]>([]);
+  const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
+  const [contentPhase, setContentPhase] = useState<ContentPhase>('idle');
+  const [contentMessage, setContentMessage] = useState<string | null>(null);
+  const [categories, setCategories] = useState<AdminKnowledgeCategoryV2Row[]>([]);
+  const [articles, setArticles] = useState<AdminKnowledgeArticleListItemV2Row[]>([]);
+  const [advisories, setAdvisories] = useState<AdminKnowledgeArticleReviewAdvisoryRow[]>([]);
+  const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
+  const [detailPhase, setDetailPhase] = useState<DetailPhase>('idle');
+  const [detailMessage, setDetailMessage] = useState<string | null>(null);
+  const [articleDetail, setArticleDetail] = useState<AdminKnowledgeArticleDetailV2Row | null>(null);
+  const [panelMode, setPanelMode] = useState<PanelMode>('detail');
+  const [statusFilter, setStatusFilter] = useState<ArticleStatusFilter>('all');
+  const [visibilityFilter, setVisibilityFilter] = useState<ArticleVisibilityFilter>('all');
+  const [originFilter, setOriginFilter] = useState<ArticleOriginFilter>('all');
+  const [duplicateFilter, setDuplicateFilter] = useState<ArticleDuplicateFilter>('all');
+  const [classificationFilter, setClassificationFilter] =
+    useState<ArticleClassificationFilter>('all');
+  const [articleForm, setArticleForm] = useState<ArticleFormState>(emptyArticleForm);
+  const [articleFormSubmitting, setArticleFormSubmitting] = useState(false);
+  const [articleFormMessage, setArticleFormMessage] = useState<string | null>(null);
+  const [categoryForm, setCategoryForm] = useState<CategoryFormState>(emptyCategoryForm);
+  const [categoryFormSubmitting, setCategoryFormSubmitting] = useState(false);
+  const [categoryFormMessage, setCategoryFormMessage] = useState<string | null>(null);
+  const [articleActionSubmitting, setArticleActionSubmitting] = useState(false);
+  const [articleActionFeedback, setArticleActionFeedback] =
+    useState<ArticleActionFeedback | null>(null);
+  const [reviewStatusDraft, setReviewStatusDraft] =
+    useState<KnowledgeArticleReviewStatus>('pending');
+  const [reviewNotesDraft, setReviewNotesDraft] = useState('');
+  const [humanConfirmationsDraft, setHumanConfirmationsDraft] =
+    useState<KnowledgeReviewHumanConfirmations>(emptyHumanConfirmations);
+  const [reviewAdvisorySubmitting, setReviewAdvisorySubmitting] = useState(false);
+  const [reviewAdvisoryMessage, setReviewAdvisoryMessage] = useState<string | null>(null);
+
+  const selectedSpace =
+    spaces.find((space) => space.id === selectedSpaceId) ?? null;
+  const selectedArticleSummary =
+    articles.find((article) => article.id === selectedArticleId) ?? null;
+  const advisoryMap = new Map(advisories.map((advisory) => [advisory.article_id, advisory]));
+  const selectedAdvisory =
+    selectedArticleId ? advisoryMap.get(selectedArticleId) ?? null : null;
+  const sourceHashCounts = buildSourceHashCounts(articles);
+  const duplicateHashGroupCount = countDuplicateHashGroups(sourceHashCounts);
+  const filteredArticles = articles.filter((article) => {
+    const articleAdvisory = advisoryMap.get(article.id);
+
+    if (originFilter === 'legacy') {
+      if (!article.source_path && !article.source_hash) {
+        return false;
+      }
+    }
+
+    if (originFilter === 'manual') {
+      if (article.source_path || article.source_hash) {
+        return false;
+      }
+    }
+
+    if (classificationFilter === 'without-advisory') {
+      if (articleAdvisory) {
+        return false;
+      }
+    } else if (classificationFilter !== 'all') {
+      if (articleAdvisory?.suggested_classification !== classificationFilter) {
+        return false;
+      }
+    }
+
+    const duplicateCount =
+      articleAdvisory?.duplicate_group_article_count ??
+      (article.source_hash ? sourceHashCounts.get(article.source_hash) ?? 0 : 0);
+
+    if (duplicateFilter === 'duplicates' && duplicateCount <= 1) {
+      return false;
+    }
+
+    if (duplicateFilter === 'unique' && duplicateCount > 1) {
+      return false;
+    }
+
+    return true;
+  });
+  const articleActionMessage =
+    articleActionFeedback &&
+    selectedArticleId &&
+    articleActionFeedback.articleId === selectedArticleId
+      ? articleActionFeedback.message
+      : null;
+  const draftArticleCount = articles.filter(
+    (article) => article.status === 'draft',
+  ).length;
+  const reviewArticleCount = articles.filter(
+    (article) => article.status === 'review',
+  ).length;
+  const legacyArticleCount = articles.filter(
+    (article) => article.source_path || article.source_hash,
+  ).length;
+  const restrictedArticleCount = articles.filter(
+    (article) => article.visibility === 'restricted',
+  ).length;
+  const selectedArticleDuplicateCount =
+    selectedAdvisory?.duplicate_group_article_count ??
+    (articleDetail?.source_hash
+      ? sourceHashCounts.get(articleDetail.source_hash) ?? 0
+      : 0);
+  const editorialChecklist = articleDetail
+    ? buildEditorialChecklist(articleDetail, selectedArticleDuplicateCount)
+    : null;
+  const persistedHumanChecklist = buildPersistedHumanChecklist(humanConfirmationsDraft);
+  const advisoryRiskFlags = normalizeRiskFlags(selectedAdvisory?.risk_flags);
+
+  const loadKnowledgeSpaces = useEffectEvent(
+    async (preferredSpaceId?: string | null) => {
+      try {
+        const data = await listAdminKnowledgeSpaces();
+        setSpaces(data);
+        setPagePhase('ready');
+        setPageMessage(null);
+        setBackendDenied(false);
+
+        const preservedSpaceId =
+          preferredSpaceId ??
+          (data.some((space) => space.id === selectedSpaceId)
+            ? selectedSpaceId
+            : null);
+
+        setSelectedSpaceId(preservedSpaceId ?? data[0]?.id ?? null);
+      } catch (error) {
+        const classified = classifyAdminError(
+          error,
+          'Falha ao carregar a superficie de knowledge spaces.',
+        );
+
+        if (classified.kind === 'session-expired') {
+          markSessionExpired();
+          return;
+        }
+
+        if (classified.kind === 'permission-denied') {
+          setBackendDenied(true);
+          return;
+        }
+
+        setSpaces([]);
+        setSelectedSpaceId(null);
+        setPageMessage(classified.message);
+        setPagePhase(
+          classified.kind === 'contract-unavailable'
+            ? 'contract-unavailable'
+            : 'error',
+        );
+      }
+    },
+  );
+
+  const loadKnowledgeContent = useEffectEvent(
+    async (knowledgeSpaceId: string, preferredArticleId?: string | null) => {
+      setContentPhase('loading');
+      setContentMessage(null);
+
+      try {
+        const [categoriesData, articlesData, advisoriesData] = await Promise.all([
+          listAdminKnowledgeCategoriesV2(knowledgeSpaceId),
+          listAdminKnowledgeArticlesV2({
+            knowledgeSpaceId,
+            status: statusFilter,
+            visibility: visibilityFilter,
+          }),
+          listAdminKnowledgeArticleReviewAdvisories(knowledgeSpaceId),
+        ]);
+
+        setCategories(categoriesData);
+        setArticles(articlesData);
+        setAdvisories(advisoriesData);
+        setContentPhase('ready');
+        setContentMessage(null);
+        setBackendDenied(false);
+
+        const preservedArticleId =
+          preferredArticleId ??
+          (articlesData.some((article) => article.id === selectedArticleId)
+            ? selectedArticleId
+            : null);
+
+        setSelectedArticleId(preservedArticleId ?? articlesData[0]?.id ?? null);
+      } catch (error) {
+        const classified = classifyAdminError(
+          error,
+          'Falha ao carregar a camada editorial da Knowledge Base.',
+        );
+
+        if (classified.kind === 'session-expired') {
+          markSessionExpired();
+          return;
+        }
+
+        if (classified.kind === 'permission-denied') {
+          setBackendDenied(true);
+          return;
+        }
+
+        setCategories([]);
+        setArticles([]);
+        setAdvisories([]);
+        setSelectedArticleId(null);
+        setContentMessage(classified.message);
+        setContentPhase(
+          classified.kind === 'contract-unavailable'
+            ? 'contract-unavailable'
+            : 'error',
+        );
+      }
+    },
+  );
+
+  const loadArticleDetail = useEffectEvent(async (articleId: string) => {
+    setDetailPhase('loading');
+    setDetailMessage(null);
+
+    try {
+      const detail = await getAdminKnowledgeArticleDetailV2(articleId);
+      setBackendDenied(false);
+
+      if (!detail) {
+        setArticleDetail(null);
+        setDetailPhase('error');
+        setDetailMessage(
+          'O backend nao retornou detalhe para o artigo selecionado.',
+        );
+        return;
+      }
+
+      setArticleDetail(detail);
+      setDetailPhase('ready');
+    } catch (error) {
+      const classified = classifyAdminError(
+        error,
+        'Falha ao carregar o detalhe editorial do artigo.',
+      );
+
+      if (classified.kind === 'session-expired') {
+        markSessionExpired();
+        return;
+      }
+
+      if (classified.kind === 'permission-denied') {
+        setBackendDenied(true);
+        return;
+      }
+
+      setArticleDetail(null);
+      setDetailMessage(classified.message);
+      setDetailPhase(
+        classified.kind === 'contract-unavailable'
+          ? 'contract-unavailable'
+          : 'error',
+      );
+    }
+  });
+
+  useEffect(() => {
+    if (didBootstrapRef.current) {
+      return;
+    }
+
+    didBootstrapRef.current = true;
+    void loadKnowledgeSpaces();
+  }, []);
+
+  useEffect(() => {
+    setPanelMode('detail');
+    setArticleForm(emptyArticleForm());
+    setCategoryForm(emptyCategoryForm());
+    setArticleFormMessage(null);
+    setCategoryFormMessage(null);
+    setArticleActionFeedback(null);
+    setReviewAdvisoryMessage(null);
+    setReviewStatusDraft('pending');
+    setReviewNotesDraft('');
+    setHumanConfirmationsDraft(emptyHumanConfirmations());
+  }, [selectedSpaceId]);
+
+  useEffect(() => {
+    if (!selectedSpaceId) {
+      setCategories([]);
+      setArticles([]);
+      setAdvisories([]);
+      setSelectedArticleId(null);
+      setContentPhase('idle');
+      setContentMessage(null);
+      return;
+    }
+
+    void loadKnowledgeContent(selectedSpaceId);
+  }, [selectedSpaceId, statusFilter, visibilityFilter]);
+
+  useEffect(() => {
+    if (!selectedArticleId) {
+      setArticleDetail(null);
+      setDetailPhase('idle');
+      setDetailMessage(null);
+      return;
+    }
+
+    void loadArticleDetail(selectedArticleId);
+  }, [selectedArticleId]);
+
+  useEffect(() => {
+    setReviewAdvisoryMessage(null);
+    setReviewStatusDraft(selectedAdvisory?.review_status ?? 'pending');
+    setReviewNotesDraft(selectedAdvisory?.review_notes ?? '');
+    setHumanConfirmationsDraft(
+      normalizeHumanConfirmations(selectedAdvisory?.human_confirmations),
+    );
+  }, [selectedAdvisory?.id]);
+
+  function openCreateArticle() {
+    setPanelMode('create-article');
+    setArticleForm(emptyArticleForm());
+    setArticleFormMessage(null);
+    setArticleActionFeedback(null);
+  }
+
+  function openCreateCategory() {
+    setPanelMode('create-category');
+    setCategoryForm(emptyCategoryForm());
+    setCategoryFormMessage(null);
+    setArticleActionFeedback(null);
+  }
+
+  function openEditArticle() {
+    if (!articleDetail) {
+      return;
+    }
+
+    setPanelMode('edit-article');
+    setArticleForm(buildArticleForm(articleDetail));
+    setArticleFormMessage(null);
+    setArticleActionFeedback(null);
+  }
+
+  async function refreshSelectedSpace(preferredArticleId?: string | null) {
+    if (!selectedSpaceId) {
+      return;
+    }
+
+    await loadKnowledgeContent(selectedSpaceId, preferredArticleId ?? selectedArticleId);
+  }
+
+  async function refreshArticleDetail(articleId?: string | null) {
+    const targetArticleId = articleId ?? selectedArticleId;
+    if (!targetArticleId) {
+      return;
+    }
+
+    await loadArticleDetail(targetArticleId);
+  }
+
+  function updateHumanConfirmation(
+    key: keyof KnowledgeReviewHumanConfirmations,
+    checked: boolean,
+  ) {
+    setHumanConfirmationsDraft((current) => ({
+      ...current,
+      [key]: checked,
+    }));
+  }
+
+  async function handleSaveReviewAdvisoryStatus() {
+    if (!selectedArticleId) {
+      return;
+    }
+
+    setReviewAdvisorySubmitting(true);
+    setReviewAdvisoryMessage(null);
+
+    try {
+      await updateKnowledgeArticleReviewStatus({
+        p_article_id: selectedArticleId,
+        p_review_status: reviewStatusDraft,
+        p_human_confirmations: humanConfirmationsDraft,
+        p_review_notes: reviewNotesDraft,
+      });
+
+      await refreshSelectedSpace(selectedArticleId);
+      setReviewAdvisoryMessage('Status editorial persistido com sucesso.');
+    } catch (error) {
+      const classified = classifyAdminError(
+        error,
+        'Falha ao persistir a revisao editorial.',
+      );
+
+      if (classified.kind === 'session-expired') {
+        markSessionExpired();
+        return;
+      }
+
+      if (classified.kind === 'permission-denied') {
+        setBackendDenied(true);
+        return;
+      }
+
+      setReviewAdvisoryMessage(classified.message);
+    } finally {
+      setReviewAdvisorySubmitting(false);
+    }
+  }
+
+  async function handleMarkReviewAdvisoryReviewed() {
+    if (!selectedArticleId) {
+      return;
+    }
+
+    setReviewAdvisorySubmitting(true);
+    setReviewAdvisoryMessage(null);
+
+    try {
+      await markKnowledgeArticleReviewed({
+        p_article_id: selectedArticleId,
+        p_human_confirmations: humanConfirmationsDraft,
+        p_review_notes: reviewNotesDraft,
+      });
+
+      await refreshSelectedSpace(selectedArticleId);
+      setReviewAdvisoryMessage('Revisao editorial marcada como concluida.');
+    } catch (error) {
+      const classified = classifyAdminError(
+        error,
+        'Falha ao concluir a revisao editorial.',
+      );
+
+      if (classified.kind === 'session-expired') {
+        markSessionExpired();
+        return;
+      }
+
+      if (classified.kind === 'permission-denied') {
+        setBackendDenied(true);
+        return;
+      }
+
+      setReviewAdvisoryMessage(classified.message);
+    } finally {
+      setReviewAdvisorySubmitting(false);
+    }
+  }
+
+  async function handleCreateCategory(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!selectedSpace) {
+      return;
+    }
+
+    setCategoryFormSubmitting(true);
+    setCategoryFormMessage(null);
+
+    try {
+      await createKnowledgeCategoryV2({
+        p_name: categoryForm.name.trim(),
+        p_slug: slugify(categoryForm.slug || categoryForm.name),
+        p_description: normalizeOptionalText(categoryForm.description),
+        p_visibility: categoryForm.visibility,
+        p_parent_category_id:
+          normalizeOptionalText(categoryForm.parentCategoryId) ?? null,
+        p_knowledge_space_id: selectedSpace.id,
+        p_tenant_id: selectedSpace.owner_tenant_id ?? null,
+      });
+
+      await refreshSelectedSpace();
+      setCategoryForm(emptyCategoryForm());
+      setCategoryFormMessage('Categoria sincronizada com sucesso.');
+    } catch (error) {
+      const classified = classifyAdminError(
+        error,
+        'Falha ao criar categoria da Knowledge Base.',
+      );
+
+      if (classified.kind === 'session-expired') {
+        markSessionExpired();
+        return;
+      }
+
+      if (classified.kind === 'permission-denied') {
+        setBackendDenied(true);
+        return;
+      }
+
+      setCategoryFormMessage(classified.message);
+    } finally {
+      setCategoryFormSubmitting(false);
+    }
+  }
+
+  async function handleSaveArticle(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!selectedSpace) {
+      return;
+    }
+
+    setArticleFormSubmitting(true);
+    setArticleFormMessage(null);
+
+    try {
+      let recordId: string;
+
+      if (panelMode === 'edit-article' && articleDetail) {
+        const updated = await updateKnowledgeArticleDraftV2({
+          p_article_id: articleDetail.id,
+          p_knowledge_space_id: selectedSpace.id,
+          p_title: articleForm.title.trim(),
+          p_slug: slugify(articleForm.slug || articleForm.title),
+          p_summary: normalizeOptionalText(articleForm.summary),
+          p_body_md: articleForm.bodyMd.trim(),
+          p_category_id: normalizeOptionalText(articleForm.categoryId),
+          p_visibility: articleForm.visibility,
+          p_source_path: normalizeOptionalText(articleForm.sourcePath),
+          p_source_hash: normalizeOptionalText(articleForm.sourceHash),
+        });
+
+        recordId = updated.id;
+      } else {
+        const created = await createKnowledgeArticleDraftV2({
+          p_title: articleForm.title.trim(),
+          p_slug: slugify(articleForm.slug || articleForm.title),
+          p_summary: normalizeOptionalText(articleForm.summary),
+          p_body_md: articleForm.bodyMd.trim(),
+          p_category_id: normalizeOptionalText(articleForm.categoryId),
+          p_visibility: articleForm.visibility,
+          p_knowledge_space_id: selectedSpace.id,
+          p_tenant_id: selectedSpace.owner_tenant_id ?? null,
+          p_source_path: normalizeOptionalText(articleForm.sourcePath),
+          p_source_hash: normalizeOptionalText(articleForm.sourceHash),
+        });
+
+        recordId = created.id;
+      }
+
+      await refreshSelectedSpace(recordId);
+      await refreshArticleDetail(recordId);
+      setSelectedArticleId(recordId);
+      setPanelMode('detail');
+      setArticleForm(emptyArticleForm());
+      setArticleActionFeedback({
+        articleId: recordId,
+        message: 'Draft sincronizado com sucesso.',
+      });
+    } catch (error) {
+      const classified = classifyAdminError(
+        error,
+        'Falha ao sincronizar o draft da Knowledge Base.',
+      );
+
+      if (classified.kind === 'session-expired') {
+        markSessionExpired();
+        return;
+      }
+
+      if (classified.kind === 'permission-denied') {
+        setBackendDenied(true);
+        return;
+      }
+
+      setArticleFormMessage(classified.message);
+    } finally {
+      setArticleFormSubmitting(false);
+    }
+  }
+
+  async function handleSubmitForReview() {
+    if (!selectedSpaceId || !selectedArticleId) {
+      return;
+    }
+
+    setArticleActionSubmitting(true);
+    setArticleActionFeedback(null);
+
+    try {
+      await submitKnowledgeArticleForReviewV2({
+        p_article_id: selectedArticleId,
+        p_knowledge_space_id: selectedSpaceId,
+      });
+
+      await refreshSelectedSpace(selectedArticleId);
+      await refreshArticleDetail(selectedArticleId);
+      setArticleActionFeedback({
+        articleId: selectedArticleId,
+        message: 'Artigo enviado para revisao com sucesso.',
+      });
+    } catch (error) {
+      const classified = classifyAdminError(
+        error,
+        'Falha ao enviar o artigo para revisao.',
+      );
+
+      if (classified.kind === 'session-expired') {
+        markSessionExpired();
+        return;
+      }
+
+      if (classified.kind === 'permission-denied') {
+        setBackendDenied(true);
+        return;
+      }
+
+      setArticleActionFeedback({
+        articleId: selectedArticleId,
+        message: classified.message,
+      });
+    } finally {
+      setArticleActionSubmitting(false);
+    }
+  }
+
+  async function handlePublish() {
+    if (!selectedSpaceId || !selectedArticleId) {
+      return;
+    }
+
+    setArticleActionSubmitting(true);
+    setArticleActionFeedback(null);
+
+    try {
+      await publishKnowledgeArticleV2({
+        p_article_id: selectedArticleId,
+        p_knowledge_space_id: selectedSpaceId,
+      });
+
+      await refreshSelectedSpace(selectedArticleId);
+      await refreshArticleDetail(selectedArticleId);
+      setArticleActionFeedback({
+        articleId: selectedArticleId,
+        message: 'Artigo publicado com sucesso.',
+      });
+    } catch (error) {
+      const classified = classifyAdminError(
+        error,
+        'Falha ao publicar o artigo da Knowledge Base.',
+      );
+
+      if (classified.kind === 'session-expired') {
+        markSessionExpired();
+        return;
+      }
+
+      if (classified.kind === 'permission-denied') {
+        setBackendDenied(true);
+        return;
+      }
+
+      setArticleActionFeedback({
+        articleId: selectedArticleId,
+        message: classified.message,
+      });
+    } finally {
+      setArticleActionSubmitting(false);
+    }
+  }
+
+  async function handleArchive() {
+    if (!selectedSpaceId || !selectedArticleId) {
+      return;
+    }
+
+    setArticleActionSubmitting(true);
+    setArticleActionFeedback(null);
+
+    try {
+      await archiveKnowledgeArticleV2({
+        p_article_id: selectedArticleId,
+        p_knowledge_space_id: selectedSpaceId,
+      });
+
+      await refreshSelectedSpace(selectedArticleId);
+      await refreshArticleDetail(selectedArticleId);
+      setArticleActionFeedback({
+        articleId: selectedArticleId,
+        message: 'Artigo arquivado com sucesso.',
+      });
+    } catch (error) {
+      const classified = classifyAdminError(
+        error,
+        'Falha ao arquivar o artigo da Knowledge Base.',
+      );
+
+      if (classified.kind === 'session-expired') {
+        markSessionExpired();
+        return;
+      }
+
+      if (classified.kind === 'permission-denied') {
+        setBackendDenied(true);
+        return;
+      }
+
+      setArticleActionFeedback({
+        articleId: selectedArticleId,
+        message: classified.message,
+      });
+    } finally {
+      setArticleActionSubmitting(false);
+    }
+  }
+
+  if (backendDenied) {
+    return <Navigate replace state={{ reason: 'backend-permission' }} to="/access-denied" />;
+  }
+
+  if (pagePhase === 'loading') {
+    return <LoadingState title="Carregando Knowledge Base" />;
+  }
+
+  if (pagePhase === 'contract-unavailable') {
+    return <ContractUnavailableState contractName="lista de centrais editoriais" />;
+  }
+
+  if (pagePhase === 'error') {
+    return (
+        <ErrorState
+          description={
+            pageMessage ??
+            'Nao foi possivel carregar as centrais editoriais neste ambiente.'
+          }
+        action={<AppButton onClick={() => void loadKnowledgeSpaces()}>Tentar novamente</AppButton>}
+      />
+    );
+  }
+
+  if (spaces.length === 0) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Knowledge"
+          description="Curadoria editorial das centrais internas, com foco em revisar conteudo, classificar risco e publicar com seguranca."
+        />
+        <EmptyState
+          title="Nenhuma central editorial disponivel"
+          description="Ainda nao existe uma central pronta para curadoria neste ambiente."
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Knowledge"
+        description="Curadoria editorial com foco em revisar o artigo certo, decidir o proximo passo e publicar com seguranca."
+        action={
+          <div className="flex flex-wrap gap-2">
+            <GhostButton
+              onClick={() => {
+                void loadKnowledgeSpaces(selectedSpaceId);
+                if (selectedSpaceId) {
+                  void refreshSelectedSpace();
+                }
+              }}
+            >
+              Recarregar
+            </GhostButton>
+            <GhostButton disabled={!selectedSpace} onClick={openCreateCategory}>
+              Nova categoria
+            </GhostButton>
+            <AppButton disabled={!selectedSpace} onClick={openCreateArticle}>
+              Criar draft
+            </AppButton>
+          </div>
+        }
+      />
+
+      <WorkspaceSplit
+        layoutClassName="xl:grid-cols-[292px_minmax(0,1fr)]"
+        sidebar={
+          <ContextSubsidebar
+            description="Filtros e sinais editoriais ficam fora da area principal para deixar a revisao do artigo com mais espaco."
+            title="Ferramentas editoriais"
+          >
+            <ContextSubsidebarSection
+              description="Selecione a central e ajuste o recorte editorial."
+              title="Escopo e filtros"
+            >
+              <Field label="Central">
+                <SelectInput
+                  onChange={(event) => setSelectedSpaceId(event.target.value || null)}
+                  value={selectedSpaceId ?? ''}
+                >
+                  {spaces.map((space) => (
+                    <option key={space.id} value={space.id}>
+                      {space.display_name} ({space.slug})
+                    </option>
+                  ))}
+                </SelectInput>
+              </Field>
+
+              <Field label="Status">
+                <SelectInput
+                  onChange={(event) =>
+                    setStatusFilter(event.target.value as ArticleStatusFilter)
+                  }
+                  value={statusFilter}
+                >
+                  <option value="all">Todos</option>
+                  {KNOWLEDGE_ARTICLE_STATUSES.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </SelectInput>
+              </Field>
+
+              <Field label="Visibilidade">
+                <SelectInput
+                  onChange={(event) =>
+                    setVisibilityFilter(event.target.value as ArticleVisibilityFilter)
+                  }
+                  value={visibilityFilter}
+                >
+                  <option value="all">Todas</option>
+                  {KNOWLEDGE_VISIBILITIES.map((visibility) => (
+                    <option key={visibility} value={visibility}>
+                      {visibility}
+                    </option>
+                  ))}
+                </SelectInput>
+              </Field>
+
+              <Field label="Origem">
+                <SelectInput
+                  onChange={(event) =>
+                    setOriginFilter(event.target.value as ArticleOriginFilter)
+                  }
+                  value={originFilter}
+                >
+                  <option value="all">Todas</option>
+                  <option value="legacy">Somente legado</option>
+                  <option value="manual">Somente manual</option>
+                </SelectInput>
+              </Field>
+
+              <Field label="Duplicidade">
+                <SelectInput
+                  onChange={(event) =>
+                    setDuplicateFilter(event.target.value as ArticleDuplicateFilter)
+                  }
+                  value={duplicateFilter}
+                >
+                  <option value="all">Todos</option>
+                  <option value="duplicates">Somente duplicados</option>
+                  <option value="unique">Somente unicos</option>
+                </SelectInput>
+              </Field>
+
+              <Field label="Classificacao sugerida">
+                <SelectInput
+                  onChange={(event) =>
+                    setClassificationFilter(
+                      event.target.value as ArticleClassificationFilter,
+                    )
+                  }
+                  value={classificationFilter}
+                >
+                  <option value="all">Todas</option>
+                  {KNOWLEDGE_ADVISORY_CLASSIFICATIONS.map((classification) => (
+                    <option key={classification} value={classification}>
+                      {classification}
+                    </option>
+                  ))}
+                  <option value="without-advisory">Sem advisory</option>
+                </SelectInput>
+              </Field>
+
+              <GhostButton
+                className="min-h-11 w-full px-4"
+                disabled={!selectedSpaceId}
+                onClick={() => {
+                  if (selectedSpaceId) {
+                    void refreshSelectedSpace();
+                  }
+                }}
+              >
+                Recarregar artigos
+              </GhostButton>
+            </ContextSubsidebarSection>
+
+            <ContextSubsidebarSection
+              description="Sinais compactos para priorizar a curadoria sem virar dashboard."
+              title="Janela atual"
+            >
+              <div className="grid gap-2">
+                {[
+                  `${draftArticleCount} drafts`,
+                  `${reviewArticleCount} em review`,
+                  `${legacyArticleCount} do legado`,
+                  `${restrictedArticleCount} restritos`,
+                  `${duplicateHashGroupCount} grupos duplicados`,
+                ].map((item) => (
+                  <div
+                    className="rounded-[16px] border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm text-[color:var(--color-ink)]"
+                    key={item}
+                  >
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </ContextSubsidebarSection>
+
+            {selectedSpace ? (
+              <ContextSubsidebarSection
+                description="Resumo curto da central ativa. Checklist e advisory detalhados ficam no artigo."
+                title="Central ativa"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusPill tone={toneForSpaceStatus(selectedSpace.status)}>
+                    {selectedSpace.status}
+                  </StatusPill>
+                  <StatusPill tone="accent">{selectedSpace.organization_display_name}</StatusPill>
+                  <StatusPill>{selectedSpace.default_locale}</StatusPill>
+                </div>
+                <p className="text-sm font-semibold text-[color:var(--color-ink)]">
+                  {selectedSpace.display_name}
+                </p>
+                <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                  {selectedSpace.brand_name ? `${selectedSpace.brand_name} · ` : ''}
+                  locale {selectedSpace.default_locale}
+                </p>
+                <details className="rounded-[16px] border border-[color:var(--color-border)] bg-white px-4 py-3">
+                  <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                    Contexto adicional
+                  </summary>
+                  <div className="mt-3 space-y-3 text-sm leading-6 text-[color:var(--color-muted)]">
+                    <p>
+                      Esta area continua interna. Publicar um artigo aqui nao libera a leitura publica sem o fluxo editorial completo.
+                    </p>
+                    <p>
+                      {selectedSpace.owner_tenant_id
+                        ? `Central vinculada a ${selectedSpace.owner_tenant_display_name ?? selectedSpace.owner_tenant_slug} para compatibilidade do legado.`
+                        : 'Esta central ainda nao tem um cliente dono vinculado para a compatibilidade do legado.'}
+                    </p>
+                  </div>
+                </details>
+              </ContextSubsidebarSection>
+            ) : null}
+          </ContextSubsidebar>
+        }
+        main={
+          <div className="grid gap-5 xl:grid-cols-[minmax(320px,0.38fr)_minmax(0,0.62fr)]">
+        <Panel
+          title="Artigos"
+          description="Lista dominante de curadoria com sinais suficientes para decidir qual artigo entra em revisao."
+        >
+          {contentPhase === 'idle' ? (
+            <EmptyState
+              title="Selecione uma central"
+              description="Escolha uma central no topo para abrir a lista editorial."
+            />
+          ) : contentPhase === 'loading' ? (
+            <LoadingState
+              title="Carregando artigos"
+              description="Estamos preparando artigos, categorias e sinais editoriais desta central."
+            />
+          ) : contentPhase === 'contract-unavailable' ? (
+            <ContractUnavailableState contractName="lista editorial de artigos e categorias" />
+          ) : contentPhase === 'error' ? (
+            <ErrorState
+              description={
+                contentMessage ??
+                'Nao foi possivel carregar os artigos desta central.'
+              }
+              action={
+                <AppButton onClick={() => selectedSpaceId && void refreshSelectedSpace()}>
+                  Tentar novamente
+                </AppButton>
+              }
+            />
+          ) : filteredArticles.length === 0 ? (
+            <EmptyState
+              title="Nenhum artigo encontrado"
+              description="Nao existem artigos para esta central com os filtros escolhidos."
+              action={
+                <AppButton onClick={openCreateArticle}>
+                  Criar o primeiro draft
+                </AppButton>
+              }
+            />
+          ) : (
+            <div className="space-y-3">
+              {filteredArticles.map((article) => {
+                const isSelected = article.id === selectedArticleId;
+                const articleAdvisory = advisoryMap.get(article.id);
+                const duplicateCount =
+                  articleAdvisory?.duplicate_group_article_count ??
+                  (article.source_hash ? sourceHashCounts.get(article.source_hash) ?? 0 : 0);
+                return (
+                  <button
+                    className={cx(
+                      'flex w-full flex-col gap-3 rounded-[22px] border px-4 py-4 text-left transition',
+                      isSelected
+                        ? 'border-[rgba(48,127,226,0.42)] bg-[rgba(48,127,226,0.08)] shadow-[0_10px_24px_rgba(19,33,79,0.06)]'
+                        : 'border-[color:var(--color-border)] bg-white hover:border-[rgba(48,127,226,0.24)]',
+                    )}
+                    key={article.id}
+                    onClick={() => {
+                      setSelectedArticleId(article.id);
+                      setPanelMode('detail');
+                      setArticleFormMessage(null);
+                      setCategoryFormMessage(null);
+                      setArticleActionFeedback(null);
+                    }}
+                    type="button"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusPill tone={toneForArticleStatus(article.status)}>{article.status}</StatusPill>
+                      <StatusPill tone={toneForVisibility(article.visibility)}>{article.visibility}</StatusPill>
+                      {articleAdvisory ? (
+                        <StatusPill tone={toneForAdvisoryClassification(articleAdvisory.suggested_classification)}>
+                          {articleAdvisory.suggested_classification}
+                        </StatusPill>
+                      ) : null}
+                    </div>
+
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+                        {article.title}
+                      </h3>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[color:var(--color-muted)]">
+                        <span>{article.category_name ?? 'Sem categoria'}</span>
+                        <span>{article.source_path ? 'Legado' : 'Manual'}</span>
+                        <span>{formatDateTime(article.updated_at)}</span>
+                        {duplicateCount > 1 ? <span>Duplicado x{duplicateCount}</span> : null}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </Panel>
+
+        <Panel
+          title={
+            panelMode === 'create-category'
+              ? 'Nova categoria'
+              : panelMode === 'create-article'
+                ? 'Criar draft'
+                : panelMode === 'edit-article'
+                  ? 'Editar draft'
+                  : 'Detalhe do artigo'
+          }
+          description={
+            panelMode === 'create-category'
+              ? 'Nova categoria para organizar a navegacao editorial desta central.'
+              : panelMode === 'create-article'
+                ? 'Novo rascunho editorial para revisao segura antes da publicacao.'
+                : panelMode === 'edit-article'
+                  ? 'Edicao do rascunho sem tirar o foco da revisao editorial.'
+                  : 'Revisao detalhada do artigo, com advisory e checklist sem poluir a leitura principal.'
+          }
+        >
+          {panelMode === 'create-category' ? (
+            <form className="space-y-4" onSubmit={handleCreateCategory}>
+              <Field label="Nome da categoria">
+                <TextInput
+                  onChange={(event) =>
+                    setCategoryForm((current) => ({
+                      ...current,
+                      name: event.target.value,
+                      slug:
+                        current.slug === '' ||
+                        current.slug === slugify(current.name)
+                          ? slugify(event.target.value)
+                          : current.slug,
+                    }))
+                  }
+                  placeholder="Politicas de devolucao"
+                  required
+                  value={categoryForm.name}
+                />
+              </Field>
+
+              <Field label="Slug">
+                <TextInput
+                  onChange={(event) =>
+                    setCategoryForm((current) => ({
+                      ...current,
+                      slug: slugify(event.target.value),
+                    }))
+                  }
+                  placeholder="politicas-de-devolucao"
+                  required
+                  value={categoryForm.slug}
+                />
+              </Field>
+
+              <Field label="Categoria pai">
+                <SelectInput
+                  onChange={(event) =>
+                    setCategoryForm((current) => ({
+                      ...current,
+                      parentCategoryId: event.target.value,
+                    }))
+                  }
+                  value={categoryForm.parentCategoryId}
+                >
+                  <option value="">Sem categoria pai</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {categoryDisplayName(category)}
+                    </option>
+                  ))}
+                </SelectInput>
+              </Field>
+
+              <Field label="Visibilidade">
+                <SelectInput
+                  onChange={(event) =>
+                    setCategoryForm((current) => ({
+                      ...current,
+                      visibility: event.target.value as KnowledgeVisibility,
+                    }))
+                  }
+                  value={categoryForm.visibility}
+                >
+                  {KNOWLEDGE_VISIBILITIES.map((visibility) => (
+                    <option key={visibility} value={visibility}>
+                      {visibility}
+                    </option>
+                  ))}
+                </SelectInput>
+              </Field>
+
+              <Field label="Descricao">
+                <TextareaInput
+                  onChange={(event) =>
+                    setCategoryForm((current) => ({
+                      ...current,
+                      description: event.target.value,
+                    }))
+                  }
+                  placeholder="Orienta a curadoria editorial deste grupo."
+                  value={categoryForm.description}
+                />
+              </Field>
+
+              {categoryFormMessage ? (
+                <InlineNotice
+                  tone={
+                    categoryFormMessage.includes('sucesso') ? 'warning' : 'critical'
+                  }
+                >
+                  {categoryFormMessage}
+                </InlineNotice>
+              ) : null}
+
+              <div className="flex flex-wrap gap-3">
+                <AppButton disabled={categoryFormSubmitting} type="submit">
+                  {categoryFormSubmitting ? 'Sincronizando...' : 'Criar categoria'}
+                </AppButton>
+                <GhostButton
+                  disabled={categoryFormSubmitting}
+                  onClick={() => {
+                    setPanelMode('detail');
+                    setCategoryForm(emptyCategoryForm());
+                    setCategoryFormMessage(null);
+                  }}
+                >
+                  Fechar
+                </GhostButton>
+              </div>
+            </form>
+          ) : panelMode === 'create-article' || panelMode === 'edit-article' ? (
+            <form className="space-y-4" onSubmit={handleSaveArticle}>
+              <Field label="Titulo">
+                <TextInput
+                  onChange={(event) =>
+                    setArticleForm((current) => ({
+                      ...current,
+                      title: event.target.value,
+                      slug:
+                        current.slug === '' ||
+                        current.slug === slugify(current.title)
+                          ? slugify(event.target.value)
+                          : current.slug,
+                    }))
+                  }
+                  placeholder="Como tratar devolucao com reembolso parcial"
+                  required
+                  value={articleForm.title}
+                />
+              </Field>
+
+              <Field label="Slug">
+                <TextInput
+                  onChange={(event) =>
+                    setArticleForm((current) => ({
+                      ...current,
+                      slug: slugify(event.target.value),
+                    }))
+                  }
+                  placeholder="como-tratar-devolucao-com-reembolso-parcial"
+                  required
+                  value={articleForm.slug}
+                />
+              </Field>
+
+              <Field label="Resumo">
+                <TextareaInput
+                  onChange={(event) =>
+                    setArticleForm((current) => ({
+                      ...current,
+                      summary: event.target.value,
+                    }))
+                  }
+                  placeholder="Resumo curto para orientar a curadoria e a futura experiencia publica."
+                  value={articleForm.summary}
+                />
+              </Field>
+
+              <Field label="Categoria">
+                <SelectInput
+                  onChange={(event) =>
+                    setArticleForm((current) => ({
+                      ...current,
+                      categoryId: event.target.value,
+                    }))
+                  }
+                  value={articleForm.categoryId}
+                >
+                  <option value="">Sem categoria</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {categoryDisplayName(category)}
+                    </option>
+                  ))}
+                </SelectInput>
+              </Field>
+
+              <Field label="Visibilidade">
+                <SelectInput
+                  onChange={(event) =>
+                    setArticleForm((current) => ({
+                      ...current,
+                      visibility: event.target.value as KnowledgeVisibility,
+                    }))
+                  }
+                  value={articleForm.visibility}
+                >
+                  {KNOWLEDGE_VISIBILITIES.map((visibility) => (
+                    <option key={visibility} value={visibility}>
+                      {visibility}
+                    </option>
+                  ))}
+                </SelectInput>
+              </Field>
+
+              <Field label="Conteudo principal">
+                <TextareaInput
+                  onChange={(event) =>
+                    setArticleForm((current) => ({
+                      ...current,
+                      bodyMd: event.target.value,
+                    }))
+                  }
+                  placeholder="Escreva ou revise o corpo principal sem depender de HTML legado."
+                  required
+                  value={articleForm.bodyMd}
+                />
+              </Field>
+
+              <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                  Detalhes tecnicos da origem
+                </summary>
+                <div className="mt-4 space-y-4">
+                  <Field
+                    label="Caminho de origem"
+                    description="Opcional para curadoria manual. A importacao legada continua preenchendo isso automaticamente."
+                  >
+                    <TextInput
+                      onChange={(event) =>
+                        setArticleForm((current) => ({
+                          ...current,
+                          sourcePath: event.target.value,
+                        }))
+                      }
+                      placeholder="raw_knowledge/octadesk_export/latest/articles/..."
+                      value={articleForm.sourcePath}
+                    />
+                  </Field>
+
+                  <Field label="Hash de origem">
+                    <TextInput
+                      onChange={(event) =>
+                        setArticleForm((current) => ({
+                          ...current,
+                          sourceHash: event.target.value,
+                        }))
+                      }
+                      placeholder="sha256..."
+                      value={articleForm.sourceHash}
+                    />
+                  </Field>
+                </div>
+              </details>
+
+              {articleForm.sourcePath || articleForm.sourceHash ? (
+                <InlineNotice tone="warning">
+                  Conteudo com trilha legada nao sera publicado automaticamente.
+                  A curadoria humana continua obrigatoria.
+                </InlineNotice>
+              ) : null}
+
+              {articleFormMessage ? (
+                <InlineNotice tone="critical">{articleFormMessage}</InlineNotice>
+              ) : null}
+
+              <div className="flex flex-wrap gap-3">
+                <AppButton disabled={articleFormSubmitting} type="submit">
+                  {articleFormSubmitting
+                    ? 'Sincronizando...'
+                    : panelMode === 'edit-article'
+                      ? 'Salvar draft'
+                      : 'Criar draft'}
+                </AppButton>
+                <GhostButton
+                  disabled={articleFormSubmitting}
+                  onClick={() => {
+                    setPanelMode('detail');
+                    setArticleForm(emptyArticleForm());
+                    setArticleFormMessage(null);
+                  }}
+                >
+                  Cancelar
+                </GhostButton>
+              </div>
+            </form>
+          ) : detailPhase === 'idle' ? (
+            <EmptyState
+              title="Selecione um artigo"
+              description="O detalhe editorial so abre quando existe um artigo selecionado na lista."
+              action={
+                <AppButton onClick={openCreateArticle}>
+                  Criar novo draft
+                </AppButton>
+              }
+            />
+          ) : detailPhase === 'loading' ? (
+            <LoadingState
+              title="Carregando detalhe do artigo"
+              description="Estamos preparando a revisao detalhada deste artigo."
+            />
+          ) : detailPhase === 'contract-unavailable' ? (
+            <ContractUnavailableState contractName="detalhe editorial do artigo" />
+          ) : detailPhase === 'error' || !articleDetail || !selectedArticleSummary ? (
+            <ErrorState
+              description={
+                detailMessage ??
+                'Nao foi possivel abrir o detalhe deste artigo.'
+              }
+              action={
+                <AppButton
+                  onClick={() =>
+                    selectedArticleId && void refreshArticleDetail(selectedArticleId)
+                  }
+                >
+                  Tentar novamente
+                </AppButton>
+              }
+            />
+          ) : (
+            <div className="space-y-5">
+              <div className="space-y-3 rounded-[22px] border border-[color:var(--color-border)] bg-white px-5 py-5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusPill tone={toneForArticleStatus(articleDetail.status)}>
+                    {articleDetail.status}
+                  </StatusPill>
+                  <StatusPill tone={toneForVisibility(articleDetail.visibility)}>
+                    {articleDetail.visibility}
+                  </StatusPill>
+                  {articleDetail.category_name ? <StatusPill>{articleDetail.category_name}</StatusPill> : null}
+                </div>
+                <div className="space-y-2">
+                  <h2 className="text-[1.7rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
+                    {articleDetail.title}
+                  </h2>
+                  <p className="text-sm text-[color:var(--color-muted)]">{articleDetail.slug}</p>
+                </div>
+              </div>
+
+              {articleDetail.source_path || articleDetail.source_hash ? (
+                <InlineNotice tone="warning">
+                  Conteudo importado do legado detectado. O artigo permanece sob
+                  curadoria humana antes de qualquer publicacao editorial.
+                </InlineNotice>
+              ) : null}
+
+              {articleDetail.visibility === 'restricted' ? (
+                <InlineNotice tone="critical">
+                  Artigo restrito. Revisar manualmente segredos, credenciais,
+                  integracoes e detalhes operacionais antes de qualquer
+                  promocao editorial.
+                </InlineNotice>
+              ) : articleDetail.visibility === 'internal' ? (
+                <InlineNotice tone="warning">
+                  Artigo interno. Confirmar se o conteudo deve permanecer restrito a
+                  operacao/CS/suporte ou se precisa de reescrita antes de evoluir.
+                </InlineNotice>
+              ) : null}
+
+              {selectedArticleDuplicateCount > 1 ? (
+                <InlineNotice tone="warning">
+                  Possivel duplicidade de origem detectada nesta central. Existe mais{' '}
+                  {selectedArticleDuplicateCount - 1} artigo com a mesma origem
+                  rastreada; consolidar antes de promover.
+                </InlineNotice>
+              ) : null}
+
+              {articleActionMessage ? (
+                <InlineNotice
+                  tone={
+                    articleActionMessage.includes('sucesso')
+                      ? 'warning'
+                      : 'critical'
+                  }
+                >
+                  {articleActionMessage}
+                </InlineNotice>
+              ) : null}
+
+              {reviewAdvisoryMessage ? (
+                <InlineNotice
+                  tone={
+                    reviewAdvisoryMessage.includes('sucesso') ||
+                    reviewAdvisoryMessage.includes('concluida')
+                      ? 'warning'
+                      : 'critical'
+                  }
+                >
+                  {reviewAdvisoryMessage}
+                </InlineNotice>
+              ) : null}
+
+              <div className="flex flex-wrap gap-3">
+                {(articleDetail.status === 'draft' || articleDetail.status === 'review') ? (
+                  <GhostButton
+                    disabled={articleActionSubmitting}
+                    onClick={openEditArticle}
+                  >
+                    Editar draft
+                  </GhostButton>
+                ) : null}
+
+                {articleDetail.status === 'draft' ? (
+                  <AppButton
+                    disabled={articleActionSubmitting}
+                    onClick={() => void handleSubmitForReview()}
+                  >
+                    {articleActionSubmitting ? 'Enviando...' : 'Enviar para revisao'}
+                  </AppButton>
+                ) : null}
+
+                {articleDetail.status === 'review' ? (
+                  <AppButton
+                    disabled={articleActionSubmitting}
+                    onClick={() => void handlePublish()}
+                  >
+                    {articleActionSubmitting ? 'Publicando...' : 'Publicar'}
+                  </AppButton>
+                ) : null}
+
+                {articleDetail.status !== 'archived' ? (
+                  <GhostButton
+                    disabled={articleActionSubmitting}
+                    onClick={() => void handleArchive()}
+                  >
+                    {articleActionSubmitting ? 'Arquivando...' : 'Arquivar'}
+                  </GhostButton>
+                ) : null}
+              </div>
+
+              <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4 text-sm text-[color:var(--color-muted)]">
+                <div className="flex flex-wrap gap-x-4 gap-y-1">
+                  <span>Central: {articleDetail.knowledge_space_display_name}</span>
+                  <span>Revisoes: {articleDetail.revisions.length}</span>
+                  <span>Atualizado: {formatDateTime(articleDetail.updated_at)}</span>
+                  {selectedAdvisory ? <span>Status da revisao: {selectedAdvisory.review_status}</span> : null}
+                </div>
+              </div>
+
+              {editorialChecklist ? (
+                <div className="space-y-3">
+                  <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4" open>
+                    <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                      Advisory resumido
+                    </summary>
+                    <div className="mt-3 space-y-3">
+                      {selectedAdvisory ? (
+                        <>
+                          <div className="flex flex-wrap gap-2">
+                            <StatusPill tone={toneForAdvisoryClassification(selectedAdvisory.suggested_classification)}>
+                              {selectedAdvisory.suggested_classification}
+                            </StatusPill>
+                            <StatusPill tone={toneForVisibility(selectedAdvisory.suggested_visibility)}>
+                              {selectedAdvisory.suggested_visibility}
+                            </StatusPill>
+                            <StatusPill tone={toneForReviewStatus(selectedAdvisory.review_status)}>
+                              {selectedAdvisory.review_status}
+                            </StatusPill>
+                            {selectedAdvisory.duplicate_group_key ? (
+                              <StatusPill tone="warning">
+                                duplicado x{selectedAdvisory.duplicate_group_article_count}
+                              </StatusPill>
+                            ) : null}
+                          </div>
+                          <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                            {selectedAdvisory.classification_reason}
+                          </p>
+                          {advisoryRiskFlags.length > 0 ? (
+                            <div className="flex flex-wrap gap-2">
+                              {advisoryRiskFlags.map((flag) => (
+                                <StatusPill key={flag} tone="critical">
+                                  {flag}
+                                </StatusPill>
+                              ))}
+                            </div>
+                          ) : null}
+                        </>
+                      ) : (
+                        <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                          Este artigo ainda nao recebeu um advisory salvo.
+                        </p>
+                      )}
+                    </div>
+                  </details>
+
+                  <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+                    <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                      Checklist editorial
+                    </summary>
+                    <div className="mt-4 space-y-4">
+                      <div className="space-y-2">
+                        {editorialChecklist.automated.map((item) => (
+                          <div key={item.label} className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <StatusPill tone={item.tone}>{item.label}</StatusPill>
+                            </div>
+                            <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
+                              {item.description}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="grid gap-3">
+                        {persistedHumanChecklist.map((item, index) => {
+                          const field = HUMAN_CONFIRMATION_FIELDS[index];
+                          const checked = humanConfirmationsDraft[field.key] === true;
+
+                          return (
+                            <label
+                              key={field.key}
+                              className="flex gap-3 rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3"
+                            >
+                              <input
+                                checked={checked}
+                                className="mt-1 h-4 w-4 rounded border-[color:var(--color-border)]"
+                                onChange={(event) =>
+                                  updateHumanConfirmation(field.key, event.target.checked)
+                                }
+                                type="checkbox"
+                              />
+                              <div className="space-y-1">
+                                <p className="font-medium text-[color:var(--color-ink)]">{item.label}</p>
+                                <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                                  {item.description}
+                                </p>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+
+                      <div className="grid gap-4 xl:grid-cols-[minmax(240px,0.6fr)_minmax(0,1.4fr)]">
+                        <Field label="Status da revisao editorial">
+                          <SelectInput
+                            onChange={(event) =>
+                              setReviewStatusDraft(event.target.value as KnowledgeArticleReviewStatus)
+                            }
+                            value={reviewStatusDraft}
+                          >
+                            {KNOWLEDGE_ARTICLE_REVIEW_STATUSES.map((status) => (
+                              <option key={status} value={status}>
+                                {status}
+                              </option>
+                            ))}
+                          </SelectInput>
+                        </Field>
+
+                        <Field label="Notas de revisao">
+                          <TextareaInput
+                            onChange={(event) => setReviewNotesDraft(event.target.value)}
+                            placeholder="Observacoes curtas da revisao humana."
+                            value={reviewNotesDraft}
+                          />
+                        </Field>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3">
+                        <GhostButton
+                          disabled={!selectedAdvisory || reviewAdvisorySubmitting}
+                          onClick={() => void handleSaveReviewAdvisoryStatus()}
+                        >
+                          {reviewAdvisorySubmitting ? 'Salvando...' : 'Salvar revisao'}
+                        </GhostButton>
+                        <AppButton
+                          disabled={!selectedAdvisory || reviewAdvisorySubmitting}
+                          onClick={() => void handleMarkReviewAdvisoryReviewed()}
+                        >
+                          {reviewAdvisorySubmitting ? 'Marcando...' : 'Marcar revisado'}
+                        </AppButton>
+                      </div>
+                    </div>
+                  </details>
+
+                  <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+                    <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                      Detalhes tecnicos da origem
+                    </summary>
+                    <div className="mt-3 space-y-2 text-sm leading-6 text-[color:var(--color-muted)]">
+                      <p>
+                        Origem:{' '}
+                        {articleDetail.source_path || articleDetail.source_hash ? 'importado do legado' : 'manual'}
+                      </p>
+                      {articleDetail.source_path ? <p>Caminho: {articleDetail.source_path}</p> : null}
+                      {articleDetail.source_hash ? <p>Hash: {articleDetail.source_hash}</p> : null}
+                    </div>
+                  </details>
+                </div>
+              ) : null}
+
+              <div className="space-y-2">
+                <h3 className="text-base font-semibold text-[color:var(--color-ink)]">
+                  Resumo editorial
+                </h3>
+                <div className="rounded-[24px] border border-[color:var(--color-border)] bg-white p-4">
+                  <p className="text-sm leading-6 text-[color:var(--color-ink)]">
+                    {articleDetail.summary?.trim() || 'Resumo ainda nao revisado.'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-base font-semibold text-[color:var(--color-ink)]">
+                  Corpo principal
+                </h3>
+                <div className="rounded-[24px] border border-[color:var(--color-border)] bg-white p-4">
+                  <pre className="whitespace-pre-wrap text-sm leading-6 text-[color:var(--color-ink)]">
+                    {articleDetail.body_md || 'Sem conteudo principal cadastrado.'}
+                  </pre>
+                </div>
+              </div>
+
+              <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+                <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                  Trilha de origem
+                </summary>
+                <div className="mt-3 space-y-3">
+                  {articleDetail.sources.length === 0 ? (
+                    <EmptyState
+                      title="Sem fontes rastreadas"
+                      description="Este artigo ainda nao possui trilha de fonte agregada no detalhe."
+                    />
+                  ) : (
+                    articleDetail.sources.slice(0, 4).map((source) => (
+                      <div
+                        key={source.id}
+                        className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3"
+                      >
+                        <p className="font-medium text-[color:var(--color-ink)]">
+                          {source.source_title ?? source.source_kind}
+                        </p>
+                        <p className="mt-1 text-xs text-[color:var(--color-muted)]">
+                          {source.source_path}
+                        </p>
+                        <p className="mt-1 text-xs text-[color:var(--color-muted)]">
+                          origem {source.source_hash}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </details>
+
+              <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+                <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                  Revisoes recentes
+                </summary>
+                <div className="mt-3 space-y-3">
+                  {articleDetail.revisions.length === 0 ? (
+                      <EmptyState
+                        title="Sem revisoes agregadas"
+                        description="Ainda nao existe historico recente de revisoes para este artigo."
+                      />
+                  ) : (
+                    articleDetail.revisions.slice(0, 4).map((revision) => (
+                      <div
+                        key={revision.id}
+                        className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3"
+                      >
+                        <div className="flex flex-wrap items-center gap-2">
+                          <StatusPill tone={toneForArticleStatus(revision.status_snapshot)}>
+                            {revision.status_snapshot}
+                          </StatusPill>
+                          <StatusPill tone={toneForVisibility(revision.visibility)}>
+                            {revision.visibility}
+                          </StatusPill>
+                          <StatusPill>rev {revision.revision_number}</StatusPill>
+                        </div>
+                        <p className="mt-2 text-sm font-medium text-[color:var(--color-ink)]">
+                          {revision.title}
+                        </p>
+                        <p className="mt-1 text-xs text-[color:var(--color-muted)]">
+                          {revision.change_note ?? 'Sem anotacao de mudanca'}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </details>
+            </div>
+          )}
+        </Panel>
+          </div>
+        }
+      />
+    </div>
+  );
+}

@@ -9,6 +9,28 @@
     "packages/*"
   ],
   "scripts": {
-    "extract:octadesk": "node raw_knowledge/octadesk_export/export-octadesk-kb.mjs"
+    "contracts:typecheck": "npm run typecheck --workspace @genius-support-os/contracts",
+    "extract:octadesk": "node raw_knowledge/octadesk_export/export-octadesk-kb.mjs",
+    "supabase:bootstrap:first-admin": "node supabase/bootstrap/bootstrap-first-platform-admin.mjs",
+    "supabase:start": "supabase start",
+    "supabase:wait:ready": "node scripts/ci/wait-for-supabase-ready.mjs",
+    "supabase:db:reset:raw": "supabase db reset --local --yes",
+    "supabase:db:reset": "node scripts/ci/run-supabase-db-reset.mjs",
+    "supabase:test:db": "supabase test db --local",
+    "supabase:lint:db": "supabase db lint --local",
+    "supabase:verify": "node scripts/ci/run-supabase-verify.mjs",
+    "supabase:qa:local-admin-fixture": "node supabase/qa/create-local-admin-fixture.mjs",
+    "supabase:qa:local-support-fixture": "node supabase/qa/create-local-support-fixture.mjs",
+    "knowledge:curation:backlog": "node scripts/knowledge/generate-curation-backlog.mjs",
+    "knowledge:import:octadesk:local": "node scripts/knowledge/import-octadesk-drafts.mjs --local",
+    "knowledge:review:advisories:local": "node scripts/knowledge/sync-review-advisories.mjs --local",
+    "knowledge:verify:octadesk:space-aware": "node scripts/ci/verify-octadesk-import-space-aware.mjs",
+    "web:dev": "node scripts/dev/run-web-dev.mjs",
+    "web:typecheck": "npm run typecheck --workspace @genius-support-os/web",
+    "web:build": "npm run build --workspace @genius-support-os/web"
+  },
+  "devDependencies": {
+    "supabase": "^2.95.6",
+    "typescript": "^5.9.3"
   }
 }

@@ -1,0 +1,594 @@
+# PROJECT_STATE.md
+
+## Produto
+Genius Support OS
+
+## Objetivo
+Construir uma plataforma interna para centralizar suporte B2B, base de conhecimento, tickets, comunicação entre suporte, CS, times técnicos e tecnologia, gestão de bugs, melhorias, SLAs, auditoria e IA operacional.
+
+## Contexto operacional
+A empresa opera o Genius Returns e o After Sale, SaaS B2B de automação de logística reversa para e-commerce. A operação atual sofre com suporte descentralizado, conhecimento espalhado, ausência de histórico confiável, demandas técnicas perdidas, baixa visibilidade para clientes B2B e dependência excessiva de pessoas específicas.
+
+## Decisão central
+O sistema deve ser construído como SaaS profissional desde o início, mesmo sendo inicialmente interno.
+
+## Fonte de verdade documental
+
+Documentos prioritários:
+- `PRODUCT_VISION.md`
+- `ARCHITECTURE_RULES.md`
+- `DATA_MODEL_STRATEGY.md`
+- `AUTH_CONTEXT_STRATEGY.md`
+- `AUDIT_LOGGING_STRATEGY.md`
+- `KNOWLEDGE_BASE_STRATEGY.md`
+- `AI_GOVERNANCE.md`
+- `ENVIRONMENT_VARIABLES.md`
+- `DEPLOYMENT_STRATEGY.md`
+- `BRANCHING_STRATEGY.md`
+- `IMPLEMENTATION_PLAN.md`
+- `REMOTE_SUPABASE_DEPLOY_RUNBOOK.md`
+- `SECURITY_RLS_TEST_PLAN.md`
+- `VIEW_RPC_CONTRACTS.md`
+- `DOCUMENTATION_LEDGER.md`
+- `PLATFORM_FAQ_STRATEGY.md`
+- `KNOWLEDGE_CONTENT_CURATION_PLAN.md`
+- `PUBLIC_HELP_CENTER_PUBLISH_RUNBOOK.md`
+- `CONTENT_OPERATIONS_GOVERNANCE.md`
+- `SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`
+- `CUSTOMER_ACCOUNT_PROFILE_SPEC.md`
+- `CUSTOMER_ACCOUNT_PROFILE_DATA_MODEL_REVIEW.md`
+- `CUSTOMER_ACCOUNT_PROFILE_MIGRATION_DESIGN.md`
+- `TICKET_KNOWLEDGE_LINKING_SPEC.md`
+- `TICKET_KNOWLEDGE_LINKING_DATA_MODEL_REVIEW.md`
+- `TICKET_KNOWLEDGE_LINKING_MIGRATION_DESIGN.md`
+- `TICKET_KNOWLEDGE_PUBLIC_LINK_CONTRACT_REVIEW.md`
+- `reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`
+
+Documentos históricos:
+- `CLEANUP_REPORT.md`
+
+## Princípios vigentes
+- Backend é source of truth.
+- Frontend apenas renderiza dados e envia comandos.
+- Multi-tenant obrigatório desde o início.
+- `organization` é governança, `tenant` é operação e `knowledge_space` é marca/help center público.
+- Genius Support OS é uma plataforma de operação CX B2B técnica, não um SAC B2C.
+- Permissões, auth, RLS, auditoria e logs são fundação, não etapa posterior.
+- IA só pode responder com base oficial, versionada e citável.
+- Tickets, suporte, cliente B2B, engenharia e conhecimento são domínios separados.
+- Nenhum dado operacional relevante deve ser perdido.
+- Documentação deve ser viva e versionada no repositório.
+
+## Estado real do repositório em 2026-04-30
+
+### Existe
+- Repositório base com `apps/`, `packages/`, `supabase/`, `tests/`, `docs/` e `raw_knowledge/`.
+- Frontend real do Admin Console mínimo implementado em `apps/web/` com `Vite`, `React`, `TypeScript`, `Tailwind`, `React Router` e `@supabase/supabase-js`.
+- Template de ambiente versionado apenas como `.env.example`, sem valores reais.
+- Blueprint histórico em `supabase/blueprints/001_foundation.sql`, marcado como não executável.
+- Documentação estratégica oficial em `docs/`.
+- Governança operacional de variáveis, branches e deploy documentada em `docs/ENVIRONMENT_VARIABLES.md`, `docs/DEPLOYMENT_STRATEGY.md` e `docs/BRANCHING_STRATEGY.md`.
+- Projeto Supabase inicializado via CLI com `supabase/config.toml`.
+- Portas locais do Supabase remapeadas para `55321-55327` para coexistir com outro stack local já em execução.
+- Migration oficial `supabase/migrations/20260429210127_phase1_identity_tenancy.sql`.
+- Migration oficial de hardening `supabase/migrations/20260429212721_phase1_1_hardening.sql`.
+- Migration oficial de control plane e function hardening `supabase/migrations/20260429215122_phase1_2_admin_control_plane.sql`.
+- Migration oficial de ticketing core e contratos backend `supabase/migrations/20260429225342_phase2_ticketing_core_backend_contracts.sql`.
+- Migration oficial de read models administrativos `supabase/migrations/20260430024632_phase2_3_admin_read_models.sql`.
+- Migration oficial do auth read model administrativo `supabase/migrations/20260430144642_phase3_1_admin_auth_context.sql`.
+- Migration oficial do user lookup administrativo `supabase/migrations/20260430172140_phase3_2_admin_user_lookup.sql`.
+- Migration oficial do núcleo de Knowledge Base e pipeline editorial interno `supabase/migrations/20260430182128_phase4_knowledge_base_core.sql`.
+- Migration oficial da fundação multi-brand aditiva `supabase/migrations/20260430191513_phase4_2_multi_brand_foundation.sql`.
+- Migration oficial de backfill e compatibilidade space-aware `supabase/migrations/20260430194826_phase4_3_backfill_space_aware_compatibility.sql`.
+- Migration oficial dos read models públicos da Central de Ajuda `supabase/migrations/20260503004940_phase4_5_public_help_center_read_models.sql`.
+- Migration oficial do contrato de busca pública da Central de Ajuda `supabase/migrations/20260503170246_phase4_9_public_help_center_search_contract.sql`.
+- Migration oficial do advisory persistente de revisão editorial da Knowledge Base `supabase/migrations/20260503204209_phase5_3_knowledge_review_advisory_contract.sql`.
+- Migration oficial dos read models do Support Workspace e revisão de authz `supabase/migrations/20260504004500_phase6_1_support_workspace_read_models.sql`.
+- Migration oficial do diretório de agentes atribuíveis do Support Workspace `supabase/migrations/20260504043000_phase6_3_support_assignable_agents.sql`.
+- Migration oficial do backend mínimo do Customer Account Profile `supabase/migrations/20260504195833_phase6_8_customer_account_profile_backend.sql`.
+- Migration oficial do backend mínimo do vínculo ticket -> Knowledge Base `supabase/migrations/20260505015350_phase6_15_ticket_knowledge_linking_backend.sql`.
+- Teste local de banco em `supabase/tests/001_phase1_identity_tenancy_rls.sql`.
+- Teste local de hardening em `supabase/tests/002_phase1_1_hardening.sql`.
+- Teste local de control plane administrativo em `supabase/tests/003_phase1_2_admin_control_plane.sql`.
+- Teste local de auditoria estrutural de functions em `supabase/tests/004_phase1_2_function_audit.sql`.
+- Teste local de ticketing core em `supabase/tests/005_phase2_ticketing_core.sql`.
+- Teste local de auditoria estrutural de views em `supabase/tests/006_phase2_1_view_security_audit.sql`.
+- Teste local de read models administrativos em `supabase/tests/007_phase2_3_admin_read_models.sql`.
+- Teste local de auth read model administrativo em `supabase/tests/008_phase3_1_admin_auth_context.sql`.
+- Teste local de user lookup administrativo em `supabase/tests/009_phase3_2_admin_user_lookup.sql`.
+- Teste local do núcleo de Knowledge Base em `supabase/tests/010_phase4_knowledge_base_core.sql`.
+- Teste local da fundação multi-brand em `supabase/tests/011_phase4_2_multi_brand_foundation.sql`.
+- Teste local de backfill e compatibilidade space-aware em `supabase/tests/012_phase4_3_space_aware_compatibility.sql`.
+- Teste local dos read models públicos da Central de Ajuda em `supabase/tests/013_phase4_5_public_help_center_read_models.sql`.
+- Teste local do branding público da Central de Ajuda em `supabase/tests/014_phase4_7_public_help_center_branding_contract.sql`.
+- Teste local do contrato de busca pública da Central de Ajuda em `supabase/tests/015_phase4_9_public_help_center_search_contract.sql`.
+- Teste local do advisory persistente de revisão editorial em `supabase/tests/016_phase5_3_knowledge_review_advisory_contract.sql`.
+- Teste local dos read models do Support Workspace em `supabase/tests/017_phase6_1_support_workspace_read_models.sql`.
+- Teste local do diretório de agentes atribuíveis do Support Workspace em `supabase/tests/018_phase6_3_support_assignable_agents.sql`.
+- Teste local do backend do Customer Account Profile em `supabase/tests/020_phase6_8_customer_account_profile_backend.sql`.
+- Teste local do backend do vínculo ticket -> Knowledge Base em `supabase/tests/021_phase6_15_ticket_knowledge_linking_backend.sql`.
+- Seed separado em `supabase/seeds/` e desabilitado por padrão.
+- Fluxo de bootstrap seguro do primeiro `platform_admin` em `supabase/bootstrap/`.
+- Núcleo Fase 1 implementado com `profiles`, `user_global_roles`, `tenants`, `tenant_memberships`, `tenant_contacts` e `audit.audit_logs`.
+- Triggers reais de `updated_at`, auditoria append-only e sync de `auth.users -> profiles`.
+- Policies RLS reais para identidade, tenancy e leitura restrita de auditoria.
+- Control plane administrativo mínimo materializado em RPCs seguras no schema `public`.
+- `authenticated` não possui DML direto em `tenants`, `tenant_memberships`, `tenant_contacts` e `user_global_roles`; essas mutações passam por RPCs auditadas.
+- Funções auditadas com `SECURITY DEFINER` endurecido, `search_path` explícito e ACLs revisadas.
+- Núcleo operacional de tickets implementado localmente com `tickets`, `ticket_messages`, `ticket_events`, `ticket_assignments` e `ticket_attachments`.
+- Views contratuais de leitura materializadas em `vw_tickets_list`, `vw_ticket_detail` e `vw_ticket_timeline`.
+- Views contratuais administrativas materializadas em `vw_admin_tenants_list`, `vw_admin_tenant_detail`, `vw_admin_tenant_memberships` e `vw_admin_audit_feed`.
+- View contratual de auth context materializada em `vw_admin_auth_context`.
+- View contratual de user lookup administrativo materializada em `vw_admin_user_lookup`.
+- Views contratuais administrativas de Knowledge Base materializadas em `vw_admin_knowledge_categories`, `vw_admin_knowledge_articles_list` e `vw_admin_knowledge_article_detail`.
+- Views contratuais administrativas multi-brand materializadas em `vw_admin_organizations_list`, `vw_admin_organization_detail` e `vw_admin_knowledge_spaces`.
+- Views contratuais administrativas v2 space-aware materializadas em `vw_admin_knowledge_categories_v2`, `vw_admin_knowledge_articles_list_v2` e `vw_admin_knowledge_article_detail_v2`.
+- View contratual administrativa advisory materializada em `vw_admin_knowledge_article_review_advisories`.
+- Views contratuais públicas endurecidas materializadas em `vw_public_knowledge_space_resolver`, `vw_public_knowledge_navigation`, `vw_public_knowledge_articles_list` e `vw_public_knowledge_article_detail`.
+- Views contratuais do Support Workspace materializadas em `vw_support_tickets_queue`, `vw_support_ticket_detail`, `vw_support_ticket_timeline`, `vw_support_ticket_timeline_recent`, `vw_support_customer_360`, `vw_support_customer_recent_tickets` e `vw_support_customer_recent_events`.
+- Diretório contratual de agentes atribuíveis do Support Workspace materializado em `vw_support_assignable_agents`.
+- Views contratuais do Customer Account Profile materializadas em `vw_support_customer_account_context` e `vw_admin_customer_account_profiles`.
+- Views contratuais do vínculo ticket -> Knowledge Base materializadas em `vw_support_ticket_knowledge_links`, `vw_support_knowledge_article_picker` e `vw_customer_portal_ticket_knowledge_links`.
+- RPCs contratuais de escrita materializadas em `rpc_create_ticket`, `rpc_update_ticket_status`, `rpc_assign_ticket`, `rpc_add_ticket_message`, `rpc_add_internal_ticket_note`, `rpc_close_ticket` e `rpc_reopen_ticket`.
+- RPCs contratuais administrativas de Knowledge Base materializadas em `rpc_admin_create_knowledge_category`, `rpc_admin_create_knowledge_article_draft`, `rpc_admin_update_knowledge_article_draft`, `rpc_admin_submit_knowledge_article_for_review`, `rpc_admin_publish_knowledge_article` e `rpc_admin_archive_knowledge_article`.
+- RPCs contratuais administrativas v2 space-aware materializadas em `rpc_admin_create_knowledge_category_v2`, `rpc_admin_create_knowledge_article_draft_v2`, `rpc_admin_update_knowledge_article_draft_v2`, `rpc_admin_submit_knowledge_article_for_review_v2`, `rpc_admin_publish_knowledge_article_v2` e `rpc_admin_archive_knowledge_article_v2`.
+- RPCs contratuais advisory materializadas em `rpc_admin_update_knowledge_article_review_status` e `rpc_admin_mark_knowledge_article_reviewed`.
+- RPCs administrativas do Customer Account Profile materializadas em `rpc_admin_upsert_customer_account_profile`, `rpc_admin_add_customer_integration`, `rpc_admin_update_customer_integration`, `rpc_admin_add_customer_customization`, `rpc_admin_update_customer_customization`, `rpc_admin_add_customer_account_alert` e `rpc_admin_archive_customer_account_alert`.
+- RPCs contratuais do vínculo ticket -> Knowledge Base materializadas em `rpc_support_link_ticket_article`, `rpc_support_archive_ticket_article_link`, `rpc_support_mark_documentation_gap` e `rpc_support_mark_article_needs_update`.
+- `authenticated` não possui `SELECT`, `INSERT`, `UPDATE` nem `DELETE` direto nas tabelas base de ticketing; o app lê via views e escreve via RPCs.
+- Pacote `packages/contracts` materializado com tipos TypeScript para views e RPCs de ticketing.
+- Pacote `packages/contracts` agora também materializa tipos TypeScript para os read models do Support Workspace.
+- Auditoria estrutural das views oficializada com `security_barrier = true`, filtros explícitos por caller e teste pgTAP dedicado.
+- Admin Console mínimo agora possui read models contratuais próprios e bloqueia leitura dessas views para não-`platform_admin`.
+- O gate do Admin Console agora resolve auth/profile/roles globais apenas por `vw_admin_auth_context`.
+- O frontend do Admin Console não lê `profiles`, `user_global_roles`, `tenants`, `tenant_memberships`, `tenant_contacts` nem `audit.audit_logs` diretamente.
+- `authenticated` não possui mais `SELECT` direto em `public.profiles`; o lookup global de usuários do Admin Console foi deslocado para `vw_admin_user_lookup`.
+- O client browser do Supabase no Admin Console agora usa `storageKey` própria por ambiente para isolar sessão local e evitar contenção com tokens legados de outras execuções.
+- O fluxo de auth do frontend foi endurecido para não resetar o gate em refresh de token/snapshot equivalente e para não disparar bootstrap em loop no `StrictMode`.
+- Rotas mínimas materializadas em `/login`, `/admin`, `/admin/tenants`, `/admin/access`, `/admin/system` e `/access-denied`.
+- Rotas mínimas materializadas em `/login`, `/admin`, `/admin/tenants`, `/admin/knowledge`, `/admin/access`, `/admin/system` e `/access-denied`.
+- Rotas públicas mínimas materializadas em `/help`, `/help/:spaceSlug`, `/help/:spaceSlug/articles` e `/help/:spaceSlug/articles/:articleSlug`.
+- Shell protegido materializado com `AuthBootstrap`, `AdminGate`, `AdminConsoleShell`, `AdminSidebar` e `AdminTopbar`.
+- Leitura operacional do frontend já consome apenas `vw_admin_auth_context`, `vw_admin_tenants_list`, `vw_admin_tenant_detail`, `vw_admin_tenant_memberships` e `vw_admin_audit_feed`.
+- A rota `/admin/knowledge` agora consome apenas `vw_admin_knowledge_spaces`, `vw_admin_knowledge_categories_v2`, `vw_admin_knowledge_articles_list_v2` e `vw_admin_knowledge_article_detail_v2`.
+- A tela `Access` agora também consome `vw_admin_user_lookup` para resolver busca de usuários por nome/email antes das RPCs de membership.
+- Escrita operacional do frontend já consome apenas `rpc_admin_create_tenant`, `rpc_admin_update_tenant_status`, `rpc_admin_add_tenant_member`, `rpc_admin_update_tenant_member_role`, `rpc_admin_update_tenant_member_status`, `rpc_admin_create_tenant_contact` e `rpc_admin_update_tenant_contact`.
+- A rota `/admin/knowledge` agora escreve apenas por `rpc_admin_create_knowledge_category_v2`, `rpc_admin_create_knowledge_article_draft_v2`, `rpc_admin_update_knowledge_article_draft_v2`, `rpc_admin_submit_knowledge_article_for_review_v2`, `rpc_admin_publish_knowledge_article_v2` e `rpc_admin_archive_knowledge_article_v2`.
+- Núcleo de Knowledge Base materializado localmente com `knowledge_categories`, `knowledge_articles`, `knowledge_article_revisions` e `knowledge_article_sources`.
+- Fundação multi-brand materializada localmente com `organizations`, `organization_memberships`, `knowledge_spaces`, `knowledge_space_domains` e `brand_settings`.
+- `tenants` agora aceita `organization_id` nullable para backfill futuro sem quebrar contratos atuais.
+- `knowledge_categories` e `knowledge_articles` agora aceitam `knowledge_space_id` nullable para transição multi-brand sem remover `tenant_id`.
+- A organization padrão `genius-group` e o knowledge space padrão `genius`/`Genius Returns` agora existem por migration aditiva.
+- Knowledge Base possui versionamento editorial, trilha de origem (`source_path`, `source_hash`), auditoria de mutações e política de importação legado somente como draft.
+- O app autenticado não possui `SELECT` direto nas tabelas base de Knowledge Base; a superfície administrativa futura lê apenas por `vw_admin_knowledge_*`.
+- O app autenticado também não possui `SELECT` direto nas novas tabelas base de multi-brand; a superfície administrativa multi-brand lê apenas por `vw_admin_organizations_*` e `vw_admin_knowledge_spaces`.
+- `anon` e `authenticated` não leem tabelas base da camada pública da KB; a futura Central Pública lê apenas pelas `vw_public_knowledge_*`.
+- As RPCs atuais de Knowledge Base permanecem compatíveis e ainda podem criar conteúdo com `knowledge_space_id = null` enquanto a migração completa para a camada v2 não for concluída.
+- O corpus atual da Knowledge Base já foi associado ao `knowledge_space` oficial `genius` por backfill aditivo.
+- As RPCs e views v2 já operam por `knowledge_space_id` explícito sem alterar o frontend atual.
+- O pipeline legado `scripts/knowledge/import-octadesk-drafts.mjs` já inventaria a exportação Octadesk, classifica visibilidade inicial conservadora, preserva `source_path`/`source_hash` e bloqueia uso remoto.
+- O import legado agora exige `--space-slug` ou `--knowledge-space-id`, continua local-only e grava o conteúdo pela camada v2 space-aware.
+- A importação legado não usa HTML como corpo principal e não publica artigos automaticamente.
+- A camada pública da KB não expõe `source_path`, `source_hash`, `tenant_id`, autores internos nem HTML legado.
+- A Central Pública mínima agora consome apenas `vw_public_knowledge_space_resolver`, `vw_public_knowledge_navigation`, `vw_public_knowledge_articles_list` e `vw_public_knowledge_article_detail`.
+- A Central Pública mínima agora também consulta `rpc_public_search_knowledge_articles` para busca textual simples por `knowledge_space`.
+- A Central Pública mínima renderiza apenas `body_md` com Markdown seguro, sem `dangerouslySetInnerHTML` e sem depender de filtro de visibilidade no frontend.
+- A identidade visual pública usa os dados públicos do `knowledge_space` e fallback seguro quando branding detalhado não estiver projetado nos read models públicos.
+- O resolver público agora expõe branding sanitizado mínimo (`brand_name`, `logo_asset_url`, `theme_tokens`, `seo_defaults` e `support_contacts` públicos) sem abrir acesso direto a `brand_settings`.
+- A busca pública agora expõe apenas metadados mínimos de resultado e nunca retorna `body_md` completo, `source_path`, `source_hash` ou metadados internos.
+- A Central Pública passou por polish de legibilidade, hierarquia visual e leitura mobile-first, mantendo a mesma superfície pública e o mesmo escopo funcional.
+- Estratégia oficial de FAQ da plataforma criada em `docs/PLATFORM_FAQ_STRATEGY.md`.
+- Ledger documental por fase criado em `docs/DOCUMENTATION_LEDGER.md`.
+- Estratégia oficial de curadoria do corpus legado criada em `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md`.
+- Runbook oficial de publicação pública criado em `docs/PUBLIC_HELP_CENTER_PUBLISH_RUNBOOK.md`.
+- Governança oficial de operações de conteúdo criada em `docs/CONTENT_OPERATIONS_GOVERNANCE.md`.
+- Mini design system oficial de workspaces internos criado em `docs/INTERNAL_WORKSPACE_DESIGN_SYSTEM.md`.
+- Checklist oficial de aceite de UI interna criado em `docs/INTERNAL_UI_ACCEPTANCE_CHECKLIST.md`.
+- Backlog oficial de refatoracao de UI criado em `docs/UI_REFACTOR_BACKLOG.md`.
+- Spec oficial do Support Workspace criada em `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`.
+- Spec oficial do perfil operacional do cliente B2B criada em `docs/CUSTOMER_ACCOUNT_PROFILE_SPEC.md`.
+- Revisão oficial do modelo mínimo do perfil operacional do cliente B2B criada em `docs/CUSTOMER_ACCOUNT_PROFILE_DATA_MODEL_REVIEW.md`.
+- Desenho técnico pré-migration do perfil operacional do cliente B2B criado em `docs/CUSTOMER_ACCOUNT_PROFILE_MIGRATION_DESIGN.md`.
+- Read models oficiais do Support Workspace materializados com authz restrita a `platform_admin` e roles globais de suporte com membership ativo no tenant.
+- O detalhe do Support Workspace agora prioriza conversa e composer como fluxo principal, mantendo eventos tecnicos e controles avancados em camadas secundarias.
+- O backend do Customer Account Profile agora materializa perfil operacional, stack resumida, features, customizacoes e alertas por tenant, com bloqueio de conteudo sensivel antes de persistir ou auditar.
+- Relatório oficial do inventário legado criado em `docs/reports/KNOWLEDGE_LEGACY_INVENTORY_REPORT.md`.
+- Backlog versionado oficial de curadoria legado criado em `docs/reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`.
+- O inventário atual da base legada em `raw_knowledge/octadesk_export/latest/articles/` identificou 58 artigos, 3 categorias-raiz, 1 grupo de duplicidade por `source_hash` e múltiplos candidatos sensíveis/restritos.
+- O script `scripts/knowledge/generate-curation-backlog.mjs` agora materializa esse backlog versionado a partir do corpus bruto preservado.
+- O `supabase:verify` atual mantém a KB local sem lote legado importado; o pipeline de curadoria desta fase opera sobre o corpus bruto e o dry-run do import oficial.
+- O pipeline legado `scripts/knowledge/import-octadesk-drafts.mjs` já foi validado em `dry-run` e em `apply` local controlado para o `knowledge_space` `genius`, sempre em `draft`, sem publicação automática e preservando `source_path`/`source_hash`.
+- A rota `/admin/knowledge` agora destaca origem legado/manual, hash curto na listagem e `source_path`/`source_hash` no detalhe para acelerar curadoria humana.
+- A rota `/admin/knowledge` agora também oferece filtro por duplicidade de `source_hash`, checklist editorial visual e destaque cauteloso para artigos `internal`/`restricted`.
+- Estados obrigatórios do frontend materializados: loading, vazio, erro, acesso negado, contrato indisponível e sessão expirada.
+- Build do frontend agora usa code-splitting por rota.
+- Fixture local de QA controlado materializado em `supabase/qa/create-local-admin-fixture.mjs`.
+- QA headless local já validou:
+  - login real com `platform_admin`;
+  - gate resolvido por `vw_admin_auth_context`;
+  - `/admin/tenants` com `vw_admin_tenants_list` e `vw_admin_tenant_detail`;
+  - `/admin/access` com `vw_admin_tenant_memberships`;
+  - `/admin/system` com `vw_admin_audit_feed`;
+  - `/access-denied` para usuário autenticado sem role global.
+- `npm run contracts:typecheck` validado com sucesso.
+- `npm run supabase:verify` validado com sucesso.
+- `npm run knowledge:verify:octadesk:space-aware` validado com sucesso.
+- `npm run web:typecheck` validado com sucesso.
+- `npm run web:build` validado com sucesso.
+- `npm run supabase:wait:ready` agora respeita stacks locais em que `supabase_edge_runtime` esteja explicitamente parado, mantendo `REST + Postgres` como readiness obrigatória.
+- Suite pgTAP atual validada com `Files=8`, `Tests=135`, `Result: PASS`.
+- Suite pgTAP atual validada com `Files=10`, `Tests=177`, `Result: PASS`.
+- Suite pgTAP atual validada com `Files=11`, `Tests=218`, `Result: PASS`.
+- Suite pgTAP atual validada com `Files=12`, `Tests=256`, `Result: PASS`.
+- Suite pgTAP atual validada com `Files=13`, `Tests=275`, `Result: PASS`.
+- Suite pgTAP atual validada com `Files=15`, `Tests=304`, `Result: PASS`.
+- Suite pgTAP atual validada com `Files=16`, `Tests=322`, `Result: PASS`.
+- Suite pgTAP atual validada com `Files=17`, `Tests=339`, `Result: PASS`.
+- Suite pgTAP atual validada com `Files=19`, `Tests=358`, `Result: PASS`.
+- Pipeline CI para banco em `.github/workflows/supabase-db.yml`.
+- A workflow `.github/workflows/supabase-db.yml` agora valida também `web:typecheck` e `web:build`.
+- A workflow `.github/workflows/supabase-db.yml` agora valida também a compatibilidade do import Octadesk space-aware.
+- CI remota validada no GitHub pela workflow `Supabase DB`, run `25139500960`, commit `85b3495`, branch `codex/phase1-2-admin-control-plane`, conclusão `success`.
+- Runbook de deploy remoto criado em `docs/REMOTE_SUPABASE_DEPLOY_RUNBOOK.md`.
+- Deploy remoto das 4 migrations oficiais concluído com sucesso no Supabase remoto.
+- `supabase migration list` ficou alinhado entre diretório local e ambiente remoto após o push.
+- Bootstrap remoto do primeiro `platform_admin` concluído com sucesso.
+- `public.user_global_roles` validado no remoto com o `user_id` promovido e role `platform_admin`.
+- `audit.audit_logs` validado no remoto para o evento de bootstrap do `platform_admin`.
+- Segunda tentativa de bootstrap remoto bloqueada explicitamente por desenho.
+- Nenhuma seed foi executada, nenhum frontend foi criado e nenhum `service_role` foi usado durante deploy e bootstrap remotos.
+- Working tree local permaneceu limpa ao final da operação remota validada.
+- Base bruta preservada em `raw_knowledge/octadesk_export/latest/`.
+
+### Não existe ainda
+- Publicação automática de artigos legados.
+- Indexação de Knowledge Base em IA.
+- After Sale como segundo `knowledge_space` oficial.
+- Support Desk/frontend de tickets.
+- Views/read models contratuais para engenharia.
+- Portal B2B do cliente.
+- Abertura pública de ticket.
+- Chat, widget ou IA na Central Pública.
+- Role específica de CS para operar o Support Workspace sem reaproveitar roles de suporte.
+- Dominio materializado de Customer Account Profile para produto, plano, stack, customizacoes e alertas operacionais.
+- Migration oficial do Customer Account Profile.
+- Views/RPCs contratuais do Customer Account Profile.
+
+## Situação por fase
+
+- Fase 0: concluída.
+  - Estrutura base existe.
+  - Documentação oficial existe.
+  - Blueprint existe.
+  - Supabase oficial local foi inicializado.
+- Fase 1: concluída localmente e aplicada com sucesso no ambiente remoto oficial.
+  - Identity + Tenancy materializados em migration real.
+  - RLS mínima validada com pgTAP.
+  - Auditoria append-only validada localmente.
+  - Hardening 1.1 entregue com anti-escalation, bootstrap seguro e CI de banco.
+  - Hardening 1.2 entregue com control plane administrativo via RPC, DML direto revogado para o app nas tabelas administrativas e auditoria estrutural de funções.
+  - Frontend continua bloqueado.
+  - Deploy remoto concluído sem seed e sem `service_role`.
+- Fase 2: ticketing core concluído localmente e aplicado no ambiente remoto.
+  - Schema de tickets materializado por migration oficial.
+  - Views contratuais e RPCs de ticketing materializadas.
+  - Máquina de estados, diferenciação entre mensagens públicas e notas internas e auditoria automática validadas com pgTAP.
+  - Leitura direta das tabelas-base de ticketing bloqueada para `authenticated`.
+  - `supabase:verify` atual confirma `Files=6`, `Tests=93`, `Result: PASS`.
+  - Consumo por frontend continua bloqueado.
+- Fase 2.1: contratos tipados e auditoria de views concluídos no repositório.
+  - `packages/contracts` descreve enums, DTOs de views e payloads/responses de RPCs.
+  - A estratégia de segurança das views foi auditada e documentada.
+  - A CI agora também valida `contracts:typecheck`.
+  - O estado validado em CI remota mais recente está verde no commit `85b3495`.
+- Fase 2.2: documentação sincronizada, deploy remoto e bootstrap admin concluídos.
+  - `README.md`, `supabase/README.md` e `docs/IMPLEMENTATION_PLAN.md` foram alinhados ao estado real.
+  - `docs/REMOTE_SUPABASE_DEPLOY_RUNBOOK.md` define pré-requisitos, secrets, validação, deploy, rollback e checklist pós-deploy.
+  - Deploy remoto das 4 migrations concluído com migration list local/remoto alinhada.
+  - Primeiro `platform_admin` criado e validado no remoto.
+  - Segunda tentativa de bootstrap segue bloqueada por desenho.
+- Fase 2.3: Admin Read Models concluída localmente.
+  - Views contratuais administrativas foram materializadas para `Tenants`, `Tenant Detail`, `Memberships` e `Audit Feed`.
+  - A leitura do Admin Console agora tem read models dedicados sem join manual de frontend nas tabelas administrativas.
+  - `platform_admin` lê globalmente; `tenant_admin` e membros comuns recebem zero linhas.
+  - A suíte `supabase/tests/007_phase2_3_admin_read_models.sql` cobre grants, acesso permitido, acesso negado e ausência de vazamento cross-tenant.
+  - `supabase:verify` atual confirma `Files=7`, `Tests=120`, `Result: PASS`.
+- Fase 3: Admin Console mínimo implementado localmente.
+  - Login real, gate de `platform_admin`, shell protegido e rotas mínimas materializados em `apps/web`.
+  - `Tenants`, `Access` e `System` consomem apenas views e RPCs contratuais.
+  - O frontend aplica alinhamento institucional de marca Genius sem abrir Support Desk, Customer Portal ou IA operacional.
+  - O bug crítico de login/loading foi resolvido no frontend sem alterar backend, contracts ou migrations.
+  - O Admin Console mínimo já passou por QA local real com fixture controlado e usuário autenticado sem role.
+- Fase 3.1: hardening frontend, auth read model e CI sync concluídos localmente.
+  - `vw_admin_auth_context` resolve o gate autenticado sem leitura direta de `profiles` e `user_global_roles` no client.
+  - `supabase/tests/008_phase3_1_admin_auth_context.sql` cobre grants, filtro por `auth.uid()`, self-only e preservação de `is_active`/roles.
+  - A workflow de CI agora valida `contracts:typecheck`, `web:typecheck`, `web:build` e `supabase:verify`.
+  - `supabase:verify` atual confirma `Files=8`, `Tests=135`, `Result: PASS`.
+- Fase 3.2: Admin User Lookup Contract concluído localmente.
+  - `vw_admin_user_lookup` materializa busca global de usuários existentes com campos mínimos para memberships.
+  - `authenticated` não possui mais `SELECT` direto em `public.profiles`.
+  - A tela `Access` resolve nome/email -> `user_id` pela view contratual e mantém fallback manual controlado.
+  - `supabase/tests/009_phase3_2_admin_user_lookup.sql` cobre grants, `security_barrier`, acesso permitido, acesso negado e ausência de vazamento de colunas sensíveis.
+  - `supabase:verify` atual confirma `Files=9`, `Tests=146`, `Result: PASS`.
+- Fase 4: Knowledge Base Core + Legacy Import Pipeline concluída localmente.
+  - Núcleo editorial materializado com categorias, artigos, revisões e fontes rastreáveis.
+  - Views contratuais administrativas de Knowledge Base materializadas para lista, detalhe e categorias.
+  - RPCs administrativas de criação, atualização, review, publicação e arquivamento materializadas.
+  - Importação legado Octadesk implementada apenas como draft, local-only e sem uso de HTML como corpo principal.
+  - Inventário legado atual registrou 58 artigos, 1 grupo de duplicidade por `source_hash` e visibilidade inicial conservadora (`internal`/`restricted`).
+  - `supabase/tests/010_phase4_knowledge_base_core.sql` cobre grants, RLS, publicação autorizada, preservação de `source_hash` e auditoria.
+  - `supabase:verify` atual confirma `Files=10`, `Tests=177`, `Result: PASS`.
+- Fase 4.1: revisão arquitetural multi-brand concluída e aprovada como direção oficial.
+  - `organization` foi oficializado como camada de governança.
+  - `tenant` foi preservado como camada operacional.
+  - `knowledge_space` foi oficializado como eixo de marca/documentação pública técnica.
+  - A migração recomendada ficou definida como aditiva, com convivência temporária entre contratos legados e futuros contratos space-aware.
+- Fase 4.2: Multi-Brand Foundation concluída localmente.
+  - Estruturas novas materializadas com `organizations`, `organization_memberships`, `knowledge_spaces`, `knowledge_space_domains` e `brand_settings`.
+  - `tenants.organization_id`, `knowledge_categories.knowledge_space_id` e `knowledge_articles.knowledge_space_id` foram adicionados como chaves de transição nullable.
+  - Novas views administrativas `vw_admin_organizations_list`, `vw_admin_organization_detail` e `vw_admin_knowledge_spaces` foram materializadas sem alterar o frontend.
+  - Constraints novas de slug e índices parciais por `knowledge_space_id` foram adicionados sem remover as constraints legadas por `tenant_id`.
+  - O import legado Octadesk, os tickets, as views públicas e as RPCs v2 continuam intocados nesta fase.
+  - `supabase/tests/011_phase4_2_multi_brand_foundation.sql` cobre grants, isolamento administrativo, compatibilidade das RPCs atuais e integridade multi-brand.
+  - `supabase:verify` atual confirma `Files=11`, `Tests=218`, `Result: PASS`.
+- Fase 4.3: Backfill + Space-Aware Compatibility concluída localmente.
+  - A migration criou a organization padrão `genius-group` e o knowledge space padrão `genius`/`Genius Returns`, mantendo `owner_tenant_id = null`.
+  - O corpus atual da Knowledge Base foi associado ao `knowledge_space` oficial por backfill aditivo, sem remover `tenant_id` nem as constraints antigas.
+  - Views administrativas v2 `vw_admin_knowledge_categories_v2`, `vw_admin_knowledge_articles_list_v2` e `vw_admin_knowledge_article_detail_v2` foram materializadas.
+  - RPCs administrativas v2 space-aware foram materializadas sem quebrar as RPCs antigas.
+  - O import legado Octadesk agora exige destino explícito por space e continua sempre em `draft`, preservando `source_path` e `source_hash`.
+  - `supabase/tests/012_phase4_3_space_aware_compatibility.sql` cobre bootstrap/backfill do space padrão, filtros v2 por space e compatibilidade contínua das views/RPCs antigas.
+  - `supabase:verify` atual confirma `Files=12`, `Tests=256`, `Result: PASS`.
+- Fase 4.4: Admin Knowledge Base UI Minimum concluída localmente.
+  - A rota `/admin/knowledge` e a navegação `Knowledge` foram materializadas no Admin Console.
+  - A UI administrativa mínima de curadoria agora oferece seletor de `knowledge_space`, filtros por `status` e `visibility`, lista space-aware de artigos, detalhe editorial, criação de categoria, criação/edição de draft e transições de `review`/`publish`/`archive`.
+  - A leitura do frontend dessa superfície usa apenas `vw_admin_knowledge_spaces`, `vw_admin_knowledge_categories_v2`, `vw_admin_knowledge_articles_list_v2` e `vw_admin_knowledge_article_detail_v2`.
+  - A escrita do frontend dessa superfície usa apenas as RPCs v2 space-aware da Knowledge Base.
+  - Conteúdo importado do legado continua sob curadoria humana e não ganha publicação automática pela UI.
+- Fase 4.5: Public Help Center Read Models + Routing Contract concluída localmente.
+  - A camada pública de leitura da Knowledge Base foi materializada por `vw_public_knowledge_space_resolver`, `vw_public_knowledge_navigation`, `vw_public_knowledge_articles_list` e `vw_public_knowledge_article_detail`.
+  - A superfície pública expõe apenas `knowledge_spaces` ativos e artigos `published` + `public`, sem drafts, review, archived, conteúdo internal/restricted ou spaces inativos.
+  - O resolver público já suporta `space_slug` e preparação de domínio ativo por `knowledge_space_domains`, sem abrir a UI pública.
+  - `anon` e `authenticated` recebem `SELECT` apenas nessas views públicas; tabelas base de multi-brand e `knowledge_*` continuam bloqueadas.
+  - `supabase/tests/013_phase4_5_public_help_center_read_models.sql` cobre grants, ausência de vazamento sensível, resolução por slug, filtros públicos e bloqueio de base tables para `anon`.
+- Fase 4.6: Public Help Center UI Minimum concluída localmente.
+  - A Central Pública mínima de leitura foi materializada em `/help`, `/help/:spaceSlug`, `/help/:spaceSlug/articles` e `/help/:spaceSlug/articles/:articleSlug`.
+  - O frontend público consome apenas `vw_public_knowledge_space_resolver`, `vw_public_knowledge_navigation`, `vw_public_knowledge_articles_list` e `vw_public_knowledge_article_detail`.
+  - A UI pública cobre landing, navegação por categorias, lista de artigos, detalhe de artigo e estados de loading, vazio, erro e não encontrado.
+  - O corpo do artigo é renderizado exclusivamente por `body_md` com Markdown seguro; HTML legado continua fora da superfície pública.
+  - Branding público usa apenas dados já expostos pelos read models públicos, com fallback visual seguro quando `brand_settings` não estiver projetado nessa camada.
+- Fase 4.7: Public Help Center Branding Contract concluída localmente.
+  - `vw_public_knowledge_space_resolver` agora projeta branding público sanitizado mínimo a partir de `brand_settings`, sem expor JSON bruto nem contatos privados.
+  - A Central Pública passou a aplicar logo, tokens visuais públicos mínimos, metadata básica de título/descrição e contatos técnicos públicos quando disponíveis.
+  - O frontend valida URLs, tokens CSS, email e metadata antes de aplicar branding dinâmico ou renderizar links públicos.
+  - `supabase/tests/014_phase4_7_public_help_center_branding_contract.sql` cobre branding permitido, ausência de dados sensíveis e ausência de regressão dos filtros públicos.
+- Fase 4.9: Public Help Center Search Contract concluída localmente.
+  - A busca pública textual mínima foi materializada por `rpc_public_search_knowledge_articles`.
+  - A RPC expõe apenas resultados de artigos `published` + `public` em `knowledge_spaces` ativos, sem `body_md` completo e sem leitura do frontend em tabelas-base.
+  - A Central Pública agora oferece busca simples em `/help/:spaceSlug` com estados de carregando, vazio, sem resultados e erro.
+  - `supabase/tests/015_phase4_9_public_help_center_search_contract.sql` cobre grants, isolamento público, busca em space ativo, bloqueio de draft/restricted/categoria interna e comportamento controlado para query vazia/curta.
+- Fase 4.9.1: Public Help Center UX Readability Polish + Documentation Ledger Strategy concluída localmente.
+  - A Central Pública recebeu polish de leitura para parecer documentação técnica B2B e não um painel administrativo.
+  - A landing `/help`, a home do `knowledge_space`, a lista de artigos e o detalhe do artigo foram simplificados para reduzir competição visual, melhorar contraste e ficar mais confortáveis em mobile.
+  - O contrato backend permaneceu intacto; a leitura continua limitada a `vw_public_knowledge_space_resolver`, `vw_public_knowledge_navigation`, `vw_public_knowledge_articles_list`, `vw_public_knowledge_article_detail` e `rpc_public_search_knowledge_articles`.
+  - `docs/PLATFORM_FAQ_STRATEGY.md` formaliza como a futura FAQ da plataforma deve nascer apenas de funcionalidade implementada e validada.
+  - `docs/DOCUMENTATION_LEDGER.md` formaliza o registro por fase de commit, branch, docs, superfícies e impacto na FAQ futura.
+- Fase 5.0: Knowledge Content Curation Pipeline concluída localmente.
+  - Nenhum artigo legado foi publicado, reescrito automaticamente no banco ou promovido de status nesta fase.
+  - A auditoria confirmou `58` artigos no corpus bruto legado, `1` grupo de duplicidade por `source_hash` e sinais fortes de sensibilidade em integrações, credenciais, permissões, estorno, PIX, Correios, endpoints/API e erros técnicos internos.
+  - O estado local pós-`supabase:verify` segue com `0` drafts legado importados no banco; a curadoria desta fase foi documentada a partir do corpus preservado e do dry-run do import oficial.
+  - `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md` define critérios de `public`/`internal`/`restricted`, duplicidade, obsolescência, padrão editorial e checklist humano antes de publicar.
+  - `docs/reports/KNOWLEDGE_LEGACY_INVENTORY_REPORT.md` registra o inventário, os candidatos heurísticos por visibilidade e os principais riscos editoriais.
+- Fase 5.1: Legacy Knowledge Import Backlog + Controlled Draft Ingestion concluída localmente.
+  - O backlog versionado dos `58` artigos foi materializado em `docs/reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`.
+  - O import legado foi validado em `dry-run` e em `apply` local controlado no `knowledge_space` `genius`, sem qualquer publicação automática.
+  - O `apply` local gerou `58` drafts legado preservando `source_path`/`source_hash`; no ambiente validado isso resultou em `59` drafts totais no space por já existir `1` artigo local anterior.
+  - A triagem operacional atual do backlog ficou em `4 public`, `34 internal`, `16 restricted`, `2 obsolete` e `2 duplicate`.
+  - A rota `/admin/knowledge` agora evidencia origem legado/manual, hash curto na listagem e `source_path`/`source_hash` no detalhe do artigo para suportar revisão editorial.
+  - O `supabase:verify` continua resetando o banco local e removendo esse lote aplicado; a ingestão controlada permanece operacional e local-only, não baseline persistente do repositório.
+- Fase 5.2: Knowledge Editorial Review Workflow concluída localmente.
+  - A curadoria em `/admin/knowledge` agora oferece filtro por origem, `status`, `visibility` e duplicidade por `source_hash`.
+  - A lista administrativa passou a destacar artigos `restricted` e `internal` para revisão mais cautelosa.
+  - O detalhe do artigo agora inclui checklist editorial visual, separado entre sinais objetivos atuais e confirmações humanas obrigatórias.
+  - A classificação sugerida do backlog continua fora do contrato backend atual; a proposta mínima segura ficou registrada em `docs/KNOWLEDGE_BASE_STRATEGY.md` e `docs/KNOWLEDGE_CONTENT_CURATION_PLAN.md`.
+  - Nenhum artigo legado foi publicado automaticamente e nenhuma heurística editorial nova foi promovida a source of truth do frontend.
+- Fase 5.3: Knowledge Review Advisory Contract concluída localmente.
+  - A camada `knowledge_article_review_advisories` agora materializa apoio editorial persistente, separado do artigo canônico e sem qualquer mutação automática de `status`, `visibility` ou `body_md`.
+  - O backlog versionado da curadoria agora gera também `docs/reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.json` como insumo seguro para backfill advisory.
+  - O sync local controlado via `npm run knowledge:review:advisories:local` associou `58` advisories aos `58` drafts legado importados no `knowledge_space` `genius`, com `0` revisões humanas sobrescritas.
+  - A distribuição advisory validada ficou em `4 public`, `34 internal`, `16 restricted`, `2 obsolete`, `2 duplicate`, com `1` grupo de duplicidade persistido.
+  - A rota `/admin/knowledge` agora lê `vw_admin_knowledge_article_review_advisories`, mostra classificação sugerida, `risk_flags`, duplicidade persistida e grava `review_status`/confirmações humanas por RPC.
+  - `supabase/tests/016_phase5_3_knowledge_review_advisory_contract.sql` cobre grants, view, RPCs, persistência humana e ausência de mutação editorial automática.
+- Fase 5.4: Knowledge Review QA + First Publish Candidate Flow concluída localmente.
+  - O ambiente local foi reidratado com reset, fixture `platform_admin`, import legado controlado de `58` drafts e sync advisory dos `58` artigos no `knowledge_space` `genius`.
+  - A rota `/admin/knowledge` agora também oferece filtro por `suggested_classification`, permitindo isolar candidatos `public` sem depender de heurística solta no frontend.
+  - Dois candidatos `public` foram revisados manualmente, reescritos em Markdown seguro, marcados como revisados no advisory, promovidos para `review` e publicados de forma controlada:
+    - `Como reenviar um e-mail de uma solicitacao`
+    - `Como configurar regra por motivo`
+  - Nenhum artigo `restricted`, `internal`, `obsolete` ou `duplicate` foi publicado nesta fase.
+  - A exposição pública só foi liberada após ativação operacional local do `knowledge_space` `genius`; com o space ainda em `draft`, os read models públicos continuavam bloqueando corretamente os artigos.
+  - Após a ativação do space, a Central Pública e a busca passaram a listar apenas os `2` artigos publicados, mantendo drafts e conteúdos não públicos fora da superfície `/help`.
+- Fase 5.5: Publish Readiness Runbook + Content Operations Governance concluída localmente.
+  - O processo seguro de curadoria, revisão, publish, pós-publicação e rollback da Central Pública foi formalizado em `docs/PUBLIC_HELP_CENTER_PUBLISH_RUNBOOK.md`.
+  - A governança de conteúdo agora está definida em `docs/CONTENT_OPERATIONS_GOVERNANCE.md`, com papéis, responsabilidades, critérios de publish e revisão periódica.
+  - A documentação oficial agora diferencia com clareza:
+    - QA local de publish controlado
+    - baseline persistente do repositório
+    - readiness operacional do `knowledge_space`
+    - uso do `DOCUMENTATION_LEDGER.md` e da futura FAQ como trilha de rastreabilidade
+  - Nenhum artigo novo foi publicado, nenhuma mudança de produto foi aplicada e nenhum deploy remoto foi executado nesta fase.
+- Fase 6.0: Support Workspace Architecture Spec concluída localmente.
+  - A arquitetura do futuro workspace interno de suporte e CS foi formalizada em `docs/SUPPORT_WORKSPACE_ARCHITECTURE_SPEC.md`.
+  - A spec reaproveita o ticketing core já materializado por `vw_tickets_list`, `vw_ticket_detail`, `vw_ticket_timeline` e pelas RPCs atuais de ticketing.
+  - As lacunas antes da UI ficaram explicitadas:
+    - read models específicos de suporte
+    - filtros de fila
+    - visão 360 do cliente B2B
+    - vínculo ticket -> KB
+    - vínculo ticket -> engenharia
+    - SLA futuro
+  - Nenhuma UI, migration, schema, RPC ou automação foi implementada nesta fase.
+- Fase 6.1: Support Workspace Backend Read Models + Authz Review concluída localmente.
+  - Read models `vw_support_tickets_queue`, `vw_support_ticket_detail`, `vw_support_ticket_timeline` e `vw_support_customer_360` foram materializados sobre o ticketing core existente.
+  - A leitura do workspace ficou deliberadamente mais restrita que o ticketing core: apenas `platform_admin` ou `support_agent`/`support_manager` com membership ativo no tenant entram nessa superfície.
+  - A escrita continua nas RPCs de ticketing já existentes, sem novas mutações nesta fase.
+  - `supabase/tests/017_phase6_1_support_workspace_read_models.sql` cobre grants, autorização, cross-tenant, nota interna protegida e bloqueio de base tables.
+- Fase 6.2: Support Workspace UI Minimum concluída localmente.
+  - As rotas `/support`, `/support/tickets`, `/support/tickets/:ticketId`, `/support/customers/:tenantId` e `/support/queue` agora materializam a primeira UI interna mínima do workspace de suporte/CS B2B.
+  - A superfície lê apenas `vw_support_tickets_queue`, `vw_support_ticket_detail`, `vw_support_ticket_timeline` e `vw_support_customer_360`.
+  - A escrita continua limitada às RPCs existentes de ticketing: `rpc_update_ticket_status`, `rpc_assign_ticket`, `rpc_add_ticket_message`, `rpc_add_internal_ticket_note`, `rpc_close_ticket` e `rpc_reopen_ticket`.
+  - A primeira entrega funcional validou rota, contratos e mutações do workspace, mas ainda carregava gramática visual demais do Admin Console.
+  - Uma fixture local controlada passou a reidratar tenants, contatos e tickets de QA para inspeção visual do workspace sem depender de credenciais remotas ou dados reais.
+  - A QA local validou leitura e mutação real por UI no ambiente local, incluindo adição de nota interna via RPC existente.
+- Fase 6.2.1: Support Workspace Operational UX Review concluída localmente.
+  - O workspace de suporte foi reposicionado como cockpit operacional B2B, deixando de repetir a hierarquia visual do Admin Console.
+  - A fila passou a dominar a triagem, com toolbar operacional, recorte de urgência e seleção clara do ticket em atendimento.
+  - O detalhe do ticket virou painel de tratativa: cabeçalho forte, ações operacionais agrupadas, composer unificado com modo explícito e timeline como trilha principal.
+  - O contexto do cliente B2B ficou compacto e útil, servindo a operação sem competir com o atendimento.
+  - A diretriz global de UX do produto agora está formalizada em `docs/UX_DIRECTION.md`, fixando que cada domínio define sua própria composição de tela.
+- Fase 6.2.2: Domain-Specific UX Correction Gate concluída localmente.
+  - O Support Workspace passou por simplificação estrutural para reduzir cards, badges e blocos simultâneos, priorizando triagem e tratativa real em notebook e desktop largo.
+  - `/support/queue` agora opera com resumo compacto, lista dominante de tickets e preview lateral curto do ticket em foco.
+  - `/support/tickets/:ticketId` agora organiza a tratativa em duas zonas reais: composer e timeline no eixo principal, rail operacional compacto com status, atribuição, customer context e detalhes avançados recolhidos.
+  - `/support/customers/:tenantId` foi reduzido a contexto operacional do cliente B2B, com tickets recentes, contatos ativos, eventos e navegação lateral utilitária.
+  - `/admin/knowledge` deixou de operar como painel com métricas concorrentes e passou a usar master/detail editorial mais estável, com advisory, checklist e bloco técnico recolhidos por padrão.
+- Fase 6.3: Support Workspace Agent Directory + Assignment UX concluída localmente.
+  - O backend passou a expor `vw_support_assignable_agents` como diretório seguro de operadores atribuíveis por tenant, com `security_barrier = true` e boundary compatível com `rpc_assign_ticket`.
+  - O diretório lista apenas `platform_admin`, `support_agent` e `support_manager` ativos, sempre respeitando tenant, membership ativo e bloqueio cross-tenant.
+  - O Support Workspace substituiu o fluxo principal de digitação manual de `user_id` por seletor operacional de agente, com `Atribuir a mim` e `Desatribuir`.
+  - O `user_id` técnico permaneceu apenas como fallback recolhido para exceções operacionais.
+- Fase 6.4: Support Timeline Volume Guard + Customer Context Pagination concluída localmente.
+  - A camada de suporte passou a expor recortes recentes dedicados para timeline e customer context por `vw_support_ticket_timeline_recent`, `vw_support_customer_recent_tickets` e `vw_support_customer_recent_events`.
+  - A timeline inicial do ticket agora carrega apenas a janela recente com `recent_limit`, `total_available_count` e `has_more`, evitando primeira carga infinita.
+  - O customer context passou a separar resumo do tenant e preview de contatos em `vw_support_customer_360` dos recortes recentes operacionais de tickets e eventos.
+  - O frontend do workspace passou a consumir esses recortes recentes explicitamente, sem simular paginação carregando o histórico completo por trás.
+- Fase 6.9: Support Workspace Customer Account Context UI concluída localmente.
+- O Support Workspace passou a consumir `vw_support_customer_account_context` no ticket e na visão do cliente, sem abrir UI de edição do perfil.
+- `/support/tickets/:ticketId` agora mostra no rail apenas produto, status operacional, tier, plataforma, integrações principais, features relevantes, customizações de risco e alertas ativos.
+- `/support/customers/:tenantId` passou a exibir stack, integrações, features, customizações, alertas, contatos e tickets recentes em layout operacional leve.
+- Observacoes internas, flags e detalhes extensos do perfil operacional ficaram recolhidos por padrao.
+- Fase 6.10: Internal Workspace Shell + Agent UX System concluída localmente.
+  - O Support Workspace agora usa shell interno colapsavel proprio, sem cards textuais longos na sidebar e com navegacao operacional mais util.
+  - `/support/queue` foi ajustada para operar como fila dominante com preview leve do ticket selecionado.
+  - `/support/tickets/:ticketId` passou a tratar conversa e composer como eixo principal, com rail direito recolhivel e historico tecnico sob demanda.
+  - `/support/customers/:tenantId` foi simplificada como contexto operacional sintetico do cliente B2B.
+  - A direção visual transversal dessa camada ficou formalizada em `docs/INTERNAL_WORKSPACE_DESIGN_SYSTEM.md`.
+- Fase 6.11: Internal UI System Refactor + Operational Design Enforcement concluida localmente.
+  - O contrato de UI interna foi endurecido em `docs/UX_DIRECTION.md`, `docs/INTERNAL_WORKSPACE_DESIGN_SYSTEM.md` e `docs/INTERNAL_UI_ACCEPTANCE_CHECKLIST.md`.
+  - `/admin/tenants`, `/admin/knowledge`, `/admin/access`, `/admin/system`, `/support/queue`, `/support/tickets/:ticketId`, `/support/customers/:tenantId` e a Central Publica passaram por limpeza de copy, reducao de ruido visual e rebaixamento de metadados tecnicos.
+  - O backlog oficial de polimento e evolucao futura dessas superficies ficou consolidado em `docs/UI_REFACTOR_BACKLOG.md`.
+- Fase 6.12: Ticket -> Knowledge Base Assistive Linking Spec concluida localmente.
+  - O dominio de vinculo assistivo entre ticket e artigo foi especificado em `docs/TICKET_KNOWLEDGE_LINKING_SPEC.md`.
+  - A fase define casos de uso, tipos de vinculo, boundary de permissao, modelo futuro minimo e impacto de UI sem IA, automacao ou publicacao automatica.
+  - O contrato separa com clareza:
+    - referencia interna
+    - link publico enviado ao cliente
+    - lacuna de documentacao
+    - artigo que precisa de atualizacao
+  - Support e Knowledge agora possuem trilha documental comum para evoluir ticket -> KB sem misturar tratativa com curadoria editorial.
+- Fase 6.13: Ticket Knowledge Linking Data Model Review concluida localmente.
+  - O modelo minimo implementavel do vinculo ticket -> KB foi revisado em `docs/TICKET_KNOWLEDGE_LINKING_DATA_MODEL_REVIEW.md`.
+  - A fase consolidou:
+    - entidade `ticket_knowledge_links`
+    - enum `ticket_knowledge_link_type`
+    - regras de integridade por tenant, artigo e visibilidade
+    - boundary de authz/RLS e superficie contratual futura
+  - A revisao tambem fixou:
+    - `sent_to_customer` exige artigo `public` + `published`
+    - `documentation_gap` e `suggested_article` podem existir sem `article_id`
+    - o vinculo deve ser append-only com arquivamento logico, sem snapshot do artigo
+- Fase 6.14: Ticket Knowledge Linking Migration Design concluida localmente.
+  - O desenho tecnico pre-migration do vinculo ticket -> KB foi consolidado em `docs/TICKET_KNOWLEDGE_LINKING_MIGRATION_DESIGN.md`.
+  - A fase definiu:
+    - enum `ticket_knowledge_link_type`
+    - tabela futura `ticket_knowledge_links`
+    - constraints de integridade por `link_type`, tenant, artigo e archive logico
+    - helpers privados de authz, validacao editorial e bloqueio de conteudo sensivel
+  - A fase tambem fechou:
+    - views futuras de suporte e portal
+    - RPCs futuras de create/archive/gap/needs_update
+    - plano pgTAP e ordem de implementacao da fase materializavel
+- Fase 6.15: Ticket Knowledge Linking Backend Materialization concluida localmente.
+  - O backend minimo do vinculo ticket -> Knowledge Base foi materializado com enum, tabela, helpers privados, views contratuais, RPCs de escrita e pgTAP dedicado.
+  - O contrato executavel agora garante:
+    - `sent_to_customer` apenas para artigo `public` + `published`
+    - bloqueio de `internal` e `restricted` no envio ao cliente
+    - `documentation_gap` e `suggested_article` funcionando sem `article_id`
+    - arquivamento logico append-only e auditavel
+    - bloqueio de `SELECT` direto em `ticket_knowledge_links`
+    - sanitizacao de `note` contra vazamento tecnico e sensivel
+  - A fixture local de suporte agora tambem reidrata:
+    - artigo `public`
+    - artigo `internal`
+    - artigo `restricted`
+    - vinculos permitidos reais por RPC
+  - Nenhuma UI de ticket -> KB foi aberta nesta fase; o escopo ficou estritamente no backend.
+- Fase 6.16: Ticket Knowledge Assistive UI concluida localmente.
+  - `/support/tickets/:ticketId` agora consome `vw_support_ticket_knowledge_links` e `vw_support_knowledge_article_picker` em um painel recolhivel `Conhecimento relacionado`.
+  - O painel permite:
+    - registrar `Referencia interna`
+    - registrar `Link enviado ao cliente` apenas quando o picker sinaliza envio permitido
+    - marcar `Lacuna de documentacao`
+    - marcar `Precisa revisao`
+    - arquivar vinculos ativos
+  - A conversa e o composer continuam no fluxo principal; a KB entra apenas como apoio operacional no rail do ticket.
+  - O frontend continua sem acesso a `ticket_knowledge_links` diretamente e sem exibir UUID, nomes de views/RPCs ou metadata tecnica no fluxo principal.
+- Fase 6.17: Ticket Knowledge Public Link Contract Review concluida localmente.
+  - A auditoria confirmou a lacuna contratual entre a UI assistiva do ticket e a camada publica da KB: o suporte sabe quando um artigo pode ser enviado ao cliente, mas ainda nao recebe uma rota publica segura pronta para uso.
+  - `vw_support_knowledge_article_picker` foi mantida como read model geral de busca e vinculo, sem assumir a responsabilidade de compor URL publica no frontend.
+  - A recomendacao oficial ficou documentada em `docs/TICKET_KNOWLEDGE_PUBLIC_LINK_CONTRACT_REVIEW.md`:
+    - criar uma view dedicada para candidatos a link publico seguro
+    - manter a decisao de `can_send_to_customer` e de `public_article_path` no backend
+    - evitar concatenacao fragil de `/help/:spaceSlug/articles/:articleSlug` no frontend
+  - O proximo contrato candidato dessa ponte passa a ser `vw_support_knowledge_public_link_candidates`.
+- Fase 6.18: Contextual Subsidebar UX Pattern concluida localmente.
+  - O shell interno passou a formalizar 3 camadas de operacao:
+    - sidebar global
+    - subsidebar contextual
+    - area principal de trabalho
+  - Support, Admin, Knowledge e Central Publica foram auditados contra esse contrato.
+  - O frontend agora usa primitives compartilhadas de subsidebar para:
+    - filtros e filas rapidas no suporte
+    - operacao do ticket fora da conversa principal
+    - stack e atalhos no customer context
+    - filtros editoriais no Knowledge
+    - filtros e acoes recorrentes em Tenants, Access e System
+  - A fixture local de suporte tambem passou a garantir a central publica `genius` com artigo publicado de smoke, evitando falso positivo de link quebrado em `/help/genius`.
+- Ajuste complementar da fase 6.18: blueprint de tratativa operacional aplicada em `/support/tickets/:ticketId`.
+  - A tela de ticket deixou de usar subsidebar esquerda nessa rota e passou a operar como workspace de conversa:
+    - cabecalho operacional compacto
+    - toolbar util dentro da superficie
+    - conversa central com cliente e equipe em lados distintos
+    - composer amplo no eixo principal
+    - rail direito compacto com acoes, cliente, conhecimento e atividade recente
+  - O shell de suporte tambem integrou o controle de colapso diretamente ao header da sidebar, removendo o botao redundante abaixo do branding.
+  - Nenhum backend, schema, view ou RPC foi alterado neste ajuste.
+- Fase 6.18.3: Ticket Workspace Blueprint Fidelity Pass concluida localmente.
+  - A tela `/support/tickets/:ticketId` foi refinada para aproximar densidade, proporcao e composicao da blueprint aprovada, reduzindo altura desperdicada no resumo do ticket e no rail direito.
+  - A thread principal ficou mais continua e visivel na primeira dobra, com composer mais integrado e seletor de status preservando o estado atual no card operacional.
+  - A fidelidade avancou sem alterar backend, schema, contratos, views ou RPCs.
+
+## Ajustes de auditoria concluídos
+- Documentação redundante herdada removida da rota principal.
+- Índice de `docs/` realinhado para a documentação oficial.
+- Blueprint SQL alinhado com os termos e fases do produto.
+- Estrutura do repositório consolidada em documento próprio.
+
+## Bloqueios vigentes
+- Não iniciar telas.
+- Não iniciar telas de tickets antes dos contratos tipados do backend.
+- Não tratar blueprint histórico como implementação pronta.
+- Não ingerir `raw_knowledge` sem classificação de sensibilidade.
+- Não publicar automaticamente artigos legados importados.
+- Não usar HTML raspado do Octadesk como UI, layout ou corpo principal de artigo.
+- Não indexar Knowledge Base em IA antes de classificação, revisão humana e governança explícita.
+- Não permitir mutação administrativa por acesso direto às tabelas do control plane.
+- Não permitir leitura direta do app nas tabelas base de ticketing.
+- Não permitir leitura direta do app em `profiles` e `user_global_roles` para o gate do Admin Console.
+- Não permitir leitura do Admin Console fora das views `vw_admin_*`.
+
+## Próxima prioridade
+Materializar o contrato minimo seguro para copia/envio de link publico de artigo a partir do ticket,
+sem concatenacao fragil no frontend,
+mantendo o picker geral separado da superficie especializada de rota publica,
+e preservando `public` + `published` em `knowledge_space` ativo como pre-requisito de envio ao cliente.
