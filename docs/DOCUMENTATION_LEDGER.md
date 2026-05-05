@@ -904,3 +904,38 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - prepara a camada executavel que vai registrar uso interno e envio publico de artigo com rastreabilidade
   - fecha o boundary tecnico para evoluir ticket -> KB sem publicar artigo por acidente
+
+### Fase 6.15 - Ticket Knowledge Linking Backend Materialization
+- fase: `6.15`
+- commit: `cc4b030`
+- branch: `codex/phase6-15-ticket-knowledge-linking-backend`
+- data: `2026-05-05`
+- resumo funcional: o backend minimo do vinculo ticket -> Knowledge Base foi materializado com enum, tabela append-only, helpers privados, views contratuais, RPCs seguras, pgTAP dedicado e fixture local enriquecida.
+- docs alterados:
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - `vw_support_ticket_knowledge_links`
+  - `vw_support_knowledge_article_picker`
+  - `vw_customer_portal_ticket_knowledge_links`
+  - `rpc_support_link_ticket_article`
+  - `rpc_support_archive_ticket_article_link`
+  - `rpc_support_mark_documentation_gap`
+  - `rpc_support_mark_article_needs_update`
+- telas afetadas:
+  - nenhuma UI nova nesta fase
+  - fixture e QA preparadas para inspecao geral de:
+    - `/support/queue`
+    - `/support/tickets/:ticketId`
+    - `/admin/knowledge`
+    - `/help/genius`
+- riscos restantes:
+  - a primeira UI assistiva de ticket -> KB ainda nao foi aberta
+  - o portal B2B futuro continua exigindo contrato proprio para expor apenas `sent_to_customer`
+  - a heuristica de sanitizacao de `note` pode precisar de ajuste fino conforme uso real
+- impacto na FAQ futura:
+  - cria a trilha auditavel para explicar quando um artigo foi usado internamente, enviado ao cliente ou marcado como lacuna de documentacao
+  - prepara base executavel para futuras respostas oficiais sobre relacao entre tickets e base de conhecimento
