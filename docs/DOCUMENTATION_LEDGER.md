@@ -833,7 +833,7 @@ Cada registro deve informar:
 
 ### Fase 6.13 - Ticket Knowledge Linking Data Model Review
 - fase: `6.13`
-- commit: `pending`
+- commit: `dee338a`
 - branch: `codex/phase6-13-ticket-knowledge-linking-data-model-review`
 - data: `2026-05-04`
 - resumo funcional: o modelo minimo implementavel do vinculo ticket -> Knowledge Base foi revisado antes de qualquer migration, fixando entidade, enum, regras de integridade e boundary de permissao.
