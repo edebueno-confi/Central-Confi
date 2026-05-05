@@ -1112,3 +1112,29 @@ Cada registro deve informar:
   - screenshot final em `.tmp/phase6-20-admin-access/admin-access-final.png`
 - impacto na FAQ futura:
   - formaliza a blueprint de Access como control plane operacional, sem voltar para a tela longa de membership da implementacao anterior
+
+### Fase 6.21 - Artigo Publico Blueprint
+- fase: `6.21`
+- branch: `codex/phase6-21-public-article-blueprint`
+- data: `2026-05-05`
+- resumo funcional: a rota publica `/help/genius/articles/:slug` foi reconstruida para o shell de leitura em 3 colunas da blueprint aprovada, com topbar clara, breadcrumb, indice lateral, leitura central e rail direito de apoio.
+- docs alterados:
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- telas afetadas:
+  - `/help/genius/articles/:slug`
+  - `HelpCenterSpaceLayout` apenas para tirar a rota de artigo do shell lateral antigo
+  - `MarkdownDocument` para gerar anchors navegaveis nas headings
+- views/RPCs afetadas:
+  - nenhuma alteracao de backend
+  - nenhuma view ou RPC nova
+- riscos restantes:
+  - o fixture publico atual tem corpo curto, entao o indice lateral pode ficar com poucas secoes enquanto o conteudo real nao crescer
+  - o CTA `Abrir ticket` permanece como entrada para autenticacao, porque nao existe fluxo publico contratual de abertura direta nesta fase
+- validacao final:
+  - `npm run contracts:typecheck`
+  - `npm run web:typecheck`
+  - `npm run web:build`
+  - screenshot final em `.tmp/phase6-21-public-article/public-article-final.png`
+- impacto na FAQ futura:
+  - formaliza o shell canonico de leitura publica de artigo sem reutilizar a sidebar de navegacao da home da central

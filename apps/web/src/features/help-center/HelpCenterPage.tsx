@@ -417,6 +417,7 @@ export function HelpCenterSpaceLayout() {
   const isArticlesRoute =
     location.pathname.endsWith('/articles') ||
     location.pathname.includes('/articles/');
+  const isArticleDetailRoute = /\/articles\/[^/]+\/?$/.test(location.pathname);
   const helpCenterTitle = space
     ? buildHelpCenterSeoTitle(space)
     : 'Help Center B2B | Genius Support OS';
@@ -493,6 +494,11 @@ export function HelpCenterSpaceLayout() {
         ...theme,
       }}
     >
+      {isArticleDetailRoute ? (
+        <main className="min-h-screen">
+          <Outlet context={context} />
+        </main>
+      ) : (
       <div className="mx-auto grid min-h-screen max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[300px_minmax(0,1fr)] lg:px-8">
         <aside className="grid content-start gap-4 lg:sticky lg:top-0 lg:max-h-screen lg:overflow-y-auto lg:py-2">
           <section className="relative overflow-hidden rounded-[34px] border border-[var(--help-border)] bg-[var(--help-hero)] px-6 py-7 text-white shadow-[0_28px_80px_rgba(20,31,71,0.14)]">
@@ -703,6 +709,7 @@ export function HelpCenterSpaceLayout() {
           <Outlet context={context} />
         </main>
       </div>
+      )}
     </div>
   );
 }

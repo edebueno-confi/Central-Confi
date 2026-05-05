@@ -580,6 +580,20 @@ Documentos históricos:
     - `npm run web:typecheck`
     - `npm run web:build`
   - QA visual local final gerada em `.tmp/phase6-20-admin-access/admin-access-final.png`, sem scroll horizontal e sem console error relevante.
+- Fase 6.21: Artigo Publico Blueprint concluida localmente.
+  - `/help/genius/articles/:slug` deixou de herdar a coluna lateral da central publica e passou a usar um shell proprio de leitura, alinhado a blueprint aprovada:
+    - topbar publica clara com busca compacta
+    - breadcrumb acima da leitura
+    - indice do artigo na coluna esquerda
+    - conteudo central de leitura com metadados compactos e callout informativo
+    - rail direito com relacionados e feedback
+  - O renderer Markdown agora gera anchors nas headings para que o indice lateral navegue pelo proprio conteudo do artigo.
+  - A fase preservou os contratos publicos atuais sem alterar backend, Supabase, schema, migrations, RPCs, contracts ou fixtures.
+  - Validacoes locais da fase:
+    - `npm run contracts:typecheck`
+    - `npm run web:typecheck`
+    - `npm run web:build`
+  - QA visual local final gerada em `.tmp/phase6-21-public-article/public-article-final.png`, com leitura publica em 3 colunas e sem scroll horizontal.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.

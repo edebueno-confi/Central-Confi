@@ -189,8 +189,19 @@ function renderInline(text: string): ReactNode[] {
   });
 }
 
+function slugifyHeading(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+}
+
 export function MarkdownDocument({ source }: { source: string }) {
   const blocks = parseMarkdown(source);
+  const headingUsage = new Map<string, number>();
 
   return (
     <div className="space-y-6 text-[color:var(--help-ink)]">
@@ -208,6 +219,11 @@ export function MarkdownDocument({ source }: { source: string }) {
 
         if (block.type === 'heading') {
           const Tag = `h${block.level ?? 2}` as const;
+          const baseHeadingId = slugifyHeading(block.text ?? '') || `secao-${index + 1}`;
+          const headingCount = headingUsage.get(baseHeadingId) ?? 0;
+          headingUsage.set(baseHeadingId, headingCount + 1);
+          const headingId =
+            headingCount === 0 ? baseHeadingId : `${baseHeadingId}-${headingCount + 1}`;
           const className =
             block.level === 1
               ? 'scroll-mt-24 text-3xl font-semibold tracking-[-0.05em] text-[color:var(--help-ink-strong)] sm:text-[2.1rem]'
@@ -216,7 +232,7 @@ export function MarkdownDocument({ source }: { source: string }) {
                 : 'scroll-mt-24 text-xl font-semibold tracking-[-0.03em] text-[color:var(--help-ink-strong)] sm:text-[1.3rem]';
 
           return (
-            <Tag key={key} className={className}>
+            <Tag key={key} className={className} id={headingId}>
               {renderInline(block.text ?? '')}
             </Tag>
           );
