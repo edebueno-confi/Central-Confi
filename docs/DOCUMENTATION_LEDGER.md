@@ -1061,7 +1061,8 @@ Cada registro deve informar:
 
 ### Fase 6.18.3 - Ticket Workspace Blueprint Fidelity Pass
 - fase: `6.18.3`
-- commit: `a02f2db`
+- commit principal: `a02f2db`
+- commit corretivo final: `7a22461`
 - branch: `codex/phase6-18-3-ticket-workspace-blueprint-fidelity`
 - data: `2026-05-05`
 - resumo funcional: a tela `/support/tickets/:ticketId` recebeu um passe corretivo de fidelidade visual para se aproximar da blueprint aprovada, com header mais baixo, thread mais densa, composer mais encaixado e rail direito menos pesado.
@@ -1080,5 +1081,8 @@ Cada registro deve informar:
 - riscos restantes:
   - a tela ficou mais proxima da blueprint, mas alguns detalhes finos ainda dependem das primitives atuais de pills, inputs e selects
   - a copia segura de link publico de artigo continua dependente do contrato futuro revisado na fase 6.17
+- validacao final:
+  - CI verde no workflow `Supabase DB`, run `25390082441`
+  - correcao de escopo aplicada sem alterar backend, schema, RPCs ou contracts
 - impacto na FAQ futura:
   - registra que fidelidade de tratativa deve ser medida por densidade, hierarquia e continuidade operacional, nao so por reorganizacao de cards
