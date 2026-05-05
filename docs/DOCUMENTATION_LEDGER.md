@@ -1058,3 +1058,27 @@ Cada registro deve informar:
   - a copia segura de link publico de artigo continua dependente do contrato futuro da fase 6.17
 - impacto na FAQ futura:
   - consolida o padrao de tratativa como superficie de conversa real, e nao como painel administrativo
+
+### Fase 6.18.3 - Ticket Workspace Blueprint Fidelity Pass
+- fase: `6.18.3`
+- commit: `a02f2db`
+- branch: `codex/phase6-18-3-ticket-workspace-blueprint-fidelity`
+- data: `2026-05-05`
+- resumo funcional: a tela `/support/tickets/:ticketId` recebeu um passe corretivo de fidelidade visual para se aproximar da blueprint aprovada, com header mais baixo, thread mais densa, composer mais encaixado e rail direito menos pesado.
+- docs alterados:
+  - `docs/UX_DIRECTION.md`
+  - `docs/INTERNAL_WORKSPACE_DESIGN_SYSTEM.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de backend
+  - nenhuma view ou RPC nova
+- telas afetadas:
+  - `/support/tickets/:ticketId`
+  - `SupportWorkspaceShell` como refinamento visual da sidebar do suporte
+- riscos restantes:
+  - a tela ficou mais proxima da blueprint, mas alguns detalhes finos ainda dependem das primitives atuais de pills, inputs e selects
+  - a copia segura de link publico de artigo continua dependente do contrato futuro revisado na fase 6.17
+- impacto na FAQ futura:
+  - registra que fidelidade de tratativa deve ser medida por densidade, hierarquia e continuidade operacional, nao so por reorganizacao de cards
