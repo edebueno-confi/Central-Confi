@@ -554,6 +554,15 @@ Documentos históricos:
     - filtros editoriais no Knowledge
     - filtros e acoes recorrentes em Tenants, Access e System
   - A fixture local de suporte tambem passou a garantir a central publica `genius` com artigo publicado de smoke, evitando falso positivo de link quebrado em `/help/genius`.
+- Ajuste complementar da fase 6.18: blueprint de tratativa operacional aplicada em `/support/tickets/:ticketId`.
+  - A tela de ticket deixou de usar subsidebar esquerda nessa rota e passou a operar como workspace de conversa:
+    - cabecalho operacional compacto
+    - toolbar util dentro da superficie
+    - conversa central com cliente e equipe em lados distintos
+    - composer amplo no eixo principal
+    - rail direito compacto com acoes, cliente, conhecimento e atividade recente
+  - O shell de suporte tambem integrou o controle de colapso diretamente ao header da sidebar, removendo o botao redundante abaixo do branding.
+  - Nenhum backend, schema, view ou RPC foi alterado neste ajuste.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.

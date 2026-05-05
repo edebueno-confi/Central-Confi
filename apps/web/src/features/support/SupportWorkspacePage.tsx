@@ -344,45 +344,125 @@ function summarizeTimelineEvent(entry: SupportTicketTimelineItem) {
   return note || humanizeToken(entry.eventType ?? 'evento');
 }
 
+type ConversationLane = 'customer' | 'agent' | 'internal';
+
+function initialsFromLabel(value: string | null | undefined) {
+  const normalized = String(value ?? '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((chunk) => chunk[0]?.toUpperCase() ?? '')
+    .join('');
+
+  return normalized || 'GS';
+}
+
+function resolveConversationLane(entry: SupportTicketTimelineItem): ConversationLane {
+  if (entry.visibility === 'internal') {
+    return 'internal';
+  }
+
+  return entry.actorUserId ? 'agent' : 'customer';
+}
+
+function resolveConversationAuthor(
+  entry: SupportTicketTimelineItem,
+  requesterName?: string | null,
+) {
+  if (entry.visibility === 'internal') {
+    return entry.actorFullName ?? entry.actorEmail ?? 'Equipe interna';
+  }
+
+  if (entry.actorUserId) {
+    return entry.actorFullName ?? entry.actorEmail ?? 'Agente Genius';
+  }
+
+  return entry.actorFullName ?? entry.actorEmail ?? requesterName ?? 'Cliente';
+}
+
 function ConversationEntry({
   entry,
+  requesterName,
 }: {
   entry: SupportTicketTimelineItem;
+  requesterName?: string | null;
 }) {
   const summary = summarizeTimelineEvent(entry);
-  const isInternal = entry.visibility === 'internal';
+  const lane = resolveConversationLane(entry);
+  const author = resolveConversationAuthor(entry, requesterName);
+  const label =
+    lane === 'internal'
+      ? 'Nota interna'
+      : lane === 'agent'
+        ? 'Atendimento Genius'
+        : 'Cliente';
+  const timestamp = formatDateTime(entry.occurredAt);
+  const avatar = initialsFromLabel(author);
 
-  return (
-    <article
-      className={cx(
-        'rounded-[20px] border px-4 py-4 shadow-[0_10px_22px_rgba(19,33,79,0.04)]',
-        isInternal
-          ? 'border-[color:var(--color-danger-border)] bg-[color:var(--color-danger-surface)]/62'
-          : 'border-[rgba(48,127,226,0.18)] bg-[rgba(48,127,226,0.06)]',
-      )}
-    >
-      <div className="space-y-3">
+  if (lane === 'internal') {
+    return (
+      <article className="rounded-[24px] border border-amber-200 bg-[linear-gradient(180deg,rgba(255,249,232,0.96),rgba(255,243,214,0.9))] px-5 py-4 shadow-[0_12px_24px_rgba(180,120,34,0.08)]">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0 space-y-1">
+          <div className="min-w-0 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <StatusPill tone={isInternal ? 'critical' : 'accent'}>
-                {humanizeVisibility(entry.visibility)}
-              </StatusPill>
-              <p className="text-xs font-medium text-[color:var(--color-muted)]">
-                {entry.actorFullName ?? entry.actorEmail ?? 'Ator nao resolvido'}
-              </p>
+              <StatusPill tone="warning">{label}</StatusPill>
+              <p className="text-sm font-semibold text-[color:var(--color-ink)]">{author}</p>
             </div>
-            <p className="text-xs text-[color:var(--color-muted)]">
-              {formatDateTime(entry.occurredAt)}
+            <p className="whitespace-pre-wrap text-[15px] leading-7 text-[color:var(--color-ink)]">
+              {summary}
             </p>
           </div>
+          <p className="text-xs font-medium text-[color:var(--color-muted)]">{timestamp}</p>
         </div>
+      </article>
+    );
+  }
 
-        <div className="text-[15px] leading-7 text-[color:var(--color-ink)]">
-          <p className="whitespace-pre-wrap">{summary}</p>
+  return (
+    <div
+      className={cx(
+        'flex items-end gap-3',
+        lane === 'agent' ? 'justify-end' : 'justify-start',
+      )}
+    >
+      {lane === 'customer' ? (
+        <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#f05b93,#ee3f77)] text-sm font-semibold text-white shadow-[0_10px_22px_rgba(240,91,147,0.28)]">
+          {avatar}
         </div>
-      </div>
-    </article>
+      ) : null}
+
+      <article
+        className={cx(
+          'max-w-[min(78%,48rem)] min-w-0 rounded-[26px] border px-5 py-4 shadow-[0_14px_30px_rgba(19,33,79,0.06)]',
+          lane === 'agent'
+            ? 'border-[rgba(48,127,226,0.22)] bg-[linear-gradient(180deg,rgba(243,248,255,0.98),rgba(236,244,255,0.92))]'
+            : 'border-[color:var(--color-border)] bg-white',
+        )}
+      >
+        <div className="space-y-2">
+          <div
+            className={cx(
+              'flex flex-wrap items-center gap-2 text-xs',
+              lane === 'agent' ? 'justify-end' : 'justify-start',
+            )}
+          >
+            <StatusPill tone={lane === 'agent' ? 'accent' : 'default'}>{label}</StatusPill>
+            <p className="font-semibold text-[color:var(--color-ink)]">{author}</p>
+            <span className="text-[color:var(--color-muted)]">{timestamp}</span>
+          </div>
+          <div className="text-[15px] leading-7 text-[color:var(--color-ink)]">
+            <p className="whitespace-pre-wrap">{summary}</p>
+          </div>
+        </div>
+      </article>
+
+      {lane === 'agent' ? (
+        <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#1f5dcf,#377ef7)] text-sm font-semibold text-white shadow-[0_10px_22px_rgba(55,126,247,0.22)]">
+          {avatar}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -418,8 +498,10 @@ function TechnicalTimelineRow({
 
 function SupportConversation({
   window,
+  requesterName,
 }: {
   window: SupportTicketTimelineRecentWindow;
+  requesterName?: string | null;
 }) {
   const entries = window.entries;
   const conversationEntries = entries.filter((entry) => entry.entryType === 'message');
@@ -435,13 +517,21 @@ function SupportConversation({
   }
 
   return (
-    <div className="space-y-3">
-      <div className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 text-sm leading-6 text-[color:var(--color-muted)]">
-        Mostrando {conversationEntries.length} interacoes recentes da conversa.
+    <div className="space-y-5">
+      <div className="flex items-center gap-3">
+        <div className="h-px flex-1 bg-[color:var(--color-border)]" />
+        <span className="rounded-full bg-[color:var(--color-surface)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+          Janela recente
+        </span>
+        <div className="h-px flex-1 bg-[color:var(--color-border)]" />
+      </div>
+
+      <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 text-sm leading-6 text-[color:var(--color-muted)]">
+        Mostrando {conversationEntries.length} troca(s) recentes entre cliente e equipe.
         {window.hasMore
-          ? ' O restante do historico fica recolhido para nao pesar a tratativa.'
+          ? ' O restante segue recolhido para manter a tratativa leve.'
           : eventEntries.length > 0
-            ? ` ${eventEntries.length} registro(s) de apoio seguem no historico tecnico.`
+            ? ` ${eventEntries.length} registro(s) de apoio continuam disponiveis no rail.`
             : ''}
       </div>
 
@@ -451,30 +541,66 @@ function SupportConversation({
           description="A janela atual ainda nao trouxe respostas publicas nem notas internas para este ticket."
         />
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {conversationEntries.map((entry) => (
-            <ConversationEntry key={entry.timelineEntryId} entry={entry} />
+            <ConversationEntry
+              entry={entry}
+              key={entry.timelineEntryId}
+              requesterName={requesterName}
+            />
           ))}
         </div>
       )}
+    </div>
+  );
+}
 
-      <details className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4">
-        <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-          Historico tecnico e eventos de sistema
-        </summary>
-        <div className="mt-2 text-xs leading-5 text-[color:var(--color-muted)]">
-          {eventEntries.length === 0
-            ? 'Nenhum registro extra apareceu nesta janela.'
-            : `Mostrando ${eventEntries.length} registro(s) de apoio dentro de ${window.totalAvailableCount} itens recentes.`}
-        </div>
-        {eventEntries.length === 0 ? null : (
-          <div className="mt-3 space-y-2">
-            {eventEntries.map((entry) => (
-              <TechnicalTimelineRow key={entry.timelineEntryId} entry={entry} />
-            ))}
+function SupportRecentActivity({
+  window,
+}: {
+  window: SupportTicketTimelineRecentWindow;
+}) {
+  const entries = window.entries.filter((entry) => entry.entryType === 'event').slice(0, 4);
+
+  if (entries.length === 0) {
+    return (
+      <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+        Nenhuma mudanca recente apareceu fora da conversa principal.
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {entries.map((entry) => (
+        <div
+          className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3"
+          key={entry.timelineEntryId}
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <StatusPill tone={entry.visibility === 'internal' ? 'critical' : 'default'}>
+                  {entry.eventType ? humanizeToken(entry.eventType) : 'evento'}
+                </StatusPill>
+                <p className="text-xs text-[color:var(--color-muted)]">
+                  {entry.actorFullName ?? entry.actorEmail ?? 'Equipe Genius'}
+                </p>
+              </div>
+              <p className="text-sm leading-6 text-[color:var(--color-ink)]">
+                {summarizeTimelineEvent(entry)}
+              </p>
+            </div>
+            <p className="text-xs text-[color:var(--color-muted)]">{formatDateTime(entry.occurredAt)}</p>
           </div>
-        )}
-      </details>
+        </div>
+      ))}
+
+      {window.hasMore ? (
+        <p className="text-xs leading-5 text-[color:var(--color-muted)]">
+          O restante do historico tecnico fica recolhido para nao pesar a leitura do atendimento.
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -636,6 +762,7 @@ function SupportKnowledgePickerCard({
 
 function SupportKnowledgePanel({
   articles,
+  defaultOpen = true,
   links,
   loading,
   noteDraft,
@@ -651,6 +778,7 @@ function SupportKnowledgePanel({
   message,
 }: {
   articles: SupportKnowledgeArticlePickerItem[];
+  defaultOpen?: boolean;
   links: SupportTicketKnowledgeLink[];
   loading: boolean;
   noteDraft: string;
@@ -666,7 +794,10 @@ function SupportKnowledgePanel({
   message: string | null;
 }) {
   return (
-    <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]" open>
+    <details
+      className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]"
+      open={defaultOpen}
+    >
       <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
         Conhecimento relacionado
       </summary>
@@ -1562,6 +1693,173 @@ function SupportAccountContextCompact({
   );
 }
 
+function SupportTicketCustomerSnapshot({
+  accountContext,
+  customer,
+}: {
+  accountContext: SupportCustomerAccountContext | null;
+  customer: SupportCustomer360 | null;
+}) {
+  if (!customer) {
+    return (
+      <InlineNotice tone="warning">
+        O contexto resumido do cliente ainda nao ficou disponivel para esta tratativa.
+      </InlineNotice>
+    );
+  }
+
+  const primaryContact = primaryContactFromCustomer(customer);
+
+  if (!accountContext || !accountContext.profileId) {
+    return (
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 space-y-1">
+            <p className="text-sm font-semibold text-[color:var(--color-ink)]">
+              {customer.tenantDisplayName ?? customer.tenantLegalName ?? customer.tenantSlug}
+            </p>
+            <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+              {primaryContact ? `${primaryContact.fullName} · ${primaryContact.email}` : 'Contato principal nao resolvido'}
+            </p>
+          </div>
+          <Link
+            className="inline-flex min-h-10 items-center justify-center rounded-full border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold text-[color:var(--color-brand-blue)]"
+            to={`/support/customers/${customer.tenantId}`}
+          >
+            Abrir cliente
+          </Link>
+        </div>
+        <InlineNotice tone="warning">
+          Perfil operacional ainda nao cadastrado. A tratativa segue com o contato principal e o historico recente do cliente.
+        </InlineNotice>
+      </div>
+    );
+  }
+
+  const primaryPlatform = primaryPlatformFromContext(accountContext);
+  const integrations = visibleOperationalIntegrations(accountContext, 2);
+  const features = visibleFeatureSlice(accountContext, 3);
+  const alerts = visibleAlertSlice(accountContext, 2);
+  const riskyCustomizations = visibleRiskCustomizations(accountContext, 2);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 space-y-2">
+          <p className="text-sm font-semibold text-[color:var(--color-ink)]">
+            {customer.tenantDisplayName ?? customer.tenantLegalName ?? customer.tenantSlug}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {accountContext.productLine ? (
+              <StatusPill tone="accent">{humanizeCustomerValue(accountContext.productLine)}</StatusPill>
+            ) : null}
+            {accountContext.operationalStatus ? (
+              <StatusPill tone={accountContext.operationalStatus === 'active' ? 'positive' : 'warning'}>
+                {humanizeCustomerValue(accountContext.operationalStatus)}
+              </StatusPill>
+            ) : null}
+            {accountContext.accountTier ? <StatusPill>{accountContext.accountTier}</StatusPill> : null}
+          </div>
+        </div>
+        <Link
+          className="inline-flex min-h-10 items-center justify-center rounded-full border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold text-[color:var(--color-brand-blue)]"
+          to={`/support/customers/${customer.tenantId}`}
+        >
+          Abrir cliente
+        </Link>
+      </div>
+
+      <div className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+        <dl className="grid gap-3 text-sm leading-6 text-[color:var(--color-muted)]">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <dt className="font-medium text-[color:var(--color-ink)]">Plataforma</dt>
+            <dd className="text-right">
+              {primaryPlatform ? primaryPlatform.provider : 'Nao registrada'}
+            </dd>
+          </div>
+          <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-3">
+            <dt className="font-medium text-[color:var(--color-ink)]">Contato principal</dt>
+            <dd className="text-right">
+              {primaryContact ? primaryContact.fullName : 'Nao resolvido'}
+            </dd>
+          </div>
+          <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-3">
+            <dt className="font-medium text-[color:var(--color-ink)]">E-mail</dt>
+            <dd className="text-right break-all">
+              {primaryContact?.email ?? 'Nao resolvido'}
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      {integrations.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+            Integracoes principais
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {integrations.map((integration) => (
+              <StatusPill key={integration.id}>{integration.provider}</StatusPill>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {features.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+            Features ativas
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {features.map((feature) => (
+              <StatusPill key={feature.featureKey}>{humanizeCustomerValue(feature.featureKey)}</StatusPill>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {alerts.length > 0 ? (
+        <div className="space-y-2">
+          {alerts.map((alert) => (
+            <InlineNotice key={alert.id} tone={toneForAlertSeverity(alert.severity)}>
+              <span className="font-semibold">{alert.title}</span>
+              {`: ${alert.description}`}
+            </InlineNotice>
+          ))}
+        </div>
+      ) : null}
+
+      {riskyCustomizations.length > 0 ? (
+        <details className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-3">
+          <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+            Customizacoes com atencao
+          </summary>
+          <div className="mt-3 space-y-2">
+            {riskyCustomizations.map((customization) => (
+              <div
+                className="rounded-[16px] bg-[color:var(--color-surface)] px-3 py-3"
+                key={customization.id}
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-medium text-[color:var(--color-ink)]">
+                    {customization.title}
+                  </p>
+                  <StatusPill tone={toneForCustomizationRisk(customization.riskLevel)}>
+                    {humanizeCustomerValue(customization.riskLevel)}
+                  </StatusPill>
+                </div>
+                <p className="mt-1 line-clamp-3 text-sm leading-6 text-[color:var(--color-muted)]">
+                  {customization.operationalNote ?? customization.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </details>
+      ) : null}
+    </div>
+  );
+}
+
 function SupportAccountContextOverview({
   accountContext,
   customer,
@@ -1795,6 +2093,10 @@ function SupportWorkspaceView({
   const [detailNoticeTone, setDetailNoticeTone] = useState<'default' | 'critical'>('default');
   const [submitting, setSubmitting] = useState(false);
   const [ticketRailOpen, setTicketRailOpen] = useState(true);
+  const [advancedToolsOpen, setAdvancedToolsOpen] = useState(false);
+  const conversationSectionRef = useRef<HTMLDivElement | null>(null);
+  const knowledgeSectionRef = useRef<HTMLDivElement | null>(null);
+  const advancedSectionRef = useRef<HTMLDetailsElement | null>(null);
 
   const loadQueue = useEffectEvent(async (preferredTicketId?: string | null) => {
     try {
@@ -1882,6 +2184,7 @@ function SupportWorkspaceView({
       setDetailPhase('ready');
       setStatusDraft(buildStatusChoices(detail.status)[0] ?? 'triage');
       setAssignDraft(detail.assignedToUserId ?? '');
+      setAdvancedToolsOpen(false);
       setComposerMode(detail.canAddMessage ? 'public' : detail.canAddInternalNote ? 'internal' : 'public');
       setKnowledgeSearch('');
       setKnowledgeNoteDraft('');
@@ -2500,16 +2803,49 @@ function SupportWorkspaceView({
       disabled: false,
     },
   ] as const;
+  const requesterLabel =
+    ticketDetail?.requesterContactFullName ??
+    ticketDetail?.requesterContactEmail ??
+    'Cliente B2B';
+  const currentAssignedLabel =
+    formatAssignedAgentSummary(currentAssignedAgent) ??
+    ticketDetail?.assignedToFullName ??
+    'Sem responsavel definido';
+
+  function openConversationSurface() {
+    conversationSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function openKnowledgeSurface() {
+    if (!ticketRailOpen) {
+      setTicketRailOpen(true);
+    }
+
+    window.requestAnimationFrame(() => {
+      knowledgeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  function openAdvancedSurface() {
+    if (!ticketRailOpen) {
+      setTicketRailOpen(true);
+    }
+
+    setAdvancedToolsOpen(true);
+    window.requestAnimationFrame(() => {
+      advancedSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
 
   return (
     <div className="space-y-5">
       <PageHeader
         eyebrow="Support Workspace"
-        title={variant === 'queue' ? 'Fila operacional' : 'Ticket workspace'}
+        title={variant === 'queue' ? 'Fila operacional' : 'Tratativa do ticket'}
         description={
           variant === 'queue'
             ? 'Sidebar global para navegar, subsidebar para triagem e area principal para decidir o proximo atendimento.'
-            : 'Sidebar global para navegar, subsidebar para operar o ticket e area principal reservada para conversa e resposta.'
+            : 'Conversa, resposta e tomada de acao ficam no centro. O contexto lateral so apoia a tratativa.'
         }
       />
 
@@ -2657,85 +2993,256 @@ function SupportWorkspaceView({
         />
       ) : (
         <div className="space-y-5">
-          <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-5 py-5 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="min-w-0 space-y-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>{humanizeStatus(ticketDetail.status)}</StatusPill>
-                    <span className="text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
-                      {humanizeToken(ticketDetail.priority)} · {humanizeToken(ticketDetail.severity)}
-                    </span>
-                </div>
-                <div className="space-y-2">
-                  <h3 className="max-w-5xl text-[1.9rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
-                    {ticketDetail.title}
-                  </h3>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[color:var(--color-muted)]">
-                    <span>Cliente: {ticketDetail.tenantDisplayName ?? ticketDetail.tenantLegalName ?? ticketDetail.tenantSlug}</span>
-                    <span>Solicitante: {ticketDetail.requesterContactFullName ?? 'Contato nao identificado'}</span>
-                    <span>
-                      Responsavel:{' '}
-                      {formatAssignedAgentSummary(currentAssignedAgent)
-                        ?? ticketDetail.assignedToFullName
-                        ?? 'Nao atribuido'}
-                    </span>
-                    <span>Ultima atividade: {formatDateTime(ticketDetail.lastMessageAt ?? ticketDetail.updatedAt)}</span>
+          <section className="overflow-hidden rounded-[28px] border border-[color:var(--color-border)] bg-white shadow-[0_18px_34px_rgba(19,33,79,0.08)]">
+            <div className="px-5 py-5 sm:px-6">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="min-w-0 space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>
+                      {humanizeStatus(ticketDetail.status)}
+                    </StatusPill>
+                    <StatusPill tone={toneForPriority(ticketDetail.priority)}>
+                      {humanizeToken(ticketDetail.priority)}
+                    </StatusPill>
+                    <StatusPill tone={toneForSeverity(ticketDetail.severity)}>
+                      {humanizeToken(ticketDetail.severity)}
+                    </StatusPill>
                   </div>
-                  {ticketDetail.description?.trim() ? (
-                    <p className="max-w-4xl text-sm leading-6 text-[color:var(--color-muted)]">
-                      {ticketDetail.description}
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-[color:var(--color-muted)]">
+                      Aberto em {formatDateTime(ticketDetail.createdAt)}
                     </p>
-                  ) : null}
+                    <h3 className="max-w-5xl text-[2rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
+                      {ticketDetail.title}
+                    </h3>
+                    {ticketDetail.description?.trim() ? (
+                      <p className="max-w-4xl text-sm leading-6 text-[color:var(--color-muted)]">
+                        {ticketDetail.description}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <GhostButton className="min-h-11 px-4" onClick={() => navigate('/support/queue')}>
+                    Voltar para fila
+                  </GhostButton>
+                  <GhostButton
+                    className="min-h-11 px-4"
+                    onClick={() => setTicketRailOpen((current) => !current)}
+                  >
+                    {ticketRailOpen ? 'Ocultar contexto' : 'Mostrar contexto'}
+                  </GhostButton>
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                <GhostButton
-                  className="min-h-11 px-4"
-                  onClick={() => navigate('/support/queue')}
+              <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                <div className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                    Cliente
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-[color:var(--color-ink)]">
+                    {ticketDetail.tenantDisplayName ?? ticketDetail.tenantLegalName ?? ticketDetail.tenantSlug}
+                  </p>
+                </div>
+                <div className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                    Solicitante
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-[color:var(--color-ink)]">
+                    {requesterLabel}
+                  </p>
+                </div>
+                <div className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                    Responsavel
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-[color:var(--color-ink)]">
+                    {currentAssignedLabel}
+                  </p>
+                </div>
+                <div className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                    Ultima atividade
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-[color:var(--color-ink)]">
+                    {formatDateTime(ticketDetail.lastMessageAt ?? ticketDetail.updatedAt)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-[color:var(--color-border)] px-4 sm:px-6">
+              <div className="flex items-center gap-1 overflow-x-auto py-2">
+                <button
+                  className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border border-[rgba(48,127,226,0.28)] bg-[rgba(48,127,226,0.1)] px-4 py-2 text-sm font-semibold text-[color:var(--color-brand-blue)]"
+                  onClick={openConversationSurface}
+                  type="button"
                 >
-                  Voltar para fila
-                </GhostButton>
-                <GhostButton
-                  className="min-h-11 px-4"
-                  onClick={() => setTicketRailOpen((current) => !current)}
+                  Conversar
+                </button>
+                <button
+                  className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border border-transparent px-4 py-2 text-sm font-medium text-[color:var(--color-muted)] transition hover:border-[color:var(--color-border)] hover:bg-[color:var(--color-surface)] hover:text-[color:var(--color-ink)]"
+                  onClick={openKnowledgeSurface}
+                  type="button"
                 >
-                  {ticketRailOpen ? 'Recolher contexto lateral' : 'Mostrar contexto lateral'}
-                </GhostButton>
+                  Conhecimento
+                </button>
+                <Link
+                  className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border border-transparent px-4 py-2 text-sm font-medium text-[color:var(--color-muted)] transition hover:border-[color:var(--color-border)] hover:bg-[color:var(--color-surface)] hover:text-[color:var(--color-ink)]"
+                  to="/help/genius"
+                >
+                  Central de ajuda
+                </Link>
+                <button
+                  className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border border-transparent px-4 py-2 text-sm font-medium text-[color:var(--color-muted)] transition hover:border-[color:var(--color-border)] hover:bg-[color:var(--color-surface)] hover:text-[color:var(--color-ink)]"
+                  onClick={openAdvancedSurface}
+                  type="button"
+                >
+                  Mais acoes
+                </button>
               </div>
             </div>
           </section>
 
           {detailNotice ? <InlineNotice tone={detailNoticeTone}>{detailNotice}</InlineNotice> : null}
 
-          {ticketRailOpen ? (
-            <WorkspaceSplit
-              layoutClassName="xl:grid-cols-[300px_minmax(0,1fr)]"
-              sidebar={
-                <ContextSubsidebar
-                  description="Operacao essencial, contexto do cliente e conhecimento de apoio ficam fora da conversa principal."
-                  title="Ferramentas do ticket"
-                >
-                  <ContextSubsidebarSection
-                    description="Status atual, prioridade e dono do ticket."
-                    title="Operacao"
-                  >
-                    <div className="flex flex-wrap gap-2">
-                      <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>{humanizeStatus(ticketDetail.status)}</StatusPill>
-                      <StatusPill tone={toneForPriority(ticketDetail.priority)}>{ticketDetail.priority}</StatusPill>
-                      <StatusPill tone={toneForSeverity(ticketDetail.severity)}>{ticketDetail.severity}</StatusPill>
-                    </div>
-                    <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                      {formatAssignedAgentSummary(currentAssignedAgent)
-                        ?? ticketDetail.assignedToFullName
-                        ?? 'Ticket sem agente atribuido no momento.'}
-                    </p>
-                  </ContextSubsidebarSection>
+          <div
+            className={cx(
+              'grid items-start gap-5',
+              ticketRailOpen && '2xl:grid-cols-[minmax(0,1fr)_360px]',
+            )}
+          >
+            <section
+              className="overflow-hidden rounded-[28px] border border-[color:var(--color-border)] bg-white shadow-[0_18px_34px_rgba(19,33,79,0.08)]"
+              ref={conversationSectionRef}
+            >
+              <div className="px-5 py-5 sm:px-6">
+                <div className="space-y-1">
+                  <h4 className="text-lg font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+                    Conversa em andamento
+                  </h4>
+                  <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                    A conversa fica no centro da tratativa. O contexto do ticket apoia a resposta sem roubar foco.
+                  </p>
+                </div>
 
-                  <ContextSubsidebarSection
-                    description="Atribuicao segura para manter a tratativa com responsavel claro."
-                    title="Responsavel"
-                  >
+                <div className="mt-5">
+                  <SupportConversation
+                    requesterName={requesterLabel}
+                    window={timelineWindow}
+                  />
+                </div>
+              </div>
+
+              <div className="border-t border-[color:var(--color-border)] bg-[linear-gradient(180deg,rgba(245,249,255,0.96),rgba(255,255,255,1))] px-5 py-5 sm:px-6">
+                <div className="space-y-4">
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      className={cx(
+                        'inline-flex min-h-12 items-center justify-center rounded-full border px-5 py-2 text-sm font-semibold transition',
+                        composerMode === 'public'
+                          ? 'border-[rgba(48,127,226,0.28)] bg-[rgba(48,127,226,0.1)] text-[color:var(--color-brand-blue)]'
+                          : 'border-[color:var(--color-border)] bg-white text-[color:var(--color-muted)]',
+                      )}
+                      disabled={!canUsePublicComposer}
+                      onClick={() => setComposerMode('public')}
+                      type="button"
+                    >
+                      Resposta publica
+                    </button>
+                    <button
+                      className={cx(
+                        'inline-flex min-h-12 items-center justify-center rounded-full border px-5 py-2 text-sm font-semibold transition',
+                        composerMode === 'internal'
+                          ? 'border-[color:var(--color-danger-border)] bg-[color:var(--color-danger-surface)] text-[color:var(--color-danger-ink)]'
+                          : 'border-[color:var(--color-border)] bg-white text-[color:var(--color-muted)]',
+                      )}
+                      disabled={!canUseInternalComposer}
+                      onClick={() => setComposerMode('internal')}
+                      type="button"
+                    >
+                      Nota interna
+                    </button>
+                  </div>
+
+                  <InlineNotice tone={composerMode === 'public' ? 'default' : 'critical'}>
+                    {composerMode === 'public'
+                      ? 'Resposta publica pronta para o cliente B2B.'
+                      : 'Nota interna restrita ao time autorizado.'}
+                  </InlineNotice>
+
+                  <form className="space-y-4" onSubmit={handleSubmitComposer}>
+                    <Field
+                      label={composerMode === 'public' ? 'Responder cliente' : 'Registrar nota interna'}
+                    >
+                      <TextareaInput
+                        className="min-h-[180px]"
+                        onChange={(event) =>
+                          composerMode === 'public'
+                            ? setMessageDraft(event.target.value)
+                            : setNoteDraft(event.target.value)
+                        }
+                        placeholder={
+                          composerMode === 'public'
+                            ? 'Escreva a resposta com o proximo passo claro para o cliente.'
+                            : 'Registre contexto interno, handoff ou decisao da tratativa.'
+                        }
+                        value={composerDraft}
+                      />
+                    </Field>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                        {composerMode === 'public'
+                          ? 'Mantenha a devolutiva objetiva, com acao clara e linguagem operacional.'
+                          : 'Use a nota interna para registrar contexto sem poluir a conversa visivel ao cliente.'}
+                      </p>
+                      <AppButton
+                        className={
+                          composerMode === 'internal'
+                            ? 'min-h-12 px-6 bg-[linear-gradient(135deg,#7c2648,#b63f76)]'
+                            : 'min-h-12 px-6'
+                        }
+                        disabled={composerDisabled}
+                        type="submit"
+                      >
+                        {submitting
+                          ? 'Salvando...'
+                          : composerMode === 'public'
+                            ? 'Enviar resposta'
+                            : 'Salvar nota'}
+                      </AppButton>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </section>
+
+            {ticketRailOpen ? (
+              <aside className="space-y-3 2xl:sticky 2xl:top-4">
+                <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
+                  <div className="space-y-4">
+                    <div className="space-y-1">
+                      <h4 className="text-base font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+                        Acoes do ticket
+                      </h4>
+                      <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                        Ajuste dono e andamento sem sair da conversa.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>
+                        {humanizeStatus(ticketDetail.status)}
+                      </StatusPill>
+                      <StatusPill tone={toneForPriority(ticketDetail.priority)}>
+                        {humanizeToken(ticketDetail.priority)}
+                      </StatusPill>
+                      <StatusPill tone={toneForSeverity(ticketDetail.severity)}>
+                        {humanizeToken(ticketDetail.severity)}
+                      </StatusPill>
+                    </div>
+
                     {agentsPhase === 'contract-unavailable' ? (
                       <InlineNotice tone="critical">
                         {agentsMessage ?? 'A lista de agentes nao ficou disponivel neste ambiente.'}
@@ -2750,11 +3257,11 @@ function SupportWorkspaceView({
                       </p>
                     ) : assignableAgents.length === 0 ? (
                       <InlineNotice tone="warning">
-                        Nenhum agente ativo ficou disponivel para este cliente. Use o fallback manual apenas se necessario.
+                        Nenhum agente ativo ficou disponivel para este cliente.
                       </InlineNotice>
                     ) : (
                       <form className="space-y-3" onSubmit={handleAssign}>
-                        <Field label="Selecionar agente">
+                        <Field label="Responsavel">
                           <SelectInput
                             onChange={(event) => setAssignDraft(event.target.value)}
                             value={assignDraft}
@@ -2774,7 +3281,7 @@ function SupportWorkspaceView({
                         >
                           {submitting ? 'Salvando...' : 'Salvar responsavel'}
                         </AppButton>
-                        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+                        <div className="grid gap-2 sm:grid-cols-2">
                           <GhostButton
                             className="min-h-11 px-4"
                             disabled={
@@ -2800,13 +3307,8 @@ function SupportWorkspaceView({
                         </div>
                       </form>
                     )}
-                  </ContextSubsidebarSection>
 
-                  <ContextSubsidebarSection
-                    description="Mova o ticket sem tirar a conversa do foco principal."
-                    title="Status"
-                  >
-                    <form className="space-y-3" onSubmit={handleUpdateStatus}>
+                    <form className="space-y-3 border-t border-[color:var(--color-border)] pt-4" onSubmit={handleUpdateStatus}>
                       <Field label="Mover status">
                         <SelectInput
                           onChange={(event) =>
@@ -2821,10 +3323,10 @@ function SupportWorkspaceView({
                           ))}
                         </SelectInput>
                       </Field>
-                      <Field label="Nota da transicao">
+                      <Field label="Observacao da mudanca">
                         <TextareaInput
                           onChange={(event) => setStatusNote(event.target.value)}
-                          placeholder="Opcional. Explique a mudanca para o proximo operador."
+                          placeholder="Opcional. Deixe o proximo passo claro para quem assumir o ticket."
                           value={statusNote}
                         />
                       </Field>
@@ -2833,24 +3335,30 @@ function SupportWorkspaceView({
                         disabled={submitting || !ticketDetail.canUpdateStatus}
                         type="submit"
                       >
-                        {submitting ? 'Atualizando...' : 'Salvar status'}
+                        {submitting ? 'Atualizando...' : 'Salvar andamento'}
                       </AppButton>
                     </form>
-                  </ContextSubsidebarSection>
+                  </div>
+                </section>
 
-                  <ContextSubsidebarSection
-                    description="Stack, alertas e contatos uteis para responder sem abrir outra tela."
-                    title="Cliente B2B"
-                  >
-                    <SupportCustomerRail
+                <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
+                  <div className="space-y-1">
+                    <h4 className="text-base font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+                      Cliente
+                    </h4>
+                    <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                      Contexto rapido para responder sem sair da tratativa.
+                    </p>
+                  </div>
+                  <div className="mt-4">
+                    <SupportTicketCustomerSnapshot
                       accountContext={customerAccountContext}
-                      compact
                       customer={customer}
-                      recentEventsWindow={customerRecentEvents}
-                      recentTicketsWindow={customerRecentTickets}
                     />
-                  </ContextSubsidebarSection>
+                  </div>
+                </section>
 
+                <div ref={knowledgeSectionRef}>
                   <SupportKnowledgePanel
                     articles={filteredKnowledgeArticles}
                     links={knowledgeLinks}
@@ -2871,20 +3379,44 @@ function SupportWorkspaceView({
                     phase={knowledgePhase}
                     search={knowledgeSearch}
                   />
+                </div>
 
-                  <ContextSubsidebarSection
-                    collapsible
-                    description="Fallback manual, historico tecnico e acoes de excecao ficam fora da primeira camada."
-                    title="Historico tecnico e avancado"
-                  >
+                <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
+                  <div className="space-y-1">
+                    <h4 className="text-base font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+                      Atividade recente
+                    </h4>
+                    <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                      Mudancas de apoio sem poluir a conversa principal.
+                    </p>
+                  </div>
+                  <div className="mt-4">
+                    <SupportRecentActivity window={timelineWindow} />
+                  </div>
+                </section>
+
+                <details
+                  className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]"
+                  onToggle={(event) => setAdvancedToolsOpen(event.currentTarget.open)}
+                  open={advancedToolsOpen}
+                  ref={advancedSectionRef}
+                >
+                  <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                    Historico tecnico e mais acoes
+                  </summary>
+                  <div className="mt-4 space-y-4">
+                    <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                      Excecoes, fallback manual e trilha tecnica ficam recolhidos por padrao.
+                    </p>
+
                     <form className="space-y-3" onSubmit={handleAssign}>
                       <Field
                         label="Responsavel manual"
-                        description="Use apenas em excecoes. O fluxo principal de atribuicao deve continuar no seletor acima."
+                        description="Use apenas em excecao, quando o seletor principal nao atender."
                       >
                         <TextInput
                           onChange={(event) => setAssignDraft(event.target.value)}
-                          placeholder="Cole o identificador manual apenas em excecao"
+                          placeholder="Digite o identificador manual apenas em excecao"
                           value={assignDraft}
                         />
                       </Field>
@@ -2935,7 +3467,7 @@ function SupportWorkspaceView({
                       </div>
                     ) : null}
 
-                    <details className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-3">
+                    <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
                       <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
                         Historico tecnico recente
                       </summary>
@@ -2943,185 +3475,11 @@ function SupportWorkspaceView({
                         <SupportTechnicalHistory window={timelineWindow} />
                       </div>
                     </details>
-                  </ContextSubsidebarSection>
-                </ContextSubsidebar>
-              }
-              main={
-                <Panel
-                  className="bg-white"
-                  title="Conversa em andamento"
-                  description="A conversa fica no centro da tratativa. Resposta publica e nota interna usam o mesmo fluxo, sem desviar para formularios tecnicos."
-                >
-                  <div className="space-y-4">
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        className={cx(
-                          'inline-flex min-h-11 items-center justify-center rounded-full border px-5 py-2 text-sm font-semibold transition',
-                          composerMode === 'public'
-                            ? 'border-[rgba(48,127,226,0.28)] bg-[rgba(48,127,226,0.1)] text-[color:var(--color-brand-blue)]'
-                            : 'border-[color:var(--color-border)] bg-white text-[color:var(--color-muted)]',
-                        )}
-                        disabled={!canUsePublicComposer}
-                        onClick={() => setComposerMode('public')}
-                        type="button"
-                      >
-                        Resposta publica
-                      </button>
-                      <button
-                        className={cx(
-                          'inline-flex min-h-11 items-center justify-center rounded-full border px-5 py-2 text-sm font-semibold transition',
-                          composerMode === 'internal'
-                            ? 'border-[color:var(--color-danger-border)] bg-[color:var(--color-danger-surface)] text-[color:var(--color-danger-ink)]'
-                            : 'border-[color:var(--color-border)] bg-white text-[color:var(--color-muted)]',
-                        )}
-                        disabled={!canUseInternalComposer}
-                        onClick={() => setComposerMode('internal')}
-                        type="button"
-                      >
-                        Nota interna
-                      </button>
-                    </div>
-
-                    <InlineNotice tone={composerMode === 'public' ? 'default' : 'critical'}>
-                      {composerMode === 'public'
-                        ? 'Modo resposta publica: a devolutiva abaixo sera visivel ao cliente B2B.'
-                        : 'Modo nota interna: este registro fica restrito ao time interno autorizado.'}
-                    </InlineNotice>
-
-                    <form className="space-y-4" onSubmit={handleSubmitComposer}>
-                      <Field
-                        label={composerMode === 'public' ? 'Responder cliente' : 'Registrar nota interna'}
-                      >
-                        <TextareaInput
-                          onChange={(event) =>
-                            composerMode === 'public'
-                              ? setMessageDraft(event.target.value)
-                              : setNoteDraft(event.target.value)
-                          }
-                          placeholder={
-                            composerMode === 'public'
-                              ? 'Escreva a devolutiva tecnico-operacional ao cliente B2B.'
-                              : 'Registre contexto interno, proximo passo, handoff ou observacao de suporte.'
-                          }
-                          value={composerDraft}
-                        />
-                      </Field>
-                      <AppButton
-                        className={
-                          composerMode === 'internal'
-                            ? 'min-h-12 px-6 bg-[linear-gradient(135deg,#7c2648,#b63f76)]'
-                            : 'min-h-12 px-6'
-                        }
-                        disabled={composerDisabled}
-                        type="submit"
-                      >
-                        {submitting
-                          ? 'Salvando...'
-                          : composerMode === 'public'
-                            ? 'Enviar resposta publica'
-                            : 'Registrar nota interna'}
-                      </AppButton>
-                    </form>
-
-                    <div className="border-t border-[color:var(--color-border)] pt-4">
-                      <div className="mb-3 space-y-1">
-                        <h4 className="text-base font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
-                          Conversa recente
-                        </h4>
-                        <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                          Mensagens e notas internas ficam no fluxo principal. O historico tecnico e os eventos repetitivos ficam sob demanda na lateral.
-                        </p>
-                      </div>
-                      <SupportConversation window={timelineWindow} />
-                    </div>
                   </div>
-                </Panel>
-              }
-            />
-          ) : (
-            <Panel
-              className="bg-white"
-              title="Conversa em andamento"
-              description="Reabra o contexto lateral quando precisar ajustar status, responsavel ou consultar o cliente."
-            >
-              <div className="space-y-4">
-                <InlineNotice>
-                  O contexto lateral esta recolhido. A conversa continua ocupando toda a largura util.
-                </InlineNotice>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    className={cx(
-                      'inline-flex min-h-11 items-center justify-center rounded-full border px-5 py-2 text-sm font-semibold transition',
-                      composerMode === 'public'
-                        ? 'border-[rgba(48,127,226,0.28)] bg-[rgba(48,127,226,0.1)] text-[color:var(--color-brand-blue)]'
-                        : 'border-[color:var(--color-border)] bg-white text-[color:var(--color-muted)]',
-                    )}
-                    disabled={!canUsePublicComposer}
-                    onClick={() => setComposerMode('public')}
-                    type="button"
-                  >
-                    Resposta publica
-                  </button>
-                  <button
-                    className={cx(
-                      'inline-flex min-h-11 items-center justify-center rounded-full border px-5 py-2 text-sm font-semibold transition',
-                      composerMode === 'internal'
-                        ? 'border-[color:var(--color-danger-border)] bg-[color:var(--color-danger-surface)] text-[color:var(--color-danger-ink)]'
-                        : 'border-[color:var(--color-border)] bg-white text-[color:var(--color-muted)]',
-                    )}
-                    disabled={!canUseInternalComposer}
-                    onClick={() => setComposerMode('internal')}
-                    type="button"
-                  >
-                    Nota interna
-                  </button>
-                </div>
-                <form className="space-y-4" onSubmit={handleSubmitComposer}>
-                  <Field label={composerMode === 'public' ? 'Responder cliente' : 'Registrar nota interna'}>
-                    <TextareaInput
-                      onChange={(event) =>
-                        composerMode === 'public'
-                          ? setMessageDraft(event.target.value)
-                          : setNoteDraft(event.target.value)
-                      }
-                      placeholder={
-                        composerMode === 'public'
-                          ? 'Escreva a devolutiva tecnico-operacional ao cliente B2B.'
-                          : 'Registre contexto interno, proximo passo, handoff ou observacao de suporte.'
-                      }
-                      value={composerDraft}
-                    />
-                  </Field>
-                  <AppButton
-                    className={
-                      composerMode === 'internal'
-                        ? 'min-h-12 px-6 bg-[linear-gradient(135deg,#7c2648,#b63f76)]'
-                        : 'min-h-12 px-6'
-                    }
-                    disabled={composerDisabled}
-                    type="submit"
-                  >
-                    {submitting
-                      ? 'Salvando...'
-                      : composerMode === 'public'
-                        ? 'Enviar resposta publica'
-                        : 'Registrar nota interna'}
-                  </AppButton>
-                </form>
-                <div className="border-t border-[color:var(--color-border)] pt-4">
-                  <div className="mb-3 space-y-1">
-                    <h4 className="text-base font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
-                      Conversa recente
-                    </h4>
-                    <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                      Reabra o contexto lateral apenas quando precisar consultar operacao, cliente ou conhecimento.
-                    </p>
-                  </div>
-                  <SupportConversation window={timelineWindow} />
-                </div>
-              </div>
-            </Panel>
-          )}
+                </details>
+              </aside>
+            ) : null}
+          </div>
         </div>
       )}
     </div>

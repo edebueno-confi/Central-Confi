@@ -176,10 +176,16 @@
   - admin quando autorizado
 - o ticket vira workspace unico de atendimento:
   1. cabecalho compacto
-  2. composer
-  3. conversa recente
-  4. rail operacional recolhivel
-  5. historico tecnico e acoes de excecao recolhidos
+  2. toolbar operacional na propria superficie
+  3. conversa em formato de troca real entre cliente e equipe
+  4. composer amplo e central
+  5. rail operacional recolhivel
+  6. historico tecnico e acoes de excecao recolhidos
+- o ticket nao deve mais parecer pilha de cards administrativos:
+  - cliente do lado esquerdo
+  - equipe do lado direito
+  - nota interna separada visualmente
+  - contexto e conhecimento fora da coluna principal
 - `/support/customers/:tenantId` continua apoiando a tratativa, mas com stack, tickets, contatos e eventos em leitura curta
 - a referencia visual transversal dessa camada fica em `INTERNAL_WORKSPACE_DESIGN_SYSTEM.md`
 

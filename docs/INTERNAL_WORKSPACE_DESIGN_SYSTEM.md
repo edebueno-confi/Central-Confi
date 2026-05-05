@@ -106,7 +106,13 @@ Fixar um mini design system para superficies operacionais internas do Genius Sup
 
 ### Support
 - queue: subsidebar com filtros, filas rapidas e atalhos; area principal com fila dominante e preview curto
-- ticket: subsidebar com status, responsavel, cliente, conhecimento relacionado e historico tecnico recolhido; area principal com conversa e composer
+- ticket:
+  - cabecalho operacional compacto com metadados essenciais
+  - toolbar util dentro da propria superficie
+  - area principal com conversa em formato de troca real e composer amplo
+  - cliente de um lado, equipe do outro, nota interna separada
+  - rail direito com status, responsavel, cliente, conhecimento e atividade recente
+  - historico tecnico e acoes avancadas recolhidos
 - customers: subsidebar com clientes acessiveis e atalhos; area principal com stack, alertas, tickets recentes e contatos
 
 ### Knowledge

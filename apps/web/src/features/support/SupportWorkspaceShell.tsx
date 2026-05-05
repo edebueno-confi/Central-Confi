@@ -8,12 +8,12 @@ const SIDEBAR_STORAGE_KEY = 'support-workspace-shell-collapsed';
 
 const routeCopy: Record<string, { title: string; subtitle: string }> = {
   '/support': {
-    title: 'Agent workspace',
+    title: 'Workspace de atendimento',
     subtitle:
       'Fila, tratativa e contexto operacional do cliente B2B na mesma superficie interna.',
   },
   '/support/queue': {
-    title: 'Queue',
+    title: 'Fila',
     subtitle: 'Triagem rapida com fila dominante e preview curto do ticket em foco.',
   },
   '/support/tickets': {
@@ -26,7 +26,7 @@ const routeCopy: Record<string, { title: string; subtitle: string }> = {
 function describeRoute(pathname: string) {
   if (pathname.startsWith('/support/customers/')) {
     return {
-      title: 'Customers',
+      title: 'Clientes',
       subtitle:
         'Contexto operacional do cliente B2B com stack, tickets recentes e contatos uteis para a tratativa.',
     };
@@ -34,7 +34,7 @@ function describeRoute(pathname: string) {
 
   if (pathname.startsWith('/support/tickets/')) {
     return {
-      title: 'Ticket workspace',
+      title: 'Tratativa do ticket',
       subtitle:
         'Conversa primeiro, operacao essencial no rail e historico tecnico fora do fluxo principal.',
     };
@@ -135,32 +135,33 @@ function SupportSidebar({
     >
       <div
         className={cx(
-          'flex items-center gap-3 rounded-[22px] border border-white/10 bg-white/6 px-3 py-3',
-          collapsed && 'justify-center px-2',
+          'rounded-[22px] border border-white/10 bg-white/6 px-3 py-3',
+          collapsed ? 'flex flex-col items-center gap-2 px-2' : 'flex items-center gap-3',
         )}
       >
-        <img alt="Mascote Genius" className="w-11 shrink-0" src={mascotUrl} />
-        {!collapsed ? (
-          <div className="min-w-0 space-y-1">
-            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.26em] text-white/58">
-              Genius
-            </p>
-            <h1 className="text-base font-semibold tracking-[-0.04em]">
-              Support Workspace
-            </h1>
-          </div>
-        ) : null}
-      </div>
-
-      <div className={cx('mt-3 flex', collapsed ? 'justify-center' : 'justify-end')}>
+        <div className={cx('flex min-w-0 items-center gap-3', collapsed && 'justify-center')}>
+          <img alt="Mascote Genius" className="w-11 shrink-0" src={mascotUrl} />
+          {!collapsed ? (
+            <div className="min-w-0 space-y-1">
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.26em] text-white/58">
+                Genius
+              </p>
+              <h1 className="text-base font-semibold tracking-[-0.04em]">
+                Support Workspace
+              </h1>
+            </div>
+          ) : null}
+        </div>
         <GhostButton
+          aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
           className={cx(
-            'min-h-10 border-white/16 bg-white/8 px-3 text-white hover:bg-white/12 hover:text-white',
-            collapsed && 'w-full justify-center px-0',
+            'min-h-10 shrink-0 border-white/16 bg-white/8 px-3 text-white hover:bg-white/12 hover:text-white',
+            collapsed ? 'w-10 px-0' : 'ml-auto',
           )}
           onClick={onToggle}
+          title={collapsed ? 'Expandir menu' : 'Recolher menu'}
         >
-          {collapsed ? '>>' : '<<'}
+          {collapsed ? '>' : '<'}
         </GhostButton>
       </div>
 
@@ -249,13 +250,7 @@ function SupportQuickNav() {
   );
 }
 
-function SupportTopbar({
-  sidebarCollapsed,
-  onToggleSidebar,
-}: {
-  sidebarCollapsed: boolean;
-  onToggleSidebar: () => void;
-}) {
+function SupportTopbar() {
   const location = useLocation();
   const { runtimeConfig, signOut } = useAuthContext();
   const copy = describeRoute(location.pathname);
@@ -279,12 +274,6 @@ function SupportTopbar({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <GhostButton
-            className="hidden min-h-11 px-4 lg:inline-flex"
-            onClick={onToggleSidebar}
-          >
-            {sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'}
-          </GhostButton>
           <GhostButton
             className="min-h-11 border-[rgba(48,127,226,0.18)] text-[color:var(--color-brand-blue)]"
             onClick={() => void signOut()}
@@ -318,10 +307,7 @@ export function SupportWorkspaceShell() {
 
         <div className="min-w-0 flex-1">
           <div className="space-y-4">
-            <SupportTopbar
-              onToggleSidebar={() => setSidebarCollapsed((current) => !current)}
-              sidebarCollapsed={sidebarCollapsed}
-            />
+            <SupportTopbar />
             <main className="min-w-0">
               <Outlet />
             </main>

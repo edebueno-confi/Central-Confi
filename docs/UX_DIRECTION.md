@@ -66,6 +66,12 @@
 - a fila deve dominar a triagem
 - o ticket precisa parecer uma ferramenta de atendimento diario, nao dashboard
 - conversa e composer ficam no fluxo principal
+- a tratativa do ticket deve assumir formato de workspace de conversa:
+  - cabecalho operacional compacto
+  - toolbar util dentro da propria superficie
+  - mensagens do cliente e da equipe em lados distintos
+  - nota interna visualmente separada
+  - rail direito apenas com acoes do ticket, cliente, conhecimento e atividade recente
 - historico tecnico fica recolhido
 - contexto do cliente apoia a tratativa, sem dominar a tela
 

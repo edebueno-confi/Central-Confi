@@ -362,28 +362,46 @@ export function Field({
   );
 }
 
-export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
+export function TextInput({
+  className,
+  ...props
+}: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className="h-11 rounded-2xl border border-[color:var(--color-border)] bg-white px-4 text-sm text-[color:var(--color-ink)] outline-none transition placeholder:text-[color:var(--color-muted)] focus:border-[color:var(--color-brand-blue)]/60 focus:ring-2 focus:ring-[color:var(--color-brand-blue)]/20"
+      className={cx(
+        'h-11 rounded-2xl border border-[color:var(--color-border)] bg-white px-4 text-sm text-[color:var(--color-ink)] outline-none transition placeholder:text-[color:var(--color-muted)] focus:border-[color:var(--color-brand-blue)]/60 focus:ring-2 focus:ring-[color:var(--color-brand-blue)]/20',
+        className,
+      )}
       {...props}
     />
   );
 }
 
-export function SelectInput(props: SelectHTMLAttributes<HTMLSelectElement>) {
+export function SelectInput({
+  className,
+  ...props
+}: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
-      className="h-11 min-w-0 w-full rounded-2xl border border-[color:var(--color-border)] bg-white px-4 text-sm text-[color:var(--color-ink)] outline-none transition focus:border-[color:var(--color-brand-blue)]/60 focus:ring-2 focus:ring-[color:var(--color-brand-blue)]/20"
+      className={cx(
+        'h-11 min-w-0 w-full rounded-2xl border border-[color:var(--color-border)] bg-white px-4 text-sm text-[color:var(--color-ink)] outline-none transition focus:border-[color:var(--color-brand-blue)]/60 focus:ring-2 focus:ring-[color:var(--color-brand-blue)]/20',
+        className,
+      )}
       {...props}
     />
   );
 }
 
-export function TextareaInput(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+export function TextareaInput({
+  className,
+  ...props
+}: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <textarea
-      className="min-h-28 rounded-[24px] border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm text-[color:var(--color-ink)] outline-none transition placeholder:text-[color:var(--color-muted)] focus:border-[color:var(--color-brand-blue)]/60 focus:ring-2 focus:ring-[color:var(--color-brand-blue)]/20"
+      className={cx(
+        'min-h-28 rounded-[24px] border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm text-[color:var(--color-ink)] outline-none transition placeholder:text-[color:var(--color-muted)] focus:border-[color:var(--color-brand-blue)]/60 focus:ring-2 focus:ring-[color:var(--color-brand-blue)]/20',
+        className,
+      )}
       {...props}
     />
   );

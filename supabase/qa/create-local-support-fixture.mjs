@@ -1219,13 +1219,17 @@ async function ensureKnowledgeCategory(adminSession, tenantId, category) {
   return queryKnowledgeCategoryBySlug(category.slug);
 }
 
-function queryKnowledgeArticleBySlug(slug) {
+function queryKnowledgeArticleBySlug(slug, tenantId = null) {
+  const tenantPredicate = tenantId
+    ? `and tenant_id = '${sqlEscape(tenantId)}'::uuid`
+    : '';
   const result = runSupabaseDbQuery(`
     select
       id::text as id,
       status::text as status
     from public.knowledge_articles
     where slug = '${sqlEscape(slug)}'
+      ${tenantPredicate}
     limit 1;
   `);
 
@@ -1233,7 +1237,7 @@ function queryKnowledgeArticleBySlug(slug) {
 }
 
 async function ensureKnowledgeArticlePublished(adminSession, tenantId, article, categoryId) {
-  let existing = queryKnowledgeArticleBySlug(article.slug);
+  let existing = queryKnowledgeArticleBySlug(article.slug, tenantId);
 
   if (!existing?.id) {
     await callRpcAsUser({
@@ -1254,7 +1258,7 @@ async function ensureKnowledgeArticlePublished(adminSession, tenantId, article, 
       },
     });
 
-    existing = queryKnowledgeArticleBySlug(article.slug);
+    existing = queryKnowledgeArticleBySlug(article.slug, tenantId);
   }
 
   if (!existing?.id) {
@@ -1271,7 +1275,7 @@ async function ensureKnowledgeArticlePublished(adminSession, tenantId, article, 
         p_article_id: existing.id,
       },
     });
-    existing = queryKnowledgeArticleBySlug(article.slug);
+    existing = queryKnowledgeArticleBySlug(article.slug, tenantId);
   }
 
   if (existing?.status === 'review') {
@@ -1284,7 +1288,7 @@ async function ensureKnowledgeArticlePublished(adminSession, tenantId, article, 
         p_article_id: existing.id,
       },
     });
-    existing = queryKnowledgeArticleBySlug(article.slug);
+    existing = queryKnowledgeArticleBySlug(article.slug, tenantId);
   }
 
   return existing?.id ?? null;
@@ -1310,7 +1314,7 @@ function queryTicketKnowledgeLink(ticketId, linkType, articleSlug = null) {
   return result.rows?.[0]?.id ?? null;
 }
 
-async function ensureTicketKnowledgeLink({ actorSession, ticketId, link }) {
+async function ensureTicketKnowledgeLink({ actorSession, tenantId, ticketId, link }) {
   const existingId = queryTicketKnowledgeLink(ticketId, link.linkType, link.articleSlug ?? null);
   if (existingId) {
     return existingId;
@@ -1332,7 +1336,7 @@ async function ensureTicketKnowledgeLink({ actorSession, ticketId, link }) {
     return created?.id ?? queryTicketKnowledgeLink(ticketId, link.linkType, null);
   }
 
-  const article = queryKnowledgeArticleBySlug(link.articleSlug);
+  const article = queryKnowledgeArticleBySlug(link.articleSlug, tenantId);
   if (!article?.id) {
     fail(`Artigo de fixture nao encontrado para o vinculo ${link.linkType}: ${link.articleSlug}.`);
   }
@@ -1949,14 +1953,20 @@ async function main() {
 
   for (const link of FIXTURE.knowledgeBase.links ?? []) {
     const ticketId = ticketMap.get(`${link.ticketTenantSlug}::${link.ticketTitle}`);
+    const tenantId = tenantMap.get(link.ticketTenantSlug);
     const actorSession = await getSessionForKey(link.actorKey);
 
     if (!ticketId) {
       fail(`Ticket ausente para vinculo de conhecimento: ${link.ticketTitle}.`);
     }
 
+    if (!tenantId) {
+      fail(`Tenant ausente para vinculo de conhecimento: ${link.ticketTenantSlug}.`);
+    }
+
     const linkId = await ensureTicketKnowledgeLink({
       actorSession,
+      tenantId,
       ticketId,
       link,
     });

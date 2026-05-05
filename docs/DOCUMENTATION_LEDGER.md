@@ -1034,3 +1034,27 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - formaliza um contrato de UX para futuras superficies internas sem reintroduzir layout generico do Admin Console
   - cria baseline para decidir quando filtros, ferramentas e contexto pertencem a subsidebar ou a area principal
+
+### Ajuste complementar 6.18 - Ticket workspace guiado por blueprint operacional
+- fase: `6.18`
+- commit: `pendente`
+- branch: `codex/phase6-18-ticket-workspace-blueprint`
+- data: `2026-05-05`
+- resumo funcional: a tela `/support/tickets/:ticketId` foi refatorada para seguir um blueprint de tratativa operacional, com conversa central, toolbar util na propria superficie e rail direito compacto.
+- docs alterados:
+  - `docs/UX_DIRECTION.md`
+  - `docs/INTERNAL_WORKSPACE_DESIGN_SYSTEM.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de backend
+  - nenhuma view ou RPC nova
+- telas afetadas:
+  - `/support/tickets/:ticketId`
+  - `SupportWorkspaceShell` como ajuste neutro de sidebar
+- riscos restantes:
+  - o rail do ticket pode pedir novo recorte se o contexto do cliente continuar crescendo
+  - a copia segura de link publico de artigo continua dependente do contrato futuro da fase 6.17
+- impacto na FAQ futura:
+  - consolida o padrao de tratativa como superficie de conversa real, e nao como painel administrativo
