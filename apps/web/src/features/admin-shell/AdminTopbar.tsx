@@ -63,24 +63,24 @@ export function AdminTopbar({
   const location = useLocation();
   const { runtimeConfig, signOut } = useAuthContext();
   const copy = routeCopy[location.pathname] ?? routeCopy['/admin/tenants'];
-  const compactMode = location.pathname === '/admin/knowledge';
+  const compactMode =
+    location.pathname === '/admin/knowledge' || location.pathname === '/admin/access';
+  const showQuickNav = location.pathname === '/admin/knowledge';
 
   if (compactMode) {
     return (
       <header className="rounded-[28px] border border-[color:var(--color-border)] bg-white/84 px-5 py-4 shadow-[var(--shadow-panel)] backdrop-blur sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <StatusPill tone="accent">{runtimeConfig?.appEnv ?? 'development'}</StatusPill>
-            <StatusPill>platform_admin</StatusPill>
+            <span className="inline-flex min-h-9 items-center rounded-full border border-[rgba(48,127,226,0.24)] bg-[rgba(48,127,226,0.08)] px-3 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-brand-blue)]">
+              {runtimeConfig?.appEnv ?? 'development'}
+            </span>
+            <span className="inline-flex min-h-9 items-center rounded-full border border-[rgba(48,127,226,0.24)] bg-white px-3 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-brand-blue)]">
+              platform_admin
+            </span>
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <GhostButton
-              className="hidden min-h-11 px-4 xl:inline-flex"
-              onClick={onToggleSidebar}
-            >
-              {sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'}
-            </GhostButton>
             <GhostButton
               className="border-[rgba(48,127,226,0.18)] text-[color:var(--color-brand-blue)]"
               onClick={() => void signOut()}
@@ -90,9 +90,11 @@ export function AdminTopbar({
           </div>
         </div>
 
-        <div className="mt-4">
-          <AdminQuickNav />
-        </div>
+        {showQuickNav ? (
+          <div className="mt-4">
+            <AdminQuickNav />
+          </div>
+        ) : null}
       </header>
     );
   }

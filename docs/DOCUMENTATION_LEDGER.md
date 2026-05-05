@@ -1086,3 +1086,29 @@ Cada registro deve informar:
   - correcao de escopo aplicada sem alterar backend, schema, RPCs ou contracts
 - impacto na FAQ futura:
   - registra que fidelidade de tratativa deve ser medida por densidade, hierarquia e continuidade operacional, nao so por reorganizacao de cards
+
+### Fase 6.20 - Admin Access Blueprint
+- fase: `6.20`
+- branch: `codex/phase6-20-admin-access-blueprint`
+- data: `2026-05-05`
+- resumo funcional: a tela `/admin/access` foi reconstruida para o layout administrativo em 3 colunas da blueprint aprovada, com filtros a esquerda, base central de acesso e rail direito de detalhe ou convite.
+- docs alterados:
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- telas afetadas:
+  - `/admin/access`
+  - `AdminTopbar` como modo compacto do shell desta familia de tela
+  - `AdminSidebar` como refinamento visual do shell desta familia de tela
+- views/RPCs afetadas:
+  - nenhuma alteracao de backend
+  - nenhuma view ou RPC nova
+- riscos restantes:
+  - a fase preserva apenas as acoes com contrato real; reset de senha e desativacao dedicada continuam fora do contrato atual
+  - a tela ainda usa memberships como base operacional de acesso, entao detalhes de MFA e credenciais seguem como `Indisponivel`
+- validacao final:
+  - `npm run contracts:typecheck`
+  - `npm run web:typecheck`
+  - `npm run web:build`
+  - screenshot final em `.tmp/phase6-20-admin-access/admin-access-final.png`
+- impacto na FAQ futura:
+  - formaliza a blueprint de Access como control plane operacional, sem voltar para a tela longa de membership da implementacao anterior

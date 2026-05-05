@@ -19,7 +19,8 @@ export function AdminSidebar({
 }) {
   const location = useLocation();
   const { gate } = useAuthContext();
-  const compactKnowledgeMode = location.pathname === '/admin/knowledge';
+  const compactKnowledgeMode =
+    location.pathname === '/admin/knowledge' || location.pathname === '/admin/access';
 
   return (
     <aside
@@ -29,34 +30,37 @@ export function AdminSidebar({
       )}
     >
       {compactKnowledgeMode ? (
-        <div
-          className={cx(
-            'flex items-start justify-between gap-3',
-            collapsed ? 'px-1 py-1' : 'px-2 py-1',
-          )}
-        >
-          <div className={cx('flex items-center gap-3', collapsed && 'justify-center')}>
-            <img alt="Mascote Genius" className="w-12" src={mascotUrl} />
-            {!collapsed ? (
-              <div className="space-y-1">
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.26em] text-white/58">
-                  Genius Support OS
-                </p>
-                <p className="text-sm font-medium text-white/82">Admin Console</p>
-              </div>
-            ) : null}
+        <div className={cx('space-y-4', collapsed ? 'px-1 py-1' : 'px-2 py-1')}>
+          <div className="flex items-start justify-between gap-3">
+            <div className={cx('flex items-center gap-3', collapsed && 'justify-center')}>
+              <img alt="Mascote Genius" className="w-10" src={mascotUrl} />
+              {!collapsed ? (
+                <div className="space-y-1">
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-white/58">
+                    Genius Support OS
+                  </p>
+                  <p className="text-xl font-semibold leading-6 text-white">Admin Console</p>
+                </div>
+              ) : null}
+            </div>
+
+            <button
+              className={cx(
+                'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/16 bg-white/8 text-sm font-medium text-white transition hover:bg-white/12',
+                collapsed && 'mx-auto',
+              )}
+              onClick={onToggle}
+              type="button"
+            >
+              {collapsed ? '>>' : '<<'}
+            </button>
           </div>
 
-          <button
-            className={cx(
-              'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/16 bg-white/8 text-sm font-medium text-white transition hover:bg-white/12',
-              collapsed && 'mx-auto',
-            )}
-            onClick={onToggle}
-            type="button"
-          >
-            {collapsed ? '>>' : '<<'}
-          </button>
+          {!collapsed ? (
+            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.24em] text-white/46">
+              Admin Console
+            </p>
+          ) : null}
         </div>
       ) : (
         <>
@@ -151,14 +155,20 @@ export function AdminSidebar({
         </p>
         <div className="mt-3 space-y-1">
           <p className="font-medium text-white">
-            {collapsed
-              ? String(gate.actor?.profile.full_name ?? 'Platform Admin')
-                  .split(' ')
-                  .slice(0, 2)
-                  .join(' ')
-              : (gate.actor?.profile.full_name ?? 'Platform Admin')}
+            {compactKnowledgeMode
+              ? 'Platform Admin'
+              : collapsed
+                ? String(gate.actor?.profile.full_name ?? 'Platform Admin')
+                    .split(' ')
+                    .slice(0, 2)
+                    .join(' ')
+                : (gate.actor?.profile.full_name ?? 'Platform Admin')}
           </p>
-          {!collapsed ? <p className="text-xs text-white/68">{gate.actor?.profile.email}</p> : null}
+          {!collapsed ? (
+            <p className="text-xs text-white/68">
+              {compactKnowledgeMode ? 'platform_admin' : gate.actor?.profile.email}
+            </p>
+          ) : null}
           {!collapsed && !compactKnowledgeMode ? (
             <p className="pt-2 text-xs leading-5 text-white/60">
               Controle institucional de tenants, acessos e rastreabilidade da operacao Genius.

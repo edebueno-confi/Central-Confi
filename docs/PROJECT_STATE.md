@@ -568,6 +568,18 @@ Documentos históricos:
   - A thread principal ficou mais continua e visivel na primeira dobra, com composer mais integrado e seletor de status preservando o estado atual no card operacional.
   - A fidelidade avancou sem alterar backend, schema, contratos, views ou RPCs.
   - O fechamento da fase ficou registrado na branch `codex/phase6-18-3-ticket-workspace-blueprint-fidelity` com correcao de escopo no commit `7a22461` e workflow verde em `25390082441`.
+- Fase 6.20: Admin Access Blueprint concluida localmente.
+  - `/admin/access` deixou de operar como tela longa de memberships e passou a seguir o grid administrativo de 3 colunas do contrato visual:
+    - filtros compactos a esquerda
+    - base central densa com tabs de contexto
+    - rail direito de detalhe/convite
+  - A topbar e a sidebar do Admin Console tambem receberam o modo compacto desta familia de telas para aproximar a blueprint de Access sem alterar backend, contratos ou fixtures.
+  - O CTA `Convidar usuario` agora abre um rail de convite usando os contratos administrativos ja existentes, enquanto `Usuarios`, `Papeis`, `Convites` e `Permissoes` reaproveitam a mesma base de memberships sem criar backend novo.
+  - Validacoes locais da fase:
+    - `npm run contracts:typecheck`
+    - `npm run web:typecheck`
+    - `npm run web:build`
+  - QA visual local final gerada em `.tmp/phase6-20-admin-access/admin-access-final.png`, sem scroll horizontal e sem console error relevante.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
