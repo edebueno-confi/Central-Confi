@@ -939,3 +939,31 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - cria a trilha auditavel para explicar quando um artigo foi usado internamente, enviado ao cliente ou marcado como lacuna de documentacao
   - prepara base executavel para futuras respostas oficiais sobre relacao entre tickets e base de conhecimento
+
+### Fase 6.16 - Ticket Knowledge Assistive UI
+- fase: `6.16`
+- commit: `7fed25c`
+- branch: `codex/phase6-16-ticket-knowledge-assistive-ui`
+- data: `2026-05-05`
+- resumo funcional: a primeira UI assistiva de ticket -> Knowledge Base foi aberta no Support Workspace com painel recolhivel, busca de artigos permitidos, registro de uso interno/publico e arquivamento logico de vinculos, sem competir com a conversa do ticket.
+- docs alterados:
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - `vw_support_ticket_knowledge_links`
+  - `vw_support_knowledge_article_picker`
+  - `rpc_support_link_ticket_article`
+  - `rpc_support_archive_ticket_article_link`
+  - `rpc_support_mark_documentation_gap`
+  - `rpc_support_mark_article_needs_update`
+- telas afetadas:
+  - `/support/tickets/:ticketId`
+- riscos restantes:
+  - a UI ainda nao oferece fluxo de copia segura de link publico por space, porque o contrato atual do picker nao expõe route metadata suficiente
+  - o painel pode pedir novo recorte visual se a quantidade de vinculos ativos crescer muito no mesmo ticket
+  - o fluxo editorial de criacao/atualizacao de artigo continua corretamente fora da tela de suporte
+- impacto na FAQ futura:
+  - registra o primeiro uso operacional real da ponte ticket -> KB no workspace de suporte
+  - prepara explicacoes futuras sobre referencia interna, envio ao cliente, lacuna de documentacao e revisao de artigo sem depender de IA
