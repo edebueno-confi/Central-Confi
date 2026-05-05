@@ -249,6 +249,14 @@
   - deixar o backend decidir `can_send_to_customer`, `public_article_path` e `reason_if_blocked`
 - o objetivo da proxima camada nao e publicar artigo nem automatizar resposta; e apenas permitir copia/envio seguro de link publico quando o artigo for `public` + `published` em `knowledge_space` ativo
 
+## Ajuste visual 6.18.3 da tratativa
+- `/support/tickets/:ticketId` recebeu um passe corretivo de fidelidade visual para aproximar layout, densidade e hierarquia da blueprint aprovada
+- o header do ticket ficou mais compacto e horizontal, com status, prioridade, id e data na mesma faixa de resumo
+- a conversa passou a mostrar mais thread util na primeira dobra, com mensagens mais proximas do formato de inbox operacional
+- o composer foi mantido no fluxo principal, mas com encaixe mais natural ao fim da conversa
+- o rail direito continua contextual, agora com leitura mais curta para status, cliente, conhecimento e atividade recente
+- o seletor de andamento preserva o status atual visivel, evitando salto visual incoerente no card de acoes
+
 ## Fora de escopo do workspace
 - atendimento a shopper final
 - omnichannel B2C

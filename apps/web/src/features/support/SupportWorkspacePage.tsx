@@ -190,6 +190,27 @@ function humanizeKnowledgeStatus(status: KnowledgeArticleStatus) {
   return humanizeToken(status).replaceAll('_', ' ');
 }
 
+function humanizeTicketEventLabel(eventType: SupportTicketTimelineItem['eventType']) {
+  switch (eventType) {
+    case 'ticket_created':
+      return 'Ticket criado';
+    case 'assigned':
+      return 'Responsavel atualizado';
+    case 'status_changed':
+      return 'Status atualizado';
+    case 'message_added':
+      return 'Mensagem registrada';
+    case 'internal_note_added':
+      return 'Nota interna registrada';
+    case 'resolved':
+      return 'Ticket resolvido';
+    case 'cancelled':
+      return 'Ticket cancelado';
+    default:
+      return humanizeToken(eventType ?? 'evento').replaceAll('_', ' ');
+  }
+}
+
 function humanizeKnowledgeLinkType(linkType: TicketKnowledgeLinkType) {
   switch (linkType) {
     case 'reference_internal':
@@ -270,7 +291,7 @@ function formatAssignedAgentSummary(agent: SupportAssignableAgent | null) {
     return null;
   }
 
-  return `${agent.fullName} · ${humanizeSupportRole(agent.role)}`;
+  return agent.fullName;
 }
 
 function ticketTenantLabel(ticket: Pick<SupportTicketQueueItem, 'tenantDisplayName' | 'tenantLegalName' | 'tenantSlug'>) {
@@ -323,10 +344,16 @@ function emptyKnowledgeArticlePicker(): SupportKnowledgeArticlePickerItem[] {
 }
 
 function buildStatusChoices(currentStatus: TicketStatus) {
-  return TICKET_STATUSES.filter(
+  const available = TICKET_STATUSES.filter(
     (status): status is TicketStatusUpdateTarget =>
       status !== 'closed' && status !== currentStatus,
   );
+
+  if (currentStatus === 'closed') {
+    return available;
+  }
+
+  return [currentStatus as TicketStatusUpdateTarget, ...available];
 }
 
 function summarizeTimelineEvent(entry: SupportTicketTimelineItem) {
@@ -334,17 +361,65 @@ function summarizeTimelineEvent(entry: SupportTicketTimelineItem) {
     return entry.body ?? '';
   }
 
-  const note =
-    entry.metadata && typeof entry.metadata === 'object' && !Array.isArray(entry.metadata)
-      ? Object.entries(entry.metadata)
+  const metadata = readTimelineMetadata(entry);
+  const statusValue = readTimelineMetadataString(entry, 'status');
+  const assignedToUserId = readTimelineMetadataString(entry, 'assigned_to_user_id');
+  const note = readTimelineMetadataString(entry, 'note');
+
+  if (entry.eventType === 'status_changed' && statusValue) {
+    return `Status movido para ${humanizeStatus(statusValue as TicketStatus)}.`;
+  }
+
+  if (entry.eventType === 'assigned') {
+    if (entry.actorFullName) {
+      return `${entry.actorFullName} atualizou a responsavel do ticket.`;
+    }
+
+    if (assignedToUserId) {
+      return 'Responsavel do ticket atualizado.';
+    }
+  }
+
+  if (entry.eventType === 'ticket_created') {
+    return 'Ticket aberto na fila de atendimento.';
+  }
+
+  if (entry.eventType === 'message_added') {
+    return 'Mensagem registrada no ticket.';
+  }
+
+  if (entry.eventType === 'internal_note_added') {
+    return 'Nota interna registrada na tratativa.';
+  }
+
+  if (entry.eventType === 'resolved') {
+    return 'Ticket marcado como resolvido.';
+  }
+
+  if (entry.eventType === 'cancelled') {
+    return 'Ticket cancelado.';
+  }
+
+  if (note) {
+    return note;
+  }
+
+  const metadataSummary =
+    metadata
+      ? Object.entries(metadata)
           .map(([key, value]) => `${humanizeToken(key)}: ${String(value)}`)
           .join(' · ')
       : '';
 
-  return note || humanizeToken(entry.eventType ?? 'evento');
+  return metadataSummary || humanizeTicketEventLabel(entry.eventType);
 }
 
 type ConversationLane = 'customer' | 'agent' | 'internal';
+
+type ConversationAttachment = {
+  name: string;
+  sizeLabel: string | null;
+};
 
 function initialsFromLabel(value: string | null | undefined) {
   const normalized = String(value ?? '')
@@ -358,9 +433,56 @@ function initialsFromLabel(value: string | null | undefined) {
   return normalized || 'GS';
 }
 
-function resolveConversationLane(entry: SupportTicketTimelineItem): ConversationLane {
+function readTimelineMetadata(entry: SupportTicketTimelineItem) {
+  if (!entry.metadata || typeof entry.metadata !== 'object' || Array.isArray(entry.metadata)) {
+    return null;
+  }
+
+  return entry.metadata;
+}
+
+function readTimelineMetadataString(
+  entry: SupportTicketTimelineItem,
+  ...keys: string[]
+) {
+  const metadata = readTimelineMetadata(entry);
+  if (!metadata) {
+    return null;
+  }
+
+  for (const key of keys) {
+    const value = metadata[key];
+    if (typeof value === 'string' && value.trim().length > 0) {
+      return value.trim();
+    }
+  }
+
+  return null;
+}
+
+function resolveConversationLane(
+  entry: SupportTicketTimelineItem,
+  requesterName?: string | null,
+): ConversationLane {
+  const metadataLane = readTimelineMetadataString(
+    entry,
+    'conversation_lane',
+    'conversationLane',
+    'lane',
+  );
+
+  if (metadataLane === 'customer' || metadataLane === 'agent' || metadataLane === 'internal') {
+    return metadataLane;
+  }
+
   if (entry.visibility === 'internal') {
     return 'internal';
+  }
+
+  const actorName = `${entry.actorFullName ?? ''} ${entry.actorEmail ?? ''}`.toLowerCase();
+  const requesterToken = String(requesterName ?? '').trim().toLowerCase();
+  if (requesterToken && actorName.includes(requesterToken)) {
+    return 'customer';
   }
 
   return entry.actorUserId ? 'agent' : 'customer';
@@ -370,6 +492,17 @@ function resolveConversationAuthor(
   entry: SupportTicketTimelineItem,
   requesterName?: string | null,
 ) {
+  const metadataAuthor = readTimelineMetadataString(
+    entry,
+    'conversation_author',
+    'conversationAuthor',
+    'author_label',
+  );
+
+  if (metadataAuthor) {
+    return metadataAuthor;
+  }
+
   if (entry.visibility === 'internal') {
     return entry.actorFullName ?? entry.actorEmail ?? 'Equipe interna';
   }
@@ -381,6 +514,64 @@ function resolveConversationAuthor(
   return entry.actorFullName ?? entry.actorEmail ?? requesterName ?? 'Cliente';
 }
 
+function resolveConversationAttachment(
+  entry: SupportTicketTimelineItem,
+): ConversationAttachment | null {
+  const attachmentName = readTimelineMetadataString(
+    entry,
+    'attachment_name',
+    'attachmentName',
+    'attachment_label',
+  );
+
+  if (!attachmentName) {
+    return null;
+  }
+
+  const sizeLabel =
+    readTimelineMetadataString(entry, 'attachment_size_label', 'attachmentSizeLabel') ??
+    (() => {
+      const metadata = readTimelineMetadata(entry);
+      if (!metadata) {
+        return null;
+      }
+
+      const sizeKb = metadata.attachment_size_kb ?? metadata.attachmentSizeKb;
+      if (typeof sizeKb === 'number' && Number.isFinite(sizeKb)) {
+        return `${sizeKb} KB`;
+      }
+
+      return null;
+    })();
+
+  return {
+    name: attachmentName,
+    sizeLabel,
+  };
+}
+
+function buildConversationDividerLabel(entries: SupportTicketTimelineItem[]) {
+  if (entries.length === 0) {
+    return null;
+  }
+
+  const latest = new Date(entries[entries.length - 1].occurredAt);
+  const now = new Date();
+  const sameDay =
+    latest.getFullYear() === now.getFullYear() &&
+    latest.getMonth() === now.getMonth() &&
+    latest.getDate() === now.getDate();
+
+  if (sameDay) {
+    return 'Hoje';
+  }
+
+  return latest.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+  });
+}
+
 function ConversationEntry({
   entry,
   requesterName,
@@ -389,32 +580,29 @@ function ConversationEntry({
   requesterName?: string | null;
 }) {
   const summary = summarizeTimelineEvent(entry);
-  const lane = resolveConversationLane(entry);
+  const lane = resolveConversationLane(entry, requesterName);
   const author = resolveConversationAuthor(entry, requesterName);
+  const attachment = resolveConversationAttachment(entry);
   const label =
     lane === 'internal'
       ? 'Nota interna'
       : lane === 'agent'
-        ? 'Atendimento Genius'
+        ? 'Agente'
         : 'Cliente';
   const timestamp = formatDateTime(entry.occurredAt);
   const avatar = initialsFromLabel(author);
 
   if (lane === 'internal') {
     return (
-      <article className="rounded-[24px] border border-amber-200 bg-[linear-gradient(180deg,rgba(255,249,232,0.96),rgba(255,243,214,0.9))] px-5 py-4 shadow-[0_12px_24px_rgba(180,120,34,0.08)]">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0 space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <StatusPill tone="warning">{label}</StatusPill>
-              <p className="text-sm font-semibold text-[color:var(--color-ink)]">{author}</p>
-            </div>
-            <p className="whitespace-pre-wrap text-[15px] leading-7 text-[color:var(--color-ink)]">
-              {summary}
-            </p>
-          </div>
-          <p className="text-xs font-medium text-[color:var(--color-muted)]">{timestamp}</p>
+      <article className="mx-auto max-w-[94%] rounded-[16px] border border-amber-200 bg-[linear-gradient(180deg,rgba(255,248,227,0.98),rgba(255,241,206,0.94))] px-4 py-3 shadow-[0_8px_18px_rgba(180,120,34,0.06)]">
+        <div className="flex flex-wrap items-center gap-2 text-[11px]">
+          <StatusPill tone="warning">{label}</StatusPill>
+          <p className="font-semibold text-[color:var(--color-ink)]">{author}</p>
+          <span className="ml-auto text-[color:var(--color-muted)]">{timestamp}</span>
         </div>
+        <p className="mt-2 whitespace-pre-wrap text-[14px] leading-5 text-[color:var(--color-ink)]">
+          {summary}
+        </p>
       </article>
     );
   }
@@ -427,38 +615,54 @@ function ConversationEntry({
       )}
     >
       {lane === 'customer' ? (
-        <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#f05b93,#ee3f77)] text-sm font-semibold text-white shadow-[0_10px_22px_rgba(240,91,147,0.28)]">
+        <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#f05b93,#ee3f77)] text-sm font-semibold text-white shadow-[0_8px_18px_rgba(240,91,147,0.24)]">
           {avatar}
         </div>
       ) : null}
 
-      <article
-        className={cx(
-          'max-w-[min(78%,48rem)] min-w-0 rounded-[26px] border px-5 py-4 shadow-[0_14px_30px_rgba(19,33,79,0.06)]',
-          lane === 'agent'
-            ? 'border-[rgba(48,127,226,0.22)] bg-[linear-gradient(180deg,rgba(243,248,255,0.98),rgba(236,244,255,0.92))]'
-            : 'border-[color:var(--color-border)] bg-white',
-        )}
-      >
-        <div className="space-y-2">
-          <div
-            className={cx(
-              'flex flex-wrap items-center gap-2 text-xs',
-              lane === 'agent' ? 'justify-end' : 'justify-start',
-            )}
-          >
-            <StatusPill tone={lane === 'agent' ? 'accent' : 'default'}>{label}</StatusPill>
-            <p className="font-semibold text-[color:var(--color-ink)]">{author}</p>
-            <span className="text-[color:var(--color-muted)]">{timestamp}</span>
-          </div>
-          <div className="text-[15px] leading-7 text-[color:var(--color-ink)]">
-            <p className="whitespace-pre-wrap">{summary}</p>
-          </div>
+      <div className={cx('min-w-0 max-w-[min(84%,44rem)] space-y-1.5', lane === 'agent' && 'items-end')}>
+        <div
+          className={cx(
+            'flex flex-wrap items-center gap-2 px-1 text-[11px]',
+            lane === 'agent' ? 'justify-end' : 'justify-start',
+          )}
+        >
+          <p className="font-semibold text-[color:var(--color-ink)]">{author}</p>
+          <span className="text-[color:var(--color-muted)]">{label}</span>
+          <span className="text-[color:var(--color-muted)]">{timestamp}</span>
         </div>
-      </article>
+        <article
+          className={cx(
+            'min-w-0 rounded-[16px] border px-4 py-3 shadow-[0_8px_18px_rgba(19,33,79,0.05)]',
+            lane === 'agent'
+              ? 'border-[rgba(48,127,226,0.24)] bg-[linear-gradient(180deg,rgba(243,248,255,0.98),rgba(236,244,255,0.92))]'
+              : 'border-[color:var(--color-border)] bg-white',
+          )}
+        >
+          <div className="space-y-3">
+            <p className="whitespace-pre-wrap text-[14px] leading-5 text-[color:var(--color-ink)]">
+              {summary}
+            </p>
+            {attachment ? (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[color:var(--color-border)] bg-white/86 px-3 py-2 text-sm">
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-[color:var(--color-ink)]">
+                    {attachment.name}
+                  </p>
+                </div>
+                {attachment.sizeLabel ? (
+                  <span className="shrink-0 text-xs text-[color:var(--color-muted)]">
+                    {attachment.sizeLabel}
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        </article>
+      </div>
 
       {lane === 'agent' ? (
-        <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#1f5dcf,#377ef7)] text-sm font-semibold text-white shadow-[0_10px_22px_rgba(55,126,247,0.22)]">
+        <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#1f5dcf,#377ef7)] text-sm font-semibold text-white shadow-[0_8px_18px_rgba(55,126,247,0.2)]">
           {avatar}
         </div>
       ) : null}
@@ -506,6 +710,7 @@ function SupportConversation({
   const entries = window.entries;
   const conversationEntries = entries.filter((entry) => entry.entryType === 'message');
   const eventEntries = entries.filter((entry) => entry.entryType === 'event');
+  const dividerLabel = buildConversationDividerLabel(conversationEntries);
 
   if (conversationEntries.length === 0 && eventEntries.length === 0) {
     return (
@@ -517,31 +722,21 @@ function SupportConversation({
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center gap-3">
-        <div className="h-px flex-1 bg-[color:var(--color-border)]" />
-        <span className="rounded-full bg-[color:var(--color-surface)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-          Janela recente
-        </span>
-        <div className="h-px flex-1 bg-[color:var(--color-border)]" />
-      </div>
-
-      <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 text-sm leading-6 text-[color:var(--color-muted)]">
-        Mostrando {conversationEntries.length} troca(s) recentes entre cliente e equipe.
-        {window.hasMore
-          ? ' O restante segue recolhido para manter a tratativa leve.'
-          : eventEntries.length > 0
-            ? ` ${eventEntries.length} registro(s) de apoio continuam disponiveis no rail.`
-            : ''}
-      </div>
-
+    <div className="space-y-2.5">
+      {dividerLabel ? (
+        <div className="flex items-center justify-center">
+          <span className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+            {dividerLabel}
+          </span>
+        </div>
+      ) : null}
       {conversationEntries.length === 0 ? (
         <EmptyState
           title="Sem conversa recente"
           description="A janela atual ainda nao trouxe respostas publicas nem notas internas para este ticket."
         />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-2.5">
           {conversationEntries.map((entry) => (
             <ConversationEntry
               entry={entry}
@@ -551,6 +746,14 @@ function SupportConversation({
           ))}
         </div>
       )}
+
+      {(window.hasMore || eventEntries.length > 0) ? (
+        <p className="text-xs leading-5 text-[color:var(--color-muted)]">
+          {window.hasMore
+            ? 'Parte do historico continua recolhida para manter a leitura rapida.'
+            : `${eventEntries.length} registro(s) de apoio seguem no rail lateral.`}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -560,7 +763,7 @@ function SupportRecentActivity({
 }: {
   window: SupportTicketTimelineRecentWindow;
 }) {
-  const entries = window.entries.filter((entry) => entry.entryType === 'event').slice(0, 4);
+  const entries = window.entries.filter((entry) => entry.entryType === 'event').slice(0, 2);
 
   if (entries.length === 0) {
     return (
@@ -574,31 +777,26 @@ function SupportRecentActivity({
     <div className="space-y-2">
       {entries.map((entry) => (
         <div
-          className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3"
+          className="rounded-[14px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2.5"
           key={entry.timelineEntryId}
         >
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0 space-y-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <StatusPill tone={entry.visibility === 'internal' ? 'critical' : 'default'}>
-                  {entry.eventType ? humanizeToken(entry.eventType) : 'evento'}
-                </StatusPill>
-                <p className="text-xs text-[color:var(--color-muted)]">
-                  {entry.actorFullName ?? entry.actorEmail ?? 'Equipe Genius'}
-                </p>
-              </div>
-              <p className="text-sm leading-6 text-[color:var(--color-ink)]">
+          <div className="flex items-start gap-3">
+            <span className="mt-1 inline-flex h-2.5 w-2.5 shrink-0 rounded-full bg-[color:var(--color-brand-blue)]" />
+            <div className="min-w-0 flex-1 space-y-1">
+              <p className="text-sm font-medium leading-5 text-[color:var(--color-ink)]">
                 {summarizeTimelineEvent(entry)}
               </p>
+              <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
+                {formatDateTime(entry.occurredAt)} · {entry.actorFullName ?? entry.actorEmail ?? 'Equipe Genius'}
+              </p>
             </div>
-            <p className="text-xs text-[color:var(--color-muted)]">{formatDateTime(entry.occurredAt)}</p>
           </div>
         </div>
       ))}
 
       {window.hasMore ? (
-        <p className="text-xs leading-5 text-[color:var(--color-muted)]">
-          O restante do historico tecnico fica recolhido para nao pesar a leitura do atendimento.
+        <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
+          O restante do historico fica recolhido para manter a tratativa leve.
         </p>
       ) : null}
     </div>
@@ -648,7 +846,7 @@ function SupportKnowledgeLinkCard({
       : 'Vinculo sem artigo associado');
 
   return (
-    <article className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+    <article className="rounded-[14px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2.5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -664,19 +862,19 @@ function SupportKnowledgeLinkCard({
           </div>
           <div className="space-y-1">
             <p className="text-sm font-semibold text-[color:var(--color-ink)]">{title}</p>
-            <p className="text-xs leading-5 text-[color:var(--color-muted)]">
+            <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
               Registrado por {link.createdByFullName ?? 'Operador nao identificado'} em{' '}
               {formatDateTime(link.createdAt)}
             </p>
           </div>
           {link.note ? (
-            <p className="line-clamp-3 text-sm leading-6 text-[color:var(--color-muted)]">
+            <p className="line-clamp-2 text-[13px] leading-5 text-[color:var(--color-muted)]">
               {link.note}
             </p>
           ) : null}
         </div>
         <GhostButton
-          className="min-h-10 px-3 text-sm"
+          className="min-h-9 rounded-full px-3 text-sm"
           disabled={disabled}
           onClick={() => onArchive(link.ticketKnowledgeLinkId)}
           type="button"
@@ -702,8 +900,8 @@ function SupportKnowledgePickerCard({
   onSendToCustomer: (articleId: Uuid) => void;
 }) {
   return (
-    <article className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4">
-      <div className="space-y-3">
+    <article className="rounded-[14px] border border-[color:var(--color-border)] bg-white px-3 py-3">
+      <div className="space-y-2">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <StatusPill>{humanizeKnowledgeVisibility(article.articleVisibility)}</StatusPill>
@@ -714,14 +912,14 @@ function SupportKnowledgePickerCard({
             <p className="text-sm font-semibold text-[color:var(--color-ink)]">
               {article.articleTitle}
             </p>
-            <p className="line-clamp-3 text-sm leading-6 text-[color:var(--color-muted)]">
+            <p className="line-clamp-2 text-sm leading-5 text-[color:var(--color-muted)]">
               {article.articleSummary?.trim() || 'Resumo ainda nao informado para este artigo.'}
             </p>
           </div>
         </div>
 
         <div className="space-y-2">
-          <p className="text-xs leading-5 text-[color:var(--color-muted)]">
+          <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
             {article.isCustomerSendAllowed
               ? 'Este artigo pode ser usado como link publico ao cliente.'
               : 'Este artigo fica restrito ao uso interno do time.'}
@@ -773,6 +971,7 @@ function SupportKnowledgePanel({
   onNoteChange,
   onSearchChange,
   onSendToCustomer,
+  onToggle,
   phase,
   search,
   message,
@@ -789,23 +988,25 @@ function SupportKnowledgePanel({
   onNoteChange: (value: string) => void;
   onSearchChange: (value: string) => void;
   onSendToCustomer: (articleId: Uuid) => void;
+  onToggle: (open: boolean) => void;
   phase: KnowledgePhase;
   search: string;
   message: string | null;
 }) {
+  const visibleLinks = links.slice(0, 2);
+  const hiddenLinksCount = Math.max(links.length - visibleLinks.length, 0);
+  const visibleArticles = articles.slice(0, 2);
+
   return (
     <details
-      className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]"
+      className="rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_12px_24px_rgba(19,33,79,0.08)]"
+      onToggle={(event) => onToggle(event.currentTarget.open)}
       open={defaultOpen}
     >
       <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
         Conhecimento relacionado
       </summary>
-      <div className="mt-3 space-y-4">
-        <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-          Use artigos da base como apoio da resposta sem tirar o foco da conversa.
-        </p>
-
+      <div className="mt-3 space-y-3">
         {phase === 'contract-unavailable' ? (
           <InlineNotice tone="warning">
             {message ?? 'O contrato de conhecimento ainda nao ficou disponivel neste ambiente.'}
@@ -826,7 +1027,7 @@ function SupportKnowledgePanel({
                 <h4 className="text-sm font-semibold text-[color:var(--color-ink)]">
                   Vinculos ativos
                 </h4>
-                <p className="text-xs leading-5 text-[color:var(--color-muted)]">
+                <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
                   {links.length === 0
                     ? 'Nenhum vinculo aberto'
                     : `${links.length} vinculo(s) em acompanhamento`}
@@ -834,11 +1035,11 @@ function SupportKnowledgePanel({
               </div>
               {links.length === 0 ? (
                 <InlineNotice>
-                  Nenhum artigo foi relacionado a este ticket ainda. Use a busca abaixo ou registre uma lacuna.
+                  Nenhum artigo foi relacionado a este ticket ainda.
                 </InlineNotice>
-              ) : (
+            ) : (
                 <div className="space-y-2">
-                  {links.map((link) => (
+                  {visibleLinks.map((link) => (
                     <SupportKnowledgeLinkCard
                       disabled={loading}
                       key={link.ticketKnowledgeLinkId}
@@ -846,74 +1047,51 @@ function SupportKnowledgePanel({
                       onArchive={onArchive}
                     />
                   ))}
+                  {hiddenLinksCount > 0 ? (
+                    <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
+                      Mais {hiddenLinksCount} vinculo(s) continuam registrados no historico deste ticket.
+                    </p>
+                  ) : null}
                 </div>
-              )}
+            )}
             </div>
 
-            <div className="space-y-3 border-t border-[color:var(--color-border)] pt-4">
-              <div className="space-y-1">
-                <h4 className="text-sm font-semibold text-[color:var(--color-ink)]">
-                  Buscar artigo de apoio
-                </h4>
-                <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                  A busca usa apenas os artigos permitidos para este ticket. O fluxo ao cliente fica restrito ao que e publico e publicado.
-                </p>
-              </div>
-
-              <Field
-                label="Buscar por titulo, resumo ou categoria"
-                description="Os detalhes tecnicos do artigo continuam fora desta tela."
-              >
+            <details className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3">
+              <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                Buscar e vincular
+              </summary>
+              <div className="mt-3 space-y-3">
                 <TextInput
                   onChange={(event) => onSearchChange(event.target.value)}
-                  placeholder="Ex.: webhook ERP, correios, regra por motivo"
+                  placeholder="Buscar artigo por titulo, resumo ou categoria"
                   value={search}
                 />
-              </Field>
 
-              <Field
-                label="Observacao opcional"
-                description="Use quando o vinculo precisa de um contexto curto para o proximo operador."
-              >
                 <TextareaInput
+                  className="min-h-[82px]"
                   onChange={(event) => onNoteChange(event.target.value)}
-                  placeholder="Ex.: artigo usado para orientar checklist do cliente ou documentar uma lacuna."
+                  placeholder="Observacao curta opcional para o proximo operador."
                   value={noteDraft}
                 />
-              </Field>
 
-              <div className="rounded-[18px] border border-dashed border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="space-y-1">
-                    <p className="text-sm font-semibold text-[color:var(--color-ink)]">
-                      Sem artigo aderente?
-                    </p>
-                    <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                      Registre a lacuna para a base evoluir sem transformar o ticket em backlog editorial.
-                    </p>
-                  </div>
-                  <AppButton
-                    className="min-h-11 px-5"
+                <div className="flex flex-wrap gap-2">
+                  <GhostButton
+                    className="min-h-10 px-4 text-sm"
                     disabled={loading}
                     onClick={onMarkGap}
                     type="button"
                   >
                     Marcar lacuna de documentacao
-                  </AppButton>
+                  </GhostButton>
                 </div>
-              </div>
 
-              {articles.length === 0 ? (
-                <InlineNotice tone="warning">
-                  Nenhum artigo permitido apareceu para este filtro. Tente outro termo ou registre a lacuna diretamente.
-                </InlineNotice>
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-xs leading-5 text-[color:var(--color-muted)]">
-                    Mostrando {articles.length} artigo(s) permitidos para este ticket.
-                  </p>
+                {articles.length === 0 ? (
+                  <InlineNotice tone="warning">
+                    Nenhum artigo permitido apareceu para este filtro.
+                  </InlineNotice>
+                ) : (
                   <div className="space-y-2">
-                    {articles.map((article) => (
+                    {visibleArticles.map((article) => (
                       <SupportKnowledgePickerCard
                         article={article}
                         disabled={loading}
@@ -923,10 +1101,15 @@ function SupportKnowledgePanel({
                         onSendToCustomer={onSendToCustomer}
                       />
                     ))}
+                    {articles.length > visibleArticles.length ? (
+                      <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
+                        Ajuste a busca para abrir outros artigos desta base.
+                      </p>
+                    ) : null}
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            </details>
           </>
         )}
       </div>
@@ -1726,7 +1909,7 @@ function SupportTicketCustomerSnapshot({
             className="inline-flex min-h-10 items-center justify-center rounded-full border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold text-[color:var(--color-brand-blue)]"
             to={`/support/customers/${customer.tenantId}`}
           >
-            Abrir cliente
+            Ver detalhes do cliente
           </Link>
         </div>
         <InlineNotice tone="warning">
@@ -1765,25 +1948,37 @@ function SupportTicketCustomerSnapshot({
           className="inline-flex min-h-10 items-center justify-center rounded-full border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold text-[color:var(--color-brand-blue)]"
           to={`/support/customers/${customer.tenantId}`}
         >
-          Abrir cliente
+          Ver detalhes do cliente
         </Link>
       </div>
 
-      <div className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
-        <dl className="grid gap-3 text-sm leading-6 text-[color:var(--color-muted)]">
+      <div className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
+        <dl className="grid gap-2 text-[13px] leading-5 text-[color:var(--color-muted)]">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <dt className="font-medium text-[color:var(--color-ink)]">Plataforma</dt>
             <dd className="text-right">
               {primaryPlatform ? primaryPlatform.provider : 'Nao registrada'}
             </dd>
           </div>
-          <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-3">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-2">
+            <dt className="font-medium text-[color:var(--color-ink)]">Produto</dt>
+            <dd className="text-right">
+              {accountContext.productLine ? humanizeCustomerValue(accountContext.productLine) : 'Nao resolvido'}
+            </dd>
+          </div>
+          <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-2">
+            <dt className="font-medium text-[color:var(--color-ink)]">Porte / tier</dt>
+            <dd className="text-right">
+              {accountContext.accountTier ?? 'Nao resolvido'}
+            </dd>
+          </div>
+          <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-2">
             <dt className="font-medium text-[color:var(--color-ink)]">Contato principal</dt>
             <dd className="text-right">
               {primaryContact ? primaryContact.fullName : 'Nao resolvido'}
             </dd>
           </div>
-          <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-3">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-2">
             <dt className="font-medium text-[color:var(--color-ink)]">E-mail</dt>
             <dd className="text-right break-all">
               {primaryContact?.email ?? 'Nao resolvido'}
@@ -1830,14 +2025,14 @@ function SupportTicketCustomerSnapshot({
       ) : null}
 
       {riskyCustomizations.length > 0 ? (
-        <details className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-3">
+        <details className="rounded-[16px] border border-[color:var(--color-border)] bg-white px-4 py-3">
           <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
             Customizacoes com atencao
           </summary>
           <div className="mt-3 space-y-2">
             {riskyCustomizations.map((customization) => (
               <div
-                className="rounded-[16px] bg-[color:var(--color-surface)] px-3 py-3"
+                className="rounded-[16px] bg-[color:var(--color-surface)] px-3 py-2.5"
                 key={customization.id}
               >
                 <div className="flex flex-wrap items-center gap-2">
@@ -1848,10 +2043,10 @@ function SupportTicketCustomerSnapshot({
                     {humanizeCustomerValue(customization.riskLevel)}
                   </StatusPill>
                 </div>
-                <p className="mt-1 line-clamp-3 text-sm leading-6 text-[color:var(--color-muted)]">
-                  {customization.operationalNote ?? customization.description}
-                </p>
-              </div>
+                  <p className="mt-1 line-clamp-2 text-sm leading-5 text-[color:var(--color-muted)]">
+                    {customization.operationalNote ?? customization.description}
+                  </p>
+                </div>
             ))}
           </div>
         </details>
@@ -2094,6 +2289,12 @@ function SupportWorkspaceView({
   const [submitting, setSubmitting] = useState(false);
   const [ticketRailOpen, setTicketRailOpen] = useState(true);
   const [advancedToolsOpen, setAdvancedToolsOpen] = useState(false);
+  const [knowledgePanelOpen, setKnowledgePanelOpen] = useState(true);
+  const [customerPanelOpen, setCustomerPanelOpen] = useState(true);
+  const [activityPanelOpen, setActivityPanelOpen] = useState(true);
+  const [ticketToolbarTab, setTicketToolbarTab] = useState<
+    'conversation' | 'knowledge' | 'help' | 'more'
+  >('conversation');
   const conversationSectionRef = useRef<HTMLDivElement | null>(null);
   const knowledgeSectionRef = useRef<HTMLDivElement | null>(null);
   const advancedSectionRef = useRef<HTMLDetailsElement | null>(null);
@@ -2182,9 +2383,13 @@ function SupportWorkspaceView({
       setCustomerRecentTickets(recentTicketsWindow);
       setCustomerRecentEvents(recentEventsWindow);
       setDetailPhase('ready');
-      setStatusDraft(buildStatusChoices(detail.status)[0] ?? 'triage');
+      setStatusDraft(detail.status === 'closed' ? 'triage' : detail.status);
       setAssignDraft(detail.assignedToUserId ?? '');
       setAdvancedToolsOpen(false);
+      setKnowledgePanelOpen(true);
+      setCustomerPanelOpen(true);
+      setActivityPanelOpen(true);
+      setTicketToolbarTab('conversation');
       setComposerMode(detail.canAddMessage ? 'public' : detail.canAddInternalNote ? 'internal' : 'public');
       setKnowledgeSearch('');
       setKnowledgeNoteDraft('');
@@ -2813,13 +3018,16 @@ function SupportWorkspaceView({
     'Sem responsavel definido';
 
   function openConversationSurface() {
+    setTicketToolbarTab('conversation');
     conversationSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function openKnowledgeSurface() {
+    setTicketToolbarTab('knowledge');
     if (!ticketRailOpen) {
       setTicketRailOpen(true);
     }
+    setKnowledgePanelOpen(true);
 
     window.requestAnimationFrame(() => {
       knowledgeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2827,6 +3035,7 @@ function SupportWorkspaceView({
   }
 
   function openAdvancedSurface() {
+    setTicketToolbarTab('more');
     if (!ticketRailOpen) {
       setTicketRailOpen(true);
     }
@@ -2839,15 +3048,13 @@ function SupportWorkspaceView({
 
   return (
     <div className="space-y-5">
-      <PageHeader
-        eyebrow="Support Workspace"
-        title={variant === 'queue' ? 'Fila operacional' : 'Tratativa do ticket'}
-        description={
-          variant === 'queue'
-            ? 'Sidebar global para navegar, subsidebar para triagem e area principal para decidir o proximo atendimento.'
-            : 'Conversa, resposta e tomada de acao ficam no centro. O contexto lateral so apoia a tratativa.'
-        }
-      />
+      {variant === 'queue' ? (
+        <PageHeader
+          eyebrow="Support Workspace"
+          title="Fila operacional"
+          description="Sidebar global para navegar, subsidebar para triagem e area principal para decidir o proximo atendimento."
+        />
+      ) : null}
 
       {variant === 'queue' ? (
         <WorkspaceSplit
@@ -2992,110 +3199,117 @@ function SupportWorkspaceView({
           description={detailMessage ?? 'O painel operacional do ticket nao ficou disponivel.'}
         />
       ) : (
-        <div className="space-y-5">
-          <section className="overflow-hidden rounded-[28px] border border-[color:var(--color-border)] bg-white shadow-[0_18px_34px_rgba(19,33,79,0.08)]">
-            <div className="px-5 py-5 sm:px-6">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="min-w-0 space-y-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>
-                      {humanizeStatus(ticketDetail.status)}
-                    </StatusPill>
-                    <StatusPill tone={toneForPriority(ticketDetail.priority)}>
-                      {humanizeToken(ticketDetail.priority)}
-                    </StatusPill>
-                    <StatusPill tone={toneForSeverity(ticketDetail.severity)}>
-                      {humanizeToken(ticketDetail.severity)}
-                    </StatusPill>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-[color:var(--color-muted)]">
-                      Aberto em {formatDateTime(ticketDetail.createdAt)}
+        <div className="space-y-3">
+          <div className="px-1">
+            <h2 className="text-[1.08rem] font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
+              Tratativa do ticket
+            </h2>
+          </div>
+
+          <section className="overflow-hidden rounded-[26px] border border-[rgba(22,42,93,0.1)] bg-white shadow-[0_18px_34px_rgba(19,33,79,0.08)]">
+            <div className="px-5 py-3 sm:px-6">
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-3">
+                  <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>
+                    {humanizeStatus(ticketDetail.status)}
+                  </StatusPill>
+                  <StatusPill tone={toneForPriority(ticketDetail.priority)}>
+                    {humanizeToken(ticketDetail.priority)}
+                  </StatusPill>
+                  <span className="text-sm font-semibold text-[color:var(--color-ink)]">
+                    #{ticketDetail.id.slice(0, 8)}
+                  </span>
+                  <span className="text-sm text-[color:var(--color-muted)]">
+                    Criado em {formatDateTime(ticketDetail.createdAt)}
+                  </span>
+                </div>
+
+                <h3 className="max-w-5xl text-[1.56rem] font-semibold tracking-[-0.05em] leading-tight text-[color:var(--color-ink)]">
+                  {ticketDetail.title}
+                </h3>
+
+                <div className="grid gap-2.5 border-t border-[color:var(--color-border)] pt-2 text-sm md:grid-cols-2 xl:grid-cols-4">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                      Cliente
                     </p>
-                    <h3 className="max-w-5xl text-[2rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
-                      {ticketDetail.title}
-                    </h3>
-                    {ticketDetail.description?.trim() ? (
-                      <p className="max-w-4xl text-sm leading-6 text-[color:var(--color-muted)]">
-                        {ticketDetail.description}
-                      </p>
-                    ) : null}
+                    <p className="mt-1 truncate font-semibold text-[color:var(--color-ink)]">
+                      {ticketDetail.tenantDisplayName ?? ticketDetail.tenantLegalName ?? ticketDetail.tenantSlug}
+                    </p>
                   </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <GhostButton className="min-h-11 px-4" onClick={() => navigate('/support/queue')}>
-                    Voltar para fila
-                  </GhostButton>
-                  <GhostButton
-                    className="min-h-11 px-4"
-                    onClick={() => setTicketRailOpen((current) => !current)}
-                  >
-                    {ticketRailOpen ? 'Ocultar contexto' : 'Mostrar contexto'}
-                  </GhostButton>
-                </div>
-              </div>
-
-              <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
-                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-                    Cliente
-                  </p>
-                  <p className="mt-2 text-sm font-semibold text-[color:var(--color-ink)]">
-                    {ticketDetail.tenantDisplayName ?? ticketDetail.tenantLegalName ?? ticketDetail.tenantSlug}
-                  </p>
-                </div>
-                <div className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
-                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-                    Solicitante
-                  </p>
-                  <p className="mt-2 text-sm font-semibold text-[color:var(--color-ink)]">
-                    {requesterLabel}
-                  </p>
-                </div>
-                <div className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
-                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-                    Responsavel
-                  </p>
-                  <p className="mt-2 text-sm font-semibold text-[color:var(--color-ink)]">
-                    {currentAssignedLabel}
-                  </p>
-                </div>
-                <div className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
-                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-                    Ultima atividade
-                  </p>
-                  <p className="mt-2 text-sm font-semibold text-[color:var(--color-ink)]">
-                    {formatDateTime(ticketDetail.lastMessageAt ?? ticketDetail.updatedAt)}
-                  </p>
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                      Solicitante
+                    </p>
+                    <p className="mt-1 truncate font-semibold text-[color:var(--color-ink)]">
+                      {requesterLabel}
+                    </p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                      Responsavel
+                    </p>
+                    <p className="mt-1 truncate font-semibold text-[color:var(--color-ink)]">
+                      {currentAssignedLabel}
+                    </p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                      Ultima atualizacao
+                    </p>
+                    <p className="mt-1 truncate font-semibold text-[color:var(--color-ink)]">
+                      {formatDateTime(ticketDetail.lastMessageAt ?? ticketDetail.updatedAt)}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="border-t border-[color:var(--color-border)] px-4 sm:px-6">
-              <div className="flex items-center gap-1 overflow-x-auto py-2">
+            <div className="border-t border-[color:var(--color-border)] px-5 sm:px-6">
+              <div className="flex items-center gap-5 overflow-x-auto">
                 <button
-                  className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border border-[rgba(48,127,226,0.28)] bg-[rgba(48,127,226,0.1)] px-4 py-2 text-sm font-semibold text-[color:var(--color-brand-blue)]"
+                  className={cx(
+                    'inline-flex min-h-11 shrink-0 items-center border-b-2 px-1 text-sm font-semibold transition',
+                    ticketToolbarTab === 'conversation'
+                      ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
+                      : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
+                  )}
                   onClick={openConversationSurface}
                   type="button"
                 >
                   Conversar
                 </button>
                 <button
-                  className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border border-transparent px-4 py-2 text-sm font-medium text-[color:var(--color-muted)] transition hover:border-[color:var(--color-border)] hover:bg-[color:var(--color-surface)] hover:text-[color:var(--color-ink)]"
+                  className={cx(
+                    'inline-flex min-h-11 shrink-0 items-center border-b-2 px-1 text-sm font-semibold transition',
+                    ticketToolbarTab === 'knowledge'
+                      ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
+                      : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
+                  )}
                   onClick={openKnowledgeSurface}
                   type="button"
                 >
                   Conhecimento
                 </button>
                 <Link
-                  className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border border-transparent px-4 py-2 text-sm font-medium text-[color:var(--color-muted)] transition hover:border-[color:var(--color-border)] hover:bg-[color:var(--color-surface)] hover:text-[color:var(--color-ink)]"
+                  className={cx(
+                    'inline-flex min-h-11 shrink-0 items-center border-b-2 px-1 text-sm font-semibold transition',
+                    ticketToolbarTab === 'help'
+                      ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
+                      : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
+                  )}
+                  onClick={() => setTicketToolbarTab('help')}
                   to="/help/genius"
                 >
                   Central de ajuda
                 </Link>
                 <button
-                  className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border border-transparent px-4 py-2 text-sm font-medium text-[color:var(--color-muted)] transition hover:border-[color:var(--color-border)] hover:bg-[color:var(--color-surface)] hover:text-[color:var(--color-ink)]"
+                  className={cx(
+                    'inline-flex min-h-11 shrink-0 items-center border-b-2 px-1 text-sm font-semibold transition',
+                    ticketToolbarTab === 'more'
+                      ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
+                      : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
+                  )}
                   onClick={openAdvancedSurface}
                   type="button"
                 >
@@ -3109,41 +3323,27 @@ function SupportWorkspaceView({
 
           <div
             className={cx(
-              'grid items-start gap-5',
-              ticketRailOpen && '2xl:grid-cols-[minmax(0,1fr)_360px]',
+              'grid items-start gap-3',
+              ticketRailOpen && 'xl:grid-cols-[minmax(0,1fr)_292px]',
             )}
           >
             <section
               className="overflow-hidden rounded-[28px] border border-[color:var(--color-border)] bg-white shadow-[0_18px_34px_rgba(19,33,79,0.08)]"
               ref={conversationSectionRef}
             >
-              <div className="px-5 py-5 sm:px-6">
-                <div className="space-y-1">
-                  <h4 className="text-lg font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
-                    Conversa em andamento
-                  </h4>
-                  <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                    A conversa fica no centro da tratativa. O contexto do ticket apoia a resposta sem roubar foco.
-                  </p>
-                </div>
-
-                <div className="mt-5">
-                  <SupportConversation
-                    requesterName={requesterLabel}
-                    window={timelineWindow}
-                  />
-                </div>
+              <div className="px-5 py-3.5 sm:px-6">
+                <SupportConversation requesterName={requesterLabel} window={timelineWindow} />
               </div>
 
-              <div className="border-t border-[color:var(--color-border)] bg-[linear-gradient(180deg,rgba(245,249,255,0.96),rgba(255,255,255,1))] px-5 py-5 sm:px-6">
-                <div className="space-y-4">
-                  <div className="flex flex-wrap gap-2">
+              <div className="border-t border-[color:var(--color-border)] bg-[linear-gradient(180deg,rgba(247,250,255,0.96),rgba(255,255,255,1))] px-5 py-3.5 sm:px-6">
+                <form className="space-y-2.5" onSubmit={handleSubmitComposer}>
+                  <div className="flex flex-wrap gap-5 border-b border-[color:var(--color-border)]">
                     <button
                       className={cx(
-                        'inline-flex min-h-12 items-center justify-center rounded-full border px-5 py-2 text-sm font-semibold transition',
+                        'inline-flex min-h-10 items-center border-b-2 px-1 text-sm font-semibold transition',
                         composerMode === 'public'
-                          ? 'border-[rgba(48,127,226,0.28)] bg-[rgba(48,127,226,0.1)] text-[color:var(--color-brand-blue)]'
-                          : 'border-[color:var(--color-border)] bg-white text-[color:var(--color-muted)]',
+                          ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
+                          : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
                       )}
                       disabled={!canUsePublicComposer}
                       onClick={() => setComposerMode('public')}
@@ -3153,10 +3353,10 @@ function SupportWorkspaceView({
                     </button>
                     <button
                       className={cx(
-                        'inline-flex min-h-12 items-center justify-center rounded-full border px-5 py-2 text-sm font-semibold transition',
+                        'inline-flex min-h-10 items-center border-b-2 px-1 text-sm font-semibold transition',
                         composerMode === 'internal'
-                          ? 'border-[color:var(--color-danger-border)] bg-[color:var(--color-danger-surface)] text-[color:var(--color-danger-ink)]'
-                          : 'border-[color:var(--color-border)] bg-white text-[color:var(--color-muted)]',
+                          ? 'border-[color:var(--color-danger-ink)] text-[color:var(--color-danger-ink)]'
+                          : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
                       )}
                       disabled={!canUseInternalComposer}
                       onClick={() => setComposerMode('internal')}
@@ -3165,70 +3365,96 @@ function SupportWorkspaceView({
                       Nota interna
                     </button>
                   </div>
+                  <div className="rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-3.5 shadow-[0_10px_22px_rgba(19,33,79,0.04)]">
+                    <TextareaInput
+                      className="min-h-[96px] resize-y border-0 bg-transparent px-0 py-0 text-[15px] leading-6 shadow-none focus:border-transparent focus:ring-0"
+                      onChange={(event) =>
+                        composerMode === 'public'
+                          ? setMessageDraft(event.target.value)
+                          : setNoteDraft(event.target.value)
+                      }
+                      placeholder={
+                        composerMode === 'public'
+                          ? 'Digite sua resposta publica para o cliente...'
+                          : 'Registre a nota interna da tratativa...'
+                      }
+                      value={composerDraft}
+                    />
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--color-border)] pt-3">
+                      <div className="flex items-center gap-2 text-[color:var(--color-muted)]">
+                        <button
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-sm font-semibold"
+                          type="button"
+                        >
+                          +
+                        </button>
+                        <button
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-sm font-semibold"
+                          type="button"
+                        >
+                          Aa
+                        </button>
+                        <button
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-sm font-semibold"
+                          type="button"
+                        >
+                          @
+                        </button>
+                        <button
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-sm font-semibold"
+                          type="button"
+                        >
+                          ...
+                        </button>
+                      </div>
 
-                  <InlineNotice tone={composerMode === 'public' ? 'default' : 'critical'}>
-                    {composerMode === 'public'
-                      ? 'Resposta publica pronta para o cliente B2B.'
-                      : 'Nota interna restrita ao time autorizado.'}
-                  </InlineNotice>
-
-                  <form className="space-y-4" onSubmit={handleSubmitComposer}>
-                    <Field
-                      label={composerMode === 'public' ? 'Responder cliente' : 'Registrar nota interna'}
-                    >
-                      <TextareaInput
-                        className="min-h-[180px]"
-                        onChange={(event) =>
-                          composerMode === 'public'
-                            ? setMessageDraft(event.target.value)
-                            : setNoteDraft(event.target.value)
-                        }
-                        placeholder={
-                          composerMode === 'public'
-                            ? 'Escreva a resposta com o proximo passo claro para o cliente.'
-                            : 'Registre contexto interno, handoff ou decisao da tratativa.'
-                        }
-                        value={composerDraft}
-                      />
-                    </Field>
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                        {composerMode === 'public'
-                          ? 'Mantenha a devolutiva objetiva, com acao clara e linguagem operacional.'
-                          : 'Use a nota interna para registrar contexto sem poluir a conversa visivel ao cliente.'}
-                      </p>
-                      <AppButton
-                        className={
-                          composerMode === 'internal'
-                            ? 'min-h-12 px-6 bg-[linear-gradient(135deg,#7c2648,#b63f76)]'
-                            : 'min-h-12 px-6'
-                        }
-                        disabled={composerDisabled}
-                        type="submit"
-                      >
-                        {submitting
-                          ? 'Salvando...'
-                          : composerMode === 'public'
-                            ? 'Enviar resposta'
-                            : 'Salvar nota'}
-                      </AppButton>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <SelectInput
+                          className="min-w-[132px] rounded-full px-4 text-sm font-semibold"
+                          onChange={(event) =>
+                            setComposerMode(event.target.value === 'internal' ? 'internal' : 'public')
+                          }
+                          value={composerMode}
+                        >
+                          <option value="public">Publico</option>
+                          <option value="internal">Interno</option>
+                        </SelectInput>
+                        <AppButton
+                          className={
+                            composerMode === 'internal'
+                              ? 'min-h-11 rounded-[16px] px-6 bg-[linear-gradient(135deg,#7c2648,#b63f76)]'
+                              : 'min-h-11 rounded-[16px] px-6'
+                          }
+                          disabled={composerDisabled}
+                          type="submit"
+                        >
+                          {submitting
+                            ? 'Salvando...'
+                            : composerMode === 'public'
+                              ? 'Enviar resposta'
+                              : 'Salvar nota'}
+                        </AppButton>
+                      </div>
                     </div>
-                  </form>
-                </div>
+                  </div>
+                </form>
               </div>
             </section>
 
             {ticketRailOpen ? (
-              <aside className="space-y-3 2xl:sticky 2xl:top-4">
-                <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
-                  <div className="space-y-4">
-                    <div className="space-y-1">
-                      <h4 className="text-base font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+              <aside className="space-y-3 xl:sticky xl:top-4">
+                <section className="rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_12px_24px_rgba(19,33,79,0.08)]">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <h4 className="text-sm font-semibold tracking-[-0.02em] text-[color:var(--color-ink)]">
                         Acoes do ticket
                       </h4>
-                      <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                        Ajuste dono e andamento sem sair da conversa.
-                      </p>
+                      <GhostButton
+                        className="min-h-9 px-3 text-xs"
+                        onClick={() => setTicketRailOpen(false)}
+                      >
+                        Recolher
+                      </GhostButton>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
@@ -3275,15 +3501,15 @@ function SupportWorkspaceView({
                           </SelectInput>
                         </Field>
                         <AppButton
-                          className="min-h-12 w-full px-5"
+                          className="min-h-11 w-full rounded-[16px] px-5"
                           disabled={submitting || !ticketDetail.canAssign}
                           type="submit"
                         >
-                          {submitting ? 'Salvando...' : 'Salvar responsavel'}
+                          {submitting ? 'Salvando...' : 'Salvar alteracoes'}
                         </AppButton>
                         <div className="grid gap-2 sm:grid-cols-2">
                           <GhostButton
-                            className="min-h-11 px-4"
+                            className="min-h-10 px-4 text-sm"
                             disabled={
                               submitting ||
                               !ticketDetail.canAssign ||
@@ -3297,7 +3523,7 @@ function SupportWorkspaceView({
                             Atribuir a mim
                           </GhostButton>
                           <GhostButton
-                            className="min-h-11 px-4"
+                            className="min-h-10 px-4 text-sm"
                             disabled={submitting || !ticketDetail.canAssign || !ticketDetail.assignedToUserId}
                             onClick={() => void runAssignment(null)}
                             type="button"
@@ -3308,7 +3534,7 @@ function SupportWorkspaceView({
                       </form>
                     )}
 
-                    <form className="space-y-3 border-t border-[color:var(--color-border)] pt-4" onSubmit={handleUpdateStatus}>
+                    <form className="space-y-3 border-t border-[color:var(--color-border)] pt-3" onSubmit={handleUpdateStatus}>
                       <Field label="Mover status">
                         <SelectInput
                           onChange={(event) =>
@@ -3323,15 +3549,8 @@ function SupportWorkspaceView({
                           ))}
                         </SelectInput>
                       </Field>
-                      <Field label="Observacao da mudanca">
-                        <TextareaInput
-                          onChange={(event) => setStatusNote(event.target.value)}
-                          placeholder="Opcional. Deixe o proximo passo claro para quem assumir o ticket."
-                          value={statusNote}
-                        />
-                      </Field>
                       <AppButton
-                        className="min-h-12 w-full px-5"
+                        className="min-h-11 w-full rounded-[16px] px-5"
                         disabled={submitting || !ticketDetail.canUpdateStatus}
                         type="submit"
                       >
@@ -3341,26 +3560,26 @@ function SupportWorkspaceView({
                   </div>
                 </section>
 
-                <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
-                  <div className="space-y-1">
-                    <h4 className="text-base font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
-                      Cliente
-                    </h4>
-                    <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                      Contexto rapido para responder sem sair da tratativa.
-                    </p>
-                  </div>
-                  <div className="mt-4">
+                <details
+                  className="rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_12px_24px_rgba(19,33,79,0.08)]"
+                  onToggle={(event) => setCustomerPanelOpen(event.currentTarget.open)}
+                  open={customerPanelOpen}
+                >
+                  <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                    Cliente
+                  </summary>
+                  <div className="mt-3">
                     <SupportTicketCustomerSnapshot
                       accountContext={customerAccountContext}
                       customer={customer}
                     />
                   </div>
-                </section>
+                </details>
 
                 <div ref={knowledgeSectionRef}>
                   <SupportKnowledgePanel
                     articles={filteredKnowledgeArticles}
+                    defaultOpen={knowledgePanelOpen}
                     links={knowledgeLinks}
                     loading={knowledgeBusy}
                     message={knowledgeMessage}
@@ -3376,27 +3595,27 @@ function SupportWorkspaceView({
                     onSendToCustomer={(articleId) =>
                       void handleLinkKnowledgeArticle(articleId, 'sent_to_customer')
                     }
+                    onToggle={setKnowledgePanelOpen}
                     phase={knowledgePhase}
                     search={knowledgeSearch}
                   />
                 </div>
 
-                <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
-                  <div className="space-y-1">
-                    <h4 className="text-base font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
-                      Atividade recente
-                    </h4>
-                    <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                      Mudancas de apoio sem poluir a conversa principal.
-                    </p>
-                  </div>
-                  <div className="mt-4">
+                <details
+                  className="rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_12px_24px_rgba(19,33,79,0.08)]"
+                  onToggle={(event) => setActivityPanelOpen(event.currentTarget.open)}
+                  open={activityPanelOpen}
+                >
+                  <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                    Atividade recente
+                  </summary>
+                  <div className="mt-3">
                     <SupportRecentActivity window={timelineWindow} />
                   </div>
-                </section>
+                </details>
 
                 <details
-                  className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_14px_28px_rgba(19,33,79,0.08)]"
+                  className="rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_12px_24px_rgba(19,33,79,0.08)]"
                   onToggle={(event) => setAdvancedToolsOpen(event.currentTarget.open)}
                   open={advancedToolsOpen}
                   ref={advancedSectionRef}
@@ -3405,9 +3624,26 @@ function SupportWorkspaceView({
                     Historico tecnico e mais acoes
                   </summary>
                   <div className="mt-4 space-y-4">
-                    <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                      Excecoes, fallback manual e trilha tecnica ficam recolhidos por padrao.
-                    </p>
+                    <form className="space-y-3" onSubmit={handleUpdateStatus}>
+                      <Field
+                        label="Atualizar com observacao"
+                        description="Use quando o movimento de status precisa levar um contexto curto."
+                      >
+                        <TextareaInput
+                          className="min-h-[96px]"
+                          onChange={(event) => setStatusNote(event.target.value)}
+                          placeholder="Descreva o proximo passo ou o motivo da mudanca."
+                          value={statusNote}
+                        />
+                      </Field>
+                      <AppButton
+                        className="min-h-11 w-full rounded-[16px] px-5"
+                        disabled={submitting || !ticketDetail.canUpdateStatus}
+                        type="submit"
+                      >
+                        {submitting ? 'Atualizando...' : 'Salvar status com observacao'}
+                      </AppButton>
+                    </form>
 
                     <form className="space-y-3" onSubmit={handleAssign}>
                       <Field
@@ -3421,7 +3657,7 @@ function SupportWorkspaceView({
                         />
                       </Field>
                       <AppButton
-                        className="min-h-11 w-full px-5"
+                        className="min-h-11 w-full rounded-[16px] px-5"
                         disabled={submitting || !ticketDetail.canAssign}
                         type="submit"
                       >
@@ -3441,7 +3677,7 @@ function SupportWorkspaceView({
                               />
                             </Field>
                             <AppButton
-                              className="min-h-11 w-full bg-[linear-gradient(135deg,#8b1e3f,#c3365e)] px-5"
+                              className="min-h-11 w-full rounded-[16px] bg-[linear-gradient(135deg,#8b1e3f,#c3365e)] px-5"
                               disabled={submitting || closeReason.trim().length === 0}
                               type="submit"
                             >
@@ -3478,7 +3714,13 @@ function SupportWorkspaceView({
                   </div>
                 </details>
               </aside>
-            ) : null}
+            ) : (
+              <div className="flex justify-end">
+                <GhostButton className="min-h-10 px-4 text-sm" onClick={() => setTicketRailOpen(true)}>
+                  Mostrar contexto
+                </GhostButton>
+              </div>
+            )}
           </div>
         </div>
       )}

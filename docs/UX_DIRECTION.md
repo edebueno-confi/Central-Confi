@@ -72,6 +72,11 @@
   - mensagens do cliente e da equipe em lados distintos
   - nota interna visualmente separada
   - rail direito apenas com acoes do ticket, cliente, conhecimento e atividade recente
+- a referencia visual de ticket deve buscar:
+  - resumo horizontal de baixa altura
+  - thread densa, com mais interacoes visiveis na dobra
+  - composer integrado ao rodape da conversa
+  - rail contextual compacto, sem cara de dashboard
 - historico tecnico fica recolhido
 - contexto do cliente apoia a tratativa, sem dominar a tela
 

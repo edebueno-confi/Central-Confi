@@ -563,6 +563,10 @@ Documentos históricos:
     - rail direito compacto com acoes, cliente, conhecimento e atividade recente
   - O shell de suporte tambem integrou o controle de colapso diretamente ao header da sidebar, removendo o botao redundante abaixo do branding.
   - Nenhum backend, schema, view ou RPC foi alterado neste ajuste.
+- Fase 6.18.3: Ticket Workspace Blueprint Fidelity Pass concluida localmente.
+  - A tela `/support/tickets/:ticketId` foi refinada para aproximar densidade, proporcao e composicao da blueprint aprovada, reduzindo altura desperdicada no resumo do ticket e no rail direito.
+  - A thread principal ficou mais continua e visivel na primeira dobra, com composer mais integrado e seletor de status preservando o estado atual no card operacional.
+  - A fidelidade avancou sem alterar backend, schema, contratos, views ou RPCs.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.

@@ -113,6 +113,11 @@ Fixar um mini design system para superficies operacionais internas do Genius Sup
   - cliente de um lado, equipe do outro, nota interna separada
   - rail direito com status, responsavel, cliente, conhecimento e atividade recente
   - historico tecnico e acoes avancadas recolhidos
+  - fidelidade visual esperada:
+    - header baixo e horizontal
+    - mais thread visivel antes da dobra
+    - composer encaixado ao fim da conversa
+    - cards do rail curtos, escaneaveis e sem repeticao desnecessaria
 - customers: subsidebar com clientes acessiveis e atalhos; area principal com stack, alertas, tickets recentes e contatos
 
 ### Knowledge
