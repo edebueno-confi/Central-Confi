@@ -916,6 +916,8 @@ Fase 6.8:
 
 ## Próximos contratos planejados
 - Ticket -> Knowledge Base assistive linking:
+  - design tecnico pre-migration documentado em:
+    - `TICKET_KNOWLEDGE_LINKING_MIGRATION_DESIGN.md`
   - views candidatas:
     - `vw_support_ticket_knowledge_links`
     - `vw_support_knowledge_article_picker`

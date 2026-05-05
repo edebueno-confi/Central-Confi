@@ -320,6 +320,7 @@ Metadados brutos observados em `article.json`:
 - o vinculo futuro entre ticket e artigo deve registrar uso, lacuna ou necessidade de atualizacao sem publicar nem alterar artigo automaticamente
 - a especificacao oficial dessa ponte fica em `TICKET_KNOWLEDGE_LINKING_SPEC.md`
 - o corte minimo implementavel dessa ponte fica revisado em `TICKET_KNOWLEDGE_LINKING_DATA_MODEL_REVIEW.md`
+- o desenho tecnico pre-migration dessa ponte fica em `TICKET_KNOWLEDGE_LINKING_MIGRATION_DESIGN.md`
 - artigo `public` pode ser enviado ao cliente B2B
 - artigo `internal` e `restricted` so podem existir como referencia interna autorizada
 

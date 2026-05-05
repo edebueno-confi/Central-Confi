@@ -202,6 +202,7 @@
 - a especificacao oficial desta ponte fica em `TICKET_KNOWLEDGE_LINKING_SPEC.md`
 - o modelo minimo revisado desta ponte fica em `TICKET_KNOWLEDGE_LINKING_DATA_MODEL_REVIEW.md`
 - a proxima fase materializavel deve manter o vinculo como append-only auditavel, com arquivamento logico e sem duplicar conteudo do artigo dentro do ticket
+- o desenho tecnico pre-migration dessa ponte fica consolidado em `TICKET_KNOWLEDGE_LINKING_MIGRATION_DESIGN.md`
 
 ## Fora de escopo do workspace
 - atendimento a shopper final

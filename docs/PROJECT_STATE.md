@@ -40,6 +40,7 @@ Documentos prioritários:
 - `CUSTOMER_ACCOUNT_PROFILE_MIGRATION_DESIGN.md`
 - `TICKET_KNOWLEDGE_LINKING_SPEC.md`
 - `TICKET_KNOWLEDGE_LINKING_DATA_MODEL_REVIEW.md`
+- `TICKET_KNOWLEDGE_LINKING_MIGRATION_DESIGN.md`
 - `reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`
 
 Documentos históricos:
@@ -491,6 +492,17 @@ Documentos históricos:
     - `sent_to_customer` exige artigo `public` + `published`
     - `documentation_gap` e `suggested_article` podem existir sem `article_id`
     - o vinculo deve ser append-only com arquivamento logico, sem snapshot do artigo
+- Fase 6.14: Ticket Knowledge Linking Migration Design concluida localmente.
+  - O desenho tecnico pre-migration do vinculo ticket -> KB foi consolidado em `docs/TICKET_KNOWLEDGE_LINKING_MIGRATION_DESIGN.md`.
+  - A fase definiu:
+    - enum `ticket_knowledge_link_type`
+    - tabela futura `ticket_knowledge_links`
+    - constraints de integridade por `link_type`, tenant, artigo e archive logico
+    - helpers privados de authz, validacao editorial e bloqueio de conteudo sensivel
+  - A fase tambem fechou:
+    - views futuras de suporte e portal
+    - RPCs futuras de create/archive/gap/needs_update
+    - plano pgTAP e ordem de implementacao da fase materializavel
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -512,6 +524,6 @@ Documentos históricos:
 - Não permitir leitura do Admin Console fora das views `vw_admin_*`.
 
 ## Próxima prioridade
-Abrir o design tecnico pre-migration do vinculo ticket -> Knowledge Base,
-definindo migration, constraints, helpers privados, views, RPCs e pgTAP
-antes de materializar a tabela no backend.
+Abrir a fase de materializacao backend minima do vinculo ticket -> Knowledge Base,
+seguindo o desenho tecnico aprovado para enum, tabela, helpers privados, views,
+RPCs e pgTAP antes de qualquer UI assistiva.

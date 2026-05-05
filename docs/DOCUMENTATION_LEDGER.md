@@ -867,3 +867,40 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - prepara a camada auditavel que vai registrar quando um artigo foi usado internamente ou enviado ao cliente
   - separa backlog editorial de tratativa operacional sem misturar KB com comentario solto
+
+### Fase 6.14 - Ticket Knowledge Linking Migration Design
+- fase: `6.14`
+- commit: `pending`
+- branch: `codex/phase6-14-ticket-knowledge-linking-migration-design`
+- data: `2026-05-04`
+- resumo funcional: o desenho tecnico pre-migration do vinculo ticket -> Knowledge Base foi fechado com enum, tabela futura, constraints, helpers privados, views, RPCs e plano pgTAP antes de materializar banco.
+- docs alterados:
+  - `docs/TICKET_KNOWLEDGE_LINKING_MIGRATION_DESIGN.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+  - `docs/README.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao materializada de contrato backend
+  - views futuras desenhadas:
+    - `vw_support_ticket_knowledge_links`
+    - `vw_support_knowledge_article_picker`
+    - `vw_customer_portal_ticket_knowledge_links`
+  - RPCs futuras desenhadas:
+    - `rpc_support_link_ticket_article`
+    - `rpc_support_archive_ticket_article_link`
+    - `rpc_support_mark_documentation_gap`
+    - `rpc_support_mark_article_needs_update`
+- telas afetadas:
+  - nenhuma alteracao de UI nesta fase
+  - impacto futuro principal em `/support/tickets/:ticketId`
+  - impacto futuro secundario em `/admin/knowledge`
+- riscos restantes:
+  - a validacao tenant/space ainda depende da fase materializada de helpers e pgTAP
+  - o helper de sanitizacao de `note` precisa nascer forte para nao abrir vazamento tecnico
+  - o portal B2B futuro continua exigindo view dedicada para nao herdar referencias internas
+- impacto na FAQ futura:
+  - prepara a camada executavel que vai registrar uso interno e envio publico de artigo com rastreabilidade
+  - fecha o boundary tecnico para evoluir ticket -> KB sem publicar artigo por acidente
