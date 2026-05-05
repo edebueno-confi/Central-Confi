@@ -41,6 +41,7 @@ Documentos prioritários:
 - `TICKET_KNOWLEDGE_LINKING_SPEC.md`
 - `TICKET_KNOWLEDGE_LINKING_DATA_MODEL_REVIEW.md`
 - `TICKET_KNOWLEDGE_LINKING_MIGRATION_DESIGN.md`
+- `TICKET_KNOWLEDGE_PUBLIC_LINK_CONTRACT_REVIEW.md`
 - `reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`
 
 Documentos históricos:
@@ -532,6 +533,14 @@ Documentos históricos:
     - arquivar vinculos ativos
   - A conversa e o composer continuam no fluxo principal; a KB entra apenas como apoio operacional no rail do ticket.
   - O frontend continua sem acesso a `ticket_knowledge_links` diretamente e sem exibir UUID, nomes de views/RPCs ou metadata tecnica no fluxo principal.
+- Fase 6.17: Ticket Knowledge Public Link Contract Review concluida localmente.
+  - A auditoria confirmou a lacuna contratual entre a UI assistiva do ticket e a camada publica da KB: o suporte sabe quando um artigo pode ser enviado ao cliente, mas ainda nao recebe uma rota publica segura pronta para uso.
+  - `vw_support_knowledge_article_picker` foi mantida como read model geral de busca e vinculo, sem assumir a responsabilidade de compor URL publica no frontend.
+  - A recomendacao oficial ficou documentada em `docs/TICKET_KNOWLEDGE_PUBLIC_LINK_CONTRACT_REVIEW.md`:
+    - criar uma view dedicada para candidatos a link publico seguro
+    - manter a decisao de `can_send_to_customer` e de `public_article_path` no backend
+    - evitar concatenacao fragil de `/help/:spaceSlug/articles/:articleSlug` no frontend
+  - O proximo contrato candidato dessa ponte passa a ser `vw_support_knowledge_public_link_candidates`.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -553,6 +562,7 @@ Documentos históricos:
 - Não permitir leitura do Admin Console fora das views `vw_admin_*`.
 
 ## Próxima prioridade
-Abrir a primeira UI minima assistiva de ticket -> Knowledge Base,
-consumindo apenas `vw_support_ticket_knowledge_links` e `vw_support_knowledge_article_picker`,
-sem competir com a conversa do ticket, sem automacao e sem abrir fluxo editorial no suporte.
+Materializar o contrato minimo seguro para copia/envio de link publico de artigo a partir do ticket,
+sem concatenacao fragil no frontend,
+mantendo o picker geral separado da superficie especializada de rota publica,
+e preservando `public` + `published` em `knowledge_space` ativo como pre-requisito de envio ao cliente.

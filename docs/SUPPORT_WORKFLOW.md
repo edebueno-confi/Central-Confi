@@ -233,6 +233,16 @@
 - artigos `internal` e `restricted` aparecem apenas como apoio interno autorizado
 - o painel nao expõe UUID, nomes de views/RPCs nem metadata tecnica no fluxo principal
 
+## Contrato de link publico seguro do ticket -> KB
+- a UI 6.16 comprovou uma lacuna contratual: o suporte sabe quando um artigo pode ser enviado ao cliente, mas ainda nao recebe a rota publica segura pronta para uso
+- `vw_support_knowledge_article_picker` continua suficiente para busca e vinculo geral, mas nao deve virar montador de rota publica no frontend por heuristica
+- a review oficial desta lacuna fica em `TICKET_KNOWLEDGE_PUBLIC_LINK_CONTRACT_REVIEW.md`
+- recomendacao documental atual:
+  - manter o picker focado em selecao geral de artigo
+  - criar uma view dedicada para candidatos a link publico seguro
+  - deixar o backend decidir `can_send_to_customer`, `public_article_path` e `reason_if_blocked`
+- o objetivo da proxima camada nao e publicar artigo nem automatizar resposta; e apenas permitir copia/envio seguro de link publico quando o artigo for `public` + `published` em `knowledge_space` ativo
+
 ## Fora de escopo do workspace
 - atendimento a shopper final
 - omnichannel B2C

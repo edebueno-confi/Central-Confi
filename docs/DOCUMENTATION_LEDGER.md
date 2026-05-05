@@ -967,3 +967,36 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - registra o primeiro uso operacional real da ponte ticket -> KB no workspace de suporte
   - prepara explicacoes futuras sobre referencia interna, envio ao cliente, lacuna de documentacao e revisao de artigo sem depender de IA
+
+### Fase 6.17 - Ticket Knowledge Public Link Contract Review
+- fase: `6.17`
+- commit: `TBD`
+- branch: `codex/phase6-17-ticket-knowledge-public-link-review`
+- data: `2026-05-05`
+- resumo funcional: review documental do contrato necessario para que o suporte copie ou envie um link publico seguro de artigo ao cliente sem montar rota fragil no frontend.
+- docs alterados:
+  - `docs/TICKET_KNOWLEDGE_PUBLIC_LINK_CONTRACT_REVIEW.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/VIEW_RPC_CONTRACTS.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+  - `docs/README.md`
+- views/RPCs afetadas:
+  - auditoria de `vw_support_knowledge_article_picker`
+  - auditoria de `vw_public_knowledge_space_resolver`
+  - auditoria de `vw_public_knowledge_article_detail`
+  - auditoria de `rpc_support_link_ticket_article`
+  - view futura recomendada:
+    - `vw_support_knowledge_public_link_candidates`
+- telas afetadas:
+  - nenhuma alteracao de UI nesta fase
+  - impacto futuro principal em `/support/tickets/:ticketId`
+  - impacto futuro secundario em `/help/:spaceSlug/articles/:articleSlug`
+- riscos restantes:
+  - o contrato ainda nao foi materializado em backend
+  - a decisao entre caminho relativo e URL canonica completa ainda fica para a fase materializavel
+  - o portal B2B futuro continua exigindo superficie propria para nao herdar referencias internas por conveniencia
+- impacto na FAQ futura:
+  - prepara a trilha oficial para explicar como o suporte pode compartilhar artigo publico com seguranca
+  - reforca que permissao de envio e roteamento publico devem vir do backend, nao de heuristica no frontend

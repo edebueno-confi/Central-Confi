@@ -340,6 +340,12 @@ Metadados brutos observados em `article.json`:
   - `rpc_support_mark_documentation_gap`
   - `rpc_support_mark_article_needs_update`
 - essa UI fica no rail do ticket, como apoio operacional recolhivel, sem competir com a conversa nem abrir fluxo editorial dentro do suporte
+- a UI 6.16 ainda nao copia link publico com seguranca porque o picker atual nao projeta metadata suficiente de rota por `knowledge_space`
+- a review oficial dessa lacuna fica em `TICKET_KNOWLEDGE_PUBLIC_LINK_CONTRACT_REVIEW.md`
+- recomendacao atual:
+  - nao montar `/help/:spaceSlug/articles/:articleSlug` no frontend por concatenacao fragil
+  - projetar um contrato proprio para candidatos a link publico seguro
+  - manter a decisao de elegibilidade e rota no backend
 
 ## O que continua bloqueado
 - publicacao automatica ou em massa do legado

@@ -225,6 +225,25 @@ Fase 6.15:
   - o backend nao duplica `body_md` nem publica artigo automaticamente;
   - `note` passa por bloqueio de termos tecnicos e sensiveis antes de persistir.
 
+Fase 6.17:
+- A revisao documental do contrato de link publico seguro confirmou uma lacuna entre o picker do suporte e os read models publicos da KB.
+- `vw_support_knowledge_article_picker` hoje informa se o artigo pode ser enviado ao cliente, mas nao devolve a rota publica segura pronta para uso.
+- Recomendacao atual:
+  - manter `vw_support_knowledge_article_picker` como read model geral de busca e vinculo
+  - adicionar uma view dedicada para candidatos a link publico seguro
+  - manter a decisao de `can_send_to_customer` e da rota publica no backend, sem concatenacao fragil no frontend
+- Shape minimo recomendado para a proxima fase:
+  - `ticket_id`
+  - `article_id`
+  - `knowledge_space_slug`
+  - `article_slug`
+  - `article_title`
+  - `article_visibility`
+  - `article_status`
+  - `public_article_path`
+  - `can_send_to_customer`
+  - `reason_if_blocked`
+
 ## Views contratuais vigentes
 
 ### `vw_tickets_list`
@@ -937,21 +956,23 @@ Fase 6.15:
 
 ## Próximos contratos planejados
 - Ticket -> Knowledge Base assistive linking:
-  - design tecnico pre-migration documentado em:
-    - `TICKET_KNOWLEDGE_LINKING_MIGRATION_DESIGN.md`
-  - views candidatas:
+  - backend minimo ja materializado em:
     - `vw_support_ticket_knowledge_links`
     - `vw_support_knowledge_article_picker`
     - `vw_customer_portal_ticket_knowledge_links`
-  - RPCs candidatas:
     - `rpc_support_link_ticket_article`
     - `rpc_support_archive_ticket_article_link`
     - `rpc_support_mark_documentation_gap`
     - `rpc_support_mark_article_needs_update`
+  - review de contrato publico seguro documentada em:
+    - `TICKET_KNOWLEDGE_PUBLIC_LINK_CONTRACT_REVIEW.md`
+  - proxima view candidata:
+    - `vw_support_knowledge_public_link_candidates`
   - boundary esperado:
     - frontend continua sem leitura de tabela-base
     - `sent_to_customer` exige artigo `public` + `published`
     - `reference_internal` pode apontar para `internal` e `restricted` apenas em superficie interna autorizada
+    - o frontend nao monta rota publica por heuristica
 - Views e RPCs de intake para engenharia.
 - Roteamento frontend por domínio/`space_slug` sobre os contratos já materializados.
 - Branding público projetado explicitamente por read model quando `brand_settings` precisar sair do fallback seguro atual.
