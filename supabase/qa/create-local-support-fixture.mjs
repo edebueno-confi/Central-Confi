@@ -191,43 +191,12 @@ const FIXTURE = {
       priority: 'urgent',
       severity: 'critical',
       source: 'api',
-      assignee: 'support-manager-a',
-      status: 'in_progress',
+      assignee: null,
+      status: 'waiting_engineering',
       publicMessage:
-        'Ao reenviar o pedido no ERP, o webhook nao retorna confirmacao e o status nao atualiza no painel.',
-      publicMessageAuthor: 'Marina Operacoes QA',
+        'Registramos o incidente e escalamos a validacao tecnica do endpoint informado.',
       internalNote:
-        'Conferir timeout, retries e o payload de retorno antes de responder com causa definitiva.',
-      internalNoteAuthor: 'Juliana Martins',
-      conversationEntries: [
-        {
-          lane: 'agent',
-          body: 'Bom dia. Pode nos enviar o horario da ultima tentativa e um print do retorno para validarmos a trilha do webhook?',
-          author: 'Juliana Martins',
-        },
-        {
-          lane: 'customer',
-          body: 'Claro. Segue o print da chamada com o timeout e o horario da ultima tentativa.',
-          author: 'Marina Operacoes QA',
-          attachmentName: 'timeout-webhook-erp.png',
-          attachmentSizeLabel: '156 KB',
-        },
-        {
-          lane: 'agent',
-          body: 'Obrigada. Identificamos que a integracao recebeu o evento, mas o ERP nao confirmou o callback final. Ja estamos ajustando o reprocessamento.',
-          author: 'Juliana Martins',
-        },
-        {
-          lane: 'internal',
-          body: 'Validado retry manual no tenant A. Se o proximo retorno vier com HTTP 200, orientar o cliente a repetir o fluxo com o mesmo payload.',
-          author: 'Juliana Martins',
-        },
-        {
-          lane: 'customer',
-          body: 'Perfeito. Testei novamente e o retorno voltou a aparecer aqui. Obrigada.',
-          author: 'Marina Operacoes QA',
-        },
-      ],
+        'Conferir timeout, retries e eventuais bloqueios no endpoint do tenant.',
     },
     {
       tenantSlug: 'support-qa-a',
@@ -1502,21 +1471,14 @@ function createSupportTicket({ actorUserId, tenantId, contactId, ticket }) {
       ticket_id,
       visibility,
       body,
-      created_by_user_id,
-      metadata
+      created_by_user_id
     )
     values (
       '${sqlEscape(tenantId)}'::uuid,
       '${sqlEscape(ticketId)}'::uuid,
       'customer'::public.message_visibility,
       '${sqlEscape(ticket.publicMessage)}',
-      '${sqlEscape(actorUserId)}'::uuid,
-      jsonb_strip_nulls(
-        jsonb_build_object(
-          'conversation_lane', 'customer',
-          'conversation_author', ${ticket.publicMessageAuthor ? `'${sqlEscape(ticket.publicMessageAuthor)}'` : 'null'}
-        )
-      )
+      '${sqlEscape(actorUserId)}'::uuid
     )
     returning id::text as id;
   `);
@@ -1540,12 +1502,7 @@ function createSupportTicket({ actorUserId, tenantId, contactId, ticket }) {
         'customer'::public.message_visibility,
         '${sqlEscape(actorUserId)}'::uuid,
         '${sqlEscape(publicMessageId)}'::uuid,
-        jsonb_strip_nulls(
-          jsonb_build_object(
-            'conversation_lane', 'customer',
-            'conversation_author', ${ticket.publicMessageAuthor ? `'${sqlEscape(ticket.publicMessageAuthor)}'` : 'null'}
-          )
-        )
+        '{}'::jsonb
       );
     `);
   }
@@ -1556,21 +1513,14 @@ function createSupportTicket({ actorUserId, tenantId, contactId, ticket }) {
       ticket_id,
       visibility,
       body,
-      created_by_user_id,
-      metadata
+      created_by_user_id
     )
     values (
       '${sqlEscape(tenantId)}'::uuid,
       '${sqlEscape(ticketId)}'::uuid,
       'internal'::public.message_visibility,
       '${sqlEscape(ticket.internalNote)}',
-      '${sqlEscape(actorUserId)}'::uuid,
-      jsonb_strip_nulls(
-        jsonb_build_object(
-          'conversation_lane', 'internal',
-          'conversation_author', ${ticket.internalNoteAuthor ? `'${sqlEscape(ticket.internalNoteAuthor)}'` : 'null'}
-        )
-      )
+      '${sqlEscape(actorUserId)}'::uuid
     )
     returning id::text as id;
   `);
@@ -1594,12 +1544,7 @@ function createSupportTicket({ actorUserId, tenantId, contactId, ticket }) {
         'internal'::public.message_visibility,
         '${sqlEscape(actorUserId)}'::uuid,
         '${sqlEscape(internalMessageId)}'::uuid,
-        jsonb_strip_nulls(
-          jsonb_build_object(
-            'conversation_lane', 'internal',
-            'conversation_author', ${ticket.internalNoteAuthor ? `'${sqlEscape(ticket.internalNoteAuthor)}'` : 'null'}
-          )
-        )
+        '{}'::jsonb
       );
     `);
   }
@@ -1676,70 +1621,6 @@ function createSupportTicket({ actorUserId, tenantId, contactId, ticket }) {
           '${sqlEscape(actorUserId)}'::uuid,
           '${sqlEscape(extraMessageId)}'::uuid,
           jsonb_build_object('fixture_extra_index', ${index})
-        );
-      `);
-    }
-  }
-
-  for (const entry of ticket.conversationEntries ?? []) {
-    const visibility = entry.lane === 'internal' ? 'internal' : 'customer';
-    const eventType =
-      entry.lane === 'internal' ? 'internal_note_added' : 'message_added';
-
-    const message = runSupabaseDbQuery(`
-      insert into public.ticket_messages (
-        tenant_id,
-        ticket_id,
-        visibility,
-        body,
-        created_by_user_id,
-        metadata
-      )
-      values (
-        '${sqlEscape(tenantId)}'::uuid,
-        '${sqlEscape(ticketId)}'::uuid,
-        '${visibility}'::public.message_visibility,
-        '${sqlEscape(entry.body)}',
-        '${sqlEscape(actorUserId)}'::uuid,
-        jsonb_strip_nulls(
-          jsonb_build_object(
-            'conversation_lane', '${entry.lane}',
-            'conversation_author', '${sqlEscape(entry.author ?? '')}',
-            'attachment_name', ${entry.attachmentName ? `'${sqlEscape(entry.attachmentName)}'` : 'null'},
-            'attachment_size_label', ${entry.attachmentSizeLabel ? `'${sqlEscape(entry.attachmentSizeLabel)}'` : 'null'}
-          )
-        )
-      )
-      returning id::text as id;
-    `);
-
-    const messageId = message.rows?.[0]?.id;
-    if (messageId) {
-      runSupabaseDbQuery(`
-        insert into public.ticket_events (
-          tenant_id,
-          ticket_id,
-          event_type,
-          visibility,
-          actor_user_id,
-          message_id,
-          metadata
-        )
-        values (
-          '${sqlEscape(tenantId)}'::uuid,
-          '${sqlEscape(ticketId)}'::uuid,
-          '${eventType}'::public.ticket_event_type,
-          '${visibility}'::public.message_visibility,
-          '${sqlEscape(actorUserId)}'::uuid,
-          '${sqlEscape(messageId)}'::uuid,
-          jsonb_strip_nulls(
-            jsonb_build_object(
-              'conversation_lane', '${entry.lane}',
-              'conversation_author', '${sqlEscape(entry.author ?? '')}',
-              'attachment_name', ${entry.attachmentName ? `'${sqlEscape(entry.attachmentName)}'` : 'null'},
-              'attachment_size_label', ${entry.attachmentSizeLabel ? `'${sqlEscape(entry.attachmentSizeLabel)}'` : 'null'}
-            )
-          )
         );
       `);
     }
