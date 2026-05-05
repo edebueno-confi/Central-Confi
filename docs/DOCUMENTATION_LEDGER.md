@@ -1037,7 +1037,7 @@ Cada registro deve informar:
 
 ### Ajuste complementar 6.18 - Ticket workspace guiado por blueprint operacional
 - fase: `6.18`
-- commit: `pendente`
+- commit: `8021439`
 - branch: `codex/phase6-18-ticket-workspace-blueprint`
 - data: `2026-05-05`
 - resumo funcional: a tela `/support/tickets/:ticketId` foi refatorada para seguir um blueprint de tratativa operacional, com conversa central, toolbar util na propria superficie e rail direito compacto.
