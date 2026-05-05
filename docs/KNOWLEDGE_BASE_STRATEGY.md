@@ -310,7 +310,17 @@ Metadados brutos observados em `article.json`:
 - Evoluir a curadoria administrativa space-aware sem romper os contratos atuais do Admin Console.
 - Consumir a superfície pública apenas quando a UI da Central Pública for criada sobre as views endurecidas já aprovadas.
 - Evoluir After Sale como segundo `knowledge_space` oficial apenas quando a operação estiver pronta.
+- Materializar uma ponte assistiva e auditável entre tickets e artigos, sem IA e sem automação, conforme `TICKET_KNOWLEDGE_LINKING_SPEC.md`.
 - Usar `PLATFORM_FAQ_STRATEGY.md` e `DOCUMENTATION_LEDGER.md` como trilha oficial para transformar funcionalidades já validadas em FAQ pública ou interna.
+
+## Relacao com tickets
+- a KB deve apoiar a tratativa do suporte sem virar extensao do ticket
+- o artigo continua sendo a source of truth do conteudo
+- o ticket continua sendo a source of truth da resposta e do contexto operacional
+- o vinculo futuro entre ticket e artigo deve registrar uso, lacuna ou necessidade de atualizacao sem publicar nem alterar artigo automaticamente
+- a especificacao oficial dessa ponte fica em `TICKET_KNOWLEDGE_LINKING_SPEC.md`
+- artigo `public` pode ser enviado ao cliente B2B
+- artigo `internal` e `restricted` so podem existir como referencia interna autorizada
 
 ## O que continua bloqueado
 - publicacao automatica ou em massa do legado

@@ -38,6 +38,7 @@ Documentos prioritários:
 - `CUSTOMER_ACCOUNT_PROFILE_SPEC.md`
 - `CUSTOMER_ACCOUNT_PROFILE_DATA_MODEL_REVIEW.md`
 - `CUSTOMER_ACCOUNT_PROFILE_MIGRATION_DESIGN.md`
+- `TICKET_KNOWLEDGE_LINKING_SPEC.md`
 - `reports/KNOWLEDGE_LEGACY_CURATION_BACKLOG.md`
 
 Documentos históricos:
@@ -469,6 +470,15 @@ Documentos históricos:
   - O contrato de UI interna foi endurecido em `docs/UX_DIRECTION.md`, `docs/INTERNAL_WORKSPACE_DESIGN_SYSTEM.md` e `docs/INTERNAL_UI_ACCEPTANCE_CHECKLIST.md`.
   - `/admin/tenants`, `/admin/knowledge`, `/admin/access`, `/admin/system`, `/support/queue`, `/support/tickets/:ticketId`, `/support/customers/:tenantId` e a Central Publica passaram por limpeza de copy, reducao de ruido visual e rebaixamento de metadados tecnicos.
   - O backlog oficial de polimento e evolucao futura dessas superficies ficou consolidado em `docs/UI_REFACTOR_BACKLOG.md`.
+- Fase 6.12: Ticket -> Knowledge Base Assistive Linking Spec concluida localmente.
+  - O dominio de vinculo assistivo entre ticket e artigo foi especificado em `docs/TICKET_KNOWLEDGE_LINKING_SPEC.md`.
+  - A fase define casos de uso, tipos de vinculo, boundary de permissao, modelo futuro minimo e impacto de UI sem IA, automacao ou publicacao automatica.
+  - O contrato separa com clareza:
+    - referencia interna
+    - link publico enviado ao cliente
+    - lacuna de documentacao
+    - artigo que precisa de atualizacao
+  - Support e Knowledge agora possuem trilha documental comum para evoluir ticket -> KB sem misturar tratativa com curadoria editorial.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -490,7 +500,6 @@ Documentos históricos:
 - Não permitir leitura do Admin Console fora das views `vw_admin_*`.
 
 ## Próxima prioridade
-Abrir a próxima fase funcional do Support Workspace apenas depois da
-inspeção visual e operacional do shell interno consolidado, preservando
-conversa/composer como foco principal e sem regredir para padrão visual de
-painel administrativo.
+Abrir a próxima fase documental/técnica do vínculo ticket -> Knowledge Base,
+definindo modelo mínimo, constraints e boundary de permissões antes de
+materializar tabela, views ou RPCs.

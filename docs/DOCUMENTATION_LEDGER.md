@@ -801,3 +801,32 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - fixa a regra de que qualquer superficie interna deve esconder detalhes tecnicos do fluxo principal
   - documenta o criterio oficial de aceite visual e operacional para futuras fases
+
+### Fase 6.12 - Ticket -> Knowledge Base Assistive Linking Spec
+- fase: `6.12`
+- commit: `pending`
+- branch: `codex/phase6-12-ticket-knowledge-linking-spec`
+- data: `2026-05-04`
+- resumo funcional: o dominio de vinculo assistivo entre tickets e artigos da Knowledge Base foi especificado com foco em uso operacional do suporte, sem IA, sem automacao e sem misturar tratativa com curadoria editorial.
+- docs alterados:
+  - `docs/TICKET_KNOWLEDGE_LINKING_SPEC.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/SUPPORT_WORKFLOW.md`
+  - `docs/KNOWLEDGE_BASE_STRATEGY.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+  - `docs/README.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao materializada de contrato backend
+  - leitura atual mantida no Support Workspace e na Knowledge Base
+  - tabela futura candidata: `ticket_knowledge_links`
+- telas afetadas:
+  - nenhuma alteracao de UI nesta fase
+  - impacto futuro principal em `/support/tickets/:ticketId`
+  - impacto futuro secundario em `/admin/knowledge`
+- riscos restantes:
+  - o dominio ainda precisa de review de modelo minimo antes de qualquer migration
+  - permissoes de uso interno vs envio ao cliente vao precisar de enforcement explicito em contrato futuro
+  - ticket -> engenharia e SLA continuam fora desta especificacao
+- impacto na FAQ futura:
+  - cria trilha oficial para registrar quando suporte usa ou envia artigo ao cliente B2B
+  - prepara backlog rastreavel de lacunas e atualizacoes de documentacao a partir de tickets reais

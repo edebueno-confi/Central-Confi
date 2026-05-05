@@ -185,6 +185,16 @@ Uso esperado:
 - sugerir artigo relacionado
 - registrar artigo usado na resolucao
 - transformar demanda recorrente em backlog de conteudo
+- separar claramente:
+  - referencia interna
+  - link publico enviado ao cliente
+  - lacuna de documentacao
+  - artigo que precisa de atualizacao
+
+Direcao aprovada em especificacao:
+- esse dominio assistivo agora fica formalizado em `TICKET_KNOWLEDGE_LINKING_SPEC.md`
+- o painel de conhecimento relacionado deve apoiar a resposta no ticket sem competir com conversa e composer
+- o vinculo nao altera ticket nem artigo automaticamente
 
 ### 7. Vinculo ticket -> engineering work item
 Lacuna:

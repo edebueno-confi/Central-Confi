@@ -189,6 +189,18 @@
 - a fila, o ticket e o contexto do cliente devem continuar guiados pela operacao real, nunca por reaproveitamento visual do Admin Console
 - o backlog de refinamento da experiencia fica rastreado em `UI_REFACTOR_BACKLOG.md`
 
+## Direcao de vinculo ticket -> Knowledge Base
+- o suporte precisa conseguir relacionar artigo ao ticket sem transformar a tratativa em tela editorial
+- o vinculo deve ser assistivo:
+  - referencia interna
+  - artigo enviado ao cliente
+  - lacuna de documentacao
+  - necessidade de atualizacao
+- o ticket continua sendo a source of truth da tratativa
+- a KB continua sendo a source of truth do conteudo
+- artigo `restricted` ou `internal` nunca pode ser tratado como link ao cliente
+- a especificacao oficial desta ponte fica em `TICKET_KNOWLEDGE_LINKING_SPEC.md`
+
 ## Fora de escopo do workspace
 - atendimento a shopper final
 - omnichannel B2C
