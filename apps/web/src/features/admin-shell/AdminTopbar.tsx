@@ -64,7 +64,9 @@ export function AdminTopbar({
   const { runtimeConfig, signOut } = useAuthContext();
   const copy = routeCopy[location.pathname] ?? routeCopy['/admin/tenants'];
   const compactMode =
-    location.pathname === '/admin/knowledge' || location.pathname === '/admin/access';
+    location.pathname === '/admin/knowledge' ||
+    location.pathname === '/admin/access' ||
+    location.pathname === '/admin/system';
   const showQuickNav = location.pathname === '/admin/knowledge';
 
   if (compactMode) {

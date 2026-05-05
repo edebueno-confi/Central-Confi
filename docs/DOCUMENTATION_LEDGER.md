@@ -1162,3 +1162,28 @@ Cada registro deve informar:
   - screenshot final em `phase6-22-support-customer-detail-final.png`
 - impacto na FAQ futura:
   - fixa o padrao de detalhe de cliente como superficie operacional de suporte B2B, nao como CRUD generico herdado do shell anterior
+
+### Fase 6.23 - Admin System Blueprint
+- fase: `6.23`
+- branch: `codex/phase6-23-admin-system-blueprint`
+- data: `2026-05-05`
+- resumo funcional: a rota `/admin/system` foi reconstruida como superficie de observabilidade administrativa, com header proprio, tabs por dominio, KPIs compactos, coluna de monitoramento, lista densa de eventos/checks e rail direito de detalhe operacional.
+- docs alterados:
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- telas afetadas:
+  - `/admin/system`
+  - `AdminTopbar` e `AdminSidebar` apenas para estender o modo compacto da familia Admin a esta rota
+- views/RPCs afetadas:
+  - nenhuma alteracao de backend
+  - nenhuma view ou RPC nova
+- riscos restantes:
+  - a tela continua refletindo os contratos atuais de auditoria e memberships; nao cria novos eventos, jobs nem checks que ainda nao existam no produto
+  - alguns textos do detalhe operacional sao derivados do feed atual, entao a profundidade diagnostica depende da qualidade dos dados ja emitidos pelo backend
+- validacao final:
+  - `npm run contracts:typecheck`
+  - `npm run web:typecheck`
+  - `npm run web:build`
+  - screenshot final em `.tmp/phase6-23-admin-system/admin-system-final.png`
+- impacto na FAQ futura:
+  - formaliza `System` como tela de observabilidade administrativa do Admin Console, em vez de painel generico de cards soltos

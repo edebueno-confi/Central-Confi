@@ -607,6 +607,20 @@ Documentos históricos:
     - `npm run web:typecheck`
     - `npm run web:build`
   - QA visual local final gerada em `phase6-22-support-customer-detail-final.png`, sem scroll horizontal e com login validado ate a rota final da fixture atual.
+- Fase 6.23: Admin System Blueprint concluida localmente.
+  - `/admin/system` foi reconstruida como superficie de observabilidade administrativa alinhada ao contrato visual do Admin Console:
+    - header `System` com subtitulo operacional e CTA de recarga
+    - tabs `Saude`, `Auditoria`, `Jobs` e `Seguranca`
+    - KPIs compactos no topo
+    - coluna esquerda de monitoramento com filtros e checks rapidos
+    - lista central densa de eventos e checks
+    - rail direito com detalhe operacional, impacto, acoes recomendadas e historico relacionado
+  - A fase preservou os contratos atuais sem alterar backend, Supabase, schema, migrations, RPCs, contracts ou fixtures.
+  - Validacoes locais da fase:
+    - `npm run contracts:typecheck`
+    - `npm run web:typecheck`
+    - `npm run web:build`
+  - QA visual local final gerada em `.tmp/phase6-23-admin-system/admin-system-final.png`, com login real, rota final validada e sem scroll horizontal.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
