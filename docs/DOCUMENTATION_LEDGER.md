@@ -1000,3 +1000,37 @@ Cada registro deve informar:
 - impacto na FAQ futura:
   - prepara a trilha oficial para explicar como o suporte pode compartilhar artigo publico com seguranca
   - reforca que permissao de envio e roteamento publico devem vir do backend, nao de heuristica no frontend
+
+### Fase 6.18 - Contextual Subsidebar UX Pattern
+- fase: `6.18`
+- commit: `7970fb2`
+- branch: `codex/phase6-18-contextual-subsidebar-ux-pattern`
+- data: `2026-05-05`
+- resumo funcional: o shell interno passou a formalizar sidebar global, subsidebar contextual e area principal de trabalho, com aplicacao real em Support, Admin, Knowledge e validacao da Central Publica local.
+- docs alterados:
+  - `docs/UX_DIRECTION.md`
+  - `docs/INTERNAL_WORKSPACE_DESIGN_SYSTEM.md`
+  - `docs/INTERNAL_UI_ACCEPTANCE_CHECKLIST.md`
+  - `docs/UI_REFACTOR_BACKLOG.md`
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - nenhuma alteracao de contrato backend
+  - nenhuma view ou RPC nova materializada
+- telas afetadas:
+  - `/support/queue`
+  - `/support/tickets/:ticketId`
+  - `/support/customers/:tenantId`
+  - `/admin/knowledge`
+  - `/admin/tenants`
+  - `/admin/access`
+  - `/admin/system`
+  - `/help/genius`
+  - `/help/genius/articles/visao-geral-da-central-genius`
+- riscos restantes:
+  - o item global `Customers` no shell de suporte ainda depende de um destino melhor quando nao existe tenant em foco
+  - o rail do ticket pode pedir novo recorte se o contexto do cliente crescer muito
+  - o polimento fino de densidade e conforto diario continua no backlog oficial
+- impacto na FAQ futura:
+  - formaliza um contrato de UX para futuras superficies internas sem reintroduzir layout generico do Admin Console
+  - cria baseline para decidir quando filtros, ferramentas e contexto pertencem a subsidebar ou a area principal
