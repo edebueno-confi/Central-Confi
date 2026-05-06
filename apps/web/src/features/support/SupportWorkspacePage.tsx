@@ -3558,8 +3558,8 @@ function SupportWorkspaceView({
           />
         )
       ) : (
-        <div className="flex h-full min-h-0 flex-col gap-4 overflow-hidden xl:flex-row">
-          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+        <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden xl:flex-row">
+          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
             <section className="shrink-0 overflow-hidden rounded-[20px] border border-[rgba(22,42,93,0.1)] bg-white shadow-[0_10px_20px_rgba(19,33,79,0.06)]">
               <div className="px-4 py-3 sm:px-5">
                 <div className="space-y-1.5">
@@ -3585,36 +3585,36 @@ function SupportWorkspaceView({
                     {ticketDetail.title}
                   </h3>
 
-                  <div className="grid gap-2 border-t border-[color:var(--color-border)] pt-2 text-[10px] md:grid-cols-2 xl:grid-cols-4">
+                  <div className="grid gap-2 border-t border-[color:var(--color-border)] pt-2 text-[11px] md:grid-cols-2 xl:grid-cols-4">
                     <div className="min-w-0">
-                      <p className="text-[8.5px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                      <p className="text-[9.5px] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
                         Cliente
                       </p>
-                      <p className="truncate font-medium text-[color:var(--color-ink)]">
+                      <p className="truncate font-semibold leading-4 text-[color:var(--color-ink)]">
                         {ticketDetail.tenantDisplayName ?? ticketDetail.tenantLegalName ?? ticketDetail.tenantSlug}
                       </p>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[8.5px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                      <p className="text-[9.5px] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
                         Solicitante
                       </p>
-                      <p className="truncate font-medium text-[color:var(--color-ink)]">
+                      <p className="truncate font-semibold leading-4 text-[color:var(--color-ink)]">
                         {requesterLabel}
                       </p>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[8.5px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                      <p className="text-[9.5px] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
                         Responsavel
                       </p>
-                      <p className="truncate font-medium text-[color:var(--color-ink)]">
+                      <p className="truncate font-semibold leading-4 text-[color:var(--color-ink)]">
                         {currentAssignedLabel}
                       </p>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[8.5px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                      <p className="text-[9.5px] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
                         Ultima atualizacao
                       </p>
-                      <p className="truncate font-medium text-[color:var(--color-ink)]">
+                      <p className="truncate font-semibold leading-4 text-[color:var(--color-ink)]">
                         {formatDateTime(ticketDetail.lastMessageAt ?? ticketDetail.updatedAt)}
                       </p>
                     </div>
@@ -3681,11 +3681,17 @@ function SupportWorkspaceView({
             <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[20px] border border-[color:var(--color-border)] bg-white shadow-[0_10px_20px_rgba(19,33,79,0.06)]">
               {ticketToolbarTab === 'conversation' ? (
                 <>
-                  <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-5">
+                  <div
+                    className="min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-5"
+                    data-ticket-thread-scroll
+                  >
                     <SupportConversation requesterName={requesterLabel} window={timelineWindow} />
                   </div>
 
-                  <div className="shrink-0 border-t border-[color:var(--color-border)] bg-[linear-gradient(180deg,rgba(247,250,255,0.96),rgba(255,255,255,1))] px-4 py-3 sm:px-5">
+                  <div
+                    className="shrink-0 border-t border-[color:var(--color-border)] bg-[linear-gradient(180deg,rgba(247,250,255,0.96),rgba(255,255,255,1))] px-4 py-3 sm:px-5"
+                    data-ticket-composer
+                  >
                     <form className="space-y-1.5" onSubmit={handleSubmitComposer}>
                       <div className="flex flex-wrap gap-4 border-b border-[color:var(--color-border)]">
                         <button
@@ -3823,7 +3829,10 @@ function SupportWorkspaceView({
             </section>
           </div>
 
-          <aside className="space-y-3 xl:w-[336px] xl:shrink-0">
+          <aside
+            className="min-h-0 space-y-3 overflow-y-auto pr-1 xl:w-[352px] xl:shrink-0"
+            data-ticket-rail
+          >
             <section className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-3 shadow-[0_8px_16px_rgba(19,33,79,0.06)]">
               <h4 className="text-[13px] font-semibold tracking-[-0.02em] text-[color:var(--color-ink)]">
                 Cliente
@@ -3862,7 +3871,7 @@ function SupportWorkspaceView({
                   <form className="space-y-2" onSubmit={handleAssign}>
                     <Field label="Responsavel">
                       <SelectInput
-                        className="h-8.5 rounded-[12px] px-3 text-[12px]"
+                        className="h-8.5 rounded-[12px] px-3 text-[11.5px] font-medium"
                         onChange={(event) => setAssignDraft(event.target.value)}
                         value={assignDraft}
                       >

@@ -165,7 +165,7 @@ function SupportSidebar({
         <GhostButton
           aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
           className={cx(
-            'mt-0.5 min-h-8 shrink-0 border-white/10 bg-white/7 px-2 text-white/82 shadow-none hover:bg-white/12 hover:text-white',
+            'mt-0.5 min-h-8 shrink-0 border-white/18 bg-white/12 px-2 text-white shadow-none hover:bg-white/18 hover:text-white',
             collapsed ? 'w-8 px-0' : 'ml-auto',
           )}
           onClick={onToggle}
@@ -253,7 +253,7 @@ function SupportSidebar({
           </div>
           {!collapsed ? (
             <button
-              className="flex w-full items-center justify-between rounded-[12px] border border-white/8 bg-white/4 px-2.5 py-1.5 text-left text-[11px] text-white/74 transition hover:bg-white/8 hover:text-white"
+              className="flex w-full items-center justify-between rounded-[12px] border border-white/14 bg-white/8 px-2.5 py-1.5 text-left text-[11px] font-medium text-white/88 transition hover:bg-white/12 hover:text-white"
               onClick={() => void signOut()}
               type="button"
             >
