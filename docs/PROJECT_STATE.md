@@ -87,6 +87,7 @@ Documentos históricos:
 - Migration oficial do diretório de agentes atribuíveis do Support Workspace `supabase/migrations/20260504043000_phase6_3_support_assignable_agents.sql`.
 - Migration oficial do backend mínimo do Customer Account Profile `supabase/migrations/20260504195833_phase6_8_customer_account_profile_backend.sql`.
 - Migration oficial do backend mínimo do vínculo ticket -> Knowledge Base `supabase/migrations/20260505015350_phase6_15_ticket_knowledge_linking_backend.sql`.
+- Migration oficial do contrato de revisão editorial para artigos publicados `supabase/migrations/20260506190000_phase7_4_knowledge_editorial_revision.sql`.
 - Teste local de banco em `supabase/tests/001_phase1_identity_tenancy_rls.sql`.
 - Teste local de hardening em `supabase/tests/002_phase1_1_hardening.sql`.
 - Teste local de control plane administrativo em `supabase/tests/003_phase1_2_admin_control_plane.sql`.
@@ -107,6 +108,7 @@ Documentos históricos:
 - Teste local do diretório de agentes atribuíveis do Support Workspace em `supabase/tests/018_phase6_3_support_assignable_agents.sql`.
 - Teste local do backend do Customer Account Profile em `supabase/tests/020_phase6_8_customer_account_profile_backend.sql`.
 - Teste local do backend do vínculo ticket -> Knowledge Base em `supabase/tests/021_phase6_15_ticket_knowledge_linking_backend.sql`.
+- Teste local do contrato de revisão editorial para artigos publicados em `supabase/tests/022_phase7_4_knowledge_editorial_revision.sql`.
 - Seed separado em `supabase/seeds/` e desabilitado por padrão.
 - Fluxo de bootstrap seguro do primeiro `platform_admin` em `supabase/bootstrap/`.
 - Núcleo Fase 1 implementado com `profiles`, `user_global_roles`, `tenants`, `tenant_memberships`, `tenant_contacts` e `audit.audit_logs`.
@@ -133,6 +135,7 @@ Documentos históricos:
 - RPCs contratuais administrativas de Knowledge Base materializadas em `rpc_admin_create_knowledge_category`, `rpc_admin_create_knowledge_article_draft`, `rpc_admin_update_knowledge_article_draft`, `rpc_admin_submit_knowledge_article_for_review`, `rpc_admin_publish_knowledge_article` e `rpc_admin_archive_knowledge_article`.
 - RPCs contratuais administrativas v2 space-aware materializadas em `rpc_admin_create_knowledge_category_v2`, `rpc_admin_create_knowledge_article_draft_v2`, `rpc_admin_update_knowledge_article_draft_v2`, `rpc_admin_submit_knowledge_article_for_review_v2`, `rpc_admin_publish_knowledge_article_v2` e `rpc_admin_archive_knowledge_article_v2`.
 - RPCs contratuais advisory materializadas em `rpc_admin_update_knowledge_article_review_status` e `rpc_admin_mark_knowledge_article_reviewed`.
+- RPCs contratuais de revisão editorial para artigos publicados materializadas em `rpc_admin_begin_knowledge_article_editorial_revision_v2`, `rpc_admin_update_knowledge_article_editorial_revision_v2`, `rpc_admin_publish_knowledge_article_editorial_revision_v2` e `rpc_admin_discard_knowledge_article_editorial_revision_v2`.
 - RPCs administrativas do Customer Account Profile materializadas em `rpc_admin_upsert_customer_account_profile`, `rpc_admin_add_customer_integration`, `rpc_admin_update_customer_integration`, `rpc_admin_add_customer_customization`, `rpc_admin_update_customer_customization`, `rpc_admin_add_customer_account_alert` e `rpc_admin_archive_customer_account_alert`.
 - RPCs contratuais do vínculo ticket -> Knowledge Base materializadas em `rpc_support_link_ticket_article`, `rpc_support_archive_ticket_article_link`, `rpc_support_mark_documentation_gap` e `rpc_support_mark_article_needs_update`.
 - `authenticated` não possui `SELECT`, `INSERT`, `UPDATE` nem `DELETE` direto nas tabelas base de ticketing; o app lê via views e escreve via RPCs.
@@ -689,6 +692,20 @@ Documentos históricos:
     - `npm run web:build`
     - `npm run supabase:verify`
   - QA funcional local final cobrindo `/admin/knowledge`, `/help/genius`, `/help/genius/articles/:slug` e `/support/tickets/:ticketId` foi gerada em `.playwright-mcp/`.
+- Fase 7.4: Admin Knowledge Editorial Revision concluida localmente.
+  - Artigos `published` agora entram em um draft editorial privado por artigo, sem alterar a versão pública até a republicação explícita.
+  - O contrato novo materializa `knowledge_article_editorial_drafts` com RLS, auditoria, políticas próprias e quatro RPCs seguras para iniciar, salvar, publicar e descartar revisão.
+  - `vw_admin_knowledge_articles_list_v2` agora expõe `has_editorial_draft` e `editorial_draft_updated_at`, enquanto `vw_admin_knowledge_article_detail_v2` expõe o payload `editorial_draft` para wiring completo do Admin Knowledge.
+  - O `slug` de artigo publicado permanece imutável durante a revisão, preservando o mesmo `public_article_path` e evitando quebra de rota pública ou link enviado ao cliente.
+  - `/admin/knowledge` passou a permitir `Iniciar revisao`, `Editar revisao`, `Salvar revisao`, `Publicar atualizacao` e `Descartar revisao` com preview da revisão, aviso de estabilidade da versão pública e feedback amigável.
+  - QA local confirmou o fluxo ponta a ponta com o artigo `checklist-de-integracao-erp-webhook`: salvar revisão sem mudar o público, republicar a atualização, manter a mesma rota `/help/genius/articles/checklist-de-integracao-erp-webhook` e refletir `updated_by_user_id = ede.oliveira@confi.com.vc` no ciclo editorial suportado.
+  - Validações locais da fase:
+    - `npm run contracts:typecheck`
+    - `npm run web:typecheck`
+    - `npm run web:build`
+    - `npm run supabase:verify`
+    - `npm run supabase:qa:local-support-fixture`
+  - QA funcional local final gerou `admin-knowledge-edit-published.png`, `admin-knowledge-revision-flow.png` e `public-article-after-update.png`.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.

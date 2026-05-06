@@ -18,6 +18,32 @@ Cada registro deve informar:
 
 ## Registros
 
+### Fase 7.4 - Admin Knowledge Editorial Revision
+- fase: `7.4`
+- commit: `HEAD da branch 7.4`
+- branch: `codex/phase7-4-admin-knowledge-editorial-revision`
+- data: `2026-05-06`
+- resumo funcional: o contrato editorial da Knowledge Base passou a suportar revisão privada de artigo já publicado, com draft editorial isolado, republicação explícita e estabilidade da rota pública até o publish da atualização.
+- docs alterados:
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - `vw_admin_knowledge_articles_list_v2`
+  - `vw_admin_knowledge_article_detail_v2`
+  - `rpc_admin_begin_knowledge_article_editorial_revision_v2`
+  - `rpc_admin_update_knowledge_article_editorial_revision_v2`
+  - `rpc_admin_publish_knowledge_article_editorial_revision_v2`
+  - `rpc_admin_discard_knowledge_article_editorial_revision_v2`
+- telas afetadas:
+  - `/admin/knowledge`
+  - `/help/genius/articles/:slug`
+- riscos restantes:
+  - `published_by` continua ausente no modelo atual; a rastreabilidade de publicação segue por `published_at` e `updated_by_user_id`
+  - o contrato ainda trabalha com um draft editorial por artigo publicado; histórico fino de múltiplas revisões concorrentes continua fora do escopo
+- impacto na FAQ futura:
+  - permite revisar conteúdo público real sem expor rascunho ao cliente
+  - sustenta atualização segura do corpus público B2B sem quebrar link já compartilhado
+
 ### Fase 7.3 - First Real Public Content Pack
 - fase: `7.3`
 - commit: `HEAD da branch 7.3`

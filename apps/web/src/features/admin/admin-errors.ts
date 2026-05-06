@@ -27,7 +27,10 @@ function sanitizeAdminMessage(message: string, fallbackMessage: string) {
     lowered.includes('status transition') ||
     lowered.includes('invalid input value for enum') ||
     lowered.includes('must be in') ||
-    lowered.includes('cannot be')
+    lowered.includes('cannot be') ||
+    lowered.includes('immutable') ||
+    lowered.includes('editorial revision') ||
+    lowered.includes('only published knowledge articles support editorial revision')
   ) {
     return 'Nao foi possivel concluir a acao na etapa atual. Revise o status e os campos obrigatorios antes de tentar novamente.';
   }

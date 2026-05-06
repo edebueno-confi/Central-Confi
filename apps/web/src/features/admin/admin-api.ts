@@ -3,6 +3,7 @@ import { requireSupabaseBrowserClient } from '../../app/supabase-browser';
 import type {
   AdminAuditFeedRow,
   AdminKnowledgeArticleDetailV2Row,
+  AdminKnowledgeArticleEditorialDraftRow,
   AdminKnowledgeArticleListItemV2Row,
   AdminKnowledgeArticleReviewAdvisoryRow,
   AdminKnowledgeCategoryRecordRow,
@@ -25,6 +26,7 @@ import type {
   RpcAdminAddTenantMemberResponse,
   RpcAdminArchiveKnowledgeArticleV2Response,
   RpcAdminArticleSpaceActionV2Payload,
+  RpcAdminBeginKnowledgeArticleEditorialRevisionV2Response,
   RpcAdminCreateKnowledgeArticleDraftV2Payload,
   RpcAdminCreateKnowledgeArticleDraftV2Response,
   RpcAdminCreateKnowledgeCategoryV2Payload,
@@ -33,14 +35,18 @@ import type {
   RpcAdminCreateTenantContactResponse,
   RpcAdminCreateTenantPayload,
   RpcAdminCreateTenantResponse,
+  RpcAdminDiscardKnowledgeArticleEditorialRevisionV2Response,
   RpcAdminMarkKnowledgeArticleReviewedPayload,
   RpcAdminMarkKnowledgeArticleReviewedResponse,
   RpcAdminPublishKnowledgeArticleV2Response,
+  RpcAdminPublishKnowledgeArticleEditorialRevisionV2Response,
   RpcAdminSubmitKnowledgeArticleForReviewV2Response,
   RpcAdminUpdateKnowledgeArticleReviewStatusPayload,
   RpcAdminUpdateKnowledgeArticleReviewStatusResponse,
   RpcAdminUpdateKnowledgeArticleDraftV2Payload,
   RpcAdminUpdateKnowledgeArticleDraftV2Response,
+  RpcAdminUpdateKnowledgeArticleEditorialRevisionV2Payload,
+  RpcAdminUpdateKnowledgeArticleEditorialRevisionV2Response,
   RpcAdminUpdateTenantContactPayload,
   RpcAdminUpdateTenantContactResponse,
   RpcAdminUpdateTenantMemberRolePayload,
@@ -237,6 +243,12 @@ export async function getAdminKnowledgeArticleDetailV2(articleId: string) {
     sources: Array.isArray(data.sources)
       ? (data.sources as AdminKnowledgeArticleDetailV2Row['sources'])
       : [],
+    editorial_draft:
+      data.editorial_draft &&
+      typeof data.editorial_draft === 'object' &&
+      !Array.isArray(data.editorial_draft)
+        ? (data.editorial_draft as AdminKnowledgeArticleDetailV2Row['editorial_draft'])
+        : null,
   } satisfies AdminKnowledgeArticleDetailV2Row;
 }
 
@@ -405,6 +417,44 @@ export async function updateKnowledgeArticleDraftV2(
   return data as RpcAdminUpdateKnowledgeArticleDraftV2Response;
 }
 
+export async function beginKnowledgeArticleEditorialRevisionV2(
+  payload: RpcAdminArticleSpaceActionV2Payload,
+) {
+  const client = requireClient();
+  const { data, error } = await client.rpc(
+    'rpc_admin_begin_knowledge_article_editorial_revision_v2',
+    payload,
+  );
+
+  if (error) {
+    throw toAppError(
+      error,
+      'Falha ao iniciar a revisao editorial do artigo publicado.',
+    );
+  }
+
+  return data as RpcAdminBeginKnowledgeArticleEditorialRevisionV2Response;
+}
+
+export async function updateKnowledgeArticleEditorialRevisionV2(
+  payload: RpcAdminUpdateKnowledgeArticleEditorialRevisionV2Payload,
+) {
+  const client = requireClient();
+  const { data, error } = await client.rpc(
+    'rpc_admin_update_knowledge_article_editorial_revision_v2',
+    payload,
+  );
+
+  if (error) {
+    throw toAppError(
+      error,
+      'Falha ao salvar a revisao editorial do artigo publicado.',
+    );
+  }
+
+  return data as RpcAdminUpdateKnowledgeArticleEditorialRevisionV2Response;
+}
+
 export async function submitKnowledgeArticleForReviewV2(
   payload: RpcAdminArticleSpaceActionV2Payload,
 ) {
@@ -456,6 +506,44 @@ export async function archiveKnowledgeArticleV2(
   return data as RpcAdminArchiveKnowledgeArticleV2Response;
 }
 
+export async function publishKnowledgeArticleEditorialRevisionV2(
+  payload: RpcAdminArticleSpaceActionV2Payload,
+) {
+  const client = requireClient();
+  const { data, error } = await client.rpc(
+    'rpc_admin_publish_knowledge_article_editorial_revision_v2',
+    payload,
+  );
+
+  if (error) {
+    throw toAppError(
+      error,
+      'Falha ao publicar a atualizacao do artigo.',
+    );
+  }
+
+  return data as RpcAdminPublishKnowledgeArticleEditorialRevisionV2Response;
+}
+
+export async function discardKnowledgeArticleEditorialRevisionV2(
+  payload: RpcAdminArticleSpaceActionV2Payload,
+) {
+  const client = requireClient();
+  const { data, error } = await client.rpc(
+    'rpc_admin_discard_knowledge_article_editorial_revision_v2',
+    payload,
+  );
+
+  if (error) {
+    throw toAppError(
+      error,
+      'Falha ao descartar a revisao editorial do artigo.',
+    );
+  }
+
+  return data as RpcAdminDiscardKnowledgeArticleEditorialRevisionV2Response;
+}
+
 export async function updateKnowledgeArticleReviewStatus(
   payload: RpcAdminUpdateKnowledgeArticleReviewStatusPayload,
 ) {
@@ -491,6 +579,7 @@ export async function markKnowledgeArticleReviewed(
 export type {
   AdminAuditFeedRow,
   AdminKnowledgeArticleDetailV2Row,
+  AdminKnowledgeArticleEditorialDraftRow,
   AdminKnowledgeArticleListItemV2Row,
   AdminKnowledgeArticleReviewAdvisoryRow,
   AdminKnowledgeCategoryRecordRow,

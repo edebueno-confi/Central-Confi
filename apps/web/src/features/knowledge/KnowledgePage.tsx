@@ -26,7 +26,9 @@ import {
 } from '../../components/states';
 import {
   archiveKnowledgeArticleV2,
+  beginKnowledgeArticleEditorialRevisionV2,
   createKnowledgeArticleDraftV2,
+  discardKnowledgeArticleEditorialRevisionV2,
   createKnowledgeCategoryV2,
   getAdminKnowledgeArticleDetailV2,
   listAdminKnowledgeArticleReviewAdvisories,
@@ -35,11 +37,14 @@ import {
   listAdminKnowledgeSpaces,
   markKnowledgeArticleReviewed,
   publishKnowledgeArticleV2,
+  publishKnowledgeArticleEditorialRevisionV2,
   submitKnowledgeArticleForReviewV2,
   updateKnowledgeArticleReviewStatus,
   updateKnowledgeArticleDraftV2,
+  updateKnowledgeArticleEditorialRevisionV2,
   type AdminKnowledgeArticleReviewAdvisoryRow,
   type AdminKnowledgeArticleDetailV2Row,
+  type AdminKnowledgeArticleEditorialDraftRow,
   type AdminKnowledgeArticleListItemV2Row,
   type AdminKnowledgeCategoryV2Row,
   type AdminKnowledgeSpaceRow,
@@ -206,6 +211,21 @@ function buildArticleForm(detail: AdminKnowledgeArticleDetailV2Row): ArticleForm
     visibility: detail.visibility,
     sourcePath: detail.source_path ?? '',
     sourceHash: detail.source_hash ?? '',
+  };
+}
+
+function buildArticleFormFromEditorialDraft(
+  draft: AdminKnowledgeArticleEditorialDraftRow,
+): ArticleFormState {
+  return {
+    title: draft.title,
+    slug: draft.slug,
+    summary: draft.summary ?? '',
+    bodyMd: draft.body_md,
+    categoryId: draft.category_id ?? '',
+    visibility: draft.visibility,
+    sourcePath: draft.source_path ?? '',
+    sourceHash: draft.source_hash ?? '',
   };
 }
 
@@ -656,14 +676,23 @@ export function KnowledgePage() {
     articleDetail?.category_id
       ? articleCategoryMap.get(articleDetail.category_id) ?? null
       : null;
+  const editorialDraftCategory =
+    articleDetail?.editorial_draft?.category_id
+      ? articleCategoryMap.get(articleDetail.editorial_draft.category_id) ?? null
+      : null;
   const articleFormCategory =
     articleForm.categoryId
       ? articleCategoryMap.get(articleForm.categoryId) ?? null
       : null;
+  const publishedEditorialDraft = articleDetail?.editorial_draft ?? null;
   const articleHasPublicCategoryMismatch =
     articleDetail?.visibility === 'public' &&
     articleDetail.category_id !== null &&
     selectedArticleCategory?.visibility !== 'public';
+  const editorialDraftHasPublicCategoryMismatch =
+    publishedEditorialDraft?.visibility === 'public' &&
+    publishedEditorialDraft.category_id !== null &&
+    editorialDraftCategory?.visibility !== 'public';
   const articleFormHasPublicCategoryMismatch =
     articleForm.visibility === 'public' &&
     articleForm.categoryId !== '' &&
@@ -680,6 +709,14 @@ export function KnowledgePage() {
         : articleDetail?.status !== 'published'
           ? 'Indisponivel enquanto o artigo nao estiver publicado.'
           : 'Indisponivel neste ambiente.';
+  const editorialPreviewTitle =
+    articleDetail?.status === 'published' && publishedEditorialDraft
+      ? 'Preview da revisao'
+      : 'Preview editorial';
+  const editorialPreviewBody =
+    articleDetail?.status === 'published' && publishedEditorialDraft
+      ? publishedEditorialDraft.body_md
+      : articleDetail?.body_md ?? '';
   const editorialChecklist = articleDetail
     ? buildEditorialChecklist(articleDetail, selectedArticleDuplicateCount)
     : null;
@@ -691,6 +728,13 @@ export function KnowledgePage() {
     !advisoryMessage &&
     (!selectedAdvisory || selectedAdvisory.review_status === 'reviewed') &&
     !articleHasPublicCategoryMismatch;
+  const canPublishEditorialRevision =
+    articleDetail?.status === 'published' &&
+    !!publishedEditorialDraft &&
+    publishedEditorialDraft.title.trim().length > 0 &&
+    publishedEditorialDraft.body_md.trim().length > 0 &&
+    publishedEditorialDraft.category_id !== null &&
+    !editorialDraftHasPublicCategoryMismatch;
   const persistedHumanChecklist = buildPersistedHumanChecklist(humanConfirmationsDraft);
   const advisoryRiskFlags = normalizeRiskFlags(selectedAdvisory?.risk_flags);
   const statusCounts = {
@@ -1021,13 +1065,72 @@ export function KnowledgePage() {
     setArticleActionFeedback(null);
   }
 
-  function openEditArticle() {
+  async function openEditArticle() {
     if (!articleDetail) {
       return;
     }
 
+    let detailForEditing = articleDetail;
+
+    if (articleDetail.status === 'published') {
+      if (!selectedSpaceId) {
+        return;
+      }
+
+      setArticleActionSubmitting(true);
+      setArticleActionFeedback(null);
+
+      try {
+        if (!articleDetail.editorial_draft) {
+          await beginKnowledgeArticleEditorialRevisionV2({
+            p_article_id: articleDetail.id,
+            p_knowledge_space_id: selectedSpaceId,
+          });
+          await refreshSelectedSpace(articleDetail.id);
+        }
+
+        const refreshedDetail = await getAdminKnowledgeArticleDetailV2(articleDetail.id);
+        if (refreshedDetail) {
+          detailForEditing = refreshedDetail;
+          setArticleDetail(refreshedDetail);
+        }
+      } catch (error) {
+        const classified = classifyAdminError(
+          error,
+          'Falha ao iniciar a revisao editorial do artigo publicado.',
+        );
+
+        if (classified.kind === 'session-expired') {
+          markSessionExpired();
+          return;
+        }
+
+        if (classified.kind === 'permission-denied') {
+          setBackendDenied(true);
+          return;
+        }
+
+        setArticleActionFeedback({
+          articleId: articleDetail.id,
+          message: classified.message,
+        });
+        return;
+      } finally {
+        setArticleActionSubmitting(false);
+      }
+    }
+
+    const nextDraft =
+      detailForEditing.status === 'published'
+        ? detailForEditing.editorial_draft
+        : null;
+
     setPanelMode('edit-article');
-    setArticleForm(buildArticleForm(articleDetail));
+    setArticleForm(
+      nextDraft
+        ? buildArticleFormFromEditorialDraft(nextDraft)
+        : buildArticleForm(detailForEditing),
+    );
     setArticleFormMessage(null);
     setArticleActionFeedback(null);
   }
@@ -1199,20 +1302,37 @@ export function KnowledgePage() {
       let recordId: string;
 
       if (panelMode === 'edit-article' && articleDetail) {
-        const updated = await updateKnowledgeArticleDraftV2({
-          p_article_id: articleDetail.id,
-          p_knowledge_space_id: selectedSpace.id,
-          p_title: articleForm.title.trim(),
-          p_slug: slugify(articleForm.slug || articleForm.title),
-          p_summary: normalizeOptionalText(articleForm.summary),
-          p_body_md: articleForm.bodyMd.trim(),
-          p_category_id: normalizeOptionalText(articleForm.categoryId),
-          p_visibility: articleForm.visibility,
-          p_source_path: normalizeOptionalText(articleForm.sourcePath),
-          p_source_hash: normalizeOptionalText(articleForm.sourceHash),
-        });
+        if (articleDetail.status === 'published') {
+          const updated = await updateKnowledgeArticleEditorialRevisionV2({
+            p_article_id: articleDetail.id,
+            p_knowledge_space_id: selectedSpace.id,
+            p_title: articleForm.title.trim(),
+            p_slug: slugify(articleForm.slug || articleForm.title),
+            p_summary: normalizeOptionalText(articleForm.summary),
+            p_body_md: articleForm.bodyMd.trim(),
+            p_category_id: normalizeOptionalText(articleForm.categoryId),
+            p_visibility: articleForm.visibility,
+            p_source_path: normalizeOptionalText(articleForm.sourcePath),
+            p_source_hash: normalizeOptionalText(articleForm.sourceHash),
+          });
 
-        recordId = updated.id;
+          recordId = updated.article_id;
+        } else {
+          const updated = await updateKnowledgeArticleDraftV2({
+            p_article_id: articleDetail.id,
+            p_knowledge_space_id: selectedSpace.id,
+            p_title: articleForm.title.trim(),
+            p_slug: slugify(articleForm.slug || articleForm.title),
+            p_summary: normalizeOptionalText(articleForm.summary),
+            p_body_md: articleForm.bodyMd.trim(),
+            p_category_id: normalizeOptionalText(articleForm.categoryId),
+            p_visibility: articleForm.visibility,
+            p_source_path: normalizeOptionalText(articleForm.sourcePath),
+            p_source_hash: normalizeOptionalText(articleForm.sourceHash),
+          });
+
+          recordId = updated.id;
+        }
       } else {
         const created = await createKnowledgeArticleDraftV2({
           p_title: articleForm.title.trim(),
@@ -1237,7 +1357,10 @@ export function KnowledgePage() {
       setArticleForm(emptyArticleForm());
       setArticleActionFeedback({
         articleId: recordId,
-        message: 'Draft sincronizado com sucesso.',
+        message:
+          articleDetail?.status === 'published'
+            ? 'Revisao editorial salva com sucesso.'
+            : 'Draft sincronizado com sucesso.',
       });
     } catch (error) {
       const classified = classifyAdminError(
@@ -1375,6 +1498,98 @@ export function KnowledgePage() {
       const classified = classifyAdminError(
         error,
         'Falha ao arquivar o artigo da Knowledge Base.',
+      );
+
+      if (classified.kind === 'session-expired') {
+        markSessionExpired();
+        return;
+      }
+
+      if (classified.kind === 'permission-denied') {
+        setBackendDenied(true);
+        return;
+      }
+
+      setArticleActionFeedback({
+        articleId: selectedArticleId,
+        message: classified.message,
+      });
+    } finally {
+      setArticleActionSubmitting(false);
+    }
+  }
+
+  async function handlePublishEditorialRevision() {
+    if (!selectedSpaceId || !selectedArticleId) {
+      return;
+    }
+
+    setArticleActionSubmitting(true);
+    setArticleActionFeedback(null);
+
+    try {
+      await publishKnowledgeArticleEditorialRevisionV2({
+        p_article_id: selectedArticleId,
+        p_knowledge_space_id: selectedSpaceId,
+      });
+
+      await refreshSelectedSpace(selectedArticleId);
+      await refreshArticleDetail(selectedArticleId);
+      setArticleActionFeedback({
+        articleId: selectedArticleId,
+        message: 'Atualizacao publicada com sucesso.',
+      });
+    } catch (error) {
+      const classified = classifyAdminError(
+        error,
+        'Falha ao publicar a atualizacao do artigo.',
+      );
+
+      if (classified.kind === 'session-expired') {
+        markSessionExpired();
+        return;
+      }
+
+      if (classified.kind === 'permission-denied') {
+        setBackendDenied(true);
+        return;
+      }
+
+      setArticleActionFeedback({
+        articleId: selectedArticleId,
+        message: classified.message,
+      });
+    } finally {
+      setArticleActionSubmitting(false);
+    }
+  }
+
+  async function handleDiscardEditorialRevision() {
+    if (!selectedSpaceId || !selectedArticleId) {
+      return;
+    }
+
+    setArticleActionSubmitting(true);
+    setArticleActionFeedback(null);
+
+    try {
+      await discardKnowledgeArticleEditorialRevisionV2({
+        p_article_id: selectedArticleId,
+        p_knowledge_space_id: selectedSpaceId,
+      });
+
+      await refreshSelectedSpace(selectedArticleId);
+      await refreshArticleDetail(selectedArticleId);
+      setPanelMode('detail');
+      setArticleForm(emptyArticleForm());
+      setArticleActionFeedback({
+        articleId: selectedArticleId,
+        message: 'Revisao editorial descartada com sucesso.',
+      });
+    } catch (error) {
+      const classified = classifyAdminError(
+        error,
+        'Falha ao descartar a revisao editorial do artigo.',
       );
 
       if (classified.kind === 'session-expired') {
@@ -1747,9 +1962,14 @@ export function KnowledgePage() {
                             {formatDateTime(article.updated_at)}
                           </td>
                           <td className="px-5 py-4 align-top">
-                            <StatusPill tone={toneForArticleStatus(article.status)}>
-                              {displayArticleStatus(article.status)}
-                            </StatusPill>
+                            <div className="flex flex-wrap gap-2">
+                              <StatusPill tone={toneForArticleStatus(article.status)}>
+                                {displayArticleStatus(article.status)}
+                              </StatusPill>
+                              {article.has_editorial_draft ? (
+                                <StatusPill tone="accent">Revisao em andamento</StatusPill>
+                              ) : null}
+                            </div>
                           </td>
                         </tr>
                       );
@@ -1917,11 +2137,18 @@ export function KnowledgePage() {
                           slug: slugify(event.target.value),
                         }))
                       }
+                      disabled={articleDetail?.status === 'published'}
                       placeholder="como-tratar-devolucao-com-reembolso-parcial"
                       required
                       value={articleForm.slug}
                     />
                   </Field>
+
+                  {articleDetail?.status === 'published' ? (
+                    <p className="text-xs leading-5 text-[color:var(--color-muted)]">
+                      O slug do artigo publicado permanece travado para preservar o mesmo link publico.
+                    </p>
+                  ) : null}
 
                   <Field label="Resumo">
                     <TextareaInput
@@ -2035,7 +2262,9 @@ export function KnowledgePage() {
                       {articleFormSubmitting
                         ? 'Salvando...'
                         : panelMode === 'edit-article'
-                          ? 'Salvar artigo'
+                          ? articleDetail?.status === 'published'
+                            ? 'Salvar revisao'
+                            : 'Salvar artigo'
                           : 'Criar artigo'}
                     </AppButton>
                     <GhostButton
@@ -2150,7 +2379,7 @@ export function KnowledgePage() {
                     <div className="space-y-3 border-t border-[color:var(--color-border)] pt-4">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-                          Preview editorial
+                          {editorialPreviewTitle}
                         </p>
                         {publicPreviewHref ? (
                           <a
@@ -2169,7 +2398,7 @@ export function KnowledgePage() {
                       </div>
                       <div className="max-h-72 overflow-y-auto rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
                         <div className="whitespace-pre-wrap text-sm leading-6 text-[color:var(--color-ink)]">
-                          {articleDetail.body_md.trim() || 'Indisponivel'}
+                          {editorialPreviewBody.trim() || 'Indisponivel'}
                         </div>
                       </div>
                     </div>
@@ -2197,14 +2426,35 @@ export function KnowledgePage() {
                     </InlineNotice>
                   ) : null}
 
+                  {publishedEditorialDraft ? (
+                    <InlineNotice tone="warning">
+                      Existe uma revisao editorial em andamento. A versao publica continua estavel ate voce publicar a atualizacao.
+                    </InlineNotice>
+                  ) : null}
+
+                  {editorialDraftHasPublicCategoryMismatch ? (
+                    <InlineNotice tone="warning">
+                      A revisao em andamento esta marcada como publica, mas a categoria escolhida ainda nao esta publica. Ajuste essa coerencia antes de publicar a atualizacao.
+                    </InlineNotice>
+                  ) : null}
+
                   <div className="space-y-2">
                     <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
                       Acoes
                     </p>
                     <div className="grid gap-2">
                       {(articleDetail.status === 'draft' || articleDetail.status === 'review') ? (
-                        <GhostButton className="min-h-11 justify-start" disabled={articleActionSubmitting} onClick={openEditArticle}>
+                        <GhostButton className="min-h-11 justify-start" disabled={articleActionSubmitting} onClick={() => void openEditArticle()}>
                           Editar
+                        </GhostButton>
+                      ) : null}
+                      {articleDetail.status === 'published' ? (
+                        <GhostButton
+                          className="min-h-11 justify-start"
+                          disabled={articleActionSubmitting}
+                          onClick={() => void openEditArticle()}
+                        >
+                          {publishedEditorialDraft ? 'Editar revisao' : 'Iniciar revisao'}
                         </GhostButton>
                       ) : null}
                       {articleDetail.status === 'draft' ? (
@@ -2215,6 +2465,24 @@ export function KnowledgePage() {
                       {articleDetail.status === 'review' ? (
                         <GhostButton className="min-h-11 justify-start" disabled={articleActionSubmitting || !canPublishArticle} onClick={() => void handlePublish()}>
                           {articleActionSubmitting ? 'Publicando...' : 'Publicar'}
+                        </GhostButton>
+                      ) : null}
+                      {articleDetail.status === 'published' && publishedEditorialDraft ? (
+                        <GhostButton
+                          className="min-h-11 justify-start"
+                          disabled={articleActionSubmitting || !canPublishEditorialRevision}
+                          onClick={() => void handlePublishEditorialRevision()}
+                        >
+                          {articleActionSubmitting ? 'Publicando...' : 'Publicar atualizacao'}
+                        </GhostButton>
+                      ) : null}
+                      {articleDetail.status === 'published' && publishedEditorialDraft ? (
+                        <GhostButton
+                          className="min-h-11 justify-start"
+                          disabled={articleActionSubmitting}
+                          onClick={() => void handleDiscardEditorialRevision()}
+                        >
+                          {articleActionSubmitting ? 'Descartando...' : 'Descartar revisao'}
                         </GhostButton>
                       ) : null}
                       {articleDetail.status !== 'archived' ? (
@@ -2233,6 +2501,11 @@ export function KnowledgePage() {
                         {advisoryMessage
                           ? 'Recarregue os sinais de revisao editorial antes de publicar este artigo.'
                           : 'Conclua a revisao editorial persistida antes de publicar este artigo.'}
+                      </p>
+                    ) : null}
+                    {articleDetail.status === 'published' && publishedEditorialDraft && !canPublishEditorialRevision ? (
+                      <p className="text-xs leading-5 text-[color:var(--color-muted)]">
+                        Conclua titulo, categoria e conteudo principal da revisao antes de publicar a atualizacao.
                       </p>
                     ) : null}
                   </div>
@@ -2389,6 +2662,23 @@ export function KnowledgePage() {
                       <p>Origem: {articleDetail.source_path || 'Indisponivel'}</p>
                       <p>Hash: {articleDetail.source_hash || 'Indisponivel'}</p>
                       <p>Revisoes: {articleDetail.revisions.length}</p>
+                      <p>
+                        Revisao em andamento:{' '}
+                        {publishedEditorialDraft ? 'Sim' : 'Nao'}
+                      </p>
+                      {publishedEditorialDraft ? (
+                        <>
+                          <p>Slug em revisao: {publishedEditorialDraft.slug || 'Indisponivel'}</p>
+                          <p>
+                            Revisao iniciada da versao:{' '}
+                            {publishedEditorialDraft.based_on_revision_number}
+                          </p>
+                          <p>
+                            Revisao atualizada em:{' '}
+                            {formatOptionalDate(publishedEditorialDraft.updated_at)}
+                          </p>
+                        </>
+                      ) : null}
                     </div>
                   </details>
                 </div>

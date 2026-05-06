@@ -407,6 +407,8 @@ export interface AdminKnowledgeArticleListItemV2Row {
   updated_at: IsoTimestamp;
   created_by_full_name: string | null;
   updated_by_full_name: string | null;
+  has_editorial_draft: boolean;
+  editorial_draft_updated_at: IsoTimestamp | null;
 }
 
 export interface AdminKnowledgeArticleRevisionRow {
@@ -434,6 +436,28 @@ export interface AdminKnowledgeArticleSourceRow {
   source_title: string | null;
   source_metadata: JsonValue | null;
   created_at: IsoTimestamp;
+}
+
+export interface AdminKnowledgeArticleEditorialDraftRow {
+  id: Uuid;
+  article_id: Uuid;
+  knowledge_space_id: Uuid;
+  tenant_id: Uuid | null;
+  category_id: Uuid | null;
+  visibility: KnowledgeVisibility;
+  title: string;
+  slug: string;
+  summary: string | null;
+  body_md: string;
+  source_path: string | null;
+  source_hash: string | null;
+  based_on_revision_number: number;
+  created_at: IsoTimestamp;
+  updated_at: IsoTimestamp;
+  created_by_user_id: Uuid | null;
+  updated_by_user_id: Uuid | null;
+  created_by_full_name: string | null;
+  updated_by_full_name: string | null;
 }
 
 export interface AdminKnowledgeArticleDetailV2Row {
@@ -473,6 +497,7 @@ export interface AdminKnowledgeArticleDetailV2Row {
   updated_by_full_name: string | null;
   revisions: AdminKnowledgeArticleRevisionRow[];
   sources: AdminKnowledgeArticleSourceRow[];
+  editorial_draft: AdminKnowledgeArticleEditorialDraftRow | null;
 }
 
 export interface KnowledgeReviewHumanConfirmations {
@@ -583,6 +608,31 @@ export type RpcAdminPublishKnowledgeArticleV2Response =
   AdminKnowledgeArticleRecordRow;
 export type RpcAdminArchiveKnowledgeArticleV2Response =
   AdminKnowledgeArticleRecordRow;
+
+export type RpcAdminBeginKnowledgeArticleEditorialRevisionV2Response =
+  AdminKnowledgeArticleEditorialDraftRow;
+
+export interface RpcAdminUpdateKnowledgeArticleEditorialRevisionV2Payload {
+  p_article_id: Uuid;
+  p_knowledge_space_id: Uuid;
+  p_title: string;
+  p_slug: string;
+  p_summary?: string | null;
+  p_body_md?: string;
+  p_category_id?: Uuid | null;
+  p_visibility?: KnowledgeVisibility;
+  p_source_path?: string | null;
+  p_source_hash?: string | null;
+}
+
+export type RpcAdminUpdateKnowledgeArticleEditorialRevisionV2Response =
+  AdminKnowledgeArticleEditorialDraftRow;
+
+export type RpcAdminPublishKnowledgeArticleEditorialRevisionV2Response =
+  AdminKnowledgeArticleRecordRow;
+
+export type RpcAdminDiscardKnowledgeArticleEditorialRevisionV2Response =
+  AdminKnowledgeArticleEditorialDraftRow;
 
 export interface RpcAdminUpdateKnowledgeArticleReviewStatusPayload {
   p_article_id: Uuid;
