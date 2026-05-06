@@ -509,6 +509,19 @@ function buildStatusChoices(currentStatus: TicketStatus) {
   return [currentStatus as TicketStatusUpdateTarget, ...available];
 }
 
+function friendlyTicketStatusErrorMessage(message: string) {
+  const normalized = message.toLowerCase();
+
+  if (
+    normalized.includes('invalid ticket status transition') ||
+    normalized.includes('status transition')
+  ) {
+    return 'Nao foi possivel alterar o status. Verifique a etapa atual do ticket e tente novamente.';
+  }
+
+  return message;
+}
+
 function summarizeTimelineEvent(entry: SupportTicketTimelineItem) {
   if (entry.entryType === 'message') {
     return entry.body ?? '';
@@ -918,26 +931,26 @@ function SupportRecentActivity({
 
   if (entries.length === 0) {
     return (
-      <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+      <p className="text-[12px] leading-5 text-[color:var(--color-muted)]">
         Nenhuma mudanca recente apareceu fora da conversa principal.
       </p>
     );
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       {entries.map((entry) => (
         <div
-          className="rounded-[14px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2.5"
+          className="rounded-[13px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2"
           key={entry.timelineEntryId}
         >
-          <div className="flex items-start gap-3">
-            <span className="mt-1 inline-flex h-2.5 w-2.5 shrink-0 rounded-full bg-[color:var(--color-brand-blue)]" />
-            <div className="min-w-0 flex-1 space-y-1">
-              <p className="text-sm font-medium leading-5 text-[color:var(--color-ink)]">
+          <div className="flex items-start gap-2.5">
+            <span className="mt-1 inline-flex h-2 w-2 shrink-0 rounded-full bg-[color:var(--color-brand-blue)]" />
+            <div className="min-w-0 flex-1 space-y-0.5">
+              <p className="text-[12px] font-medium leading-4 text-[color:var(--color-ink)]">
                 {summarizeTimelineEvent(entry)}
               </p>
-              <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
+              <p className="text-[10.5px] leading-4 text-[color:var(--color-muted)]">
                 {formatDateTime(entry.occurredAt)} · {entry.actorFullName ?? entry.actorEmail ?? 'Equipe Genius'}
               </p>
             </div>
@@ -946,7 +959,7 @@ function SupportRecentActivity({
       ))}
 
       {window.hasMore ? (
-        <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
+        <p className="text-[10.5px] leading-4 text-[color:var(--color-muted)]">
           O restante do historico fica recolhido para manter a tratativa leve.
         </p>
       ) : null}
@@ -3139,7 +3152,7 @@ function SupportWorkspaceView({
         markSessionExpired();
         return;
       }
-      applyFailure(classified.message);
+      applyFailure(friendlyTicketStatusErrorMessage(classified.message));
     } finally {
       setSubmitting(false);
     }
@@ -3810,8 +3823,8 @@ function SupportWorkspaceView({
             </section>
           </div>
 
-          <aside className="space-y-4 xl:w-[308px] xl:shrink-0">
-            <section className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_8px_16px_rgba(19,33,79,0.06)]">
+          <aside className="space-y-3 xl:w-[336px] xl:shrink-0">
+            <section className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-3 shadow-[0_8px_16px_rgba(19,33,79,0.06)]">
               <h4 className="text-[13px] font-semibold tracking-[-0.02em] text-[color:var(--color-ink)]">
                 Cliente
               </h4>
@@ -3823,7 +3836,7 @@ function SupportWorkspaceView({
               </div>
             </section>
 
-            <section className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_8px_16px_rgba(19,33,79,0.06)]">
+            <section className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-3 shadow-[0_8px_16px_rgba(19,33,79,0.06)]">
               <div className="space-y-1.5">
                 <h4 className="text-[13px] font-semibold tracking-[-0.02em] text-[color:var(--color-ink)]">
                   Acoes do ticket
@@ -3922,7 +3935,7 @@ function SupportWorkspaceView({
               </div>
             </section>
 
-            <section className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_8px_16px_rgba(19,33,79,0.06)]">
+            <section className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-3 shadow-[0_8px_16px_rgba(19,33,79,0.06)]">
               <div className="flex items-center justify-between gap-2">
                 <h4 className="text-[13px] font-semibold tracking-[-0.02em] text-[color:var(--color-ink)]">
                   Conhecimento relacionado
@@ -3969,7 +3982,7 @@ function SupportWorkspaceView({
               </div>
             </section>
 
-            <section className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_8px_16px_rgba(19,33,79,0.06)]">
+            <section className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-3 shadow-[0_8px_16px_rgba(19,33,79,0.06)]">
               <h4 className="text-[13px] font-semibold tracking-[-0.02em] text-[color:var(--color-ink)]">
                 Atividade recente
               </h4>

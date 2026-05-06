@@ -356,7 +356,12 @@ export function SupportWorkspaceShell() {
 
   return (
     <div className={cx('bg-[linear-gradient(180deg,#eef4ff_0%,#f7faff_42%,#f3f6fb_100%)] text-[color:var(--color-ink)]', isTicketRoute ? 'h-screen overflow-hidden' : 'min-h-screen')}>
-      <div className={cx('flex w-full gap-3 px-1.5 sm:px-2.5 lg:px-2', isTicketRoute ? 'h-full py-2' : 'py-3')}>
+      <div
+        className={cx(
+          'flex w-full gap-3 px-1.5 sm:px-2.5 lg:px-2',
+          isTicketRoute ? 'h-full py-2 pl-0 pr-2 sm:pl-0 lg:pl-0' : 'py-3',
+        )}
+      >
         <div className="hidden shrink-0 lg:block">
           <div className={cx('sticky h-[calc(100vh-1.5rem)]', isTicketRoute ? 'top-2 h-[calc(100vh-1rem)]' : 'top-3')}>
             <SupportSidebar
