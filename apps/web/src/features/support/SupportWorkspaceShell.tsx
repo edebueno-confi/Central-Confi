@@ -88,7 +88,7 @@ function SupportSidebar({
   onToggle: () => void;
 }) {
   const location = useLocation();
-  const { gate, user } = useAuthContext();
+  const { gate, signOut, user } = useAuthContext();
 
   const navigation = useMemo(
     () =>
@@ -139,24 +139,24 @@ function SupportSidebar({
   return (
     <aside
       className={cx(
-        'flex h-full flex-col rounded-[22px] bg-[linear-gradient(180deg,#06173f_0%,#082058_54%,#0b2a68_100%)] px-2 py-2.5 text-white shadow-[0_20px_42px_rgba(9,20,56,0.22)] transition-[width,padding] duration-200',
-        collapsed ? 'w-[72px]' : 'w-[214px]',
+        'flex h-full flex-col rounded-[22px] bg-[linear-gradient(180deg,#06173f_0%,#082058_52%,#0b2a68_100%)] px-2 py-2 text-white shadow-[0_18px_36px_rgba(9,20,56,0.2)] transition-[width,padding] duration-200',
+        collapsed ? 'w-[76px]' : 'w-[206px]',
       )}
     >
       <div
         className={cx(
-          'flex items-start gap-2 px-2',
+          'flex items-start gap-2 px-1.5',
           collapsed ? 'justify-center' : '',
         )}
       >
         <div className={cx('flex min-w-0 items-center gap-2.5', collapsed && 'justify-center')}>
-          <img alt="Mascote Genius" className="w-9 shrink-0" src={mascotUrl} />
+          <img alt="Mascote Genius" className="w-8 shrink-0" src={mascotUrl} />
           {!collapsed ? (
             <div className="min-w-0 pt-0.5">
-              <p className="text-[0.56rem] font-semibold uppercase tracking-[0.2em] text-white/46">
+              <p className="text-[0.54rem] font-semibold uppercase tracking-[0.2em] text-white/44">
                 Genius
               </p>
-              <h1 className="text-[0.86rem] font-semibold tracking-[-0.03em] leading-tight">
+              <h1 className="text-[0.84rem] font-semibold leading-tight tracking-[-0.03em]">
                 Support Workspace
               </h1>
             </div>
@@ -165,7 +165,7 @@ function SupportSidebar({
         <GhostButton
           aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
           className={cx(
-            'mt-0.5 min-h-8 shrink-0 border-white/12 bg-white/8 px-2 text-white/82 shadow-none hover:bg-white/14 hover:text-white',
+            'mt-0.5 min-h-8 shrink-0 border-white/10 bg-white/7 px-2 text-white/82 shadow-none hover:bg-white/12 hover:text-white',
             collapsed ? 'w-8 px-0' : 'ml-auto',
           )}
           onClick={onToggle}
@@ -186,7 +186,7 @@ function SupportSidebar({
         </GhostButton>
       </div>
 
-      <nav className="mt-6 grid gap-1">
+      <nav className="mt-5 grid gap-1">
         {navigation.map((item) => {
           const active = item.isActive(location.pathname);
           const badgeLabel = item.label === 'Fila' ? '8' : item.label === 'Tickets' ? '12' : '';
@@ -194,10 +194,10 @@ function SupportSidebar({
           return (
             <Link
               className={cx(
-                'group flex min-h-[46px] items-center gap-2 rounded-[13px] px-2.5 py-1.5 text-[0.88rem] font-medium transition',
+                'group flex min-h-[44px] items-center gap-2 rounded-[12px] px-2.5 py-1 text-[0.84rem] font-medium transition',
                 collapsed ? 'justify-center px-0' : '',
                 active
-                  ? 'bg-[linear-gradient(135deg,rgba(31,103,255,0.95),rgba(47,126,255,0.95))] text-white shadow-[0_10px_20px_rgba(18,81,213,0.24)]'
+                  ? 'bg-[linear-gradient(135deg,rgba(31,103,255,0.92),rgba(47,126,255,0.92))] text-white shadow-[0_8px_16px_rgba(18,81,213,0.22)]'
                   : 'text-white/74 hover:bg-white/9 hover:text-white',
               )}
               key={`${item.label}:${item.to}`}
@@ -206,7 +206,7 @@ function SupportSidebar({
             >
               <span
                 className={cx(
-                  'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] border',
+                  'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[12px] border',
                   active
                     ? 'border-white/12 bg-white/14 text-white'
                     : 'border-white/10 bg-white/6 text-white/88',
@@ -218,7 +218,7 @@ function SupportSidebar({
               {!collapsed && badgeLabel ? (
                 <span
                   className={cx(
-                    'ml-auto inline-flex min-h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-semibold',
+                    'ml-auto inline-flex min-h-4.5 min-w-4.5 items-center justify-center rounded-full px-1.5 text-[9px] font-semibold',
                     active ? 'bg-white/16 text-white' : 'bg-white/10 text-white/82',
                   )}
                 >
@@ -231,8 +231,9 @@ function SupportSidebar({
       </nav>
 
       <div className="mt-auto px-0.5">
-        <div className={cx('flex items-center rounded-[14px] border border-white/10 bg-white/7 px-2 py-2', collapsed ? 'justify-center' : 'gap-2')}>
-          <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#f4b1c8,#ffffff)] text-[12px] font-semibold text-[color:var(--color-brand-navy)]">
+        <div className={cx('rounded-[14px] border border-white/10 bg-white/7 px-2 py-1.5', collapsed ? 'flex justify-center' : 'space-y-2')}>
+          <div className={cx('flex items-center', collapsed ? 'justify-center' : 'gap-2')}>
+          <div className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#f4b1c8,#ffffff)] text-[11px] font-semibold text-[color:var(--color-brand-navy)]">
             {String(user?.user_metadata?.full_name ?? user?.email ?? 'QA')
               .split(' ')
               .slice(0, 2)
@@ -241,14 +242,59 @@ function SupportSidebar({
           </div>
           {!collapsed ? (
             <div className="min-w-0">
-              <p className="truncate text-[12px] font-semibold text-white">
+              <p className="truncate text-[11px] font-semibold text-white">
                 {String(user?.user_metadata?.full_name ?? user?.email ?? 'Operador interno')}
               </p>
-              <p className="truncate text-[0.68rem] text-white/58">
+              <p className="truncate text-[0.64rem] text-white/58">
                 {gate.actor?.roles.includes('support_manager') ? 'Manager' : 'Agente'}
               </p>
             </div>
           ) : null}
+          </div>
+          {!collapsed ? (
+            <button
+              className="flex w-full items-center justify-between rounded-[12px] border border-white/8 bg-white/4 px-2.5 py-1.5 text-left text-[11px] text-white/74 transition hover:bg-white/8 hover:text-white"
+              onClick={() => void signOut()}
+              type="button"
+            >
+              <span>Encerrar sessao</span>
+              <svg
+                aria-hidden="true"
+                className="h-3.5 w-3.5"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1.8"
+                viewBox="0 0 24 24"
+              >
+                <path d="M15 16.5 19.5 12 15 7.5" />
+                <path d="M19 12H9" />
+              </svg>
+            </button>
+          ) : (
+            <GhostButton
+              aria-label="Encerrar sessao"
+              className="min-h-8 w-8 border-white/10 bg-white/5 px-0 text-white/82 hover:bg-white/10 hover:text-white"
+              onClick={() => void signOut()}
+              title="Encerrar sessao"
+            >
+              <svg
+                aria-hidden="true"
+                className="h-3.5 w-3.5"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1.8"
+                viewBox="0 0 24 24"
+              >
+                <path d="M15 16.5 19.5 12 15 7.5" />
+                <path d="M19 12H9" />
+                <path d="M12 5H6.75A1.75 1.75 0 0 0 5 6.75v10.5A1.75 1.75 0 0 0 6.75 19H12" />
+              </svg>
+            </GhostButton>
+          )}
         </div>
       </div>
     </aside>
@@ -294,31 +340,9 @@ function SupportTopbar({
 }: {
   compact?: boolean;
 }) {
-  const { signOut } = useAuthContext();
-
   return (
-    <header
-      className={cx(
-        compact
-          ? 'px-1 py-0'
-          : 'rounded-[22px] border border-[color:var(--color-border)] bg-white/92 px-4 py-3 shadow-[0_14px_28px_rgba(19,33,79,0.08)] backdrop-blur sm:px-5',
-      )}
-    >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div />
-        <div className="flex flex-wrap gap-2">
-          <GhostButton
-            className={cx(
-              'border-[rgba(48,127,226,0.18)] px-4 text-[color:var(--color-brand-blue)]',
-              compact ? 'min-h-9 bg-white/88 text-[13px] shadow-[0_10px_20px_rgba(19,33,79,0.06)]' : 'min-h-10',
-            )}
-            onClick={() => void signOut()}
-          >
-            Encerrar sessao
-          </GhostButton>
-        </div>
-      </div>
-      <div className={cx(compact ? 'mt-2 lg:hidden' : 'mt-3')}>
+    <header className={cx(compact ? 'py-0' : 'py-0')}>
+      <div className={cx(compact ? 'lg:hidden' : 'lg:hidden')}>
         <SupportQuickNav />
       </div>
     </header>
@@ -332,7 +356,7 @@ export function SupportWorkspaceShell() {
 
   return (
     <div className={cx('bg-[linear-gradient(180deg,#eef4ff_0%,#f7faff_42%,#f3f6fb_100%)] text-[color:var(--color-ink)]', isTicketRoute ? 'h-screen overflow-hidden' : 'min-h-screen')}>
-      <div className={cx('mx-auto flex max-w-[1760px] gap-3 px-3 sm:px-4 lg:px-4', isTicketRoute ? 'h-full py-2' : 'py-3')}>
+      <div className={cx('flex w-full gap-3 px-1.5 sm:px-2.5 lg:px-2', isTicketRoute ? 'h-full py-2' : 'py-3')}>
         <div className="hidden shrink-0 lg:block">
           <div className={cx('sticky h-[calc(100vh-1.5rem)]', isTicketRoute ? 'top-2 h-[calc(100vh-1rem)]' : 'top-3')}>
             <SupportSidebar
@@ -343,7 +367,7 @@ export function SupportWorkspaceShell() {
         </div>
 
         <div className={cx('min-w-0 flex-1', isTicketRoute && 'min-h-0')}>
-          <div className={cx(isTicketRoute ? 'flex h-full min-h-0 flex-col gap-2' : 'space-y-4')}>
+          <div className={cx(isTicketRoute ? 'flex h-full min-h-0 flex-col gap-1' : 'space-y-3')}>
             <SupportTopbar compact={isTicketRoute} />
             <main className={cx('min-w-0', isTicketRoute && 'min-h-0 flex-1 overflow-hidden')}>
               <Outlet />

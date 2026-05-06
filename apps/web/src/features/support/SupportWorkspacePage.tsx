@@ -747,13 +747,13 @@ function ConversationEntry({
 
   if (lane === 'internal') {
     return (
-      <article className="mx-auto max-w-[92%] rounded-[15px] border border-amber-200 bg-[linear-gradient(180deg,rgba(255,248,227,0.98),rgba(255,241,206,0.94))] px-3.5 py-2 shadow-[0_6px_14px_rgba(180,120,34,0.05)]">
+      <article className="mx-auto max-w-[92%] rounded-[15px] border border-amber-200 bg-[linear-gradient(180deg,rgba(255,248,227,0.98),rgba(255,241,206,0.94))] px-3 py-2 shadow-[0_6px_14px_rgba(180,120,34,0.05)]">
         <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
           <StatusPill tone="warning">{label}</StatusPill>
           <p className="font-semibold text-[color:var(--color-ink)]">{author}</p>
           <span className="ml-auto text-[color:var(--color-muted)]">{timestamp}</span>
         </div>
-        <p className="mt-1.5 whitespace-pre-wrap text-[13px] leading-[1.35rem] text-[color:var(--color-ink)]">
+        <p className="mt-1.5 whitespace-pre-wrap text-[12.5px] leading-[1.3rem] text-[color:var(--color-ink)]">
           {summary}
         </p>
       </article>
@@ -791,14 +791,14 @@ function ConversationEntry({
         </div>
         <article
           className={cx(
-            'min-w-0 rounded-[15px] border px-3.5 py-2 shadow-[0_6px_14px_rgba(19,33,79,0.05)]',
+            'min-w-0 rounded-[15px] border px-3 py-2 shadow-[0_6px_14px_rgba(19,33,79,0.05)]',
             lane === 'agent'
               ? 'border-[rgba(48,127,226,0.24)] bg-[linear-gradient(180deg,rgba(243,248,255,0.98),rgba(236,244,255,0.92))]'
               : 'border-[color:var(--color-border)] bg-white',
           )}
         >
           <div className="space-y-2">
-            <p className="whitespace-pre-wrap text-[13px] leading-[1.35rem] text-[color:var(--color-ink)]">
+            <p className="whitespace-pre-wrap text-[12.5px] leading-[1.3rem] text-[color:var(--color-ink)]">
               {summary}
             </p>
             {attachment ? (
@@ -847,11 +847,6 @@ function TechnicalTimelineRow({
           </p>
         </div>
         <p className="text-sm leading-6 text-[color:var(--color-ink)]">{summary}</p>
-        {entry.metadata && Object.keys(entry.metadata).length > 0 ? (
-          <p className="text-xs leading-5 text-[color:var(--color-muted)]">
-            {stringifyJsonPreview(entry.metadata)}
-          </p>
-        ) : null}
       </div>
       <p className="text-xs text-[color:var(--color-muted)]">{formatDateTime(entry.occurredAt)}</p>
     </div>
@@ -1116,7 +1111,6 @@ function SupportKnowledgePickerCard({
 
 function SupportKnowledgePanel({
   articles,
-  defaultOpen = true,
   links,
   loading,
   noteDraft,
@@ -1127,13 +1121,11 @@ function SupportKnowledgePanel({
   onNoteChange,
   onSearchChange,
   onSendToCustomer,
-  onToggle,
   phase,
   search,
   message,
 }: {
   articles: SupportKnowledgeArticlePickerItem[];
-  defaultOpen?: boolean;
   links: SupportTicketKnowledgeLink[];
   loading: boolean;
   noteDraft: string;
@@ -1144,7 +1136,6 @@ function SupportKnowledgePanel({
   onNoteChange: (value: string) => void;
   onSearchChange: (value: string) => void;
   onSendToCustomer: (articleId: Uuid) => void;
-  onToggle: (open: boolean) => void;
   phase: KnowledgePhase;
   search: string;
   message: string | null;
@@ -1154,46 +1145,55 @@ function SupportKnowledgePanel({
   const visibleArticles = articles.slice(0, 2);
 
   return (
-    <details
-      className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-3.5 py-3 shadow-[0_10px_20px_rgba(19,33,79,0.07)]"
-      onToggle={(event) => onToggle(event.currentTarget.open)}
-      open={defaultOpen}
-    >
-      <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-        Conhecimento relacionado
-      </summary>
-      <div className="mt-2.5 space-y-2.5">
-        {phase === 'contract-unavailable' ? (
-          <InlineNotice tone="warning">
-            {message ?? 'O painel de conhecimento ainda nao ficou disponivel para esta tratativa.'}
-          </InlineNotice>
-        ) : phase === 'error' ? (
-          <InlineNotice tone="critical">
-            {message ?? 'Nao foi possivel carregar o conhecimento relacionado deste ticket.'}
-          </InlineNotice>
-        ) : phase === 'loading' ? (
-          <LoadingState
-            title="Carregando conhecimento"
-            description="Estamos preparando os vinculos e os artigos disponiveis para este ticket."
-          />
-        ) : (
-          <>
-            <div className="space-y-1.5">
-              <div className="flex flex-wrap items-center justify-between gap-1.5">
-                <h4 className="text-sm font-semibold text-[color:var(--color-ink)]">
+    <section className="space-y-3">
+      <div className="space-y-1">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+          Conhecimento
+        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-[15px] font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+            Conteudo relacionado ao ticket
+          </h3>
+          <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
+            {links.length === 0
+              ? 'Nenhum vinculo ativo'
+              : `${links.length} vinculo(s) acompanhando esta tratativa`}
+          </p>
+        </div>
+      </div>
+
+      {phase === 'contract-unavailable' ? (
+        <InlineNotice tone="warning">
+          {message ?? 'O painel de conhecimento ainda nao ficou disponivel para esta tratativa.'}
+        </InlineNotice>
+      ) : phase === 'error' ? (
+        <InlineNotice tone="critical">
+          {message ?? 'Nao foi possivel carregar o conhecimento relacionado deste ticket.'}
+        </InlineNotice>
+      ) : phase === 'loading' ? (
+        <LoadingState
+          title="Carregando conhecimento"
+          description="Estamos preparando os vinculos e os artigos disponiveis para este ticket."
+        />
+      ) : (
+        <>
+          <div className="grid gap-3 xl:grid-cols-[minmax(0,0.94fr)_minmax(260px,0.82fr)]">
+            <div className="space-y-2 rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h4 className="text-[13px] font-semibold text-[color:var(--color-ink)]">
                   Vinculos ativos
                 </h4>
                 <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
                   {links.length === 0
-                    ? 'Nenhum vinculo aberto'
-                    : `${links.length} vinculo(s) em acompanhamento`}
+                    ? 'Nenhum artigo ligado'
+                    : `${links.length} referencia(s) em acompanhamento`}
                 </p>
               </div>
               {links.length === 0 ? (
                 <InlineNotice>
                   Nenhum artigo foi relacionado a este ticket ainda.
                 </InlineNotice>
-            ) : (
+              ) : (
                 <div className="space-y-1.5">
                   {visibleLinks.map((link) => (
                     <SupportKnowledgeLinkCard
@@ -1205,72 +1205,327 @@ function SupportKnowledgePanel({
                   ))}
                   {hiddenLinksCount > 0 ? (
                     <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
-                      Mais {hiddenLinksCount} vinculo(s) continuam registrados no historico deste ticket.
+                      Mais {hiddenLinksCount} vinculo(s) seguem no historico deste ticket.
                     </p>
                   ) : null}
                 </div>
-            )}
+              )}
             </div>
 
-            <details className="rounded-[15px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2.5">
-              <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                Buscar e vincular
-              </summary>
-              <div className="mt-2.5 space-y-2.5">
-                <TextInput
-                  className="min-h-10"
-                  onChange={(event) => onSearchChange(event.target.value)}
-                  placeholder="Buscar artigo por titulo, resumo ou categoria"
-                  value={search}
-                />
+            <div className="space-y-2 rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-3">
+              <div className="space-y-1">
+                <h4 className="text-[13px] font-semibold text-[color:var(--color-ink)]">
+                  Buscar e vincular
+                </h4>
+                <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
+                  Relacione artigos internos ou marque lacunas para a proxima tratativa.
+                </p>
+              </div>
 
-                <TextareaInput
-                  className="min-h-[76px]"
-                  onChange={(event) => onNoteChange(event.target.value)}
-                  placeholder="Observacao curta opcional para o proximo operador."
-                  value={noteDraft}
-                />
+              <TextInput
+                className="min-h-10"
+                onChange={(event) => onSearchChange(event.target.value)}
+                placeholder="Buscar artigo por titulo, resumo ou categoria"
+                value={search}
+              />
 
-                <div className="flex flex-wrap gap-1.5">
-                  <GhostButton
-                    className="min-h-9 px-3 text-[13px]"
+              <TextareaInput
+                className="min-h-[84px]"
+                onChange={(event) => onNoteChange(event.target.value)}
+                placeholder="Observacao curta opcional para o proximo operador."
+                value={noteDraft}
+              />
+
+              <GhostButton
+                className="min-h-9 px-3 text-[13px]"
+                disabled={loading}
+                onClick={onMarkGap}
+                type="button"
+              >
+                Marcar lacuna de documentacao
+              </GhostButton>
+            </div>
+          </div>
+
+          <div className="space-y-2 rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h4 className="text-[13px] font-semibold text-[color:var(--color-ink)]">
+                Sugestoes disponiveis
+              </h4>
+              <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
+                {articles.length === 0 ? 'Sem resultados para o filtro atual' : `${articles.length} artigo(s) encontrados`}
+              </p>
+            </div>
+
+            {articles.length === 0 ? (
+              <InlineNotice tone="warning">
+                Nenhum artigo permitido apareceu para este filtro.
+              </InlineNotice>
+            ) : (
+              <div className="grid gap-2 xl:grid-cols-2">
+                {visibleArticles.map((article) => (
+                  <SupportKnowledgePickerCard
+                    article={article}
                     disabled={loading}
-                    onClick={onMarkGap}
-                    type="button"
-                  >
-                    Marcar lacuna de documentacao
-                  </GhostButton>
-                </div>
+                    key={article.articleId}
+                    onLinkInternal={onLinkInternal}
+                    onNeedsUpdate={onNeedsUpdate}
+                    onSendToCustomer={onSendToCustomer}
+                  />
+                ))}
+              </div>
+            )}
 
-                {articles.length === 0 ? (
-                  <InlineNotice tone="warning">
-                    Nenhum artigo permitido apareceu para este filtro.
-                  </InlineNotice>
-                ) : (
-                  <div className="space-y-1.5">
-                    {visibleArticles.map((article) => (
-                      <SupportKnowledgePickerCard
-                        article={article}
-                        disabled={loading}
-                        key={article.articleId}
-                        onLinkInternal={onLinkInternal}
-                        onNeedsUpdate={onNeedsUpdate}
-                        onSendToCustomer={onSendToCustomer}
-                      />
-                    ))}
-                    {articles.length > visibleArticles.length ? (
-                      <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
-                        Ajuste a busca para abrir outros artigos desta base.
-                      </p>
+            {articles.length > visibleArticles.length ? (
+              <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
+                Ajuste a busca para abrir outros artigos desta base.
+              </p>
+            ) : null}
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
+function SupportHelpPanel({
+  articles,
+  links,
+}: {
+  articles: SupportKnowledgeArticlePickerItem[];
+  links: SupportTicketKnowledgeLink[];
+}) {
+  const publicArticles = articles.filter((article) => article.isCustomerSendAllowed).slice(0, 3);
+  const publicLinks = links
+    .filter(
+      (link) =>
+        link.linkType === 'sent_to_customer' ||
+        (link.articleVisibility != null && link.articleVisibility !== 'internal'),
+    )
+    .slice(0, 3);
+
+  return (
+    <section className="space-y-3">
+      <div className="space-y-1">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+          Central de ajuda
+        </p>
+        <h3 className="text-[15px] font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+          Conteudo publico sugerido para esta tratativa
+        </h3>
+        <p className="text-[12px] leading-5 text-[color:var(--color-muted)]">
+          Use este painel para validar se ja existe material publico pronto antes de responder o cliente.
+        </p>
+      </div>
+
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,0.92fr)_minmax(260px,0.8fr)]">
+        <div className="space-y-2 rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h4 className="text-[13px] font-semibold text-[color:var(--color-ink)]">
+              Artigos prontos para cliente
+            </h4>
+            <Link
+              className="text-[12px] font-semibold text-[color:var(--color-brand-blue)]"
+              to="/help/genius"
+            >
+              Abrir central
+            </Link>
+          </div>
+
+          {publicArticles.length === 0 ? (
+            <EmptyState
+              title="Nenhum artigo publico sugerido"
+              description="Quando um conteudo puder ser compartilhado com o cliente, ele aparecera aqui."
+            />
+          ) : (
+            <div className="space-y-2">
+              {publicArticles.map((article) => (
+                <article
+                  className="rounded-[14px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2.5"
+                  key={article.articleId}
+                >
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <StatusPill>{humanizeKnowledgeVisibility(article.articleVisibility)}</StatusPill>
+                    <StatusPill>{humanizeKnowledgeStatus(article.articleStatus)}</StatusPill>
+                    {article.categoryName ? <StatusPill tone="accent">{article.categoryName}</StatusPill> : null}
+                  </div>
+                  <p className="mt-1.5 text-[13px] font-semibold text-[color:var(--color-ink)]">
+                    {article.articleTitle}
+                  </p>
+                  <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-[color:var(--color-muted)]">
+                    {article.articleSummary?.trim() || 'Resumo ainda nao informado para este artigo.'}
+                  </p>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-2 rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
+          <h4 className="text-[13px] font-semibold text-[color:var(--color-ink)]">
+            Conteudos ja relacionados
+          </h4>
+          {publicLinks.length === 0 ? (
+            <InlineNotice>
+              Ainda nao existe conteudo publico marcado para este ticket.
+            </InlineNotice>
+          ) : (
+            <div className="space-y-1.5">
+              {publicLinks.map((link) => (
+                <div
+                  className="rounded-[14px] border border-[color:var(--color-border)] bg-white px-3 py-2"
+                  key={link.ticketKnowledgeLinkId}
+                >
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <StatusPill tone={toneForKnowledgeLinkType(link.linkType)}>
+                      {humanizeKnowledgeLinkType(link.linkType)}
+                    </StatusPill>
+                    {link.articleVisibility ? (
+                      <StatusPill>{humanizeKnowledgeVisibility(link.articleVisibility)}</StatusPill>
                     ) : null}
                   </div>
-                )}
-              </div>
-            </details>
-          </>
-        )}
+                  <p className="mt-1.5 text-[13px] font-semibold text-[color:var(--color-ink)]">
+                    {link.articleTitle ?? 'Conteudo publico relacionado'}
+                  </p>
+                  <p className="mt-1 text-[11px] leading-5 text-[color:var(--color-muted)]">
+                    Vinculado em {formatDateTime(link.createdAt)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="rounded-[14px] border border-dashed border-[rgba(48,127,226,0.28)] bg-white/72 px-3 py-2.5">
+            <p className="text-[12px] leading-5 text-[color:var(--color-muted)]">
+              Quando nao houver conteudo pronto, siga pela resposta publica normal e deixe a lacuna registrada na aba Conhecimento.
+            </p>
+          </div>
+        </div>
       </div>
-    </details>
+    </section>
+  );
+}
+
+function SupportMoreActionsPanel({
+  closeReason,
+  canClose,
+  canReopen,
+  canUpdateStatus,
+  onCloseReasonChange,
+  onCloseSubmit,
+  onReopenReasonChange,
+  onReopenSubmit,
+  onStatusNoteChange,
+  onStatusSubmit,
+  reopenReason,
+  statusNote,
+  submitting,
+  window,
+}: {
+  closeReason: string;
+  canClose: boolean;
+  canReopen: boolean;
+  canUpdateStatus: boolean;
+  onCloseReasonChange: (value: string) => void;
+  onCloseSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onReopenReasonChange: (value: string) => void;
+  onReopenSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onStatusNoteChange: (value: string) => void;
+  onStatusSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  reopenReason: string;
+  statusNote: string;
+  submitting: boolean;
+  window: SupportTicketTimelineRecentWindow;
+}) {
+  return (
+    <section className="space-y-3">
+      <div className="space-y-1">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+          Mais acoes
+        </p>
+        <h3 className="text-[15px] font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+          Movimentos secundarios da tratativa
+        </h3>
+      </div>
+
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,0.92fr)_minmax(260px,0.8fr)]">
+        <div className="space-y-3">
+          <section className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-3">
+            <form className="space-y-2.5" onSubmit={onStatusSubmit}>
+              <Field
+                label="Atualizar com observacao"
+                description="Use quando a mudanca de andamento precisa registrar o contexto operacional."
+              >
+                <TextareaInput
+                  className="min-h-[96px]"
+                  onChange={(event) => onStatusNoteChange(event.target.value)}
+                  placeholder="Descreva o proximo passo ou o motivo da mudanca."
+                  value={statusNote}
+                />
+              </Field>
+              <AppButton
+                className="min-h-10 rounded-[14px] px-4.5"
+                disabled={submitting || !canUpdateStatus}
+                type="submit"
+              >
+                {submitting ? 'Atualizando...' : 'Salvar status com observacao'}
+              </AppButton>
+            </form>
+          </section>
+
+          {(canClose || canReopen) ? (
+            <section className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-3">
+              <div className="space-y-3">
+                {canClose ? (
+                  <form className="space-y-2.5" onSubmit={onCloseSubmit}>
+                    <Field label="Motivo do fechamento">
+                      <TextareaInput
+                        className="min-h-[96px]"
+                        onChange={(event) => onCloseReasonChange(event.target.value)}
+                        placeholder="Obrigatorio para encerrar."
+                        value={closeReason}
+                      />
+                    </Field>
+                    <AppButton
+                      className="min-h-10 rounded-[14px] bg-[linear-gradient(135deg,#8b1e3f,#c3365e)] px-4.5"
+                      disabled={submitting || closeReason.trim().length === 0}
+                      type="submit"
+                    >
+                      {submitting ? 'Fechando...' : 'Fechar ticket'}
+                    </AppButton>
+                  </form>
+                ) : null}
+
+                {canReopen ? (
+                  <form className="space-y-2.5 border-t border-[color:var(--color-border)] pt-3" onSubmit={onReopenSubmit}>
+                    <Field label="Motivo da reabertura">
+                      <TextareaInput
+                        className="min-h-[84px]"
+                        onChange={(event) => onReopenReasonChange(event.target.value)}
+                        placeholder="Opcional para reabrir."
+                        value={reopenReason}
+                      />
+                    </Field>
+                    <GhostButton className="min-h-10 w-full px-4" disabled={submitting} type="submit">
+                      {submitting ? 'Reabrindo...' : 'Reabrir ticket'}
+                    </GhostButton>
+                  </form>
+                ) : null}
+              </div>
+            </section>
+          ) : null}
+        </div>
+
+        <section className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
+          <div className="space-y-2">
+            <h4 className="text-[13px] font-semibold text-[color:var(--color-ink)]">
+              Historico de apoio
+            </h4>
+            <SupportTechnicalHistory window={window} />
+          </div>
+        </section>
+      </div>
+    </section>
   );
 }
 
@@ -2077,19 +2332,15 @@ function SupportTicketCustomerSnapshot({
   }
 
   const primaryPlatform = primaryPlatformFromContext(accountContext);
-  const integrations: SupportCustomerAccountIntegration[] = [];
-  const features: SupportCustomerAccountFeature[] = [];
-  const alerts: SupportCustomerAccountAlert[] = [];
-  const riskyCustomizations: SupportCustomerAccountCustomization[] = [];
 
   return (
     <div className="space-y-1.5">
-      <div className="space-y-1.5">
+      <div className="space-y-1">
         <div className="min-w-0 space-y-1">
-          <p className="text-sm font-semibold text-[color:var(--color-ink)]">
+          <p className="text-[13px] font-semibold text-[color:var(--color-ink)]">
             {customer.tenantDisplayName ?? customer.tenantLegalName ?? customer.tenantSlug}
           </p>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1">
             {accountContext.productLine ? (
               <StatusPill tone="accent">{humanizeCustomerValue(accountContext.productLine)}</StatusPill>
             ) : null}
@@ -2102,7 +2353,7 @@ function SupportTicketCustomerSnapshot({
           </div>
         </div>
         <Link
-          className="inline-flex min-h-8 w-full items-center justify-center rounded-full border border-[rgba(48,127,226,0.26)] px-3 py-1.5 text-[12px] font-semibold text-[color:var(--color-brand-blue)]"
+          className="inline-flex min-h-7.5 w-full items-center justify-center rounded-full border border-[rgba(48,127,226,0.26)] px-3 py-1.5 text-[11px] font-semibold text-[color:var(--color-brand-blue)]"
           to={`/support/customers/${customer.tenantId}`}
         >
           Ver detalhes do cliente
@@ -2110,32 +2361,32 @@ function SupportTicketCustomerSnapshot({
       </div>
 
       <div className="rounded-[14px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-2.5 py-2">
-        <dl className="grid gap-1 text-[12px] leading-5 text-[color:var(--color-muted)]">
+        <dl className="grid gap-0.5 text-[11px] leading-5 text-[color:var(--color-muted)]">
           <div className="flex items-start justify-between gap-3">
             <dt className="font-medium text-[color:var(--color-ink)]">Plataforma</dt>
             <dd className="text-right">
               {primaryPlatform ? primaryPlatform.provider : 'Nao registrada'}
             </dd>
           </div>
-          <div className="flex items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-1">
+          <div className="flex items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-0.5">
             <dt className="font-medium text-[color:var(--color-ink)]">Produto</dt>
             <dd className="text-right">
               {accountContext.productLine ? humanizeCustomerValue(accountContext.productLine) : 'Nao resolvido'}
             </dd>
           </div>
-          <div className="flex items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-1">
+          <div className="flex items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-0.5">
             <dt className="font-medium text-[color:var(--color-ink)]">Porte / tier</dt>
             <dd className="text-right">
               {accountContext.accountTier ?? 'Nao resolvido'}
             </dd>
           </div>
-          <div className="flex items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-1">
+          <div className="flex items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-0.5">
             <dt className="font-medium text-[color:var(--color-ink)]">Contato principal</dt>
             <dd className="text-right">
               {primaryContact ? primaryContact.fullName : 'Nao resolvido'}
             </dd>
           </div>
-          <div className="flex items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-1">
+          <div className="flex items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-0.5">
             <dt className="font-medium text-[color:var(--color-ink)]">E-mail</dt>
             <dd className="text-right break-all">
               {primaryContact?.email ?? 'Nao resolvido'}
@@ -2144,70 +2395,6 @@ function SupportTicketCustomerSnapshot({
         </dl>
       </div>
 
-      {integrations.length > 0 ? (
-        <div className="space-y-1.5">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
-            Integracoes principais
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {integrations.map((integration) => (
-              <StatusPill key={integration.id}>{integration.provider}</StatusPill>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {features.length > 0 ? (
-        <div className="space-y-1.5">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
-            Features ativas
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {features.map((feature) => (
-              <StatusPill key={feature.featureKey}>{humanizeCustomerValue(feature.featureKey)}</StatusPill>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {alerts.length > 0 ? (
-        <div className="space-y-1.5">
-          {alerts.map((alert) => (
-            <InlineNotice key={alert.id} tone={toneForAlertSeverity(alert.severity)}>
-              <span className="font-semibold">{alert.title}</span>
-              {`: ${alert.description}`}
-            </InlineNotice>
-          ))}
-        </div>
-      ) : null}
-
-      {riskyCustomizations.length > 0 ? (
-        <details className="rounded-[15px] border border-[color:var(--color-border)] bg-white px-3 py-2.5">
-          <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-            Customizacoes com atencao
-          </summary>
-          <div className="mt-2.5 space-y-1.5">
-            {riskyCustomizations.map((customization) => (
-              <div
-                className="rounded-[14px] bg-[color:var(--color-surface)] px-3 py-2"
-                key={customization.id}
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-medium text-[color:var(--color-ink)]">
-                    {customization.title}
-                  </p>
-                  <StatusPill tone={toneForCustomizationRisk(customization.riskLevel)}>
-                    {humanizeCustomerValue(customization.riskLevel)}
-                  </StatusPill>
-                </div>
-                  <p className="mt-1 line-clamp-2 text-sm leading-5 text-[color:var(--color-muted)]">
-                    {customization.operationalNote ?? customization.description}
-                  </p>
-                </div>
-            ))}
-          </div>
-        </details>
-      ) : null}
     </div>
   );
 }
@@ -2444,17 +2631,9 @@ function SupportWorkspaceView({
   const [detailNotice, setDetailNotice] = useState<string | null>(null);
   const [detailNoticeTone, setDetailNoticeTone] = useState<'default' | 'critical'>('default');
   const [submitting, setSubmitting] = useState(false);
-  const [ticketRailOpen, setTicketRailOpen] = useState(true);
-  const [advancedToolsOpen, setAdvancedToolsOpen] = useState(false);
-  const [knowledgePanelOpen, setKnowledgePanelOpen] = useState(false);
-  const [customerPanelOpen, setCustomerPanelOpen] = useState(true);
-  const [activityPanelOpen, setActivityPanelOpen] = useState(false);
   const [ticketToolbarTab, setTicketToolbarTab] = useState<
     'conversation' | 'knowledge' | 'help' | 'more'
   >('conversation');
-  const conversationSectionRef = useRef<HTMLDivElement | null>(null);
-  const knowledgeSectionRef = useRef<HTMLDivElement | null>(null);
-  const advancedSectionRef = useRef<HTMLDetailsElement | null>(null);
 
   const loadQueue = useEffectEvent(async (preferredTicketId?: string | null) => {
     try {
@@ -2542,10 +2721,6 @@ function SupportWorkspaceView({
       setDetailPhase('ready');
       setStatusDraft(detail.status === 'closed' ? 'triage' : detail.status);
       setAssignDraft(detail.assignedToUserId ?? '');
-      setAdvancedToolsOpen(false);
-      setKnowledgePanelOpen(false);
-      setCustomerPanelOpen(true);
-      setActivityPanelOpen(false);
       setTicketToolbarTab('conversation');
       setComposerMode(detail.canAddMessage ? 'public' : detail.canAddInternalNote ? 'internal' : 'public');
       setKnowledgeSearch('');
@@ -3173,38 +3348,29 @@ function SupportWorkspaceView({
     formatAssignedAgentSummary(currentAssignedAgent) ??
     ticketDetail?.assignedToFullName ??
     'Sem responsavel definido';
+  const publicKnowledgeSuggestions = filteredKnowledgeArticles.filter((article) => article.isCustomerSendAllowed);
+  const knowledgePreviewLinks = knowledgeLinks.slice(0, 2);
 
   function openConversationSurface() {
     setTicketToolbarTab('conversation');
-    conversationSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function openKnowledgeSurface() {
     setTicketToolbarTab('knowledge');
-    if (!ticketRailOpen) {
-      setTicketRailOpen(true);
-    }
-    setKnowledgePanelOpen(true);
-
-    window.requestAnimationFrame(() => {
-      knowledgeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
   }
 
   function openAdvancedSurface() {
     setTicketToolbarTab('more');
-    if (!ticketRailOpen) {
-      setTicketRailOpen(true);
-    }
-
-    setAdvancedToolsOpen(true);
-    window.requestAnimationFrame(() => {
-      advancedSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
   }
 
   return (
-    <div className={cx('space-y-5', variant === 'tickets' && 'space-y-2.5')}>
+    <div
+      className={cx(
+        variant === 'tickets'
+          ? 'flex h-full min-h-0 flex-col gap-2.5 overflow-hidden'
+          : 'space-y-5',
+      )}
+    >
       {variant === 'queue' ? (
         <section className="rounded-[26px] border border-[color:var(--color-border)] bg-white/95 px-5 py-5 shadow-[0_16px_30px_rgba(19,33,79,0.08)]">
           <div className="flex flex-wrap items-center gap-2">
@@ -3379,518 +3545,439 @@ function SupportWorkspaceView({
           />
         )
       ) : (
-        <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
-          <section className="shrink-0 overflow-hidden rounded-[20px] border border-[rgba(22,42,93,0.1)] bg-white shadow-[0_10px_20px_rgba(19,33,79,0.06)]">
-            <div className="px-4 py-2 sm:px-5">
-              <div className="space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>
-                    {humanizeStatus(ticketDetail.status)}
-                  </StatusPill>
-                  <StatusPill tone={toneForPriority(ticketDetail.priority)}>
-                    {humanizeToken(ticketDetail.priority)}
-                  </StatusPill>
-                  <span className="text-[13px] font-semibold text-[color:var(--color-ink)]">
-                    #{ticketDetail.id.slice(0, 8)}
-                  </span>
-                  <span className="text-[12px] text-[color:var(--color-muted)]">
-                    Criado em {formatDateTime(ticketDetail.createdAt)}
-                  </span>
-                </div>
-
-                <h3 className="max-w-5xl truncate text-[1.12rem] font-semibold tracking-[-0.04em] leading-tight text-[color:var(--color-ink)]">
-                  {ticketDetail.title}
-                </h3>
-
-                <div className="grid gap-1 border-t border-[color:var(--color-border)] pt-1.5 text-[12px] md:grid-cols-2 xl:grid-cols-4">
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
-                      Cliente
-                    </p>
-                    <p className="truncate font-semibold text-[color:var(--color-ink)]">
-                      {ticketDetail.tenantDisplayName ?? ticketDetail.tenantLegalName ?? ticketDetail.tenantSlug}
-                    </p>
+        <div className="flex h-full min-h-0 flex-col gap-4 overflow-hidden xl:flex-row">
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+            <section className="shrink-0 overflow-hidden rounded-[20px] border border-[rgba(22,42,93,0.1)] bg-white shadow-[0_10px_20px_rgba(19,33,79,0.06)]">
+              <div className="px-4 py-3 sm:px-5">
+                <div className="space-y-1.5">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>
+                      {humanizeStatus(ticketDetail.status)}
+                    </StatusPill>
+                    <StatusPill tone={toneForPriority(ticketDetail.priority)}>
+                      {humanizeToken(ticketDetail.priority)}
+                    </StatusPill>
+                    <StatusPill tone={toneForSeverity(ticketDetail.severity)}>
+                      {humanizeToken(ticketDetail.severity)}
+                    </StatusPill>
+                    <span className="text-[12px] font-semibold text-[color:var(--color-ink)]">
+                      #{ticketDetail.id.slice(0, 8)}
+                    </span>
+                    <span className="text-[11px] text-[color:var(--color-muted)]">
+                      Criado em {formatDateTime(ticketDetail.createdAt)}
+                    </span>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
-                      Solicitante
-                    </p>
-                    <p className="truncate font-semibold text-[color:var(--color-ink)]">
-                      {requesterLabel}
-                    </p>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
-                      Responsavel
-                    </p>
-                    <p className="truncate font-semibold text-[color:var(--color-ink)]">
-                      {currentAssignedLabel}
-                    </p>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
-                      Ultima atualizacao
-                    </p>
-                    <p className="truncate font-semibold text-[color:var(--color-ink)]">
-                      {formatDateTime(ticketDetail.lastMessageAt ?? ticketDetail.updatedAt)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            <div className="border-t border-[color:var(--color-border)] px-4 sm:px-5">
-              <div className="flex items-center gap-3.5 overflow-x-auto">
-                <button
-                  className={cx(
-                    'inline-flex min-h-8 shrink-0 items-center border-b-2 px-1 text-[13px] font-semibold transition',
-                    ticketToolbarTab === 'conversation'
-                      ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
-                      : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
-                  )}
-                  onClick={openConversationSurface}
-                  type="button"
-                >
-                  Conversar
-                </button>
-                <button
-                  className={cx(
-                    'inline-flex min-h-8 shrink-0 items-center border-b-2 px-1 text-[13px] font-semibold transition',
-                    ticketToolbarTab === 'knowledge'
-                      ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
-                      : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
-                  )}
-                  onClick={openKnowledgeSurface}
-                  type="button"
-                >
-                  Conhecimento
-                </button>
-                <Link
-                  className={cx(
-                    'inline-flex min-h-8 shrink-0 items-center border-b-2 px-1 text-[13px] font-semibold transition',
-                    ticketToolbarTab === 'help'
-                      ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
-                      : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
-                  )}
-                  onClick={() => setTicketToolbarTab('help')}
-                  to="/help/genius"
-                >
-                  Central de ajuda
-                </Link>
-                <button
-                  className={cx(
-                    'inline-flex min-h-8 shrink-0 items-center border-b-2 px-1 text-[13px] font-semibold transition',
-                    ticketToolbarTab === 'more'
-                      ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
-                      : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
-                  )}
-                  onClick={openAdvancedSurface}
-                  type="button"
-                >
-                  Mais acoes
-                </button>
-              </div>
-            </div>
-          </section>
+                  <h3 className="max-w-4xl truncate text-[0.98rem] font-semibold tracking-[-0.03em] leading-tight text-[color:var(--color-ink)]">
+                    {ticketDetail.title}
+                  </h3>
 
-          {detailNotice ? <InlineNotice tone={detailNoticeTone}>{detailNotice}</InlineNotice> : null}
-
-          <div
-            className={cx(
-              'grid min-h-0 flex-1 items-start gap-2 overflow-visible',
-              ticketRailOpen && 'xl:grid-cols-[minmax(0,1fr)_300px]',
-            )}
-          >
-            <section
-              className="flex min-h-0 flex-col overflow-hidden rounded-[20px] border border-[color:var(--color-border)] bg-white shadow-[0_10px_20px_rgba(19,33,79,0.06)]"
-              ref={conversationSectionRef}
-            >
-              <div className="min-h-0 flex-1 overflow-y-auto px-4 py-2 sm:px-5">
-                <SupportConversation requesterName={requesterLabel} window={timelineWindow} />
-              </div>
-
-              <div className="shrink-0 border-t border-[color:var(--color-border)] bg-[linear-gradient(180deg,rgba(247,250,255,0.96),rgba(255,255,255,1))] px-4 py-2 sm:px-5">
-                <form className="space-y-1.5" onSubmit={handleSubmitComposer}>
-                  <div className="flex flex-wrap gap-4 border-b border-[color:var(--color-border)]">
-                    <button
-                      className={cx(
-                        'inline-flex min-h-8 items-center border-b-2 px-1 text-[13px] font-semibold transition',
-                        composerMode === 'public'
-                          ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
-                          : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
-                      )}
-                      disabled={!canUsePublicComposer}
-                      onClick={() => setComposerMode('public')}
-                      type="button"
-                    >
-                      Resposta publica
-                    </button>
-                    <button
-                      className={cx(
-                        'inline-flex min-h-8 items-center border-b-2 px-1 text-[13px] font-semibold transition',
-                        composerMode === 'internal'
-                          ? 'border-[color:var(--color-danger-ink)] text-[color:var(--color-danger-ink)]'
-                          : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
-                      )}
-                      disabled={!canUseInternalComposer}
-                      onClick={() => setComposerMode('internal')}
-                      type="button"
-                    >
-                      Nota interna
-                    </button>
-                  </div>
-                  <div
-                    className={cx(
-                      'rounded-[18px] border px-3.5 py-2.5 shadow-[0_8px_18px_rgba(19,33,79,0.04)] transition-colors',
-                      composerMode === 'internal'
-                        ? 'border-amber-200 bg-[linear-gradient(180deg,rgba(255,248,227,0.98),rgba(255,243,214,0.95))]'
-                        : 'border-[color:var(--color-border)] bg-white',
-                    )}
-                  >
-                    <TextareaInput
-                      className={cx(
-                        'h-[126px] min-h-[126px] w-full resize-none overflow-hidden border-0 !bg-transparent px-0 py-0 text-[14px] leading-[1.45rem] shadow-none focus:border-transparent focus:ring-0',
-                        composerMode === 'internal' && 'placeholder:text-[rgba(125,92,13,0.68)]',
-                      )}
-                      onChange={(event) =>
-                        composerMode === 'public'
-                          ? setMessageDraft(event.target.value)
-                          : setNoteDraft(event.target.value)
-                      }
-                      placeholder={
-                        composerMode === 'public'
-                          ? 'Digite sua resposta publica para o cliente...'
-                          : 'Registre a nota interna da tratativa...'
-                      }
-                      value={composerDraft}
-                    />
-                    <div
-                      className={cx(
-                        'mt-2 flex flex-wrap items-center justify-end gap-2.5 pt-2',
-                        composerMode === 'internal'
-                          ? 'border-t border-amber-200/90'
-                          : 'border-t border-[color:var(--color-border)]',
-                      )}
-                    >
-                      <div className="flex flex-wrap items-center gap-2.5">
-                        <SelectInput
-                          className={cx(
-                            'h-9 min-w-[124px] rounded-full px-3.5 text-[13px] font-semibold',
-                            composerMode === 'internal' && 'border-amber-200 bg-white/90',
-                          )}
-                          onChange={(event) =>
-                            setComposerMode(event.target.value === 'internal' ? 'internal' : 'public')
-                          }
-                          value={composerMode}
-                        >
-                          <option value="public">Publico</option>
-                          <option value="internal">Interno</option>
-                        </SelectInput>
-                        <AppButton
-                          className={
-                            composerMode === 'internal'
-                              ? 'min-h-9 rounded-[13px] px-5 bg-[linear-gradient(135deg,#7c2648,#b63f76)]'
-                              : 'min-h-9 rounded-[13px] px-5'
-                          }
-                          disabled={composerDisabled}
-                          type="submit"
-                        >
-                          {submitting
-                            ? 'Salvando...'
-                            : composerMode === 'public'
-                              ? 'Enviar resposta'
-                              : 'Salvar nota'}
-                        </AppButton>
-                      </div>
+                  <div className="grid gap-2 border-t border-[color:var(--color-border)] pt-2 text-[10px] md:grid-cols-2 xl:grid-cols-4">
+                    <div className="min-w-0">
+                      <p className="text-[8.5px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                        Cliente
+                      </p>
+                      <p className="truncate font-medium text-[color:var(--color-ink)]">
+                        {ticketDetail.tenantDisplayName ?? ticketDetail.tenantLegalName ?? ticketDetail.tenantSlug}
+                      </p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[8.5px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                        Solicitante
+                      </p>
+                      <p className="truncate font-medium text-[color:var(--color-ink)]">
+                        {requesterLabel}
+                      </p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[8.5px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                        Responsavel
+                      </p>
+                      <p className="truncate font-medium text-[color:var(--color-ink)]">
+                        {currentAssignedLabel}
+                      </p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[8.5px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                        Ultima atualizacao
+                      </p>
+                      <p className="truncate font-medium text-[color:var(--color-ink)]">
+                        {formatDateTime(ticketDetail.lastMessageAt ?? ticketDetail.updatedAt)}
+                      </p>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              <div className="border-t border-[color:var(--color-border)] px-4 sm:px-5">
+                <div className="flex items-center gap-3 overflow-x-auto">
+                  <button
+                    className={cx(
+                      'inline-flex min-h-7.5 shrink-0 items-center border-b-2 px-1 text-[12px] font-semibold transition',
+                      ticketToolbarTab === 'conversation'
+                        ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
+                        : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
+                    )}
+                    onClick={openConversationSurface}
+                    type="button"
+                  >
+                    Conversar
+                  </button>
+                  <button
+                    className={cx(
+                      'inline-flex min-h-7.5 shrink-0 items-center border-b-2 px-1 text-[12px] font-semibold transition',
+                      ticketToolbarTab === 'knowledge'
+                        ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
+                        : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
+                    )}
+                    onClick={openKnowledgeSurface}
+                    type="button"
+                  >
+                    Conhecimento
+                  </button>
+                  <button
+                    className={cx(
+                      'inline-flex min-h-7.5 shrink-0 items-center border-b-2 px-1 text-[12px] font-semibold transition',
+                      ticketToolbarTab === 'help'
+                        ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
+                        : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
+                    )}
+                    onClick={() => setTicketToolbarTab('help')}
+                    type="button"
+                  >
+                    Central de ajuda
+                  </button>
+                  <button
+                    className={cx(
+                      'inline-flex min-h-7.5 shrink-0 items-center border-b-2 px-1 text-[12px] font-semibold transition',
+                      ticketToolbarTab === 'more'
+                        ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
+                        : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
+                    )}
+                    onClick={openAdvancedSurface}
+                    type="button"
+                  >
+                    Mais acoes
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            {detailNotice ? <InlineNotice tone={detailNoticeTone}>{detailNotice}</InlineNotice> : null}
+
+            <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[20px] border border-[color:var(--color-border)] bg-white shadow-[0_10px_20px_rgba(19,33,79,0.06)]">
+              {ticketToolbarTab === 'conversation' ? (
+                <>
+                  <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-5">
+                    <SupportConversation requesterName={requesterLabel} window={timelineWindow} />
+                  </div>
+
+                  <div className="shrink-0 border-t border-[color:var(--color-border)] bg-[linear-gradient(180deg,rgba(247,250,255,0.96),rgba(255,255,255,1))] px-4 py-3 sm:px-5">
+                    <form className="space-y-1.5" onSubmit={handleSubmitComposer}>
+                      <div className="flex flex-wrap gap-4 border-b border-[color:var(--color-border)]">
+                        <button
+                          className={cx(
+                            'inline-flex min-h-7.5 items-center border-b-2 px-1 text-[12px] font-semibold transition',
+                            composerMode === 'public'
+                              ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
+                              : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
+                          )}
+                          disabled={!canUsePublicComposer}
+                          onClick={() => setComposerMode('public')}
+                          type="button"
+                        >
+                          Resposta publica
+                        </button>
+                        <button
+                          className={cx(
+                            'inline-flex min-h-7.5 items-center border-b-2 px-1 text-[12px] font-semibold transition',
+                            composerMode === 'internal'
+                              ? 'border-[color:var(--color-danger-ink)] text-[color:var(--color-danger-ink)]'
+                              : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
+                          )}
+                          disabled={!canUseInternalComposer}
+                          onClick={() => setComposerMode('internal')}
+                          type="button"
+                        >
+                          Nota interna
+                        </button>
+                      </div>
+                      <div
+                        className={cx(
+                          'rounded-[16px] border px-3.5 py-2.5 shadow-[0_8px_18px_rgba(19,33,79,0.04)] transition-colors',
+                          composerMode === 'internal'
+                            ? 'border-amber-200 bg-[linear-gradient(180deg,rgba(255,248,227,0.98),rgba(255,243,214,0.95))]'
+                            : 'border-[color:var(--color-border)] bg-white',
+                        )}
+                      >
+                        <TextareaInput
+                          className={cx(
+                            'h-[142px] min-h-[142px] w-full resize-none overflow-hidden border-0 !bg-transparent px-0 py-0 text-[13px] leading-[1.35rem] shadow-none focus:border-transparent focus:ring-0',
+                            composerMode === 'internal' && 'placeholder:text-[rgba(125,92,13,0.68)]',
+                          )}
+                          onChange={(event) =>
+                            composerMode === 'public'
+                              ? setMessageDraft(event.target.value)
+                              : setNoteDraft(event.target.value)
+                          }
+                          placeholder={
+                            composerMode === 'public'
+                              ? 'Digite sua resposta publica para o cliente...'
+                              : 'Registre a nota interna da tratativa...'
+                          }
+                          value={composerDraft}
+                        />
+                        <div
+                          className={cx(
+                            'mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t pt-2',
+                            composerMode === 'internal'
+                              ? 'border-amber-200/90'
+                              : 'border-[color:var(--color-border)]',
+                          )}
+                        >
+                          <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
+                            {composerMode === 'public'
+                              ? 'A resposta sera enviada para o cliente.'
+                              : 'A nota ficara visivel apenas para a equipe interna.'}
+                          </p>
+                          <AppButton
+                            className={
+                              composerMode === 'internal'
+                                ? 'min-h-8.5 rounded-[12px] px-4.5 text-[12px] bg-[linear-gradient(135deg,#7c2648,#b63f76)]'
+                                : 'min-h-8.5 rounded-[12px] px-4.5 text-[12px]'
+                            }
+                            disabled={composerDisabled}
+                            type="submit"
+                          >
+                            {submitting
+                              ? composerMode === 'public'
+                                ? 'Enviando...'
+                                : 'Salvando...'
+                              : composerMode === 'public'
+                                ? 'Enviar resposta'
+                                : 'Salvar nota interna'}
+                          </AppButton>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                </>
+              ) : (
+                <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-5">
+                  {ticketToolbarTab === 'knowledge' ? (
+                    <SupportKnowledgePanel
+                      articles={filteredKnowledgeArticles}
+                      links={knowledgeLinks}
+                      loading={knowledgeBusy}
+                      message={knowledgeMessage}
+                      noteDraft={knowledgeNoteDraft}
+                      onArchive={(linkId) => void handleArchiveKnowledgeLink(linkId)}
+                      onLinkInternal={(articleId) =>
+                        void handleLinkKnowledgeArticle(articleId, 'reference_internal')
+                      }
+                      onMarkGap={() => void handleMarkDocumentationGap()}
+                      onNeedsUpdate={(articleId) => void handleMarkKnowledgeNeedsUpdate(articleId)}
+                      onNoteChange={setKnowledgeNoteDraft}
+                      onSearchChange={setKnowledgeSearch}
+                      onSendToCustomer={(articleId) =>
+                        void handleLinkKnowledgeArticle(articleId, 'sent_to_customer')
+                      }
+                      phase={knowledgePhase}
+                      search={knowledgeSearch}
+                    />
+                  ) : ticketToolbarTab === 'help' ? (
+                    <SupportHelpPanel articles={filteredKnowledgeArticles} links={knowledgeLinks} />
+                  ) : (
+                    <SupportMoreActionsPanel
+                      canClose={ticketDetail.canClose}
+                      canReopen={ticketDetail.canReopen}
+                      canUpdateStatus={ticketDetail.canUpdateStatus}
+                      closeReason={closeReason}
+                      onCloseReasonChange={setCloseReason}
+                      onCloseSubmit={handleClose}
+                      onReopenReasonChange={setReopenReason}
+                      onReopenSubmit={handleReopen}
+                      onStatusNoteChange={setStatusNote}
+                      onStatusSubmit={handleUpdateStatus}
+                      reopenReason={reopenReason}
+                      statusNote={statusNote}
+                      submitting={submitting}
+                      window={timelineWindow}
+                    />
+                  )}
+                </div>
+              )}
+            </section>
+          </div>
+
+          <aside className="space-y-4 xl:w-[308px] xl:shrink-0">
+            <section className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_8px_16px_rgba(19,33,79,0.06)]">
+              <h4 className="text-[13px] font-semibold tracking-[-0.02em] text-[color:var(--color-ink)]">
+                Cliente
+              </h4>
+              <div className="mt-1.5">
+                <SupportTicketCustomerSnapshot
+                  accountContext={customerAccountContext}
+                  customer={customer}
+                />
+              </div>
+            </section>
+
+            <section className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_8px_16px_rgba(19,33,79,0.06)]">
+              <div className="space-y-1.5">
+                <h4 className="text-[13px] font-semibold tracking-[-0.02em] text-[color:var(--color-ink)]">
+                  Acoes do ticket
+                </h4>
+
+                {agentsPhase === 'contract-unavailable' ? (
+                  <InlineNotice tone="critical">
+                    {agentsMessage ?? 'A lista de agentes nao ficou disponivel para esta tratativa.'}
+                  </InlineNotice>
+                ) : agentsPhase === 'error' ? (
+                  <InlineNotice tone="critical">
+                    {agentsMessage ?? 'Nao foi possivel carregar o diretorio de agentes atribuiveis.'}
+                  </InlineNotice>
+                ) : agentsPhase === 'loading' ? (
+                  <p className="text-[12px] leading-5 text-[color:var(--color-muted)]">
+                    Carregando agentes disponiveis...
+                  </p>
+                ) : assignableAgents.length === 0 ? (
+                  <InlineNotice tone="warning">
+                    Nenhum agente ativo ficou disponivel para este cliente.
+                  </InlineNotice>
+                ) : (
+                  <form className="space-y-2" onSubmit={handleAssign}>
+                    <Field label="Responsavel">
+                      <SelectInput
+                        className="h-8.5 rounded-[12px] px-3 text-[12px]"
+                        onChange={(event) => setAssignDraft(event.target.value)}
+                        value={assignDraft}
+                      >
+                        <option value="">Sem responsavel</option>
+                        {assignableAgents.map((agent) => (
+                          <option key={`${agent.tenantId}:${agent.userId}`} value={agent.userId}>
+                            {formatAssignableAgentLabel(agent)}
+                          </option>
+                        ))}
+                      </SelectInput>
+                    </Field>
+                    <AppButton
+                      className="min-h-8.5 w-full rounded-[12px] px-4 text-[12px]"
+                      disabled={submitting || !ticketDetail.canAssign}
+                      type="submit"
+                    >
+                      {submitting ? 'Salvando...' : 'Salvar alteracoes'}
+                    </AppButton>
+                    <div className="grid gap-1.5 sm:grid-cols-2">
+                      <GhostButton
+                        className="min-h-8 rounded-[12px] px-2 text-[11px]"
+                        disabled={
+                          submitting ||
+                          !ticketDetail.canAssign ||
+                          !currentUserAssignableAgent
+                        }
+                        onClick={() =>
+                          void runAssignment(currentUserAssignableAgent?.userId ?? null)
+                        }
+                        type="button"
+                      >
+                        Atribuir a mim
+                      </GhostButton>
+                      <GhostButton
+                        className="min-h-8 rounded-[12px] px-2 text-[11px]"
+                        disabled={submitting || !ticketDetail.canAssign || !ticketDetail.assignedToUserId}
+                        onClick={() => void runAssignment(null)}
+                        type="button"
+                      >
+                        Desatribuir
+                      </GhostButton>
+                    </div>
+                  </form>
+                )}
+
+                <form className="space-y-2 border-t border-[color:var(--color-border)] pt-2" onSubmit={handleUpdateStatus}>
+                  <Field label="Status">
+                    <SelectInput
+                      className="h-8.5 rounded-[12px] px-3 text-[12px]"
+                      onChange={(event) =>
+                        setStatusDraft(event.target.value as TicketStatusUpdateTarget)
+                      }
+                      value={statusDraft}
+                    >
+                      {buildStatusChoices(ticketDetail.status).map((status) => (
+                        <option key={status} value={status}>
+                          {humanizeStatus(status)}
+                        </option>
+                      ))}
+                    </SelectInput>
+                  </Field>
+                  <AppButton
+                    className="min-h-8.5 w-full rounded-[12px] px-4 text-[12px]"
+                    disabled={submitting || !ticketDetail.canUpdateStatus}
+                    type="submit"
+                  >
+                    {submitting ? 'Atualizando...' : 'Salvar andamento'}
+                  </AppButton>
                 </form>
               </div>
             </section>
 
-            {ticketRailOpen ? (
-              <aside className="min-h-0 space-y-2 overflow-hidden xl:-mt-[120px] xl:h-[calc(100%+120px)]">
-                <section className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-3 py-2.5 shadow-[0_8px_16px_rgba(19,33,79,0.06)]">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between gap-3">
-                      <h4 className="text-sm font-semibold tracking-[-0.02em] text-[color:var(--color-ink)]">
-                        Acoes do ticket
-                      </h4>
-                      <GhostButton
-                        className="min-h-8 px-2.5 text-[11px]"
-                        onClick={() => setTicketRailOpen(false)}
-                      >
-                        Recolher
-                      </GhostButton>
-                    </div>
-
-                    <div className="flex flex-wrap gap-1.5">
-                      <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>
-                        {humanizeStatus(ticketDetail.status)}
-                      </StatusPill>
-                      <StatusPill tone={toneForPriority(ticketDetail.priority)}>
-                        {humanizeToken(ticketDetail.priority)}
-                      </StatusPill>
-                      <StatusPill tone={toneForSeverity(ticketDetail.severity)}>
-                        {humanizeToken(ticketDetail.severity)}
-                      </StatusPill>
-                    </div>
-
-                    {agentsPhase === 'contract-unavailable' ? (
-                      <InlineNotice tone="critical">
-                        {agentsMessage ?? 'A lista de agentes nao ficou disponivel para esta tratativa.'}
-                      </InlineNotice>
-                    ) : agentsPhase === 'error' ? (
-                      <InlineNotice tone="critical">
-                        {agentsMessage ?? 'Nao foi possivel carregar o diretorio de agentes atribuiveis.'}
-                      </InlineNotice>
-                    ) : agentsPhase === 'loading' ? (
-                      <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                        Carregando agentes disponiveis para este cliente...
-                      </p>
-                    ) : assignableAgents.length === 0 ? (
-                      <InlineNotice tone="warning">
-                        Nenhum agente ativo ficou disponivel para este cliente.
-                      </InlineNotice>
-                    ) : (
-                      <form className="space-y-2.5" onSubmit={handleAssign}>
-                        <Field label="Responsavel">
-                          <SelectInput
-                            className="h-9 rounded-[13px] px-3 text-[13px]"
-                            onChange={(event) => setAssignDraft(event.target.value)}
-                            value={assignDraft}
-                          >
-                            <option value="">Sem responsavel</option>
-                            {assignableAgents.map((agent) => (
-                              <option key={`${agent.tenantId}:${agent.userId}`} value={agent.userId}>
-                                {formatAssignableAgentLabel(agent)}
-                              </option>
-                            ))}
-                          </SelectInput>
-                        </Field>
-                        <AppButton
-                          className="min-h-9 w-full rounded-[13px] px-4"
-                          disabled={submitting || !ticketDetail.canAssign}
-                          type="submit"
-                        >
-                          {submitting ? 'Salvando...' : 'Salvar alteracoes'}
-                        </AppButton>
-                        <div className="grid gap-2 sm:grid-cols-2">
-                          <GhostButton
-                            className="min-h-8 px-3 text-[12px]"
-                            disabled={
-                              submitting ||
-                              !ticketDetail.canAssign ||
-                              !currentUserAssignableAgent
-                            }
-                            onClick={() =>
-                              void runAssignment(currentUserAssignableAgent?.userId ?? null)
-                            }
-                            type="button"
-                          >
-                            Atribuir a mim
-                          </GhostButton>
-                          <GhostButton
-                            className="min-h-8 px-3 text-[12px]"
-                            disabled={submitting || !ticketDetail.canAssign || !ticketDetail.assignedToUserId}
-                            onClick={() => void runAssignment(null)}
-                            type="button"
-                          >
-                            Desatribuir
-                          </GhostButton>
-                        </div>
-                      </form>
-                    )}
-
-                    <form className="space-y-2 border-t border-[color:var(--color-border)] pt-2" onSubmit={handleUpdateStatus}>
-                      <Field label="Mover status">
-                        <SelectInput
-                          className="h-9 rounded-[13px] px-3 text-[13px]"
-                          onChange={(event) =>
-                            setStatusDraft(event.target.value as TicketStatusUpdateTarget)
-                          }
-                          value={statusDraft}
-                        >
-                          {buildStatusChoices(ticketDetail.status).map((status) => (
-                            <option key={status} value={status}>
-                              {humanizeStatus(status)}
-                            </option>
-                          ))}
-                        </SelectInput>
-                      </Field>
-                      <AppButton
-                        className="min-h-9 w-full rounded-[13px] px-4"
-                        disabled={submitting || !ticketDetail.canUpdateStatus}
-                        type="submit"
-                      >
-                        {submitting ? 'Atualizando...' : 'Salvar andamento'}
-                      </AppButton>
-                    </form>
-                  </div>
-                </section>
-
-                <details
-                  className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-3 py-2.5 shadow-[0_8px_16px_rgba(19,33,79,0.06)]"
-                  onToggle={(event) => setCustomerPanelOpen(event.currentTarget.open)}
-                  open={customerPanelOpen}
-                >
-                  <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                    Cliente
-                  </summary>
-                  <div className="mt-2">
-                    <SupportTicketCustomerSnapshot
-                      accountContext={customerAccountContext}
-                      customer={customer}
-                    />
-                  </div>
-                </details>
-
-                <div ref={knowledgeSectionRef}>
-                  <SupportKnowledgePanel
-                    articles={filteredKnowledgeArticles}
-                    defaultOpen={knowledgePanelOpen}
-                    links={knowledgeLinks}
-                    loading={knowledgeBusy}
-                    message={knowledgeMessage}
-                    noteDraft={knowledgeNoteDraft}
-                    onArchive={(linkId) => void handleArchiveKnowledgeLink(linkId)}
-                    onLinkInternal={(articleId) =>
-                      void handleLinkKnowledgeArticle(articleId, 'reference_internal')
-                    }
-                    onMarkGap={() => void handleMarkDocumentationGap()}
-                    onNeedsUpdate={(articleId) => void handleMarkKnowledgeNeedsUpdate(articleId)}
-                    onNoteChange={setKnowledgeNoteDraft}
-                    onSearchChange={setKnowledgeSearch}
-                    onSendToCustomer={(articleId) =>
-                      void handleLinkKnowledgeArticle(articleId, 'sent_to_customer')
-                    }
-                    onToggle={setKnowledgePanelOpen}
-                    phase={knowledgePhase}
-                    search={knowledgeSearch}
-                  />
-                </div>
-
-                <details
-                  className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-3 py-2.5 shadow-[0_8px_16px_rgba(19,33,79,0.06)]"
-                  onToggle={(event) => setActivityPanelOpen(event.currentTarget.open)}
-                  open={activityPanelOpen}
-                >
-                  <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                    Atividade recente
-                  </summary>
-                  <div className="mt-2">
-                    <SupportRecentActivity window={timelineWindow} />
-                  </div>
-                </details>
-
-                <details
-                  className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-3.5 py-3 shadow-[0_10px_20px_rgba(19,33,79,0.07)]"
-                  onToggle={(event) => setAdvancedToolsOpen(event.currentTarget.open)}
-                  open={advancedToolsOpen}
-                  ref={advancedSectionRef}
-                >
-                  <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                    Historico detalhado e mais acoes
-                  </summary>
-                  <div className="mt-3 space-y-3">
-                    <form className="space-y-2.5" onSubmit={handleUpdateStatus}>
-                      <Field
-                        label="Atualizar com observacao"
-                        description="Use quando o movimento de status precisa levar um contexto curto."
-                      >
-                        <TextareaInput
-                          className="min-h-[84px]"
-                          onChange={(event) => setStatusNote(event.target.value)}
-                          placeholder="Descreva o proximo passo ou o motivo da mudanca."
-                          value={statusNote}
-                        />
-                      </Field>
-                      <AppButton
-                        className="min-h-10 w-full rounded-[14px] px-4.5"
-                        disabled={submitting || !ticketDetail.canUpdateStatus}
-                        type="submit"
-                      >
-                        {submitting ? 'Atualizando...' : 'Salvar status com observacao'}
-                      </AppButton>
-                    </form>
-
-                    <form className="space-y-2.5" onSubmit={handleAssign}>
-                      <Field
-                        label="Responsavel manual"
-                        description="Use apenas em excecao, quando o seletor principal nao atender."
-                      >
-                        <TextInput
-                          onChange={(event) => setAssignDraft(event.target.value)}
-                          placeholder="Digite o identificador manual apenas em excecao"
-                          value={assignDraft}
-                        />
-                      </Field>
-                      <AppButton
-                        className="min-h-10 w-full rounded-[14px] px-4.5"
-                        disabled={submitting || !ticketDetail.canAssign}
-                        type="submit"
-                      >
-                        {submitting ? 'Salvando...' : 'Salvar responsavel'}
-                      </AppButton>
-                    </form>
-
-                    {ticketDetail.canClose || ticketDetail.canReopen ? (
-                      <div className="space-y-3 border-t border-[color:var(--color-border)] pt-3">
-                        {ticketDetail.canClose ? (
-                          <form className="space-y-2.5" onSubmit={handleClose}>
-                            <Field label="Motivo do fechamento">
-                              <TextareaInput
-                                onChange={(event) => setCloseReason(event.target.value)}
-                                placeholder="Obrigatorio para encerrar."
-                                value={closeReason}
-                              />
-                            </Field>
-                            <AppButton
-                              className="min-h-10 w-full rounded-[14px] bg-[linear-gradient(135deg,#8b1e3f,#c3365e)] px-4.5"
-                              disabled={submitting || closeReason.trim().length === 0}
-                              type="submit"
-                            >
-                              {submitting ? 'Fechando...' : 'Fechar ticket'}
-                            </AppButton>
-                          </form>
-                        ) : null}
-
-                        {ticketDetail.canReopen ? (
-                          <form className="space-y-2.5" onSubmit={handleReopen}>
-                            <Field label="Motivo da reabertura">
-                              <TextareaInput
-                                onChange={(event) => setReopenReason(event.target.value)}
-                                placeholder="Opcional para reabrir."
-                                value={reopenReason}
-                              />
-                            </Field>
-                            <GhostButton className="min-h-10 w-full px-4" disabled={submitting} type="submit">
-                              {submitting ? 'Reabrindo...' : 'Reabrir ticket'}
-                            </GhostButton>
-                          </form>
-                        ) : null}
-                      </div>
-                    ) : null}
-
-                    <details className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2.5">
-                      <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                        Historico detalhado recente
-                      </summary>
-                      <div className="mt-2.5 space-y-1.5">
-                        <SupportTechnicalHistory window={timelineWindow} />
-                      </div>
-                    </details>
-                  </div>
-                </details>
-              </aside>
-            ) : (
-              <div className="flex justify-end">
-                <GhostButton className="min-h-10 px-4 text-sm" onClick={() => setTicketRailOpen(true)}>
-                  Mostrar contexto
+            <section className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_8px_16px_rgba(19,33,79,0.06)]">
+              <div className="flex items-center justify-between gap-2">
+                <h4 className="text-[13px] font-semibold tracking-[-0.02em] text-[color:var(--color-ink)]">
+                  Conhecimento relacionado
+                </h4>
+                <GhostButton className="min-h-7.5 px-2 text-[10px]" onClick={openKnowledgeSurface}>
+                  Abrir aba
                 </GhostButton>
               </div>
-            )}
-          </div>
+              <div className="mt-1.5 space-y-1.5">
+                {knowledgePhase === 'loading' ? (
+                  <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
+                    Carregando vinculos...
+                  </p>
+                ) : knowledgePhase === 'contract-unavailable' || knowledgePhase === 'error' ? (
+                  <InlineNotice tone={knowledgePhase === 'error' ? 'critical' : 'warning'}>
+                    {knowledgeMessage ?? 'O painel de conhecimento nao ficou disponivel para este ticket.'}
+                  </InlineNotice>
+                ) : knowledgePreviewLinks.length === 0 ? (
+                  <InlineNotice>
+                    Nenhum artigo relacionado ainda.
+                  </InlineNotice>
+                ) : (
+                  knowledgePreviewLinks.slice(0, 1).map((link) => (
+                    <div
+                      className="rounded-[12px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-2.5 py-2"
+                      key={link.ticketKnowledgeLinkId}
+                    >
+                      <div className="flex flex-wrap items-center gap-1">
+                        <StatusPill tone={toneForKnowledgeLinkType(link.linkType)}>
+                          {humanizeKnowledgeLinkType(link.linkType)}
+                        </StatusPill>
+                      </div>
+                      <p className="mt-1 text-[11px] font-semibold leading-4.5 text-[color:var(--color-ink)]">
+                        {link.articleTitle ?? 'Vinculo sem titulo visivel'}
+                      </p>
+                    </div>
+                  ))
+                )}
+                <p className="text-[10px] leading-5 text-[color:var(--color-muted)]">
+                  {publicKnowledgeSuggestions.length > 0
+                    ? `${publicKnowledgeSuggestions.length} sugestao(oes) publicas disponiveis.`
+                    : 'Nenhuma sugestao publica pronta no momento.'}
+                </p>
+              </div>
+            </section>
+
+            <section className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_8px_16px_rgba(19,33,79,0.06)]">
+              <h4 className="text-[13px] font-semibold tracking-[-0.02em] text-[color:var(--color-ink)]">
+                Atividade recente
+              </h4>
+              <div className="mt-1.5">
+                <SupportRecentActivity window={timelineWindow} />
+              </div>
+            </section>
+          </aside>
         </div>
       )}
     </div>
