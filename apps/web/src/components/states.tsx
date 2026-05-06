@@ -74,14 +74,14 @@ interface LoadingStateProps {
 }
 
 export function LoadingState({
-  title = 'Preparando a tela',
-  description = 'Estamos organizando os dados desta area para liberar a proxima etapa da operacao.',
+  title = 'Carregando',
+  description = 'Estamos preparando os dados desta área.',
 }: LoadingStateProps) {
   return (
     <StateFrame
       title={title}
       description={description}
-      eyebrow="loading"
+      eyebrow="Carregando"
       actions={
         <div className="inline-flex items-center gap-3 rounded-full border border-[color:var(--color-border)] bg-white/90 px-4 py-2 text-sm text-[color:var(--color-ink)]">
           <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[color:var(--color-brand-blue)]" />
@@ -103,7 +103,7 @@ export function EmptyState({ title, description, action }: EmptyStateProps) {
     <StateFrame
       title={title}
       description={description}
-      eyebrow="vazio"
+      eyebrow="Sem dados"
       compact
       actions={action}
     />
@@ -117,7 +117,7 @@ interface ErrorStateProps {
 }
 
 export function ErrorState({
-  title = 'Nao foi possivel carregar esta area',
+  title = 'Não foi possível carregar esta área',
   description,
   action,
 }: ErrorStateProps) {
@@ -125,7 +125,7 @@ export function ErrorState({
     <StateFrame
       title={title}
       description={description}
-      eyebrow="erro"
+      eyebrow="Erro"
       tone="critical"
       actions={action}
     />
@@ -139,7 +139,7 @@ interface AccessDeniedStateProps {
 }
 
 export function AccessDeniedState({
-  title = 'Acesso nao autorizado',
+  title = 'Acesso não autorizado',
   description,
   action,
 }: AccessDeniedStateProps) {
@@ -147,7 +147,7 @@ export function AccessDeniedState({
     <StateFrame
       title={title}
       description={description}
-      eyebrow="permissao"
+      eyebrow="Permissão"
       tone="critical"
       actions={action}
     />
@@ -165,9 +165,9 @@ export function ContractUnavailableState({
 }: ContractUnavailableStateProps) {
   return (
     <StateFrame
-      title="Recurso indisponivel"
-      description={`Esta area depende de ${contractName}, mas esse recurso nao esta disponivel neste ambiente agora.`}
-      eyebrow="indisponivel"
+      title="Recurso indisponível"
+      description={`Este recurso não está disponível agora: ${contractName}.`}
+      eyebrow="Indisponível"
       actions={action}
     />
   );
@@ -180,9 +180,9 @@ interface SessionExpiredStateProps {
 export function SessionExpiredState({ action }: SessionExpiredStateProps) {
   return (
     <StateFrame
-      title="Sessao expirada"
-      description="Sua sessao perdeu validade durante a operacao. Entre novamente para continuar no workspace."
-      eyebrow="auth"
+      title="Sessão expirada"
+      description="Sua sessão expirou. Entre novamente para continuar."
+      eyebrow="Sessão"
       tone="critical"
       actions={action}
     />

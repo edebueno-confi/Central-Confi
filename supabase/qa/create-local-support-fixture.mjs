@@ -46,17 +46,17 @@ const FIXTURE = {
       legalName: 'Support QA Tenant A Ltda',
       displayName: 'Support QA Tenant A',
       contact: {
-        fullName: 'Marina Operacoes QA',
+        fullName: 'Marina Operações QA',
         email: 'marina.ops@support-qa-a.local',
         phone: '+55 11 91000-0001',
-        jobTitle: 'Coordenacao de Operacoes',
+        jobTitle: 'Coordenação de Operações',
       },
       customerAccount: {
         productLine: 'genius_returns',
         operationalStatus: 'active',
         accountTier: 'enterprise',
         internalNotes:
-          'Conta com acompanhamento operacional proximo e fluxo sensivel de devolucoes.',
+          'Conta com acompanhamento operacional proximo e fluxo sensivel de devoluções.',
         operationalFlags: {
           high_touch_account: true,
           custom_operational_flow: true,
@@ -68,14 +68,14 @@ const FIXTURE = {
             provider: 'totvs',
             status: 'active',
             environment: 'production',
-            notes: 'Integra pedidos, devolucoes e conciliacao financeira do tenant.',
+            notes: 'Integra pedidos, devoluções e conciliação financeira do tenant.',
           },
           {
             integrationType: 'carrier',
             provider: 'correios',
             status: 'active',
             environment: 'production',
-            notes: 'Operacao principal de coleta e tracking contratada pelo tenant.',
+            notes: 'Operação principal de coleta e tracking contratada pelo tenant.',
           },
         ],
         features: [
@@ -108,7 +108,7 @@ const FIXTURE = {
             severity: 'warning',
             title: 'Janela de ERP reduzida',
             description:
-              'Evitar respostas conclusivas fora da janela homologada de sincronizacao do ERP.',
+              'Evitar respostas conclusivas fora da janela homologada de sincronização do ERP.',
           },
         ],
       },
@@ -118,10 +118,10 @@ const FIXTURE = {
       legalName: 'Support QA Tenant B Ltda',
       displayName: 'Support QA Tenant B',
       contact: {
-        fullName: 'Rafael Integracoes QA',
+        fullName: 'Rafael Integrações QA',
         email: 'rafael.integracoes@support-qa-b.local',
         phone: '+55 11 91000-0002',
-        jobTitle: 'Analista de Integracoes',
+        jobTitle: 'Analista de Integrações',
       },
       customerAccount: {
         productLine: 'after_sale',
@@ -151,12 +151,12 @@ const FIXTURE = {
         ],
         customizations: [
           {
-            title: 'Motivo customizado de homologacao',
+            title: 'Motivo customizado de homologação',
             description:
               'Tenant B depende de motivo especial durante ajustes de onboarding estendido.',
             riskLevel: 'medium',
             operationalNote:
-              'Se o ticket tocar homologacao, responder com cautela e revisar a regra ativa.',
+              'Se o ticket tocar homologação, responder com cautela e revisar a regra ativa.',
             status: 'active',
           },
         ],
@@ -174,32 +174,32 @@ const FIXTURE = {
   tickets: [
     {
       tenantSlug: 'support-qa-a',
-      title: 'QA Support | Conciliacao de devolucoes com atraso',
+      title: 'QA Support | Conciliacao de devoluções com atraso',
       description:
-        'Cliente B2B reporta atraso na conciliacao das devolucoes aprovadas na plataforma.',
+        'Cliente B2B reporta atraso na conciliação das devoluções aprovadas na plataforma.',
       priority: 'high',
       severity: 'medium',
       source: 'portal',
       assignee: 'support-agent-a',
       status: 'in_progress',
       publicMessage:
-        'Recebemos o caso e estamos validando a trilha operacional da conciliacao.',
+        'Recebemos o caso e estamos validando a trilha operacional da conciliação.',
       internalNote:
-        'Validar lote de conciliacao, janela de sincronizacao e discrepancias por tenant.',
+        'Validar lote de conciliação, janela de sincronização e discrepâncias por cliente.',
       extraTimelineEntries: 18,
     },
     {
       tenantSlug: 'support-qa-a',
-      title: 'QA Support | Webhook sem retorno na integracao ERP',
+      title: 'QA Support | Webhook sem retorno na integração ERP',
       description:
-        'Tenant tecnico informa que o webhook de atualizacao de status nao retornou confirmacao.',
+        'O cliente informa que o webhook de atualização de status não retornou confirmação.',
       priority: 'urgent',
       severity: 'critical',
       source: 'api',
       assignee: null,
       status: 'waiting_engineering',
       publicMessage:
-        'Registramos o incidente e escalamos a validacao tecnica do endpoint informado.',
+        'Registramos o incidente e escalamos a validação técnica do endpoint informado.',
       internalNote:
         'Conferir timeout, retries e eventuais bloqueios no endpoint do tenant.',
     },
@@ -207,14 +207,14 @@ const FIXTURE = {
       tenantSlug: 'support-qa-a',
       title: 'QA Support | Etiqueta sem baixa automatica',
       description:
-        'Equipe operacional relata que etiquetas expedidas nao estao baixando automaticamente no tenant.',
+        'A equipe operacional relata que etiquetas expedidas não estão baixando automaticamente no cliente.',
       priority: 'high',
       severity: 'medium',
       source: 'email',
       assignee: 'support-manager-a',
       status: 'triage',
       publicMessage:
-        'Iniciamos a triagem do fluxo logistico e vamos retornar com o proximo passo.',
+        'Iniciamos a triagem do fluxo logístico e vamos retornar com o próximo passo.',
       internalNote:
         'Cruzar webhook da transportadora com o reconciliador interno antes de responder.',
     },
@@ -222,22 +222,22 @@ const FIXTURE = {
       tenantSlug: 'support-qa-a',
       title: 'QA Support | Painel de SLA interno desalinhado',
       description:
-        'CS percebeu divergencia entre a fila interna e a expectativa contratual do cliente.',
+        'O time percebeu divergência entre a fila interna e a expectativa contratual do cliente.',
       priority: 'normal',
       severity: 'low',
       source: 'internal',
       assignee: null,
       status: 'waiting_customer',
       publicMessage:
-        'Pedimos confirmacao do horario de corte aplicado pelo cliente para revisar a fila.',
+        'Pedimos confirmação do horário de corte aplicado pelo cliente para revisar a fila.',
       internalNote:
-        'Nao tratar como SLA de produto ainda; so validar entendimento operacional.',
+        'Não tratar como SLA de produto ainda; apenas validar o entendimento operacional.',
     },
     {
       tenantSlug: 'support-qa-a',
       title: 'QA Support | Reenvio de coleta sem tracking',
       description:
-        'Operacao informou reenvio sem numero de rastreio disponivel para o tenant.',
+        'A operação informou reenvio sem número de rastreio disponível para o cliente.',
       priority: 'normal',
       severity: 'medium',
       source: 'phone',
@@ -246,13 +246,13 @@ const FIXTURE = {
       publicMessage:
         'Estamos consolidando a trilha do reenvio para responder com status unico.',
       internalNote:
-        'Buscar correlacao entre coleta original e ordem de reenvio no tenant.',
+        'Buscar correlação entre a coleta original e a ordem de reenvio no cliente.',
     },
     {
       tenantSlug: 'support-qa-a',
-      title: 'QA Support | Divergencia na regra de expedicao',
+      title: 'QA Support | Divergência na regra de expedição',
       description:
-        'Fluxo de expedicao apresentou comportamento diferente do combinado no rollout do cliente.',
+        'O fluxo de expedição apresentou comportamento diferente do combinado no rollout do cliente.',
       priority: 'urgent',
       severity: 'high',
       source: 'portal',
@@ -261,52 +261,52 @@ const FIXTURE = {
       publicMessage:
         'Caso priorizado pelo suporte. Estamos revisando a regra operacional aplicada.',
       internalNote:
-        'Comparar tenant settings atuais com a baseline de implantacao aprovada.',
+        'Comparar as configurações atuais do cliente com a baseline de implantação aprovada.',
     },
     {
       tenantSlug: 'support-qa-a',
-      title: 'QA Support | Ajuste de motivo pendente em homologacao',
+      title: 'QA Support | Ajuste de motivo pendente em homologação',
       description:
-        'Mudanca de motivo ainda pendente de aprovacao final do cliente em homologacao.',
+        'Mudança de motivo ainda pendente de aprovação final do cliente em homologação.',
       priority: 'low',
       severity: 'low',
       source: 'internal',
       assignee: null,
       status: 'new',
       publicMessage:
-        'Ticket aberto para acompanhar a aprovacao final antes de aplicar a configuracao.',
+        'Ticket aberto para acompanhar a aprovação final antes de aplicar a configuração.',
       internalNote:
-        'Sem acao tecnica agora. Aguardar sinal de CS.',
+        'Sem ação técnica agora. Aguarde o retorno do time responsável.',
     },
     {
       tenantSlug: 'support-qa-b',
-      title: 'QA Support | Divergencia de tracking em tenant B',
+      title: 'QA Support | Divergência de tracking em cliente B',
       description:
-        'Tenant B reportou divergencia pontual entre tracking externo e status refletido no app.',
+        'O cliente B reportou divergência pontual entre o tracking externo e o status refletido no app.',
       priority: 'high',
       severity: 'medium',
       source: 'api',
       assignee: 'support-agent-b',
       status: 'triage',
       publicMessage:
-        'Estamos verificando a divergencia do evento de tracking informado.',
+        'Estamos verificando a divergência do evento de tracking informado.',
       internalNote:
-        'Conferir payload do tenant B e cronologia dos eventos recebidos.',
+        'Conferir o payload do cliente B e a cronologia dos eventos recebidos.',
     },
     {
       tenantSlug: 'support-qa-b',
       title: 'QA Support | Regra de motivo precisa de ajuste',
       description:
-        'CS pediu orientacao para uma regra de motivo que deixou de refletir a politica atual do cliente.',
+        'O time pediu orientação para uma regra de motivo que deixou de refletir a política atual do cliente.',
       priority: 'normal',
       severity: 'low',
       source: 'internal',
       assignee: 'support-manager-a',
       status: 'waiting_customer',
       publicMessage:
-        'Solicitamos a confirmacao do novo criterio operacional para concluir a configuracao.',
+        'Solicitamos a confirmação do novo critério operacional para concluir a configuração.',
       internalNote:
-        'Aguardando retorno do cliente com o mapeamento final dos motivos aprovados.',
+        'Aguardando o retorno do cliente com o mapeamento final dos motivos aprovados.',
     },
   ],
   knowledgeBase: {
@@ -330,7 +330,7 @@ const FIXTURE = {
       {
         tenantSlug: 'support-qa-a',
         categorySlug: 'support-interno-tenant-a',
-        title: 'ERP: diagnostico interno de webhook',
+        title: 'ERP: diagnóstico interno de webhook',
         slug: 'erp-diagnostico-interno-webhook',
         summary: 'Passo a passo interno para diagnosticar timeouts e retries do webhook.',
         bodyMd:
@@ -340,37 +340,37 @@ const FIXTURE = {
       {
         tenantSlug: 'support-qa-a',
         categorySlug: 'support-restrito-tenant-a',
-        title: 'ERP: observacoes restritas do rollout',
+        title: 'ERP: observações restritas do rollout',
         slug: 'erp-observacoes-restritas-rollout',
-        summary: 'Anotacoes restritas do rollout do tenant A.',
+        summary: 'Anotações restritas do rollout do cliente A.',
         bodyMd:
-          'Conteudo restrito da operacao. Nao compartilhar com cliente final nem replicar em area publica.',
+          'Conteúdo restrito da operação. Não compartilhar com o cliente nem replicar em área pública.',
         visibility: 'restricted',
       },
     ],
     links: [
       {
-        ticketTitle: 'QA Support | Webhook sem retorno na integracao ERP',
+        ticketTitle: 'QA Support | Webhook sem retorno na integração ERP',
         ticketTenantSlug: 'support-qa-a',
         actorKey: 'support-manager-a',
         linkType: 'sent_to_customer',
         articleSlug: 'checklist-de-integracao-erp-webhook',
-        note: 'Artigo publico oficial preparado para orientar o cliente sobre a validacao inicial.',
+        note: 'Artigo público oficial preparado para orientar o cliente sobre a validação inicial.',
       },
       {
-        ticketTitle: 'QA Support | Webhook sem retorno na integracao ERP',
+        ticketTitle: 'QA Support | Webhook sem retorno na integração ERP',
         ticketTenantSlug: 'support-qa-a',
         actorKey: 'support-manager-a',
         linkType: 'reference_internal',
         articleSlug: 'erp-diagnostico-interno-webhook',
-        note: 'Referencia interna para diagnostico antes de responder o cliente.',
+        note: 'Referência interna para diagnóstico antes de responder o cliente.',
       },
       {
-        ticketTitle: 'QA Support | Divergencia na regra de expedicao',
+        ticketTitle: 'QA Support | Divergência na regra de expedição',
         ticketTenantSlug: 'support-qa-a',
         actorKey: 'support-manager-a',
         linkType: 'documentation_gap',
-        note: 'Falta uma pagina dedicada explicando a divergencia de expedicao aprovada no rollout.',
+        note: 'Falta uma página dedicada explicando a divergência de expedição aprovada no rollout.',
       },
     ],
   },
@@ -381,188 +381,188 @@ const FIXTURE = {
         name: 'Primeiros passos',
         slug: 'primeiros-passos',
         description:
-          'Orientacoes iniciais para equipes B2B que operam a Central Genius no dia a dia.',
+          'Orientações iniciais para equipes B2B que operam a Central Genius no dia a dia.',
         visibility: 'public',
       },
       {
-        name: 'Operacao de reversa',
+        name: 'Operação de reversa',
         slug: 'operacao-de-reversa',
         description:
-          'Guias objetivos para acompanhar solicitacoes, etapas e status da logistica reversa.',
+          'Guias objetivos para acompanhar solicitações, etapas e status da logística reversa.',
         visibility: 'public',
       },
       {
-        name: 'Integracoes',
+        name: 'Integrações',
         slug: 'integracoes',
         description:
-          'Checklists publicos para validar ERP, webhook e pontos criticos de integracao.',
+          'Checklists públicos para validar ERP, webhook e pontos críticos de integração.',
         visibility: 'public',
       },
       {
-        name: 'Suporte tecnico',
+        name: 'Suporte técnico',
         slug: 'suporte-tecnico',
         description:
-          'Boas praticas para abrir tickets, compartilhar evidencias e acelerar o suporte.',
+          'Boas práticas para abrir tickets, compartilhar evidências e acelerar o suporte.',
         visibility: 'public',
       },
     ],
     articles: [
       {
-        title: 'Visao geral da Central Genius',
+        title: 'Visão geral da Central Genius',
         slug: 'visao-geral-da-central-genius',
         categorySlug: 'primeiros-passos',
         summary:
-          'Resumo operacional do que a Central Genius concentra e quando consultar cada orientacao publica.',
-        bodyMd: `# Visao geral da Central Genius
+          'Resumo operacional do que a Central Genius concentra e quando consultar cada orientação pública.',
+        bodyMd: `# Visão geral da Central Genius
 
-A Central Genius reune orientacoes publicas para operacoes B2B que usam Genius Returns e Central Genius no atendimento diario.
+A Central Genius reúne orientações públicas para operações B2B que usam Genius Returns e Central Genius no atendimento diário.
 
-## O que voce encontra aqui
+## O que você encontra aqui
 
-- artigos publicados para operacao de troca e devolucao
-- checklists de integracao que podem ser compartilhados com times do cliente
-- orientacoes praticas para abrir tickets com contexto suficiente
+- artigos publicados para operação de troca e devolução
+- checklists de integração que podem ser compartilhados com times do cliente
+- orientações práticas para abrir tickets com contexto suficiente
 
 ## Quando consultar a Central
 
-Consulte a Central antes de abrir um chamado novo, quando precisar alinhar um procedimento com outro time ou quando quiser compartilhar uma referencia publica com o cliente.
+Consulte a Central antes de abrir um chamado novo, quando precisar alinhar um procedimento com outro time ou quando quiser compartilhar uma referência pública com o cliente.
 
-## O que nao entra na Central publica
+## O que não entra na Central pública
 
-Nao entram detalhes internos de engenharia, credenciais, configuracoes restritas ou anotacoes operacionais exclusivas do suporte.
+Não entram detalhes internos de engenharia, credenciais, configurações restritas ou anotações operacionais exclusivas do suporte.
 `,
       },
       {
-        title: 'Como acompanhar solicitacoes de troca e devolucao',
+        title: 'Como acompanhar solicitações de troca e devolução',
         slug: 'acompanhar-solicitacoes-de-troca-e-devolucao',
         categorySlug: 'operacao-de-reversa',
         summary:
-          'Passo a passo para acompanhar uma solicitacao e alinhar expectativa com operacao, CS e cliente.',
-        bodyMd: `# Como acompanhar solicitacoes de troca e devolucao
+          'Passo a passo para acompanhar uma solicitação e alinhar expectativa com operação, CS e cliente.',
+        bodyMd: `# Como acompanhar solicitações de troca e devolução
 
-Use este roteiro para acompanhar a evolucao de uma solicitacao sem perder contexto entre atendimento, operacao e cliente.
+Use este roteiro para acompanhar a evolução de uma solicitação sem perder contexto entre atendimento, operação e cliente.
 
-## 1. Confirme os dados basicos
+## 1. Confirme os dados básicos
 
-- numero da solicitacao
+- número da solicitação
 - canal de abertura
-- cliente responsavel pelo acompanhamento
+- cliente responsável pelo acompanhamento
 
-## 2. Revise a ultima atualizacao valida
+## 2. Revise a última atualização válida
 
-Antes de responder, confira a ultima movimentacao registrada e valide se ainda representa a etapa atual do processo.
+Antes de responder, confira a última movimentação registrada e valide se ainda representa a etapa atual do processo.
 
-## 3. Alinhe o proximo passo
+## 3. Alinhe o próximo passo
 
-Explique sempre qual e a proxima acao esperada: coleta, analise, transporte, confirmacao do recebimento ou retorno do financeiro.
+Explique sempre qual é a próxima ação esperada: coleta, análise, transporte, confirmação do recebimento ou retorno do financeiro.
 
-## 4. Registre evidencias objetivas
+## 4. Registre evidências objetivas
 
-Quando houver atraso ou divergencia, compartilhe numero do pedido, identificador da solicitacao e uma descricao curta do impacto operacional.
+Quando houver atraso ou divergência, compartilhe número do pedido, identificador da solicitação e uma descrição curta do impacto operacional.
 `,
       },
       {
-        title: 'Como interpretar status da logistica reversa',
+        title: 'Como interpretar status da logística reversa',
         slug: 'interpretar-status-da-logistica-reversa',
         categorySlug: 'operacao-de-reversa',
         summary:
-          'Leitura pratica dos principais status para evitar resposta ambigua durante o acompanhamento do retorno.',
-        bodyMd: `# Como interpretar status da logistica reversa
+          'Leitura prática dos principais status para evitar resposta ambígua durante o acompanhamento do retorno.',
+        bodyMd: `# Como interpretar status da logística reversa
 
-Os status da logistica reversa servem para orientar a tratativa e evitar respostas prematuras ao cliente.
+Os status da logística reversa servem para orientar a tratativa e evitar respostas prematuras ao cliente.
 
-## Status que costumam exigir atencao
+## Status que costumam exigir atenção
 
-- solicitacao recebida: a abertura foi registrada e aguarda a proxima etapa operacional
+- solicitação recebida: a abertura foi registrada e aguarda a próxima etapa operacional
 - coleta em andamento: existe tratativa ativa para retirada ou postagem
-- material em transito: o retorno esta no fluxo logistico e depende de atualizacao externa
-- analise concluida: a etapa operacional principal terminou e a proxima decisao pode seguir
+- material em trânsito: o retorno está no fluxo logístico e depende de atualização externa
+- análise concluída: a etapa operacional principal terminou e a próxima decisão pode seguir
 
 ## Como responder melhor
 
-Use o status como ponto de partida, mas complemente com a ultima acao confirmada e o proximo passo previsto.
+Use o status como ponto de partida, mas complemente com a última ação confirmada e o próximo passo previsto.
 
 ## Quando escalar
 
-Escalone quando o status ficar parado alem da janela operacional combinada ou quando a etapa atual nao refletir o ocorrido no campo.
+Escalone quando o status ficar parado além da janela operacional combinada ou quando a etapa atual não refletir o ocorrido no campo.
 `,
       },
       {
-        title: 'Checklist de integracao ERP e webhook',
+        title: 'Checklist de integração ERP e webhook',
         slug: 'checklist-de-integracao-erp-webhook',
         categorySlug: 'integracoes',
         summary:
-          'Checklist publico para validar configuracoes minimas e reduzir retrabalho em incidentes de integracao.',
-        bodyMd: `# Checklist de integracao ERP e webhook
+          'Checklist público para validar configurações mínimas e reduzir retrabalho em incidentes de integração.',
+        bodyMd: `# Checklist de integração ERP e webhook
 
-Antes de escalar um incidente de integracao, percorra este checklist com o time responsavel.
+Antes de escalar um incidente de integração, percorra este checklist com o time responsável.
 
-## Validacoes iniciais
+## Validações iniciais
 
 - confirmar a URL configurada para recebimento
-- validar se o ambiente certo esta em uso
-- revisar o ultimo evento recebido com data e horario
+- validar se o ambiente certo está em uso
+- revisar o último evento recebido com data e horário
 
-## Confirmacoes recomendadas
+## Confirmações recomendadas
 
 - o time do ERP recebeu o retorno esperado
-- nao houve mudanca recente de endpoint sem alinhamento
-- o identificador usado na conciliacao continua valido
+- não houve mudança recente de endpoint sem alinhamento
+- o identificador usado na conciliação continua válido
 
 ## O que compartilhar no ticket
 
-Inclua o horario do ultimo evento, o identificador afetado e a descricao objetiva do que deixou de acontecer.
+Inclua o horário do último evento, o identificador afetado e a descrição objetiva do que deixou de acontecer.
 `,
       },
       {
-        title: 'Boas praticas antes de acionar suporte',
+        title: 'Boas práticas antes de acionar suporte',
         slug: 'boas-praticas-antes-de-acionar-suporte',
         categorySlug: 'suporte-tecnico',
         summary:
-          'Checklist curto para abrir chamados com contexto suficiente e acelerar a analise do suporte.',
-        bodyMd: `# Boas praticas antes de acionar suporte
+          'Checklist curto para abrir chamados com contexto suficiente e acelerar a análise do suporte.',
+        bodyMd: `# Boas práticas antes de acionar suporte
 
-Um chamado bem contextualizado reduz o tempo de triagem e evita trocas desnecessarias.
+Um chamado bem contextualizado reduz o tempo de triagem e evita trocas desnecessárias.
 
-## Reuna estas informacoes
+## Reúna estas informações
 
-- tenant ou operacao impactada
-- identificador da solicitacao, pedido ou coleta
-- horario aproximado da ocorrencia
+- cliente ou operação impactada
+- identificador da solicitação, pedido ou coleta
+- horário aproximado da ocorrência
 - impacto operacional percebido
 
 ## Descreva o comportamento observado
 
 Explique o que deveria acontecer, o que aconteceu de fato e desde quando o desvio foi percebido.
 
-## Anexe apenas o necessario
+## Anexe apenas o necessário
 
-Prefira prints, planilhas ou logs exportados que ajudem a reproduzir o contexto sem expor dados sensiveis de outras operacoes.
+Prefira prints, planilhas ou relatórios exportados que ajudem a reproduzir o contexto sem expor dados sensíveis de outras operações.
 `,
       },
       {
-        title: 'Como compartilhar evidencias em um ticket',
+        title: 'Como compartilhar evidências em um ticket',
         slug: 'como-compartilhar-evidencias-em-um-ticket',
         categorySlug: 'suporte-tecnico',
         summary:
-          'Orientacoes objetivas para anexar evidencias uteis sem ruir a leitura do ticket.',
-        bodyMd: `# Como compartilhar evidencias em um ticket
+          'Orientações objetivas para anexar evidências úteis sem prejudicar a leitura do ticket.',
+        bodyMd: `# Como compartilhar evidências em um ticket
 
-Evidencia boa e aquela que ajuda o suporte a entender o contexto sem depender de suposicoes.
+Evidência boa é aquela que ajuda o suporte a entender o contexto sem depender de suposições.
 
-## Priorize evidencias objetivas
+## Priorize evidências objetivas
 
-- print da tela com o horario visivel
-- identificador da solicitacao ou pedido
+- print da tela com o horário visível
+- identificador da solicitação ou pedido
 - arquivo exportado com os registros relacionados
 
-## Organize a descricao
+## Organize a descrição
 
-Ao anexar, diga em uma linha o que o material comprova e em que ponto da operacao ele foi capturado.
+Ao anexar, diga em uma linha o que o material comprova e em que ponto da operação ele foi capturado.
 
 ## Evite anexos sem contexto
 
-Arquivos soltos ou capturas sem explicacao atrasam a triagem porque exigem nova rodada de perguntas.
+Arquivos soltos ou capturas sem explicação atrasam a triagem porque exigem nova rodada de perguntas.
 `,
       },
     ],
@@ -1941,7 +1941,7 @@ function createSupportTicket({ actorUserId, tenantId, contactId, ticket }) {
     const body =
       visibility === 'internal'
         ? `Nota interna extra ${index} para validar continuidade operacional do ticket.`
-        : `Atualizacao publica extra ${index} para manter o cliente alinhado sobre a tratativa.`;
+        : `Atualização pública extra ${index} para manter o cliente alinhado sobre a tratativa.`;
 
     const extraMessage = runSupabaseDbQuery(`
       insert into public.ticket_messages (
@@ -2024,7 +2024,7 @@ async function ensurePublicHelpCenterFixture(authorSession) {
       ),
       jsonb_build_object(
         'title', 'Genius Returns Help Center',
-        'description', 'Documentacao tecnica oficial para operacao B2B.',
+        'description', 'Documentação oficial para operação B2B.',
         'imageUrl', 'https://cdn.example.com/help-center-og.png'
       ),
       jsonb_build_object(

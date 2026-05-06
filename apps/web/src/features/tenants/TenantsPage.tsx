@@ -197,7 +197,7 @@ export function TenantsPage() {
       if (!detail) {
         setTenantDetail(null);
         setDetailPhase('error');
-      setDetailMessage('Nao foi possivel abrir o detalhe do cliente selecionado.');
+      setDetailMessage('Não foi possível abrir o detalhe do cliente selecionado.');
         return;
       }
 
@@ -422,7 +422,7 @@ export function TenantsPage() {
   }
 
   if (phase === 'loading') {
-    return <LoadingState title="Carregando tenants" />;
+    return <LoadingState title="Carregando clientes" />;
   }
 
   if (phase === 'contract-unavailable') {
@@ -435,7 +435,7 @@ export function TenantsPage() {
     return (
         <ErrorState
           description={
-            pageMessage ?? 'Nao foi possivel carregar a base de clientes nesta area.'
+            pageMessage ?? 'Não foi possível carregar a base de clientes nesta área.'
           }
         action={<AppButton onClick={() => void loadTenants()}>Tentar novamente</AppButton>}
       />
@@ -448,7 +448,7 @@ export function TenantsPage() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
-              <StatusPill tone="accent">Tenants</StatusPill>
+              <StatusPill tone="accent">Clientes</StatusPill>
               <StatusPill>Base operacional</StatusPill>
             </div>
             <div className="space-y-1">
@@ -462,7 +462,7 @@ export function TenantsPage() {
           </div>
 
           <AppButton onClick={() => setShowCreateTenant((current) => !current)}>
-            {showCreateTenant ? 'Fechar criacao' : 'Criar tenant'}
+            {showCreateTenant ? 'Fechar criação' : 'Criar cliente'}
           </AppButton>
         </div>
       </section>
@@ -471,17 +471,17 @@ export function TenantsPage() {
         layoutClassName="xl:grid-cols-[292px_minmax(0,1fr)]"
         sidebar={
           <ContextSubsidebar
-            description="Filtros, indicadores e criacao do cliente ficam fora da area principal para manter lista e detalhe mais utilizaveis."
-            title="Ferramentas de tenants"
+            description="Filtros, indicadores e criação do cliente ficam fora da área principal para manter lista e detalhe mais utilizáveis."
+            title="Ferramentas de clientes"
           >
             <ContextSubsidebarSection
-              description="Pulso rapido da base atual."
+              description="Pulso rápido da base atual."
               title="Resumo"
             >
               <SummaryStrip className="border-0 bg-transparent px-0 py-0 shadow-none">
-                <SummaryStripItem helper="base atual" label="Tenants" value={String(totalTenants)} />
-                <SummaryStripItem helper="em operacao" label="Ativos" tone="positive" value={String(activeTenants)} />
-                <SummaryStripItem helper="pedem atencao" label="Suspensos" tone="warning" value={String(suspendedTenants)} />
+                <SummaryStripItem helper="base atual" label="Clientes" value={String(totalTenants)} />
+                <SummaryStripItem helper="em operação" label="Ativos" tone="positive" value={String(activeTenants)} />
+                <SummaryStripItem helper="pedem atenção" label="Suspensos" tone="warning" value={String(suspendedTenants)} />
                 <SummaryStripItem helper="prontos para contato" label="Contatos ativos" value={String(totalContacts)} />
               </SummaryStrip>
             </ContextSubsidebarSection>
@@ -490,10 +490,10 @@ export function TenantsPage() {
               description="Localize o cliente sem ocupar o cabecalho da lista."
               title="Busca e atalhos"
             >
-              <Field label="Buscar tenant">
+              <Field label="Buscar cliente">
                 <TextInput
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Buscar por nome, slug ou contato primario"
+                  placeholder="Buscar por nome, slug ou contato primário"
                   value={query}
                 />
               </Field>
@@ -501,7 +501,7 @@ export function TenantsPage() {
                 Recarregar
               </GhostButton>
               <AppButton className="min-h-11 w-full px-4" onClick={() => setShowCreateTenant((current) => !current)}>
-                {showCreateTenant ? 'Fechar criacao' : 'Criar tenant'}
+                {showCreateTenant ? 'Fechar criação' : 'Criar cliente'}
               </AppButton>
             </ContextSubsidebarSection>
           </ContextSubsidebar>
@@ -510,8 +510,8 @@ export function TenantsPage() {
           <div className="space-y-6">
           {showCreateTenant ? (
             <Panel
-              title="Criar tenant"
-              description="Abra um novo cliente operacional com nome, identificador e regiao de dados."
+              title="Criar cliente"
+              description="Abra um novo cliente operacional com nome, identificador e região de dados."
             >
               <form className="grid gap-4 md:grid-cols-2" onSubmit={handleCreateTenant}>
                 <Field label="Slug">
@@ -527,7 +527,7 @@ export function TenantsPage() {
                     value={tenantForm.slug}
                   />
                 </Field>
-                <Field label="Regiao de dados">
+                <Field label="Região de dados">
                   <TextInput
                     onChange={(event) =>
                       setTenantForm((current) => ({
@@ -540,7 +540,7 @@ export function TenantsPage() {
                     value={tenantForm.dataRegion}
                   />
                 </Field>
-                <Field label="Razao social">
+                <Field label="Razão social">
                   <TextInput
                     onChange={(event) =>
                       setTenantForm((current) => ({
@@ -575,7 +575,7 @@ export function TenantsPage() {
 
                 <div className="flex flex-wrap gap-3 md:col-span-2">
                   <AppButton disabled={tenantFormSubmitting} type="submit">
-                    {tenantFormSubmitting ? 'Criando...' : 'Criar tenant'}
+                    {tenantFormSubmitting ? 'Criando...' : 'Criar cliente'}
                   </AppButton>
                   <GhostButton
                     disabled={tenantFormSubmitting}
@@ -592,17 +592,17 @@ export function TenantsPage() {
           ) : null}
 
           <Panel
-            title="Base de tenants"
-            description="Lista principal para localizar o cliente, conferir o estado atual e abrir o contexto operacional do tenant selecionado."
+            title="Base de clientes"
+            description="Lista principal para localizar o cliente, conferir o estado atual e abrir o contexto operacional do item selecionado."
           >
             {tenants.length === 0 ? (
               <EmptyState
-                title="Nenhum tenant cadastrado"
-                description="Ainda nao existe cliente operacional disponivel nesta area."
+                title="Nenhum cliente cadastrado"
+                description="Ainda não existe cliente operacional disponível nesta área."
               />
             ) : filteredTenants.length === 0 ? (
               <EmptyState
-                title="Nenhum tenant bateu com o filtro"
+                title="Nenhum cliente encontrado com esse filtro"
                 description="Ajuste o termo de busca para recuperar um tenant ja existente."
               />
             ) : (
@@ -665,7 +665,7 @@ export function TenantsPage() {
                 <ContractUnavailableState contractName="detalhe do cliente" />
             ) : detailPhase === 'error' || !tenantDetail || !selectedTenantSummary ? (
               <ErrorState
-                description={detailMessage ?? 'O detalhe do tenant nao ficou disponivel.'}
+                description={detailMessage ?? 'O detalhe do cliente não ficou disponível.'}
               />
             ) : (
               <div className="space-y-5">
@@ -737,7 +737,7 @@ export function TenantsPage() {
 
           <Panel
             title="Contatos vinculados"
-            description="Pessoas de referencia para operacao, suporte e acompanhamento do cliente."
+            description="Pessoas de referência para operação, suporte e acompanhamento do cliente."
           >
             {!tenantDetail ? (
               <EmptyState
@@ -784,7 +784,7 @@ export function TenantsPage() {
                             {contact.linked_user_id ? (
                               <details className="pt-1 text-xs text-[color:var(--color-muted)]">
                                 <summary className="cursor-pointer font-medium">
-                                  Informacoes avancadas
+                                  Informações avançadas
                                 </summary>
                                 <p className="mt-2 break-all">Vinculo interno: {contact.linked_user_id}</p>
                               </details>
@@ -876,7 +876,7 @@ export function TenantsPage() {
 
                   <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
                     <summary className="cursor-pointer text-sm font-medium text-[color:var(--color-ink)]">
-                      Informacoes avancadas
+                      Informações avançadas
                     </summary>
                     <div className="mt-3">
                       <Field
@@ -909,7 +909,7 @@ export function TenantsPage() {
                         }
                         type="checkbox"
                       />
-                      Contato primario
+                      Contato primário
                     </label>
 
                     <label className="flex items-center gap-3 rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 text-sm text-[color:var(--color-ink)]">

@@ -90,11 +90,11 @@ function toneForSystemSeverity(severity: SystemSeverity) {
 
 function humanizeSystemSeverity(severity: SystemSeverity) {
   if (severity === 'critical') {
-    return 'Critico';
+    return 'Crítico';
   }
 
   if (severity === 'attention') {
-    return 'Atencao';
+    return 'Atenção';
   }
 
   return 'Estavel';
@@ -113,11 +113,11 @@ function buildSystemImpact(entry: AdminAuditFeedRow) {
   const severity = classifySystemSeverity(entry);
 
   if (severity === 'critical') {
-    return 'Esse registro pede verificacao imediata porque altera acesso, arquivo ou mudanca sensivel na operacao.';
+    return 'Esse registro pede verificação imediata porque altera acesso, arquivo ou mudança sensível na operação.';
   }
 
   if (severity === 'attention') {
-    return 'Esse evento merece acompanhamento porque muda configuracao, papel ou etapa editorial com impacto operacional.';
+    return 'Esse evento merece acompanhamento porque muda configuração, papel ou etapa editorial com impacto operacional.';
   }
 
   return 'Registro informativo para rastrear rotina administrativa e manter contexto do control plane.';
@@ -129,9 +129,9 @@ function buildSystemActions(entry: AdminAuditFeedRow) {
 
   if (severity === 'critical') {
     return [
-      'Conferir se a alteracao era esperada pela operacao.',
-      'Revisar o impacto no tenant ou no escopo global antes de seguir.',
-      'Registrar follow-up interno se houver risco de regressao.',
+      'Conferir se a alteração era esperada pela operação.',
+      'Revisar o impacto no cliente ou no escopo geral antes de seguir.',
+      'Registrar acompanhamento interno se houver risco de regressão.',
     ];
   }
 
@@ -139,14 +139,14 @@ function buildSystemActions(entry: AdminAuditFeedRow) {
     return [
       'Validar o papel, status ou convite envolvido.',
       'Confirmar se o acesso refletiu o estado aprovado.',
-      'Escalar apenas se houver incoerencia entre papel e uso esperado.',
+      'Escalar apenas se houver incoerência entre papel e uso esperado.',
     ];
   }
 
   return [
     'Manter o registro como trilha de auditoria.',
-    'Cruzar com eventos relacionados se houver duvida de sequencia.',
-    'Usar o feed para explicar a ultima mudanca operacional.',
+    'Cruzar com eventos relacionados se houver dúvida de sequência.',
+    'Usar o feed para explicar a última mudança operacional.',
   ];
 }
 
@@ -457,7 +457,7 @@ export function SystemPage() {
       <ErrorState
         action={<AppButton onClick={() => void loadSurface()}>Tentar novamente</AppButton>}
         description={
-          pageMessage ?? 'Nao foi possivel carregar o feed administrativo desta area.'
+          pageMessage ?? 'Não foi possível carregar o feed administrativo desta área.'
         }
       />
     );
@@ -469,10 +469,10 @@ export function SystemPage() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-2">
             <h1 className="text-[2.18rem] font-semibold tracking-[-0.06em] text-[color:var(--color-ink)]">
-              System
+              Sistema
             </h1>
             <p className="max-w-3xl text-sm leading-6 text-[color:var(--color-muted)]">
-              Auditoria, saude do sistema e eventos operacionais em uma unica superficie de observabilidade administrativa.
+              Auditoria, saúde do sistema e eventos operacionais em uma única superfície administrativa.
             </p>
           </div>
 
@@ -485,10 +485,10 @@ export function SystemPage() {
 
         <nav className="mt-5 flex flex-wrap gap-2 border-b border-[color:var(--color-border)] pb-2">
           {[
-            { id: 'health', label: 'Saude' },
+            { id: 'health', label: 'Saúde' },
             { id: 'audit', label: 'Auditoria' },
             { id: 'jobs', label: 'Jobs' },
-            { id: 'security', label: 'Seguranca' },
+            { id: 'security', label: 'Segurança' },
           ].map((tab) => (
             <button
               className={cx(
@@ -507,26 +507,26 @@ export function SystemPage() {
         </nav>
 
         <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <SystemMetricCard helper="Eventos com leitura estavel." label="Checks verdes" value={String(checksOkCount)} />
-          <SystemMetricCard helper="Itens que pedem atencao." label="Alertas" value={String(alertCount)} />
-          <SystemMetricCard helper="Ocorrencias nas ultimas 24h." label="Eventos recentes" value={String(recentCount)} />
-          <SystemMetricCard helper="Registros criticos no feed." label="Falhas" value={String(failureCount)} />
+          <SystemMetricCard helper="Eventos com leitura estável." label="Checks verdes" value={String(checksOkCount)} />
+          <SystemMetricCard helper="Itens que pedem atenção." label="Alertas" value={String(alertCount)} />
+          <SystemMetricCard helper="Ocorrências nas últimas 24h." label="Eventos recentes" value={String(recentCount)} />
+          <SystemMetricCard helper="Registros críticos no feed." label="Falhas" value={String(failureCount)} />
         </div>
       </section>
 
       <div className="grid gap-5 xl:grid-cols-[292px_minmax(0,1.24fr)_332px]">
         <aside className="space-y-5">
           <SystemSurfaceCard
-            description="Use listas rapidas e filtros para recortar o feed sem inflar a area central."
+            description="Use listas rápidas e filtros para recortar o feed sem inflar a área central."
             title="Monitoramento"
           >
             <div className="space-y-4">
               <div className="space-y-2">
                 {[
-                  { id: 'health', label: 'Saude geral', helper: `${checksOkCount} checks estaveis` },
+                  { id: 'health', label: 'Saúde geral', helper: `${checksOkCount} checks estáveis` },
                   { id: 'audit', label: 'Auditoria', helper: `${auditFeed.length} eventos carregados` },
-                  { id: 'jobs', label: 'Falhas recentes', helper: `${failureCount} itens criticos` },
-                  { id: 'security', label: 'Seguranca', helper: `${activeMembershipCount} memberships ativas` },
+                  { id: 'jobs', label: 'Falhas recentes', helper: `${failureCount} itens críticos` },
+                  { id: 'security', label: 'Segurança', helper: `${activeMembershipCount} associações ativas` },
                 ].map((item) => (
                   <button
                     className={cx(
@@ -571,7 +571,7 @@ export function SystemPage() {
                   >
                     <option value="all">Todas</option>
                     <option value="ok">Estavel</option>
-                    <option value="attention">Atencao</option>
+                    <option value="attention">Atenção</option>
                     <option value="critical">Critico</option>
                   </SelectInput>
                 </label>
@@ -592,7 +592,7 @@ export function SystemPage() {
                 </label>
 
                 <label className="grid gap-2">
-                  <span className="text-sm font-medium text-[color:var(--color-ink)]">Servico</span>
+                  <span className="text-sm font-medium text-[color:var(--color-ink)]">Serviço</span>
                   <SelectInput onChange={(event) => setServiceFilter(event.target.value)} value={serviceFilter}>
                     <option value="all">Todos</option>
                     {distinctServices.map((service) => (
@@ -607,7 +607,7 @@ export function SystemPage() {
                   <span className="text-sm font-medium text-[color:var(--color-ink)]">Buscar</span>
                   <TextInput
                     onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Buscar por pessoa, cliente ou servico"
+                    placeholder="Buscar por pessoa, cliente ou serviço"
                     value={query}
                   />
                 </label>
@@ -620,16 +620,16 @@ export function SystemPage() {
           </SystemSurfaceCard>
 
           <SystemSurfaceCard
-            description="Pulso atual da operacao administrativa."
-            title="Checks rapidos"
+            description="Pulso atual da operação administrativa."
+            title="Checks rápidos"
           >
             <div className="space-y-3 text-sm leading-6 text-[color:var(--color-muted)]">
               <div className="flex items-center justify-between gap-3 rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
-                <span>Tenants ativos</span>
+                <span>Clientes ativos</span>
                 <span className="font-semibold text-[color:var(--color-ink)]">{activeTenantCount}</span>
               </div>
               <div className="flex items-center justify-between gap-3 rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
-                <span>Tenants em atencao</span>
+                <span>Clientes em atenção</span>
                 <span className="font-semibold text-[color:var(--color-ink)]">{suspendedTenantCount}</span>
               </div>
               <div className="flex items-center justify-between gap-3 rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
@@ -644,7 +644,7 @@ export function SystemPage() {
           <SystemSurfaceCard
             actions={
               <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
-                <span>{filteredFeed.length} itens visiveis</span>
+                <span>{filteredFeed.length} itens visíveis</span>
               </div>
             }
             description="Checks e eventos administrativos para rastrear mudancas, alertas e contexto operacional do control plane."
@@ -652,7 +652,7 @@ export function SystemPage() {
           >
             {auditFeed.length === 0 ? (
               <EmptyState
-                description="Ainda nao existem eventos de auditoria nesta superficie."
+                description="Ainda não existem eventos de auditoria nesta área."
                 title="Sem eventos administrativos"
               />
             ) : filteredFeed.length === 0 ? (
@@ -665,7 +665,7 @@ export function SystemPage() {
                 <div className="hidden grid-cols-[138px_112px_170px_minmax(0,1fr)_148px_122px] gap-3 border-b border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)] lg:grid">
                   <span>Tipo</span>
                   <span>Severidade</span>
-                  <span>Servico</span>
+                  <span>Serviço</span>
                   <span>Mensagem</span>
                   <span>Timestamp</span>
                   <span>Status</span>
@@ -712,7 +712,7 @@ export function SystemPage() {
                           {severity === 'ok'
                             ? 'Monitorado'
                             : severity === 'attention'
-                              ? 'Em observacao'
+                              ? 'Em observação'
                               : 'Escalar'}
                         </div>
                       </button>
@@ -730,7 +730,7 @@ export function SystemPage() {
             title="Detalhe operacional"
           >
             {!selectedEntry ? (
-              <InlineNotice>Nenhum evento ficou disponivel para abrir detalhes neste recorte.</InlineNotice>
+              <InlineNotice>Nenhum evento ficou disponível para abrir detalhes neste recorte.</InlineNotice>
             ) : (
               <div className="space-y-4">
                 <section className="rounded-[24px] bg-[linear-gradient(180deg,#081d4a_0%,#102c6d_100%)] px-4 py-4 text-white shadow-[0_18px_34px_rgba(12,25,66,0.28)]">
@@ -750,7 +750,7 @@ export function SystemPage() {
                       </p>
                     </div>
                     <div className="grid gap-2 text-sm leading-6 text-white/78">
-                      <p>Servico: {humanizeSystemService(selectedEntry.entity_table)}</p>
+                      <p>Serviço: {humanizeSystemService(selectedEntry.entity_table)}</p>
                       <p>Severidade: {humanizeSystemSeverity(selectedSeverity)}</p>
                       <p>Timestamp: {formatDateTime(selectedEntry.occurred_at)}</p>
                     </div>
@@ -771,7 +771,7 @@ export function SystemPage() {
 
                 <SystemSurfaceCard
                   className="border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4 shadow-none"
-                  description="Leitura objetiva para platform admin."
+                  description="Leitura objetiva do impacto atual."
                   title="Impacto"
                 >
                   <p className="text-sm leading-6 text-[color:var(--color-muted)]">
@@ -782,7 +782,7 @@ export function SystemPage() {
                 <SystemSurfaceCard
                   className="border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4 shadow-none"
                   description="Passos sugeridos usando apenas o contexto atual."
-                  title="Acoes recomendadas"
+                  title="Ações recomendadas"
                 >
                   <ul className="space-y-2 text-sm leading-6 text-[color:var(--color-muted)]">
                     {buildSystemActions(selectedEntry).map((item) => (
@@ -826,10 +826,10 @@ export function SystemPage() {
 
                 <details className="rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-4">
                   <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                    Detalhes tecnicos
+                    Detalhes do registro
                   </summary>
                   <div className="mt-3 space-y-3 text-sm leading-6 text-[color:var(--color-muted)]">
-                    <p>Referencia interna: {selectedEntry.entity_id ?? 'Indisponível'}</p>
+                    <p>Referência interna: {selectedEntry.entity_id ?? 'Indisponível'}</p>
                     <p>Metadata resumida: {stringifyJsonPreview(selectedEntry.metadata)}</p>
                     <p>Antes: {stringifyJsonPreview(selectedEntry.before_state)}</p>
                     <p>Depois: {stringifyJsonPreview(selectedEntry.after_state)}</p>

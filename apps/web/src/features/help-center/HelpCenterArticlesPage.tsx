@@ -22,7 +22,7 @@ export function HelpCenterArticlesPage() {
     return (
       <EmptyState
         title="Nenhum artigo publicado"
-        description="Este knowledge space ainda nao possui artigos publicos publicados para a lista geral."
+        description="Esta central ainda não possui artigos públicos publicados para a lista geral."
       />
     );
   }
@@ -38,7 +38,7 @@ export function HelpCenterArticlesPage() {
             Base publicada de {context.primaryRoute.brand_name}
           </h2>
           <p className="max-w-3xl text-sm leading-7 text-[var(--help-muted)]">
-            Lista integral dos artigos tecnicos publicos aprovados para este knowledge space, organizada para leitura rapida em desktop e mobile.
+            Lista completa dos artigos públicos aprovados nesta central, organizada para leitura rápida em desktop e mobile.
           </p>
         </div>
         <StatusPill tone="positive">
@@ -69,7 +69,7 @@ export function HelpCenterArticlesPage() {
                 <div className="flex flex-wrap gap-2">
                   {article.category_id ? (
                     <StatusPill tone="accent">
-                      {categoryMap.get(article.category_id) ?? article.category_name ?? 'Categoria publica'}
+                      {categoryMap.get(article.category_id) ?? article.category_name ?? 'Categoria pública'}
                     </StatusPill>
                   ) : (
                     <StatusPill tone="default">Sem categoria</StatusPill>
@@ -79,7 +79,7 @@ export function HelpCenterArticlesPage() {
                   {article.title}
                 </h3>
                 <p className="max-w-3xl text-sm leading-7 text-[var(--help-muted)]">
-                  {article.summary ?? 'Artigo tecnico publico sem resumo adicional.'}
+                  {article.summary ?? 'Artigo público sem resumo adicional.'}
                 </p>
               </div>
               <div className="text-left text-xs leading-5 text-[var(--help-muted)] sm:text-right">

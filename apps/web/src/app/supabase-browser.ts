@@ -37,7 +37,7 @@ export function requireSupabaseBrowserClient() {
   if (!client) {
     throw new AppError(
       'runtime-config',
-      'As variaveis publicas do Supabase nao estao configuradas neste frontend.',
+      'As configurações mínimas de acesso não estão disponíveis neste ambiente.',
     );
   }
 

@@ -81,10 +81,10 @@ interface PermissionSummary {
 
 const PAGE_SIZE_OPTIONS = [12, 24, 48] as const;
 const TABS: Array<{ key: AccessTab; label: string }> = [
-  { key: 'users', label: 'Usuarios' },
-  { key: 'roles', label: 'Papeis' },
+  { key: 'users', label: 'Usuários' },
+  { key: 'roles', label: 'Papéis' },
   { key: 'invites', label: 'Convites' },
-  { key: 'permissions', label: 'Permissoes' },
+  { key: 'permissions', label: 'Permissões' },
 ];
 const SITUATION_FILTERS: Array<{ key: UserSituation; label: string }> = [
   { key: 'active', label: 'Ativo' },
@@ -106,28 +106,28 @@ function tenantRoleLabel(role: TenantRole) {
     case 'tenant_admin':
       return 'Admin';
     case 'tenant_manager':
-      return 'Manager';
+      return 'Responsável';
     case 'tenant_requester':
       return 'Solicitante';
     case 'tenant_viewer':
-      return 'Viewer';
+      return 'Leitor';
     default:
-      return 'Indisponivel';
+      return 'Indisponível';
   }
 }
 
 function tenantRoleHelper(role: TenantRole) {
   switch (role) {
     case 'tenant_admin':
-      return 'Coordena acessos e operacao do cliente.';
+      return 'Coordena acessos e a operação do cliente.';
     case 'tenant_manager':
-      return 'Opera o tenant no dia a dia e acompanha a fila.';
+      return 'Opera o cliente no dia a dia e acompanha a fila.';
     case 'tenant_requester':
       return 'Abre demandas e acompanha o retorno.';
     case 'tenant_viewer':
-      return 'Consulta contexto e historico sem operar mudancas.';
+      return 'Consulta contexto e histórico sem operar mudanças.';
     default:
-      return 'Indisponivel';
+      return 'Indisponível';
   }
 }
 
@@ -204,19 +204,19 @@ function membershipStatusLabel(status: MembershipStatus) {
 }
 
 function formatOptionalDate(value: string | null) {
-  return value ? formatDateTime(value) : 'Indisponivel';
+  return value ? formatDateTime(value) : 'Indisponível';
 }
 
 function getDisplayName(membership: AdminTenantMembershipRow) {
-  return membership.user_full_name?.trim() || 'Indisponivel';
+  return membership.user_full_name?.trim() || 'Indisponível';
 }
 
 function getDisplayEmail(membership: AdminTenantMembershipRow) {
-  return membership.user_email?.trim() || 'Indisponivel';
+  return membership.user_email?.trim() || 'Indisponível';
 }
 
 function getInitials(fullName: string | null, email: string | null) {
-  const base = fullName?.trim() || email?.trim() || 'Indisponivel';
+  const base = fullName?.trim() || email?.trim() || 'Indisponível';
   const parts = base
     .split(/[\s@._-]+/)
     .filter(Boolean)
@@ -234,29 +234,29 @@ function roleHighlights(role: TenantRole) {
     case 'tenant_admin':
       return [
         'Coordena acessos e ajustes do cliente.',
-        'Pode orientar solicitantes e managers do tenant.',
-        'Mantem visao operacional completa da conta.',
+        'Pode orientar solicitantes e responsáveis do cliente.',
+        'Mantém visão operacional completa da conta.',
       ];
     case 'tenant_manager':
       return [
         'Opera a conta no dia a dia.',
         'Acompanha tickets, contexto e continuidade do atendimento.',
-        'Nao assume governanca plena de acesso.',
+        'Não assume a governança plena de acesso.',
       ];
     case 'tenant_requester':
       return [
         'Abre demandas e responde tratativas.',
-        'Mantem o historico de solicitacoes do time.',
-        'Nao altera governanca do tenant.',
+        'Mantém o histórico de solicitações do time.',
+        'Não altera a governança do cliente.',
       ];
     case 'tenant_viewer':
       return [
-        'Consulta contexto e historico.',
-        'Acompanha a operacao sem executar mudancas.',
+        'Consulta contexto e histórico.',
+        'Acompanha a operação sem executar mudanças.',
         'Uso recomendado para leitura supervisionada.',
       ];
     default:
-      return ['Indisponivel'];
+      return ['Indisponível'];
   }
 }
 
@@ -264,7 +264,7 @@ function buildRoleSummaries(memberships: AdminTenantMembershipRow[]) {
   return TENANT_ROLES.map((role) => {
     const rows = memberships.filter((membership) => membership.role === role);
     const tenantNames = Array.from(
-      new Set(rows.map((membership) => membership.tenant_display_name || 'Indisponivel')),
+      new Set(rows.map((membership) => membership.tenant_display_name || 'Indisponível')),
     );
 
     return {
@@ -514,11 +514,11 @@ export function AccessPage() {
       setLookupPhase('ready');
       setLookupMessage(
         rows.length === 0
-          ? 'Nenhum usuario existente bateu com essa busca.'
-          : `${rows.length} usuario(s) encontrado(s).`,
+          ? 'Nenhum usuário existente corresponde a esta busca.'
+          : `${rows.length} usuário(s) encontrado(s).`,
       );
     } catch (error) {
-      const classified = classifyAdminError(error, 'Falha ao consultar usuarios existentes.');
+      const classified = classifyAdminError(error, 'Falha ao consultar usuários existentes.');
 
       if (classified.kind === 'session-expired') {
         markSessionExpired();
@@ -544,7 +544,7 @@ export function AccessPage() {
       userId: user.user_id,
     }));
     setLookupMessage(
-      `Usuario selecionado: ${user.full_name ?? 'Indisponivel'}${user.email ? ` (${user.email})` : ''}.`,
+      `Usuário selecionado: ${user.full_name ?? 'Indisponível'}${user.email ? ` (${user.email})` : ''}.`,
     );
   }
 
@@ -658,17 +658,17 @@ export function AccessPage() {
   }
 
   if (phase === 'loading') {
-    return <LoadingState title="Carregando governanca de acesso" />;
+    return <LoadingState title="Carregando governança de acesso" />;
   }
 
   if (phase === 'contract-unavailable') {
-    return <ContractUnavailableState contractName="governanca de acessos" />;
+    return <ContractUnavailableState contractName="gestão de acessos" />;
   }
 
   if (phase === 'error') {
     return (
       <ErrorState
-        description={pageMessage ?? 'Nao foi possivel carregar a tela de Access.'}
+        description={pageMessage ?? 'Não foi possível carregar a tela de acesso.'}
         action={<AppButton onClick={() => void loadSurface()}>Tentar novamente</AppButton>}
       />
     );
@@ -679,15 +679,15 @@ export function AccessPage() {
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-[color:var(--color-border)] pb-5">
         <div className="space-y-1">
           <h1 className="text-[2rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
-            Access
+            Acesso
           </h1>
           <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-            Gerencie usuarios, papeis, permissoes e convites da plataforma.
+            Gerencie usuários, papéis, permissões e convites da plataforma.
           </p>
         </div>
 
         <AppButton className="min-h-11 gap-2 px-5" onClick={() => setRailMode('invite')}>
-          + Convidar usuario
+          + Convidar usuário
         </AppButton>
       </header>
 
@@ -722,14 +722,14 @@ export function AccessPage() {
                 Filtros
               </p>
               <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                Refine a base principal sem tirar o foco da governanca de acesso.
+                Refine a base principal sem tirar o foco da gestão de acessos.
               </p>
             </div>
 
             <Field label="Buscar">
               <TextInput
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Buscar usuarios..."
+                placeholder="Buscar usuários..."
                 value={query}
               />
             </Field>
@@ -749,7 +749,7 @@ export function AccessPage() {
             </Field>
 
             <div className="space-y-3">
-              <p className="text-sm font-medium text-[color:var(--color-ink)]">Situacao</p>
+              <p className="text-sm font-medium text-[color:var(--color-ink)]">Situação</p>
               <label className="flex items-center gap-3 text-sm text-[color:var(--color-ink)]">
                 <input
                   checked={selectedSituations.length === SITUATION_FILTERS.length}
@@ -806,12 +806,12 @@ export function AccessPage() {
             <div>
               <h2 className="text-[1.55rem] font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
                 {activeTab === 'users'
-                  ? `Usuarios (${filteredMemberships.length})`
+                  ? `Usuários (${filteredMemberships.length})`
                   : activeTab === 'roles'
-                    ? `Papeis (${roleSummaries.length})`
+                    ? `Papéis (${roleSummaries.length})`
                     : activeTab === 'invites'
                       ? `Convites (${inviteMemberships.length})`
-                      : `Permissoes (${permissionSummaries.length})`}
+                      : `Permissões (${permissionSummaries.length})`}
               </h2>
             </div>
 
@@ -833,12 +833,12 @@ export function AccessPage() {
               <EmptyState
                 title={
                   activeTab === 'users'
-                    ? 'Nenhum usuario encontrado'
+                    ? 'Nenhum usuário encontrado'
                     : activeTab === 'roles'
                       ? 'Nenhum papel encontrado'
                       : activeTab === 'invites'
                         ? 'Nenhum convite encontrado'
-                        : 'Nenhuma permissao encontrada'
+                        : 'Nenhuma permissão encontrada'
                 }
                 description="Ajuste os filtros atuais para recuperar a visao completa."
                 action={<GhostButton onClick={resetFilters}>Limpar filtros</GhostButton>}
@@ -852,25 +852,25 @@ export function AccessPage() {
                     <tr className="border-b border-[color:var(--color-border)] text-[0.72rem] uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
                       {activeTab === 'users' ? (
                         <>
-                          <th className="px-4 py-3 font-semibold">Usuario</th>
+                          <th className="px-4 py-3 font-semibold">Usuário</th>
                           <th className="px-4 py-3 font-semibold">Papel</th>
                           <th className="px-4 py-3 font-semibold">Tenant</th>
-                          <th className="px-4 py-3 font-semibold">Situacao</th>
-                          <th className="px-4 py-3 font-semibold">Ultimo acesso</th>
+                          <th className="px-4 py-3 font-semibold">Situação</th>
+                          <th className="px-4 py-3 font-semibold">Último acesso</th>
                         </>
                       ) : activeTab === 'roles' ? (
                         <>
                           <th className="px-4 py-3 font-semibold">Papel</th>
-                          <th className="px-4 py-3 font-semibold">Usuarios</th>
+                          <th className="px-4 py-3 font-semibold">Usuários</th>
                           <th className="px-4 py-3 font-semibold">Ativos</th>
                           <th className="px-4 py-3 font-semibold">Convites</th>
                           <th className="px-4 py-3 font-semibold">Bloqueados</th>
                         </>
                       ) : activeTab === 'invites' ? (
                         <>
-                          <th className="px-4 py-3 font-semibold">Usuario</th>
+                          <th className="px-4 py-3 font-semibold">Usuário</th>
                           <th className="px-4 py-3 font-semibold">Tenant</th>
-                          <th className="px-4 py-3 font-semibold">Situacao</th>
+                          <th className="px-4 py-3 font-semibold">Situação</th>
                           <th className="px-4 py-3 font-semibold">Convite</th>
                           <th className="px-4 py-3 font-semibold">Convidado por</th>
                         </>
@@ -878,8 +878,8 @@ export function AccessPage() {
                         <>
                           <th className="px-4 py-3 font-semibold">Papel</th>
                           <th className="px-4 py-3 font-semibold">Escopo</th>
-                          <th className="px-4 py-3 font-semibold">Usuarios</th>
-                          <th className="px-4 py-3 font-semibold">Situacao</th>
+                          <th className="px-4 py-3 font-semibold">Usuários</th>
+                          <th className="px-4 py-3 font-semibold">Situação</th>
                         </>
                       )}
                     </tr>
@@ -917,7 +917,7 @@ export function AccessPage() {
                                 {tenantRoleLabel(membership.role)}
                               </td>
                               <td className="px-4 py-3 text-[color:var(--color-ink)]">
-                                {membership.tenant_display_name || 'Indisponivel'}
+                                {membership.tenant_display_name || 'Indisponível'}
                               </td>
                               <td className="px-4 py-3">
                                 <StatusPill tone={membershipStateTone(membership)}>
@@ -991,7 +991,7 @@ export function AccessPage() {
                                     </div>
                                   </td>
                                   <td className="px-4 py-3 text-[color:var(--color-ink)]">
-                                    {membership.tenant_display_name || 'Indisponivel'}
+                                {membership.tenant_display_name || 'Indisponível'}
                                   </td>
                                   <td className="px-4 py-3">
                                     <StatusPill tone={membershipStateTone(membership)}>
@@ -1002,7 +1002,7 @@ export function AccessPage() {
                                     {formatOptionalDate(membership.created_at)}
                                   </td>
                                   <td className="px-4 py-3 text-[color:var(--color-ink)]">
-                                    {membership.invited_by_full_name || 'Indisponivel'}
+                                {membership.invited_by_full_name || 'Indisponível'}
                                   </td>
                                 </tr>
                               );
@@ -1032,7 +1032,7 @@ export function AccessPage() {
                                     </div>
                                   </td>
                                   <td className="px-4 py-3 text-[color:var(--color-ink)]">
-                                    {permission.highlights[0] || 'Indisponivel'}
+                          {permission.highlights[0] || 'Indisponível'}
                                   </td>
                                   <td className="px-4 py-3 text-[color:var(--color-ink)]">{permission.total}</td>
                                   <td className="px-4 py-3">
@@ -1052,7 +1052,7 @@ export function AccessPage() {
               <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--color-border)] px-5 py-4 text-sm text-[color:var(--color-muted)]">
                 <p>
                   {totalRows === 0 ? 0 : startIndex + 1}-{endIndex} de {totalRows}{' '}
-                  {activeTab === 'roles' ? 'papeis' : activeTab === 'permissions' ? 'permissoes' : 'usuarios'}
+                  {activeTab === 'roles' ? 'papéis' : activeTab === 'permissions' ? 'permissões' : 'usuários'}
                 </p>
                 <div className="flex items-center gap-2">
                   <button
@@ -1098,7 +1098,7 @@ export function AccessPage() {
               <div className="flex items-center justify-between gap-3">
                 <div className="space-y-1">
                   <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--color-muted)]">
-                    Convidar usuario
+                    Convidar usuário
                   </p>
                   <h2 className="text-lg font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
                     Novo acesso
@@ -1111,8 +1111,8 @@ export function AccessPage() {
 
               <form className="space-y-4" onSubmit={handleAddMembership}>
                 <Field
-                  label="Buscar usuario existente"
-                  description="Consulte por nome ou email para preencher o convite com seguranca."
+                  label="Buscar usuário existente"
+                  description="Consulte por nome ou e-mail para preencher o convite com segurança."
                 >
                   <TextInput
                     onChange={(event) => {
@@ -1136,7 +1136,7 @@ export function AccessPage() {
                 </Field>
 
                 <GhostButton className="min-h-11 w-full" onClick={() => void handleLookupUsers()}>
-                  {lookupPhase === 'loading' ? 'Buscando...' : 'Buscar usuario'}
+                  {lookupPhase === 'loading' ? 'Buscando...' : 'Buscar usuário'}
                 </GhostButton>
 
                 {lookupMessage ? (
@@ -1171,10 +1171,10 @@ export function AccessPage() {
                           type="button"
                         >
                           <p className="font-medium text-[color:var(--color-ink)]">
-                            {user.full_name ?? 'Indisponivel'}
+                            {user.full_name ?? 'Indisponível'}
                           </p>
                           <p className="text-sm text-[color:var(--color-muted)]">
-                            {user.email ?? 'Indisponivel'}
+                            {user.email ?? 'Indisponível'}
                           </p>
                         </button>
                       );
@@ -1225,7 +1225,7 @@ export function AccessPage() {
                     Opcoes avancadas
                   </summary>
                   <div className="mt-3 space-y-4">
-                    <Field label="Situacao inicial">
+                    <Field label="Situação inicial">
                       <SelectInput
                         onChange={(event) =>
                           setAddForm((current) => ({
@@ -1244,7 +1244,7 @@ export function AccessPage() {
                     </Field>
                     <Field
                       label="Identificador manual"
-                      description="Use apenas quando a pessoa nao aparecer na busca."
+                      description="Use apenas quando a pessoa não aparecer na busca."
                     >
                       <TextInput
                         onChange={(event) =>
@@ -1301,7 +1301,7 @@ export function AccessPage() {
                   <dl className="space-y-4 text-sm">
                     <div className="border-t border-[color:var(--color-border)] pt-4">
                       <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
-                        Usuarios
+                        Usuários
                       </dt>
                       <dd className="mt-1 text-[color:var(--color-ink)]">{selectedRoleSummary.total}</dd>
                     </div>
@@ -1327,15 +1327,15 @@ export function AccessPage() {
 
                   <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4" open>
                     <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                      Tenants com esse papel
+                      Clientes com esse papel
                     </summary>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {selectedRoleSummary.tenants.length > 0 ? (
                         selectedRoleSummary.tenants.map((tenant) => (
-                          <StatusPill key={tenant}>{tenant || 'Indisponivel'}</StatusPill>
+                          <StatusPill key={tenant}>{tenant || 'Indisponível'}</StatusPill>
                         ))
                       ) : (
-                        <p className="text-sm text-[color:var(--color-muted)]">Indisponivel</p>
+                        <p className="text-sm text-[color:var(--color-muted)]">Indisponível</p>
                       )}
                     </div>
                   </details>
@@ -1345,7 +1345,7 @@ export function AccessPage() {
           ) : activeTab === 'permissions' ? (
             <div className="space-y-4">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--color-muted)]">
-                Detalhes da permissao
+                Detalhes da permissão
               </p>
               {!selectedPermissionSummary ? (
                 <EmptyState
@@ -1389,13 +1389,13 @@ export function AccessPage() {
             </div>
           ) : !selectedMembership ? (
             <EmptyState
-              title="Selecione um usuario"
+              title="Selecione um usuário"
               description="Escolha uma linha da base principal para abrir o detalhe do acesso."
             />
           ) : (
             <div className="space-y-4">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--color-muted)]">
-                Detalhes do usuario
+                Detalhes do usuário
               </p>
 
               <div className="flex flex-col items-center gap-3 rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-5 text-center">
@@ -1429,12 +1429,12 @@ export function AccessPage() {
                     Tenant
                   </dt>
                   <dd className="mt-1 text-[color:var(--color-ink)]">
-                    {selectedMembership.tenant_display_name || 'Indisponivel'}
+                    {selectedMembership.tenant_display_name || 'Indisponível'}
                   </dd>
                 </div>
                 <div className="border-t border-[color:var(--color-border)] pt-4">
                   <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
-                    Ultimo acesso
+                    Último acesso
                   </dt>
                   <dd className="mt-1 text-[color:var(--color-ink)]">
                     {formatOptionalDate(selectedMembership.updated_at)}
@@ -1444,12 +1444,12 @@ export function AccessPage() {
                   <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
                     MFA
                   </dt>
-                  <dd className="mt-1 text-[color:var(--color-ink)]">Indisponivel</dd>
+                  <dd className="mt-1 text-[color:var(--color-ink)]">Indisponível</dd>
                 </div>
               </dl>
 
               <form className="space-y-4 border-t border-[color:var(--color-border)] pt-4" onSubmit={handleUpdateMembership}>
-                <p className="text-sm font-semibold text-[color:var(--color-ink)]">Acoes</p>
+                <p className="text-sm font-semibold text-[color:var(--color-ink)]">Ações</p>
                 <Field label="Papel">
                   <SelectInput
                     onChange={(event) => setRoleDraft(event.target.value as TenantRole)}
@@ -1462,7 +1462,7 @@ export function AccessPage() {
                     ))}
                   </SelectInput>
                 </Field>
-                <Field label="Situacao">
+                <Field label="Situação">
                   <SelectInput
                     onChange={(event) => setStatusDraft(event.target.value as MembershipStatus)}
                     value={statusDraft}
@@ -1482,7 +1482,7 @@ export function AccessPage() {
                 ) : null}
 
                 <AppButton className="min-h-11 w-full" disabled={updateSubmitting} type="submit">
-                  {updateSubmitting ? 'Salvando...' : 'Salvar alteracoes'}
+                  {updateSubmitting ? 'Salvando...' : 'Salvar alterações'}
                 </AppButton>
               </form>
             </div>

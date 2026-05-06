@@ -4,20 +4,20 @@ import { useAuthContext } from '../auth/auth-context';
 
 const routeCopy: Record<string, { title: string; subtitle: string }> = {
   '/admin/tenants': {
-    title: 'Tenants',
-    subtitle: 'Clientes B2B, status operacional e contexto de pos-venda em uma unica superficie.',
+    title: 'Clientes',
+    subtitle: 'Acompanhe contas, status e contatos.',
   },
   '/admin/knowledge': {
-    title: 'Knowledge',
-    subtitle: 'Curadoria editorial space-aware da Knowledge Base sem abrir a Central Publica.',
+    title: 'Conhecimento',
+    subtitle: 'Gerencie artigos, revisão e publicação.',
   },
   '/admin/access': {
-    title: 'Access',
-    subtitle: 'Governanca minima de memberships para a operacao Genius.',
+    title: 'Acesso',
+    subtitle: 'Gerencie usuários, convites e permissões.',
   },
   '/admin/system': {
-    title: 'System',
-    subtitle: 'Rastreabilidade administrativa do backbone de trocas e devolucoes.',
+    title: 'Sistema',
+    subtitle: 'Acompanhe eventos e alertas administrativos.',
   },
 };
 
@@ -25,10 +25,10 @@ function AdminQuickNav() {
   const location = useLocation();
 
   const items = [
-    { label: 'Tenants', to: '/admin/tenants' },
-    { label: 'Knowledge', to: '/admin/knowledge' },
-    { label: 'Access', to: '/admin/access' },
-    { label: 'System', to: '/admin/system' },
+    { label: 'Clientes', to: '/admin/tenants' },
+    { label: 'Conhecimento', to: '/admin/knowledge' },
+    { label: 'Acesso', to: '/admin/access' },
+    { label: 'Sistema', to: '/admin/system' },
   ];
 
   return (
@@ -61,7 +61,7 @@ export function AdminTopbar({
   onToggleSidebar: () => void;
 }) {
   const location = useLocation();
-  const { runtimeConfig, signOut } = useAuthContext();
+  const { signOut } = useAuthContext();
   const copy = routeCopy[location.pathname] ?? routeCopy['/admin/tenants'];
   const compactMode =
     location.pathname === '/admin/tenants' ||
@@ -76,10 +76,7 @@ export function AdminTopbar({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex min-h-9 items-center rounded-full border border-[rgba(48,127,226,0.24)] bg-[rgba(48,127,226,0.08)] px-3 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-brand-blue)]">
-              {runtimeConfig?.appEnv ?? 'development'}
-            </span>
-            <span className="inline-flex min-h-9 items-center rounded-full border border-[rgba(48,127,226,0.24)] bg-white px-3 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-brand-blue)]">
-              platform_admin
+              Área administrativa
             </span>
           </div>
 
@@ -88,7 +85,7 @@ export function AdminTopbar({
               className="border-[rgba(48,127,226,0.18)] text-[color:var(--color-brand-blue)]"
               onClick={() => void signOut()}
             >
-              Encerrar sessao
+              Encerrar sessão
             </GhostButton>
           </div>
         </div>
@@ -107,8 +104,7 @@ export function AdminTopbar({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
-            <StatusPill tone="accent">{runtimeConfig?.appEnv ?? 'development'}</StatusPill>
-            <StatusPill>platform_admin</StatusPill>
+            <StatusPill tone="accent">Área administrativa</StatusPill>
           </div>
           <div className="space-y-1">
             <h2 className="text-xl font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
@@ -131,7 +127,7 @@ export function AdminTopbar({
             className="border-[rgba(48,127,226,0.18)] text-[color:var(--color-brand-blue)]"
             onClick={() => void signOut()}
           >
-            Encerrar sessao
+            Encerrar sessão
           </GhostButton>
         </div>
       </div>

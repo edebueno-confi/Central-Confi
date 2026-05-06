@@ -112,7 +112,7 @@ function SupportSidebar({
           isActive: (pathname: string) => pathname.startsWith('/support/customers'),
         },
         {
-          label: 'Knowledge',
+          label: 'Conhecimento',
           icon: 'knowledge' as const,
           to: '/admin/knowledge',
           isActive: (pathname: string) => pathname.startsWith('/admin/knowledge'),
@@ -157,7 +157,7 @@ function SupportSidebar({
                 Genius
               </p>
               <h1 className="text-[0.84rem] font-semibold leading-tight tracking-[-0.03em]">
-                Support Workspace
+                Suporte
               </h1>
             </div>
           ) : null}
@@ -247,7 +247,7 @@ function SupportSidebar({
                 {String(user?.user_metadata?.full_name ?? user?.email ?? 'Operador interno')}
               </p>
               <p className="truncate text-[0.64rem] text-white/58">
-                {gate.actor?.roles.includes('support_manager') ? 'Manager' : 'Agente'}
+                {gate.actor?.roles.includes('support_manager') ? 'Responsável' : 'Agente'}
               </p>
             </div>
           ) : null}
@@ -258,7 +258,7 @@ function SupportSidebar({
               onClick={() => void signOut()}
               type="button"
             >
-              <span>Encerrar sessao</span>
+              <span>Encerrar sessão</span>
               <svg
                 aria-hidden="true"
                 className="h-3.5 w-3.5"
@@ -275,10 +275,10 @@ function SupportSidebar({
             </button>
           ) : (
             <GhostButton
-              aria-label="Encerrar sessao"
+              aria-label="Encerrar sessão"
               className="min-h-8 w-8 border-white/10 bg-white/5 px-0 text-white/82 hover:bg-white/10 hover:text-white"
               onClick={() => void signOut()}
-              title="Encerrar sessao"
+              title="Encerrar sessão"
             >
               <svg
                 aria-hidden="true"
@@ -310,7 +310,7 @@ function SupportQuickNav() {
     { label: 'Fila', to: '/support/queue' },
     { label: 'Tickets', to: '/support/tickets' },
     { label: 'Clientes', to: '/support/customers' },
-    { label: 'Knowledge', to: '/admin/knowledge' },
+    { label: 'Conhecimento', to: '/admin/knowledge' },
     ...(gate.actor?.is_platform_admin ? [{ label: 'Admin', to: '/admin/tenants' }] : []),
   ];
 

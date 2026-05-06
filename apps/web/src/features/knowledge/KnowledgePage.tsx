@@ -115,13 +115,13 @@ interface ArticleActionFeedback {
 const HUMAN_CONFIRMATION_FIELDS: HumanConfirmationDefinition[] = [
   {
     key: 'title_reviewed',
-    label: 'Titulo revisado',
-    help: 'Confirma que o titulo editorial foi validado por um revisor humano.',
+    label: 'Título revisado',
+    help: 'Confirma que o título editorial foi validado por um revisor humano.',
   },
   {
     key: 'summary_reviewed',
     label: 'Resumo revisado',
-    help: 'Confirma que o resumo ja esta claro para suporte/CS/cliente B2B.',
+    help: 'Confirma que o resumo já está claro para suporte e cliente B2B.',
   },
   {
     key: 'body_reviewed',
@@ -136,22 +136,22 @@ const HUMAN_CONFIRMATION_FIELDS: HumanConfirmationDefinition[] = [
   {
     key: 'visibility_reviewed',
     label: 'Visibilidade correta',
-    help: 'Confirma que o escopo public/internal/restricted foi validado manualmente.',
+    help: 'Confirma que a visibilidade do artigo foi validada manualmente.',
   },
   {
     key: 'no_sensitive_data_exposed',
-    label: 'Nenhum segredo ou API sensivel exposto',
-    help: 'Confirma revisao humana de segredos, credenciais, integracoes e dados internos.',
+    label: 'Nenhum dado sensível exposto',
+    help: 'Confirma revisão humana de credenciais, integrações e dados internos.',
   },
   {
     key: 'ready_for_review',
-    label: 'Pronto para review',
-    help: 'Confirma que o artigo pode sair de draft e entrar em review editorial.',
+    label: 'Pronto para revisão',
+    help: 'Confirma que o artigo pode sair de rascunho e entrar em revisão editorial.',
   },
   {
     key: 'ready_for_publish',
-    label: 'Pronto para publish',
-    help: 'Confirma que o artigo ja esta pronto para publicacao humana quando o status permitir.',
+    label: 'Pronto para publicação',
+    help: 'Confirma que o artigo já está pronto para publicação humana quando o status permitir.',
   },
 ];
 
@@ -328,7 +328,7 @@ function displayArticleStatus(status: KnowledgeArticleStatus) {
   }
 
   if (status === 'review') {
-    return 'Em revisao';
+    return 'Em revisão';
   }
 
   if (status === 'archived') {
@@ -340,7 +340,7 @@ function displayArticleStatus(status: KnowledgeArticleStatus) {
 
 function displayVisibility(visibility: KnowledgeVisibility) {
   if (visibility === 'public') {
-    return 'Publico na central de ajuda';
+    return 'Público na central de ajuda';
   }
 
   if (visibility === 'restricted') {
@@ -354,7 +354,7 @@ function articleContributorName(article: AdminKnowledgeArticleListItemV2Row) {
   return (
     article.updated_by_full_name ??
     article.created_by_full_name ??
-    'Indisponivel'
+    'Indisponível'
   );
 }
 
@@ -362,12 +362,12 @@ function articleContributorNameFromDetail(article: AdminKnowledgeArticleDetailV2
   return (
     article.updated_by_full_name ??
     article.created_by_full_name ??
-    'Indisponivel'
+    'Indisponível'
   );
 }
 
 function formatOptionalDate(value: string | null) {
-  return value ? formatDateTime(value) : 'Indisponivel';
+  return value ? formatDateTime(value) : 'Indisponível';
 }
 
 function categoryDisplayName(category: AdminKnowledgeCategoryV2Row) {
@@ -449,17 +449,17 @@ function buildEditorialChecklist(
 
   const automated: EditorialChecklistItem[] = [
     {
-      label: 'Titulo revisado',
+      label: 'Título revisado',
       tone: titleReady ? 'positive' : 'critical',
       description: titleReady
-        ? 'Titulo com comprimento suficiente para revisao editorial.'
-        : 'Titulo ainda curto ou vazio para uma triagem segura.',
+        ? 'Título com comprimento suficiente para revisão editorial.'
+        : 'Título ainda curto ou vazio para uma triagem segura.',
     },
     {
       label: 'Resumo revisado',
       tone: summaryReady ? 'positive' : 'warning',
       description: summaryReady
-        ? 'Resumo presente e com densidade minima para orientar leitura.'
+        ? 'Resumo presente e com densidade mínima para orientar a leitura.'
         : 'Resumo ausente ou curto; vale revisar antes de promover o artigo.',
     },
     {
@@ -468,15 +468,15 @@ function buildEditorialChecklist(
       description: bodyReady
         ? 'Corpo principal em Markdown e sem sinal de HTML legado.'
         : bodyHasLegacyHtml
-          ? 'Corpo ainda contem marca de HTML legado; revisar antes de avancar.'
-          : 'Corpo principal ainda curto para leitura editorial segura.',
+          ? 'Corpo ainda contém marca de HTML legado; revise antes de avançar.'
+          : 'Corpo principal ainda curto para uma leitura editorial segura.',
     },
     {
       label: 'Categoria correta',
       tone: categoryReady ? 'positive' : 'critical',
       description: categoryReady
-        ? 'Artigo ja esta vinculado a uma categoria editorial.'
-        : 'Categoria ainda nao definida; classificar antes de review.',
+        ? 'Artigo já está vinculado a uma categoria editorial.'
+        : 'Categoria ainda não definida; classifique antes da revisão.',
     },
   ];
 
@@ -491,16 +491,16 @@ function buildEditorialChecklist(
             : 'accent',
       description:
         article.visibility === 'restricted'
-          ? 'Conteudo restrito exige leitura cautelosa antes de qualquer promocao.'
+          ? 'Conteúdo restrito exige leitura cautelosa antes de qualquer promoção.'
           : article.visibility === 'internal'
-            ? 'Confirmar se o artigo deve permanecer interno ou evoluir para publico.'
-            : 'Confirmar se o recorte publico esta coerente com o risco real do artigo.',
+        ? 'Confirmar se o artigo deve permanecer interno ou evoluir para público.'
+            : 'Confirmar se o recorte público está coerente com o risco real do artigo.',
     },
     {
       label: 'Nenhum segredo ou API sensivel exposto',
       tone: 'warning',
       description:
-        'Confirmacao humana obrigatoria para garantir que nenhum dado sensivel apareca no artigo.',
+        'Confirmação humana obrigatória para garantir que nenhum dado sensível apareça no artigo.',
     },
     {
       label: 'Pronto para review',
@@ -512,10 +512,10 @@ function buildEditorialChecklist(
             : 'default',
       description:
         automatedReady && article.status === 'draft'
-          ? 'Sinais objetivos minimos completos para envio a review humana.'
+          ? 'Sinais objetivos mínimos completos para envio à revisão humana.'
           : article.status === 'draft'
-            ? 'Ainda faltam ajustes objetivos antes do envio para review.'
-            : 'O artigo ja saiu de draft; confirmar o contexto editorial antes de repetir a acao.',
+            ? 'Ainda faltam ajustes objetivos antes do envio para revisão.'
+            : 'O artigo já saiu de rascunho; confirme o contexto editorial antes de repetir a ação.',
     },
     {
       label: 'Pronto para publish',
@@ -527,10 +527,10 @@ function buildEditorialChecklist(
             : 'default',
       description:
         automatedReady && article.status === 'review'
-          ? 'Sinais objetivos completos; falta apenas a aprovacao humana final.'
+          ? 'Sinais objetivos completos; falta apenas a aprovação humana final.'
           : article.status === 'review'
             ? 'O artigo esta em review, mas ainda precisa de ajuste antes de publish.'
-            : 'A publicacao continua bloqueada ate o artigo chegar a review com revisao humana concluida.',
+            : 'A publicação continua bloqueada até o artigo chegar à revisão com revisão humana concluída.',
     },
   ];
 
@@ -703,15 +703,15 @@ export function KnowledgePage() {
       : null;
   const publicPreviewMessage =
     articleHasPublicCategoryMismatch
-      ? 'Indisponivel enquanto a categoria do artigo nao estiver publica.'
+      ? 'Indisponível enquanto a categoria do artigo não estiver pública.'
       : articleDetail?.visibility !== 'public'
-        ? 'Indisponivel enquanto o artigo permanecer interno.'
+        ? 'Indisponível enquanto o artigo permanecer interno.'
         : articleDetail?.status !== 'published'
-          ? 'Indisponivel enquanto o artigo nao estiver publicado.'
-          : 'Indisponivel neste ambiente.';
+          ? 'Indisponível enquanto o artigo não estiver publicado.'
+          : 'Indisponível neste ambiente.';
   const editorialPreviewTitle =
     articleDetail?.status === 'published' && publishedEditorialDraft
-      ? 'Preview da revisao'
+      ? 'Preview da revisão'
       : 'Preview editorial';
   const editorialPreviewBody =
     articleDetail?.status === 'published' && publishedEditorialDraft
@@ -835,7 +835,7 @@ export function KnowledgePage() {
       } catch (error) {
         const classified = classifyAdminError(
           error,
-          'Falha ao carregar a superficie de knowledge spaces.',
+        'Falha ao carregar a superfície das centrais editoriais.',
         );
 
         if (classified.kind === 'session-expired') {
@@ -900,7 +900,7 @@ export function KnowledgePage() {
         } else {
           const advisoryError = classifyAdminError(
             advisoriesResult.reason,
-            'Os sinais de revisao editorial nao ficaram disponiveis neste ambiente.',
+        'Os sinais de revisão editorial não ficaram disponíveis neste ambiente.',
           );
 
           if (advisoryError.kind === 'session-expired') {
@@ -922,7 +922,7 @@ export function KnowledgePage() {
       } catch (error) {
         const classified = classifyAdminError(
           error,
-          'Falha ao carregar a camada editorial da Knowledge Base.',
+          'Falha ao carregar a camada editorial da central de ajuda.',
         );
 
         if (classified.kind === 'session-expired') {
@@ -961,7 +961,7 @@ export function KnowledgePage() {
         setArticleDetail(null);
         setDetailPhase('error');
         setDetailMessage(
-          'O backend nao retornou detalhe para o artigo selecionado.',
+        'O detalhe do artigo selecionado não ficou disponível.',
         );
         return;
       }
@@ -1097,7 +1097,7 @@ export function KnowledgePage() {
       } catch (error) {
         const classified = classifyAdminError(
           error,
-          'Falha ao iniciar a revisao editorial do artigo publicado.',
+        'Falha ao iniciar a revisão editorial do artigo publicado.',
         );
 
         if (classified.kind === 'session-expired') {
@@ -1183,7 +1183,7 @@ export function KnowledgePage() {
     } catch (error) {
       const classified = classifyAdminError(
         error,
-        'Falha ao persistir a revisao editorial.',
+        'Falha ao persistir a revisão editorial.',
       );
 
       if (classified.kind === 'session-expired') {
@@ -1218,11 +1218,11 @@ export function KnowledgePage() {
       });
 
       await refreshSelectedSpace(selectedArticleId);
-      setReviewAdvisoryMessage('Revisao editorial marcada como concluida.');
+      setReviewAdvisoryMessage('Revisão editorial marcada como concluída.');
     } catch (error) {
       const classified = classifyAdminError(
         error,
-        'Falha ao concluir a revisao editorial.',
+        'Falha ao concluir a revisão editorial.',
       );
 
       if (classified.kind === 'session-expired') {
@@ -1269,7 +1269,7 @@ export function KnowledgePage() {
     } catch (error) {
       const classified = classifyAdminError(
         error,
-        'Falha ao criar categoria da Knowledge Base.',
+        'Falha ao criar a categoria da central de ajuda.',
       );
 
       if (classified.kind === 'session-expired') {
@@ -1359,13 +1359,13 @@ export function KnowledgePage() {
         articleId: recordId,
         message:
           articleDetail?.status === 'published'
-            ? 'Revisao editorial salva com sucesso.'
-            : 'Draft sincronizado com sucesso.',
+          ? 'Revisão editorial salva com sucesso.'
+            : 'Rascunho sincronizado com sucesso.',
       });
     } catch (error) {
       const classified = classifyAdminError(
         error,
-        'Falha ao sincronizar o draft da Knowledge Base.',
+        'Falha ao sincronizar o rascunho da central de ajuda.',
       );
 
       if (classified.kind === 'session-expired') {
@@ -1402,12 +1402,12 @@ export function KnowledgePage() {
       await refreshArticleDetail(selectedArticleId);
       setArticleActionFeedback({
         articleId: selectedArticleId,
-        message: 'Artigo enviado para revisao com sucesso.',
+      message: 'Artigo enviado para revisão com sucesso.',
       });
     } catch (error) {
       const classified = classifyAdminError(
         error,
-        'Falha ao enviar o artigo para revisao.',
+        'Falha ao enviar o artigo para revisão.',
       );
 
       if (classified.kind === 'session-expired') {
@@ -1452,7 +1452,7 @@ export function KnowledgePage() {
     } catch (error) {
       const classified = classifyAdminError(
         error,
-        'Falha ao publicar o artigo da Knowledge Base.',
+        'Falha ao publicar o artigo da central de ajuda.',
       );
 
       if (classified.kind === 'session-expired') {
@@ -1537,7 +1537,7 @@ export function KnowledgePage() {
       await refreshArticleDetail(selectedArticleId);
       setArticleActionFeedback({
         articleId: selectedArticleId,
-        message: 'Atualizacao publicada com sucesso.',
+        message: 'Atualização publicada com sucesso.',
       });
     } catch (error) {
       const classified = classifyAdminError(
@@ -1584,12 +1584,12 @@ export function KnowledgePage() {
       setArticleForm(emptyArticleForm());
       setArticleActionFeedback({
         articleId: selectedArticleId,
-        message: 'Revisao editorial descartada com sucesso.',
+      message: 'Revisão editorial descartada com sucesso.',
       });
     } catch (error) {
       const classified = classifyAdminError(
         error,
-        'Falha ao descartar a revisao editorial do artigo.',
+        'Falha ao descartar a revisão editorial do artigo.',
       );
 
       if (classified.kind === 'session-expired') {
@@ -1628,7 +1628,7 @@ export function KnowledgePage() {
         <ErrorState
           description={
             pageMessage ??
-            'Nao foi possivel carregar as centrais editoriais neste ambiente.'
+            'Não foi possível carregar as centrais editoriais neste ambiente.'
           }
         action={<AppButton onClick={() => void loadKnowledgeSpaces()}>Tentar novamente</AppButton>}
       />
@@ -1642,18 +1642,18 @@ export function KnowledgePage() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="space-y-1">
               <h1 className="text-[2rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
-                Knowledge
+                Conhecimento
               </h1>
               <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                Gerencie artigos, categorias e publicacao na central de ajuda.
+                Gerencie artigos, categorias e publicação na central de ajuda.
               </p>
             </div>
             <AppButton disabled>Novo artigo</AppButton>
           </div>
         </section>
         <EmptyState
-          title="Nenhuma central editorial disponivel"
-          description="Ainda nao existe uma central pronta para curadoria neste ambiente."
+          title="Nenhuma central editorial disponível"
+          description="Ainda não existe uma central pronta para curadoria neste ambiente."
         />
       </div>
     );
@@ -1665,10 +1665,10 @@ export function KnowledgePage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-1">
             <h1 className="text-[2rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
-              Knowledge
+              Conhecimento
             </h1>
             <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-              Gerencie artigos, categorias e publicacao na central de ajuda.
+              Gerencie artigos, categorias e publicação na central de ajuda.
             </p>
           </div>
           <AppButton disabled={!selectedSpace} onClick={openCreateArticle}>
@@ -1713,7 +1713,7 @@ export function KnowledgePage() {
                   ['all', 'Todos', statusCounts.all],
                   ['published', 'Publicado', statusCounts.published],
                   ['draft', 'Rascunho', statusCounts.draft],
-                  ['review', 'Em revisao', statusCounts.review],
+                  ['review', 'Em revisão', statusCounts.review],
                   ['archived', 'Arquivado', statusCounts.archived],
                 ].map(([value, label, count]) => (
                   <button
@@ -1801,9 +1801,9 @@ export function KnowledgePage() {
                 }
                 value={selectedDateWindow}
               >
-                <option value="90">Ultimos 90 dias</option>
-                <option value="30">Ultimos 30 dias</option>
-                <option value="7">Ultimos 7 dias</option>
+                <option value="90">Últimos 90 dias</option>
+                <option value="30">Últimos 30 dias</option>
+                <option value="7">Últimos 7 dias</option>
                 <option value="all">Todos os periodos</option>
               </SelectInput>
             </Field>
@@ -1814,7 +1814,7 @@ export function KnowledgePage() {
               </p>
               <div className="space-y-1 text-sm text-[color:var(--color-ink)]">
                 <p>{draftArticleCount} rascunhos</p>
-                <p>{reviewArticleCount} em revisao</p>
+                <p>{reviewArticleCount} em revisão</p>
                 <p>{legacyArticleCount} do legado</p>
                 <p>{restrictedArticleCount} restritos</p>
                 <p>{duplicateHashGroupCount} grupos duplicados</p>
@@ -1858,7 +1858,7 @@ export function KnowledgePage() {
               >
                 <option value="recent">Mais recentes</option>
                 <option value="oldest">Mais antigos</option>
-                <option value="title">Titulo A-Z</option>
+                <option value="title">Título A-Z</option>
               </SelectInput>
             </div>
           </header>
@@ -1874,7 +1874,7 @@ export function KnowledgePage() {
             <div className="px-5 py-8">
               <LoadingState
                 title="Carregando artigos"
-                description="Estamos preparando a lista e a pre-visualizacao desta central."
+                description="Estamos preparando a lista e a pré-visualização desta central."
               />
             </div>
           ) : contentPhase === 'contract-unavailable' ? (
@@ -1885,7 +1885,7 @@ export function KnowledgePage() {
             <div className="px-5 py-8">
               <ErrorState
                 description={
-                  contentMessage ?? 'Nao foi possivel carregar os artigos desta central.'
+                  contentMessage ?? 'Não foi possível carregar os artigos desta central.'
                 }
                 action={
                   <AppButton onClick={() => selectedSpaceId && void refreshSelectedSpace()}>
@@ -1908,7 +1908,7 @@ export function KnowledgePage() {
                 <table className="w-full table-fixed">
                   <thead>
                     <tr className="border-b border-[color:var(--color-border)] text-left text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-                      <th className="px-5 py-4">Titulo</th>
+                      <th className="px-5 py-4">Título</th>
                       <th className="w-[112px] px-3 py-4">Categoria</th>
                       <th className="w-[126px] px-3 py-4">Autor</th>
                       <th className="w-[132px] px-3 py-4">Data</th>
@@ -1939,17 +1939,17 @@ export function KnowledgePage() {
                           <td className="px-5 py-4 align-top">
                             <div className="space-y-1">
                               <p className="truncate text-[0.98rem] font-medium text-[color:var(--color-ink)]">
-                                {article.title || 'Indisponivel'}
+                                {article.title || 'Indisponível'}
                               </p>
                               <p className="line-clamp-2 text-sm leading-5 text-[color:var(--color-muted)]">
-                                {article.summary?.trim() || 'Indisponivel'}
+                                {article.summary?.trim() || 'Indisponível'}
                               </p>
                             </div>
                           </td>
                           <td className="px-3 py-4 align-top">
                             <StatusPill tone="accent">
                               <span className="max-w-[84px] truncate">
-                                {article.category_name ?? 'Indisponivel'}
+                                {article.category_name ?? 'Indisponível'}
                               </span>
                             </StatusPill>
                           </td>
@@ -1967,7 +1967,7 @@ export function KnowledgePage() {
                                 {displayArticleStatus(article.status)}
                               </StatusPill>
                               {article.has_editorial_draft ? (
-                                <StatusPill tone="accent">Revisao em andamento</StatusPill>
+                                <StatusPill tone="accent">Revisão em andamento</StatusPill>
                               ) : null}
                             </div>
                           </td>
@@ -1991,7 +1991,7 @@ export function KnowledgePage() {
           <div className="space-y-4">
             <div className="space-y-1">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-muted)]">
-                Pre-visualizacao
+                Pré-visualização
               </p>
               {selectedSpace ? (
                 <p className="text-sm text-[color:var(--color-muted)]">
@@ -2110,7 +2110,7 @@ export function KnowledgePage() {
                 </form>
               ) : panelMode === 'create-article' || panelMode === 'edit-article' ? (
                 <form className="space-y-4" onSubmit={handleSaveArticle}>
-                  <Field label="Titulo">
+                <Field label="Título">
                     <TextInput
                       onChange={(event) =>
                         setArticleForm((current) => ({
@@ -2146,7 +2146,7 @@ export function KnowledgePage() {
 
                   {articleDetail?.status === 'published' ? (
                     <p className="text-xs leading-5 text-[color:var(--color-muted)]">
-                      O slug do artigo publicado permanece travado para preservar o mesmo link publico.
+                      O slug do artigo publicado permanece travado para preservar o mesmo link público.
                     </p>
                   ) : null}
 
@@ -2184,7 +2184,7 @@ export function KnowledgePage() {
 
                   {articleFormHasPublicCategoryMismatch ? (
                     <InlineNotice tone="warning">
-                      Artigos publicos so aparecem na central quando a categoria selecionada tambem estiver publica. Ajuste a categoria ou a visibilidade antes de publicar.
+                      Artigos públicos só aparecem na central quando a categoria selecionada também estiver pública. Ajuste a categoria ou a visibilidade antes de publicar.
                     </InlineNotice>
                   ) : null}
 
@@ -2206,7 +2206,7 @@ export function KnowledgePage() {
                     </SelectInput>
                   </Field>
 
-                  <Field label="Conteudo principal">
+                  <Field label="Conteúdo principal">
                     <TextareaInput
                       onChange={(event) =>
                         setArticleForm((current) => ({
@@ -2222,7 +2222,7 @@ export function KnowledgePage() {
 
                   <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
                     <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                      Informacoes avancadas
+                      Informações avançadas
                     </summary>
                     <div className="mt-4 space-y-4">
                       <Field label="Caminho de origem">
@@ -2263,7 +2263,7 @@ export function KnowledgePage() {
                         ? 'Salvando...'
                         : panelMode === 'edit-article'
                           ? articleDetail?.status === 'published'
-                            ? 'Salvar revisao'
+                        ? 'Salvar revisão'
                             : 'Salvar artigo'
                           : 'Criar artigo'}
                     </AppButton>
@@ -2282,12 +2282,12 @@ export function KnowledgePage() {
               ) : detailPhase === 'idle' ? (
                 <EmptyState
                   title="Selecione um artigo"
-                  description="Escolha um item da lista para abrir a pre-visualizacao."
+                  description="Escolha um item da lista para abrir a pré-visualização."
                   action={<AppButton onClick={openCreateArticle}>Novo artigo</AppButton>}
                 />
               ) : detailPhase === 'loading' ? (
                 <LoadingState
-                  title="Carregando pre-visualizacao"
+                  title="Carregando pré-visualização"
                   description="Estamos preparando os dados do artigo selecionado."
                 />
               ) : detailPhase === 'contract-unavailable' ? (
@@ -2295,7 +2295,7 @@ export function KnowledgePage() {
               ) : detailPhase === 'error' || !articleDetail || !selectedArticleSummary ? (
                 <ErrorState
                   description={
-                    detailMessage ?? 'Nao foi possivel abrir o artigo selecionado.'
+                    detailMessage ?? 'Não foi possível abrir o artigo selecionado.'
                   }
                   action={
                     <AppButton
@@ -2312,7 +2312,7 @@ export function KnowledgePage() {
                   <div className="space-y-3 rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <h2 className="text-[1.55rem] font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
-                        {articleDetail.title || 'Indisponivel'}
+                        {articleDetail.title || 'Indisponível'}
                       </h2>
                       <StatusPill tone={toneForArticleStatus(articleDetail.status)}>
                         {displayArticleStatus(articleDetail.status)}
@@ -2325,7 +2325,7 @@ export function KnowledgePage() {
                           Categoria
                         </dt>
                         <dd className="text-sm text-[color:var(--color-ink)]">
-                          {articleDetail.category_name ?? 'Indisponivel'}
+                          {articleDetail.category_name ?? 'Indisponível'}
                         </dd>
                       </div>
                       <div className="space-y-1">
@@ -2354,7 +2354,7 @@ export function KnowledgePage() {
                       </div>
                       <div className="space-y-1">
                         <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-                          Ultima publicacao
+                          Última publicação
                         </dt>
                         <dd className="text-sm text-[color:var(--color-ink)]">
                           {formatOptionalDate(articleDetail.published_at)}
@@ -2365,14 +2365,14 @@ export function KnowledgePage() {
                           Versao
                         </dt>
                         <dd className="text-sm text-[color:var(--color-ink)]">
-                          {articleDetail.current_revision_number ?? 'Indisponivel'}
+                        {articleDetail.current_revision_number ?? 'Indisponível'}
                         </dd>
                       </div>
                     </dl>
 
                     <div className="border-t border-[color:var(--color-border)] pt-4">
                       <p className="text-sm leading-6 text-[color:var(--color-ink)]">
-                        {articleDetail.summary?.trim() || 'Indisponivel'}
+                      {articleDetail.summary?.trim() || 'Indisponível'}
                       </p>
                     </div>
 
@@ -2388,7 +2388,7 @@ export function KnowledgePage() {
                             rel="noreferrer"
                             target="_blank"
                           >
-                            Abrir artigo publico
+                          Abrir artigo público
                           </a>
                         ) : (
                           <span className="text-[12px] leading-5 text-[color:var(--color-muted)]">
@@ -2398,7 +2398,7 @@ export function KnowledgePage() {
                       </div>
                       <div className="max-h-72 overflow-y-auto rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
                         <div className="whitespace-pre-wrap text-sm leading-6 text-[color:var(--color-ink)]">
-                          {editorialPreviewBody.trim() || 'Indisponivel'}
+                        {editorialPreviewBody.trim() || 'Indisponível'}
                         </div>
                       </div>
                     </div>
@@ -2422,25 +2422,25 @@ export function KnowledgePage() {
 
                   {articleHasPublicCategoryMismatch ? (
                     <InlineNotice tone="warning">
-                      Este artigo esta marcado como publico, mas a categoria atual nao esta publica. Enquanto essa coerencia nao for ajustada, o artigo nao aparece na central de ajuda.
+                    Este artigo está marcado como público, mas a categoria atual não está pública. Enquanto essa coerência não for ajustada, o artigo não aparece na central de ajuda.
                     </InlineNotice>
                   ) : null}
 
                   {publishedEditorialDraft ? (
                     <InlineNotice tone="warning">
-                      Existe uma revisao editorial em andamento. A versao publica continua estavel ate voce publicar a atualizacao.
+                    Existe uma revisão editorial em andamento. A versão pública continua estável até você publicar a atualização.
                     </InlineNotice>
                   ) : null}
 
                   {editorialDraftHasPublicCategoryMismatch ? (
                     <InlineNotice tone="warning">
-                      A revisao em andamento esta marcada como publica, mas a categoria escolhida ainda nao esta publica. Ajuste essa coerencia antes de publicar a atualizacao.
+                    A revisão em andamento está marcada como pública, mas a categoria escolhida ainda não está pública. Ajuste essa coerência antes de publicar a atualização.
                     </InlineNotice>
                   ) : null}
 
                   <div className="space-y-2">
                     <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-                      Acoes
+                      Ações
                     </p>
                     <div className="grid gap-2">
                       {(articleDetail.status === 'draft' || articleDetail.status === 'review') ? (
@@ -2454,12 +2454,12 @@ export function KnowledgePage() {
                           disabled={articleActionSubmitting}
                           onClick={() => void openEditArticle()}
                         >
-                          {publishedEditorialDraft ? 'Editar revisao' : 'Iniciar revisao'}
+                    {publishedEditorialDraft ? 'Editar revisão' : 'Iniciar revisão'}
                         </GhostButton>
                       ) : null}
                       {articleDetail.status === 'draft' ? (
                         <GhostButton className="min-h-11 justify-start" disabled={articleActionSubmitting || !canSubmitForReview} onClick={() => void handleSubmitForReview()}>
-                          {articleActionSubmitting ? 'Enviando...' : 'Enviar para revisao'}
+                    {articleActionSubmitting ? 'Enviando...' : 'Enviar para revisão'}
                         </GhostButton>
                       ) : null}
                       {articleDetail.status === 'review' ? (
@@ -2473,7 +2473,7 @@ export function KnowledgePage() {
                           disabled={articleActionSubmitting || !canPublishEditorialRevision}
                           onClick={() => void handlePublishEditorialRevision()}
                         >
-                          {articleActionSubmitting ? 'Publicando...' : 'Publicar atualizacao'}
+                          {articleActionSubmitting ? 'Publicando...' : 'Publicar atualização'}
                         </GhostButton>
                       ) : null}
                       {articleDetail.status === 'published' && publishedEditorialDraft ? (
@@ -2482,7 +2482,7 @@ export function KnowledgePage() {
                           disabled={articleActionSubmitting}
                           onClick={() => void handleDiscardEditorialRevision()}
                         >
-                          {articleActionSubmitting ? 'Descartando...' : 'Descartar revisao'}
+                    {articleActionSubmitting ? 'Descartando...' : 'Descartar revisão'}
                         </GhostButton>
                       ) : null}
                       {articleDetail.status !== 'archived' ? (
@@ -2493,26 +2493,26 @@ export function KnowledgePage() {
                     </div>
                     {articleDetail.status === 'draft' && !canSubmitForReview ? (
                       <p className="text-xs leading-5 text-[color:var(--color-muted)]">
-                        Complete titulo, resumo, categoria e corpo principal antes de enviar para revisao.
+                    Complete título, resumo, categoria e corpo principal antes de enviar para revisão.
                       </p>
                     ) : null}
                     {articleDetail.status === 'review' && !canPublishArticle ? (
                       <p className="text-xs leading-5 text-[color:var(--color-muted)]">
                         {advisoryMessage
-                          ? 'Recarregue os sinais de revisao editorial antes de publicar este artigo.'
-                          : 'Conclua a revisao editorial persistida antes de publicar este artigo.'}
+                      ? 'Recarregue os sinais de revisão editorial antes de publicar este artigo.'
+                      : 'Conclua a revisão editorial persistida antes de publicar este artigo.'}
                       </p>
                     ) : null}
                     {articleDetail.status === 'published' && publishedEditorialDraft && !canPublishEditorialRevision ? (
                       <p className="text-xs leading-5 text-[color:var(--color-muted)]">
-                        Conclua titulo, categoria e conteudo principal da revisao antes de publicar a atualizacao.
+                    Conclua título, categoria e conteúdo principal da revisão antes de publicar a atualização.
                       </p>
                     ) : null}
                   </div>
 
                   <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
                     <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                      Advisory e classificacao
+                      Revisão e classificação
                     </summary>
                     <div className="mt-3 space-y-3">
                       {selectedAdvisory ? (
@@ -2529,7 +2529,7 @@ export function KnowledgePage() {
                             </StatusPill>
                           </div>
                           <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                            {selectedAdvisory.classification_reason || 'Indisponivel'}
+                            {selectedAdvisory.classification_reason || 'Indisponível'}
                           </p>
                           {advisoryRiskFlags.length > 0 ? (
                             <div className="flex flex-wrap gap-2">
@@ -2543,7 +2543,7 @@ export function KnowledgePage() {
                         </>
                       ) : (
                         <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                          Indisponivel
+                          Indisponível
                         </p>
                       )}
                     </div>
@@ -2552,10 +2552,10 @@ export function KnowledgePage() {
                   {selectedAdvisory ? (
                     <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
                       <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                        Revisao editorial
+                        Revisão editorial
                       </summary>
                       <div className="mt-3 space-y-4">
-                        <Field label="Status da revisao">
+                        <Field label="Status da revisão">
                           <SelectInput
                             onChange={(event) =>
                               setReviewStatusDraft(
@@ -2572,18 +2572,18 @@ export function KnowledgePage() {
                           </SelectInput>
                         </Field>
 
-                        <Field label="Notas da revisao">
+                        <Field label="Notas da revisão">
                           <TextareaInput
                             className="min-h-24"
                             onChange={(event) => setReviewNotesDraft(event.target.value)}
-                            placeholder="Registre orientacoes objetivas para a etapa editorial."
+                            placeholder="Registre orientações objetivas para a etapa editorial."
                             value={reviewNotesDraft}
                           />
                         </Field>
 
                         <div className="space-y-2">
                           <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-                            Confirmacoes humanas
+                            Confirmações humanas
                           </p>
                           <div className="space-y-2">
                             {HUMAN_CONFIRMATION_FIELDS.map((field) => (
@@ -2617,7 +2617,7 @@ export function KnowledgePage() {
                             disabled={reviewAdvisorySubmitting}
                             onClick={() => void handleSaveReviewAdvisoryStatus()}
                           >
-                            {reviewAdvisorySubmitting ? 'Salvando...' : 'Salvar revisao'}
+                            {reviewAdvisorySubmitting ? 'Salvando...' : 'Salvar revisão'}
                           </AppButton>
                           <GhostButton
                             disabled={reviewAdvisorySubmitting}
@@ -2654,27 +2654,27 @@ export function KnowledgePage() {
 
                   <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
                     <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                      Informacoes avancadas
+                      Informações avançadas
                     </summary>
                     <div className="mt-3 space-y-3 text-sm leading-6 text-[color:var(--color-muted)]">
-                      <p>Central: {articleDetail.knowledge_space_display_name || 'Indisponivel'}</p>
-                      <p>Slug: {articleDetail.slug || 'Indisponivel'}</p>
-                      <p>Origem: {articleDetail.source_path || 'Indisponivel'}</p>
-                      <p>Hash: {articleDetail.source_hash || 'Indisponivel'}</p>
-                      <p>Revisoes: {articleDetail.revisions.length}</p>
+                      <p>Central: {articleDetail.knowledge_space_display_name || 'Indisponível'}</p>
+                      <p>Slug: {articleDetail.slug || 'Indisponível'}</p>
+                      <p>Origem: {articleDetail.source_path || 'Indisponível'}</p>
+                      <p>Hash: {articleDetail.source_hash || 'Indisponível'}</p>
+                      <p>Revisões: {articleDetail.revisions.length}</p>
                       <p>
-                        Revisao em andamento:{' '}
-                        {publishedEditorialDraft ? 'Sim' : 'Nao'}
+                        Revisão em andamento:{' '}
+                        {publishedEditorialDraft ? 'Sim' : 'Não'}
                       </p>
                       {publishedEditorialDraft ? (
                         <>
-                          <p>Slug em revisao: {publishedEditorialDraft.slug || 'Indisponivel'}</p>
+                          <p>Slug em revisão: {publishedEditorialDraft.slug || 'Indisponível'}</p>
                           <p>
-                            Revisao iniciada da versao:{' '}
+                            Revisão iniciada da versão:{' '}
                             {publishedEditorialDraft.based_on_revision_number}
                           </p>
                           <p>
-                            Revisao atualizada em:{' '}
+                            Revisão atualizada em:{' '}
                             {formatOptionalDate(publishedEditorialDraft.updated_at)}
                           </p>
                         </>

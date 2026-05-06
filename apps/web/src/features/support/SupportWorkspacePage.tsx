@@ -149,11 +149,62 @@ function toneForSeverity(severity: TicketSeverity) {
 }
 
 function humanizeVisibility(value: string) {
-  return value === 'internal' ? 'Nota interna' : 'Resposta publica';
+  return value === 'internal' ? 'Nota interna' : 'Resposta pública';
 }
 
 function humanizeStatus(status: TicketStatus) {
-  return humanizeToken(status).replaceAll('_', ' ');
+  switch (status) {
+    case 'new':
+      return 'Novo';
+    case 'triage':
+      return 'Triagem';
+    case 'in_progress':
+      return 'Em andamento';
+    case 'waiting_customer':
+      return 'Aguardando cliente';
+    case 'waiting_support':
+      return 'Aguardando suporte';
+    case 'waiting_engineering':
+      return 'Aguardando engenharia';
+    case 'resolved':
+      return 'Resolvido';
+    case 'closed':
+      return 'Fechado';
+    case 'cancelled':
+      return 'Cancelado';
+    default:
+      return humanizeToken(status).replaceAll('_', ' ');
+  }
+}
+
+function humanizePriority(priority: TicketPriority) {
+  switch (priority) {
+    case 'low':
+      return 'Baixa';
+    case 'normal':
+      return 'Normal';
+    case 'high':
+      return 'Alta';
+    case 'urgent':
+      return 'Urgente';
+    default:
+      return humanizeToken(priority);
+  }
+}
+
+function humanizeSeverity(severity: TicketSeverity) {
+  switch (severity) {
+    case 'low':
+      return 'Baixa';
+    case 'medium':
+      return 'Média';
+    case 'high':
+      return 'Alta';
+    case 'critical':
+      return 'Crítica';
+    default:
+      return humanizeToken(severity);
+  }
 }
 
 function humanizeCustomerValue(value: string) {
@@ -162,7 +213,7 @@ function humanizeCustomerValue(value: string) {
 
 function humanizeKnowledgeVisibility(visibility: KnowledgeArticleVisibility) {
   if (visibility === 'public') {
-    return 'Publico';
+    return 'Público';
   }
 
   if (visibility === 'internal') {
@@ -178,7 +229,7 @@ function humanizeKnowledgeStatus(status: KnowledgeArticleStatus) {
   }
 
   if (status === 'review') {
-    return 'Em revisao';
+    return 'Em revisão';
   }
 
   if (status === 'published') {
@@ -230,16 +281,16 @@ function SupportQueueLoadingScaffold() {
   return (
     <div className="space-y-5">
       <PageHeader
-        eyebrow="Support Workspace"
+        eyebrow="Suporte"
         title="Fila operacional"
-        description="A fila continua ocupando a area principal enquanto o contexto operacional termina de sincronizar."
+        description="A fila continua ocupando a área principal enquanto o contexto operacional termina de sincronizar."
       />
 
       <WorkspaceSplit
         layoutClassName="xl:grid-cols-[292px_minmax(0,1fr)]"
         sidebar={
           <ContextSubsidebar
-            description="Filtros e filas rapidas seguem reservados na lateral para a triagem nao perder a estrutura."
+            description="Filtros e filas rápidas seguem reservados na lateral para a triagem não perder a estrutura."
             title="Triagem da fila"
           >
             <ContextSubsidebarSection
@@ -394,9 +445,9 @@ function humanizeKnowledgeLinkType(linkType: TicketKnowledgeLinkType) {
     case 'sent_to_customer':
       return 'Link enviado ao cliente';
     case 'documentation_gap':
-      return 'Lacuna de documentacao';
+      return 'Lacuna de documentação';
     case 'needs_update':
-      return 'Precisa revisao';
+    return 'Precisa revisão';
     case 'suggested_article':
       return 'Artigo sugerido';
     default:
@@ -539,7 +590,7 @@ function friendlyTicketStatusErrorMessage(message: string) {
     normalized.includes('invalid ticket status transition') ||
     normalized.includes('status transition')
   ) {
-    return 'Nao foi possivel alterar o status. Verifique a etapa atual do ticket e tente novamente.';
+    return 'Não foi possível alterar o status. Verifique a etapa atual do ticket e tente novamente.';
   }
 
   return message;
@@ -879,7 +930,7 @@ function TechnicalTimelineRow({
             {entry.eventType ? humanizeToken(entry.eventType) : 'evento'}
           </StatusPill>
           <p className="text-xs text-[color:var(--color-muted)]">
-            {entry.actorFullName ?? entry.actorEmail ?? 'Ator nao resolvido'}
+                    {entry.actorFullName ?? entry.actorEmail ?? 'Autor não identificado'}
           </p>
         </div>
         <p className="text-sm leading-6 text-[color:var(--color-ink)]">{summary}</p>
@@ -905,7 +956,7 @@ function SupportConversation({
     return (
       <EmptyState
         title="Conversa vazia"
-        description="Este ticket ainda nao recebeu mensagens, notas internas nem eventos adicionais."
+                description="Este ticket ainda não recebeu mensagens, notas internas nem eventos adicionais."
       />
     );
   }
@@ -922,7 +973,7 @@ function SupportConversation({
       {conversationEntries.length === 0 ? (
         <EmptyState
           title="Sem conversa recente"
-          description="A janela atual ainda nao trouxe respostas publicas nem notas internas para este ticket."
+                description="A janela atual ainda não trouxe respostas públicas nem notas internas para este ticket."
         />
       ) : (
         <div className="space-y-1">
@@ -1052,7 +1103,7 @@ function SupportKnowledgeLinkCard({
           <div className="space-y-0.5">
             <p className="text-[13px] font-semibold text-[color:var(--color-ink)]">{title}</p>
             <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
-              Registrado por {link.createdByFullName ?? 'Operador nao identificado'} em{' '}
+                      Registrado por {link.createdByFullName ?? 'Operador não identificado'} em{' '}
               {formatDateTime(link.createdAt)}
             </p>
           </div>
@@ -1069,7 +1120,7 @@ function SupportKnowledgeLinkCard({
                 rel="noreferrer"
                 target="_blank"
               >
-                Abrir artigo publico
+                    Abrir artigo público
               </a>
               <GhostButton
                 className="min-h-8 rounded-full px-2.5 text-[12px]"
@@ -1082,7 +1133,7 @@ function SupportKnowledgeLinkCard({
             </div>
           ) : link.linkType === 'sent_to_customer' ? (
             <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
-              Link publico indisponivel para este conteudo no estado atual.
+                  Link público indisponível para este conteúdo no estado atual.
             </p>
           ) : null}
         </div>
@@ -1128,7 +1179,7 @@ function SupportKnowledgePickerCard({
               {article.articleTitle}
             </p>
             <p className="line-clamp-2 text-[13px] leading-5 text-[color:var(--color-muted)]">
-              {article.articleSummary?.trim() || 'Resumo ainda nao informado para este artigo.'}
+                      {article.articleSummary?.trim() || 'Resumo ainda não informado para este artigo.'}
             </p>
           </div>
         </div>
@@ -1136,8 +1187,8 @@ function SupportKnowledgePickerCard({
         <div className="space-y-1.5">
           <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
             {article.isCustomerSendAllowed && article.publicArticlePath
-              ? 'Este artigo pode ser usado como link publico ao cliente.'
-              : 'Link publico indisponivel. Este artigo segue apenas para uso interno no estado atual.'}
+                        ? 'Este artigo pode ser usado como link público para o cliente.'
+                        : 'Link público indisponível. Este artigo segue apenas para uso interno no estado atual.'}
           </p>
           <div className="flex flex-wrap gap-1.5">
             <GhostButton
@@ -1184,7 +1235,7 @@ function SupportKnowledgePickerCard({
               onClick={() => onNeedsUpdate(article.articleId)}
               type="button"
             >
-              Precisa revisao
+                  Precisa revisão
             </GhostButton>
           </div>
         </div>
@@ -1250,11 +1301,11 @@ function SupportKnowledgePanel({
 
       {phase === 'contract-unavailable' ? (
         <InlineNotice tone="warning">
-          {message ?? 'O painel de conhecimento ainda nao ficou disponivel para esta tratativa.'}
+                  {message ?? 'O painel de conhecimento ainda não ficou disponível para esta tratativa.'}
         </InlineNotice>
       ) : phase === 'error' ? (
         <InlineNotice tone="critical">
-          {message ?? 'Nao foi possivel carregar o conhecimento relacionado deste ticket.'}
+                  {message ?? 'Não foi possível carregar o conhecimento relacionado deste ticket.'}
         </InlineNotice>
       ) : phase === 'loading' ? (
         <LoadingState
@@ -1312,14 +1363,14 @@ function SupportKnowledgePanel({
               <TextInput
                 className="min-h-10"
                 onChange={(event) => onSearchChange(event.target.value)}
-                placeholder="Buscar artigo por titulo, resumo ou categoria"
+                placeholder="Buscar artigo por título, resumo ou categoria"
                 value={search}
               />
 
               <TextareaInput
                 className="min-h-[84px]"
                 onChange={(event) => onNoteChange(event.target.value)}
-                placeholder="Observacao curta opcional para o proximo operador."
+                placeholder="Observação curta opcional para o próximo operador."
                 value={noteDraft}
               />
 
@@ -1329,7 +1380,7 @@ function SupportKnowledgePanel({
                 onClick={onMarkGap}
                 type="button"
               >
-                Marcar lacuna de documentacao
+                Marcar lacuna de documentação
               </GhostButton>
             </div>
           </div>
@@ -1337,7 +1388,7 @@ function SupportKnowledgePanel({
           <div className="space-y-2 rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h4 className="text-[13px] font-semibold text-[color:var(--color-ink)]">
-                Sugestoes disponiveis
+                  Sugestões disponíveis
               </h4>
               <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
                 {articles.length === 0 ? 'Sem resultados para o filtro atual' : `${articles.length} artigo(s) encontrados`}
@@ -1407,10 +1458,10 @@ function SupportHelpPanel({
           Central de ajuda
         </p>
         <h3 className="text-[15px] font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
-          Conteudo publico sugerido para esta tratativa
+          Conteúdo público sugerido para esta tratativa
         </h3>
         <p className="text-[12px] leading-5 text-[color:var(--color-muted)]">
-          Use este painel para validar se ja existe material publico pronto antes de responder o cliente.
+                Use este painel para validar se já existe material público pronto antes de responder o cliente.
         </p>
       </div>
 
@@ -1418,7 +1469,7 @@ function SupportHelpPanel({
         <div className="space-y-2 rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h4 className="text-[13px] font-semibold text-[color:var(--color-ink)]">
-              Artigos prontos para cliente
+              Artigos prontos para o cliente
             </h4>
             <Link
               className="text-[12px] font-semibold text-[color:var(--color-brand-blue)]"
@@ -1430,8 +1481,8 @@ function SupportHelpPanel({
 
           {publicArticles.length === 0 ? (
             <EmptyState
-              title="Nenhum artigo publico sugerido"
-              description="Quando um conteudo puder ser compartilhado com o cliente, ele aparecera aqui."
+              title="Nenhum artigo público sugerido"
+              description="Quando um conteúdo puder ser compartilhado com o cliente, ele aparecerá aqui."
             />
           ) : (
             <div className="space-y-2">
@@ -1449,7 +1500,7 @@ function SupportHelpPanel({
                     {article.articleTitle}
                   </p>
                   <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-[color:var(--color-muted)]">
-                    {article.articleSummary?.trim() || 'Resumo ainda nao informado para este artigo.'}
+                      {article.articleSummary?.trim() || 'Resumo ainda não informado para este artigo.'}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     <a
@@ -1480,7 +1531,7 @@ function SupportHelpPanel({
           </h4>
           {publicLinks.length === 0 ? (
             <InlineNotice>
-              Ainda nao existe conteudo publico marcado para este ticket.
+              Ainda não existe conteúdo público marcado para este ticket.
             </InlineNotice>
           ) : (
             <div className="space-y-1.5">
@@ -1498,7 +1549,7 @@ function SupportHelpPanel({
                     ) : null}
                   </div>
                   <p className="mt-1.5 text-[13px] font-semibold text-[color:var(--color-ink)]">
-                    {link.articleTitle ?? 'Conteudo publico relacionado'}
+                    {link.articleTitle ?? 'Conteúdo público relacionado'}
                   </p>
                   <p className="mt-1 text-[11px] leading-5 text-[color:var(--color-muted)]">
                     Vinculado em {formatDateTime(link.createdAt)}
@@ -1527,7 +1578,7 @@ function SupportHelpPanel({
 
           <div className="rounded-[14px] border border-dashed border-[rgba(48,127,226,0.28)] bg-white/72 px-3 py-2.5">
             <p className="text-[12px] leading-5 text-[color:var(--color-muted)]">
-              Quando nao houver conteudo pronto, siga pela resposta publica normal e deixe a lacuna registrada na aba Conhecimento.
+              Quando não houver conteúdo pronto, siga com a resposta pública e registre a lacuna na aba Conhecimento.
             </p>
           </div>
         </div>
@@ -1571,7 +1622,7 @@ function SupportMoreActionsPanel({
     <section className="space-y-3">
       <div className="space-y-1">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-          Mais acoes
+          Mais ações
         </p>
         <h3 className="text-[15px] font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
           Movimentos secundarios da tratativa
@@ -1583,7 +1634,7 @@ function SupportMoreActionsPanel({
           <section className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-3">
             <form className="space-y-2.5" onSubmit={onStatusSubmit}>
               <Field
-                label="Atualizar com observacao"
+                label="Atualizar com observação"
                 description="Use quando a mudanca de andamento precisa registrar o contexto operacional."
               >
                 <TextareaInput
@@ -1598,7 +1649,7 @@ function SupportMoreActionsPanel({
                 disabled={submitting || !canUpdateStatus}
                 type="submit"
               >
-                {submitting ? 'Atualizando...' : 'Salvar status com observacao'}
+                {submitting ? 'Atualizando...' : 'Salvar status com observação'}
               </AppButton>
             </form>
           </section>
@@ -1686,8 +1737,8 @@ function SupportQueueItem({
           <StatusPill tone={toneForTicketStatus(ticket.status)}>
             {humanizeStatus(ticket.status)}
           </StatusPill>
-          <p className="text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
-            {humanizeToken(ticket.priority)} · {humanizeToken(ticket.severity)}
+            <p className="text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
+              {humanizePriority(ticket.priority)} · {humanizeSeverity(ticket.severity)}
           </p>
         </div>
 
@@ -1697,8 +1748,8 @@ function SupportQueueItem({
           </h3>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[color:var(--color-muted)]">
             <span>Cliente: {ticketTenantLabel(ticket)}</span>
-            <span>Responsavel: {ticket.assignedToFullName ?? 'Nao atribuido'}</span>
-            <span>Ultima atividade: {formatDateTime(ticket.lastMessageAt ?? ticket.updatedAt)}</span>
+                  <span>Responsável: {ticket.assignedToFullName ?? 'Não atribuído'}</span>
+            <span>Última atividade: {formatDateTime(ticket.lastMessageAt ?? ticket.updatedAt)}</span>
           </div>
         </div>
       </button>
@@ -1720,7 +1771,7 @@ function SupportSummaryStrip({
   const items = [
     { label: 'Abertos', value: totalOpen },
     { label: 'Urgentes', value: highAttention },
-    { label: 'Nao atribuidos', value: unassigned },
+                  { label: 'Não atribuídos', value: unassigned },
     { label: 'Aguardando cliente', value: waitingCustomer },
   ];
 
@@ -1759,14 +1810,14 @@ function SupportTicketPreview({
     );
   }
 
-  const title = detail?.title ?? ticket?.title ?? 'Ticket sem titulo';
+  const title = detail?.title ?? ticket?.title ?? 'Ticket sem título';
   const tenant =
     detail?.tenantDisplayName ??
     detail?.tenantLegalName ??
     detail?.tenantSlug ??
-    (ticket ? ticketTenantLabel(ticket) : 'Cliente nao resolvido');
+      (ticket ? ticketTenantLabel(ticket) : 'Cliente não identificado');
   const assigned =
-    detail?.assignedToFullName ?? ticket?.assignedToFullName ?? 'Nao atribuido';
+    detail?.assignedToFullName ?? ticket?.assignedToFullName ?? 'Não atribuído';
   const lastActivity = formatDateTime(
     detail?.lastMessageAt ?? detail?.updatedAt ?? ticket?.lastMessageAt ?? ticket?.updatedAt ?? null,
   );
@@ -1823,7 +1874,7 @@ function SupportTicketPreview({
         </p>
         {customer ? (
           <div className="mt-4 border-t border-[color:var(--color-border)] pt-3 text-sm">
-            <p>Contato principal: {customer.activeContacts[0]?.fullName ?? 'Nao resolvido'}</p>
+                <p>Contato principal: {customer.activeContacts[0]?.fullName ?? 'Não identificado'}</p>
             <p>Tickets abertos deste cliente: {customer.openTicketCount}</p>
           </div>
         ) : null}
@@ -1885,8 +1936,8 @@ function SupportQueueToolbar({
           >
             <option value="all">Todas</option>
             {TICKET_PRIORITIES.map((priority) => (
-              <option key={priority} value={priority}>
-                {humanizeToken(priority)}
+                          <option key={priority} value={priority}>
+                            {humanizePriority(priority)}
               </option>
             ))}
           </SelectInput>
@@ -1901,8 +1952,8 @@ function SupportQueueToolbar({
           >
             <option value="all">Todas</option>
             {TICKET_SEVERITIES.map((severity) => (
-              <option key={severity} value={severity}>
-                {humanizeToken(severity)}
+                          <option key={severity} value={severity}>
+                            {humanizeSeverity(severity)}
               </option>
             ))}
           </SelectInput>
@@ -1933,7 +1984,7 @@ function SupportQueueToolbar({
             value={filters.assignedToUserId}
           >
             <option value="all">Todos</option>
-            <option value="unassigned">Nao atribuidos</option>
+                <option value="unassigned">Não atribuídos</option>
             {assigneeOptions.map((assignee) => (
               <option key={assignee.id} value={assignee.id}>
                 {assignee.label}
@@ -1972,8 +2023,8 @@ function SupportCustomerRail({
   if (!customer) {
     return (
         <EmptyState
-          title="Contexto do cliente indisponivel"
-          description="O contexto deste cliente ainda nao ficou disponivel para a tratativa."
+                    title="Contexto do cliente indisponível"
+            description="O contexto deste cliente ainda não ficou disponível para a tratativa."
         />
     );
   }
@@ -2085,7 +2136,7 @@ function SupportCustomerRail({
           </Link>
         </div>
         <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
-          {customer.tenantLegalName ?? 'Razao social nao resolvida'}
+                  {customer.tenantLegalName ?? 'Razão social não identificada'}
         </p>
       </div>
 
@@ -2118,7 +2169,7 @@ function SupportCustomerRail({
             <h4 className="text-sm font-semibold text-[color:var(--color-ink)]">Contatos ativos</h4>
             {contacts.length === 0 ? (
               <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                Nenhum contato ativo disponivel no momento.
+                Nenhum contato ativo disponível no momento.
               </p>
             ) : (
               contacts.map((contact) => <SupportContactCard key={contact.id} contact={contact} />)
@@ -2174,7 +2225,7 @@ function SupportRecentTicketCard({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <StatusPill tone={toneForTicketStatus(ticket.status)}>{humanizeStatus(ticket.status)}</StatusPill>
         <span className="text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
-          {humanizeToken(ticket.priority)}
+                            {humanizePriority(ticket.priority)}
         </span>
       </div>
       <p className="mt-2 line-clamp-2 font-medium text-[color:var(--color-ink)]">{ticket.title}</p>
@@ -2267,7 +2318,7 @@ function SupportAccountContextCompact({
   if (!accountContext || !accountContext.profileId) {
     return (
       <InlineNotice tone="warning">
-        Perfil operacional ainda nao cadastrado para este cliente. O suporte segue com contatos e tickets recentes, mas sem stack enriquecido.
+                Perfil operacional ainda não cadastrado para este cliente. O suporte segue com contatos e tickets recentes, mas sem contexto enriquecido.
       </InlineNotice>
     );
   }
@@ -2298,21 +2349,21 @@ function SupportAccountContextCompact({
           <div className="flex flex-wrap items-start justify-between gap-3">
             <dt className="font-medium text-[color:var(--color-ink)]">Plataforma</dt>
             <dd className="text-right">
-              {primaryPlatform ? primaryPlatform.provider : 'Plataforma nao registrada'}
+                {primaryPlatform ? primaryPlatform.provider : 'Plataforma não registrada'}
             </dd>
           </div>
           <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-3">
-            <dt className="font-medium text-[color:var(--color-ink)]">Integracoes</dt>
+            <dt className="font-medium text-[color:var(--color-ink)]">Integrações</dt>
             <dd className="text-right">
               {integrations.length > 0
                 ? integrations.map((integration) => integration.provider).join(' · ')
-                : 'Sem integracoes principais'}
+                : 'Sem integrações principais'}
             </dd>
           </div>
           <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-3">
             <dt className="font-medium text-[color:var(--color-ink)]">Contato operacional</dt>
             <dd className="text-right">
-              {primaryContact ? `${primaryContact.fullName} · ${primaryContact.email}` : 'Nao resolvido'}
+                {primaryContact ? `${primaryContact.fullName} · ${primaryContact.email}` : 'Não identificado'}
             </dd>
           </div>
         </dl>
@@ -2345,7 +2396,7 @@ function SupportAccountContextCompact({
       {riskyCustomizations.length > 0 ? (
         <div className="space-y-2 rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
-            Customizacoes com risco
+            Customizações com risco
           </p>
           <div className="space-y-2">
             {riskyCustomizations.map((customization) => (
@@ -2375,7 +2426,7 @@ function SupportAccountContextCompact({
           {accountContext.integrations.length > 0 ? (
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
-                Integracoes registradas
+                Integrações registradas
               </p>
               <div className="space-y-2">
                 {accountContext.integrations.map((integration) => (
@@ -2405,7 +2456,7 @@ function SupportAccountContextCompact({
           {accountContext.internalNotes ? (
             <div className="space-y-1 rounded-[16px] bg-[color:var(--color-surface)] px-3 py-3">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
-                Observacao interna
+                Observação interna
               </p>
               <p className="text-sm leading-6 text-[color:var(--color-muted)]">
                 {accountContext.internalNotes}
@@ -2428,7 +2479,7 @@ function SupportTicketCustomerSnapshot({
   if (!customer) {
     return (
       <InlineNotice tone="warning">
-        O contexto resumido do cliente ainda nao ficou disponivel para esta tratativa.
+                O contexto resumido do cliente ainda não ficou disponível para esta tratativa.
       </InlineNotice>
     );
   }
@@ -2444,7 +2495,7 @@ function SupportTicketCustomerSnapshot({
               {customer.tenantDisplayName ?? customer.tenantLegalName ?? customer.tenantSlug}
             </p>
             <p className="text-[12px] leading-5 text-[color:var(--color-muted)]">
-              {primaryContact ? `${primaryContact.fullName} · ${primaryContact.email}` : 'Contato principal nao resolvido'}
+                {primaryContact ? `${primaryContact.fullName} · ${primaryContact.email}` : 'Contato principal não identificado'}
             </p>
           </div>
           <Link
@@ -2455,7 +2506,7 @@ function SupportTicketCustomerSnapshot({
           </Link>
         </div>
         <InlineNotice tone="warning">
-          Perfil operacional ainda nao cadastrado. A tratativa segue com o contato principal e o historico recente do cliente.
+                Perfil operacional ainda não cadastrado. A tratativa segue com o contato principal e o histórico recente do cliente.
         </InlineNotice>
       </div>
     );
@@ -2495,31 +2546,31 @@ function SupportTicketCustomerSnapshot({
           <div className="flex items-start justify-between gap-3">
             <dt className="font-medium text-[color:var(--color-ink)]">Plataforma</dt>
             <dd className="text-right">
-              {primaryPlatform ? primaryPlatform.provider : 'Nao registrada'}
+                {primaryPlatform ? primaryPlatform.provider : 'Não registrada'}
             </dd>
           </div>
           <div className="flex items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-0.5">
             <dt className="font-medium text-[color:var(--color-ink)]">Produto</dt>
             <dd className="text-right">
-              {accountContext.productLine ? humanizeCustomerValue(accountContext.productLine) : 'Nao resolvido'}
+                {accountContext.productLine ? humanizeCustomerValue(accountContext.productLine) : 'Não identificado'}
             </dd>
           </div>
           <div className="flex items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-0.5">
             <dt className="font-medium text-[color:var(--color-ink)]">Porte / tier</dt>
             <dd className="text-right">
-              {accountContext.accountTier ?? 'Nao resolvido'}
+                {accountContext.accountTier ?? 'Não identificado'}
             </dd>
           </div>
           <div className="flex items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-0.5">
             <dt className="font-medium text-[color:var(--color-ink)]">Contato principal</dt>
             <dd className="text-right">
-              {primaryContact ? primaryContact.fullName : 'Nao resolvido'}
+                {primaryContact ? primaryContact.fullName : 'Não identificado'}
             </dd>
           </div>
           <div className="flex items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-0.5">
             <dt className="font-medium text-[color:var(--color-ink)]">E-mail</dt>
             <dd className="text-right break-all">
-              {primaryContact?.email ?? 'Nao resolvido'}
+                {primaryContact?.email ?? 'Não identificado'}
             </dd>
           </div>
         </dl>
@@ -2539,7 +2590,7 @@ function SupportAccountContextOverview({
   if (!accountContext || !accountContext.profileId) {
     return (
       <InlineNotice tone="warning">
-        Este cliente ainda nao tem um perfil operacional enriquecido. O suporte pode seguir com contatos e tickets recentes, mas sem stack consolidado.
+                Este cliente ainda não tem um perfil operacional enriquecido. O suporte pode seguir com contatos e tickets recentes, mas sem contexto consolidado.
       </InlineNotice>
     );
   }
@@ -2577,7 +2628,7 @@ function SupportAccountContextOverview({
               Plataforma e stack
             </p>
             <p className="text-sm font-medium text-[color:var(--color-ink)]">
-              {primaryPlatform ? primaryPlatform.provider : 'Plataforma nao registrada'}
+                {primaryPlatform ? primaryPlatform.provider : 'Plataforma não registrada'}
             </p>
             <p className="text-sm leading-6 text-[color:var(--color-muted)]">
               {primaryPlatform
@@ -2589,7 +2640,7 @@ function SupportAccountContextOverview({
           <div className="space-y-2">
             {accountContext.integrations.length === 0 ? (
               <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                Nenhuma integracao registrada no perfil.
+                Nenhuma integração registrada no perfil.
               </p>
             ) : (
               accountContext.integrations.map((integration) => (
@@ -2681,7 +2732,7 @@ function SupportAccountContextOverview({
 
       <details className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
         <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-          Observacoes internas e flags controladas
+          Observações internas e flags controladas
         </summary>
         <div className="mt-3 space-y-3">
           {accountContext.internalNotes ? (
@@ -2692,7 +2743,7 @@ function SupportAccountContextOverview({
             </div>
           ) : (
             <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-              Nenhuma observacao interna controlada registrada.
+              Nenhuma observação interna controlada registrada.
             </p>
           )}
           <div className="rounded-[16px] bg-[color:var(--color-surface)] px-3 py-3">
@@ -2786,7 +2837,7 @@ function SupportWorkspaceView({
     } catch (error) {
       const classified = classifyAdminError(
         error,
-        'Falha ao carregar a fila oficial do Support Workspace.',
+          'Falha ao carregar a fila oficial do suporte.',
       );
 
       if (classified.kind === 'session-expired') {
@@ -2840,7 +2891,7 @@ function SupportWorkspaceView({
         setKnowledgeArticlePicker(emptyKnowledgeArticlePicker());
         setKnowledgePhase('idle');
         setDetailPhase('error');
-        setDetailMessage('O ticket solicitado nao apareceu na leitura operacional disponivel.');
+        setDetailMessage('O ticket solicitado não apareceu na leitura operacional disponível.');
         return;
       }
 
@@ -3145,9 +3196,9 @@ function SupportWorkspaceView({
       }
 
       await navigator.clipboard.writeText(buildAbsoluteAppUrl(publicArticlePath));
-      applySuccess('Link publico copiado com sucesso.');
+      applySuccess('Link público copiado com sucesso.');
     } catch {
-      applyFailure('Nao foi possivel copiar o link publico agora.');
+      applyFailure('Não foi possível copiar o link público agora.');
     }
   }
 
@@ -3242,15 +3293,15 @@ function SupportWorkspaceView({
       await refreshDetail(ticketDetail.id);
       applySuccess(
         linkType === 'sent_to_customer'
-          ? 'Link publico relacionado ao ticket com sucesso.'
+          ? 'Link público relacionado ao ticket com sucesso.'
           : 'Referencia interna relacionada ao ticket com sucesso.',
       );
     } catch (error) {
       const classified = classifyAdminError(
         error,
         linkType === 'sent_to_customer'
-          ? 'Falha ao registrar o link publico para o cliente.'
-          : 'Falha ao relacionar a referencia interna.',
+          ? 'Falha ao registrar o link público para o cliente.'
+          : 'Falha ao relacionar a referência interna.',
       );
       if (classified.kind === 'session-expired') {
         markSessionExpired();
@@ -3276,11 +3327,11 @@ function SupportWorkspaceView({
         note: optionalKnowledgeNote(),
       });
       await refreshDetail(ticketDetail.id);
-      applySuccess('Lacuna de documentacao registrada com sucesso.');
+      applySuccess('Lacuna de documentação registrada com sucesso.');
     } catch (error) {
       const classified = classifyAdminError(
         error,
-        'Falha ao registrar a lacuna de documentacao.',
+        'Falha ao registrar a lacuna de documentação.',
       );
       if (classified.kind === 'session-expired') {
         markSessionExpired();
@@ -3307,11 +3358,11 @@ function SupportWorkspaceView({
         note: optionalKnowledgeNote(),
       });
       await refreshDetail(ticketDetail.id);
-      applySuccess('Artigo marcado para revisao com sucesso.');
+      applySuccess('Artigo marcado para revisão com sucesso.');
     } catch (error) {
       const classified = classifyAdminError(
         error,
-        'Falha ao marcar que o artigo precisa de revisao.',
+        'Falha ao marcar que o artigo precisa de revisão.',
       );
       if (classified.kind === 'session-expired') {
         markSessionExpired();
@@ -3384,7 +3435,7 @@ function SupportWorkspaceView({
           body,
         });
         setMessageDraft('');
-        applySuccess('Resposta publica adicionada com sucesso.');
+        applySuccess('Resposta pública adicionada com sucesso.');
       } else {
         await addInternalTicketNote({
           ticketId: ticketDetail.id,
@@ -3401,7 +3452,7 @@ function SupportWorkspaceView({
       const classified = classifyAdminError(
         error,
         composerMode === 'public'
-          ? 'Falha ao adicionar a resposta publica.'
+          ? 'Falha ao adicionar a resposta pública.'
           : 'Falha ao adicionar a nota interna.',
       );
       if (classified.kind === 'session-expired') {
@@ -3489,7 +3540,7 @@ function SupportWorkspaceView({
   if (phase === 'error') {
     return (
         <ErrorState
-          description={pageMessage ?? 'A fila operacional nao ficou disponivel neste ambiente.'}
+          description={pageMessage ?? 'A fila operacional não ficou disponível neste ambiente.'}
         action={<AppButton onClick={() => void loadQueue(focusTicketId ?? null)}>Tentar novamente</AppButton>}
       />
     );
@@ -3527,7 +3578,7 @@ function SupportWorkspaceView({
     },
     {
       key: 'unassigned',
-      label: 'Nao atribuidos',
+      label: 'Não atribuídos',
       helper: 'pedem dono',
       active: filters.assignedToUserId === 'unassigned',
       apply: () => setFilters({ ...filters, assignedToUserId: 'unassigned' }),
@@ -3643,7 +3694,7 @@ function SupportWorkspaceView({
               </ContextSubsidebarSection>
 
               <ContextSubsidebarSection
-                description="Ajuste o recorte sem ocupar a area de trabalho principal."
+                description="Ajuste o recorte sem ocupar a área de trabalho principal."
                 title="Filtros"
               >
                 <SupportQueueToolbar
@@ -3712,7 +3763,7 @@ function SupportWorkspaceView({
                   ) : detailPhase === 'contract-unavailable' ? (
                     <ContractUnavailableState contractName="previa operacional do ticket" />
                   ) : detailPhase === 'error' ? (
-                    <ErrorState description={detailMessage ?? 'A previa do ticket nao ficou disponivel.'} />
+                    <ErrorState description={detailMessage ?? 'A prévia do ticket não ficou disponível.'} />
                   ) : (
                     <SupportTicketPreview customer={customer} detail={previewTicket} ticket={selectedQueueTicket} />
                   )}
@@ -3735,7 +3786,7 @@ function SupportWorkspaceView({
       ) : detailPhase === 'loading' ? (
         <LoadingState
           title="Montando tratativa"
-          description="Estamos preparando a conversa, o contexto do cliente e a operacao do ticket."
+          description="Estamos preparando a conversa, o contexto do cliente e a operação do ticket."
         />
       ) : detailPhase === 'contract-unavailable' ? (
         <ContractUnavailableState contractName="detalhe do ticket, conversa recente e contexto do cliente" />
@@ -3743,8 +3794,8 @@ function SupportWorkspaceView({
         focusTicketId ? (
           <section className="rounded-[28px] border border-[color:var(--color-border)] bg-white/95 px-6 py-6 shadow-[0_18px_34px_rgba(19,33,79,0.08)]">
             <EmptyState
-              title="Ticket nao encontrado"
-              description={detailMessage ?? 'O ticket solicitado nao apareceu na leitura operacional disponivel.'}
+              title="Ticket não encontrado"
+              description={detailMessage ?? 'O ticket solicitado não apareceu na leitura operacional disponível.'}
               action={
                 <Link to="/support/queue">
                   <AppButton>Voltar para a fila</AppButton>
@@ -3754,7 +3805,7 @@ function SupportWorkspaceView({
           </section>
         ) : (
           <ErrorState
-            description={detailMessage ?? 'O painel operacional do ticket nao ficou disponivel.'}
+            description={detailMessage ?? 'O painel operacional do ticket não ficou disponível.'}
           />
         )
       ) : (
@@ -3768,10 +3819,10 @@ function SupportWorkspaceView({
                       {humanizeStatus(ticketDetail.status)}
                     </StatusPill>
                     <StatusPill tone={toneForPriority(ticketDetail.priority)}>
-                      {humanizeToken(ticketDetail.priority)}
+                      {humanizePriority(ticketDetail.priority)}
                     </StatusPill>
                     <StatusPill tone={toneForSeverity(ticketDetail.severity)}>
-                      {humanizeToken(ticketDetail.severity)}
+                      {humanizeSeverity(ticketDetail.severity)}
                     </StatusPill>
                     <span className="text-[12px] font-semibold text-[color:var(--color-ink)]">
                       #{ticketDetail.id.slice(0, 8)}
@@ -3812,7 +3863,7 @@ function SupportWorkspaceView({
                     </div>
                     <div className="min-w-0">
                       <p className="text-[9.5px] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
-                        Ultima atualizacao
+                        Última atualização
                       </p>
                       <p className="truncate font-semibold leading-4 text-[color:var(--color-ink)]">
                         {formatDateTime(ticketDetail.lastMessageAt ?? ticketDetail.updatedAt)}
@@ -3870,7 +3921,7 @@ function SupportWorkspaceView({
                     onClick={openAdvancedSurface}
                     type="button"
                   >
-                    Mais acoes
+                    Mais ações
                   </button>
                 </div>
               </div>
@@ -3917,7 +3968,7 @@ function SupportWorkspaceView({
                           onClick={() => setComposerMode('public')}
                           type="button"
                         >
-                          Resposta publica
+                          Resposta pública
                         </button>
                         <button
                           className={cx(
@@ -3953,7 +4004,7 @@ function SupportWorkspaceView({
                           }
                           placeholder={
                             composerMode === 'public'
-                              ? 'Digite sua resposta publica para o cliente...'
+                              ? 'Digite sua resposta pública para o cliente...'
                               : 'Registre a nota interna da tratativa...'
                           }
                           value={composerDraft}
@@ -4069,34 +4120,34 @@ function SupportWorkspaceView({
             <section className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-3 shadow-[0_8px_16px_rgba(19,33,79,0.06)]">
               <div className="space-y-1.5">
                 <h4 className="text-[13px] font-semibold tracking-[-0.02em] text-[color:var(--color-ink)]">
-                  Acoes do ticket
+                  Ações do ticket
                 </h4>
 
                 {agentsPhase === 'contract-unavailable' ? (
                   <InlineNotice tone="critical">
-                    {agentsMessage ?? 'A lista de agentes nao ficou disponivel para esta tratativa.'}
+                  {agentsMessage ?? 'A lista de agentes não ficou disponível para esta tratativa.'}
                   </InlineNotice>
                 ) : agentsPhase === 'error' ? (
                   <InlineNotice tone="critical">
-                    {agentsMessage ?? 'Nao foi possivel carregar o diretorio de agentes atribuiveis.'}
+                  {agentsMessage ?? 'Não foi possível carregar o diretório de agentes atribuíveis.'}
                   </InlineNotice>
                 ) : agentsPhase === 'loading' ? (
                   <p className="text-[12px] leading-5 text-[color:var(--color-muted)]">
-                    Carregando agentes disponiveis...
+                    Carregando agentes disponíveis...
                   </p>
                 ) : assignableAgents.length === 0 ? (
                   <InlineNotice tone="warning">
-                    Nenhum agente ativo ficou disponivel para este cliente.
+                    Nenhum agente ativo ficou disponível para este cliente.
                   </InlineNotice>
                 ) : (
                   <form className="space-y-2" onSubmit={handleAssign}>
-                    <Field label="Responsavel">
+                    <Field label="Responsável">
                       <SelectInput
                         className="h-8.5 rounded-[12px] px-3 text-[11.5px] font-medium"
                         onChange={(event) => setAssignDraft(event.target.value)}
                         value={assignDraft}
                       >
-                        <option value="">Sem responsavel</option>
+                        <option value="">Sem responsável</option>
                         {assignableAgents.map((agent) => (
                           <option key={`${agent.tenantId}:${agent.userId}`} value={agent.userId}>
                             {formatAssignableAgentLabel(agent)}
@@ -4109,7 +4160,7 @@ function SupportWorkspaceView({
                       disabled={submitting || !ticketDetail.canAssign}
                       type="submit"
                     >
-                      {submitting ? 'Salvando...' : 'Salvar alteracoes'}
+                      {submitting ? 'Salvando...' : 'Salvar alterações'}
                     </AppButton>
                     <div className="grid gap-1.5 sm:grid-cols-2">
                       <GhostButton
@@ -4181,7 +4232,7 @@ function SupportWorkspaceView({
                   </p>
                 ) : knowledgePhase === 'contract-unavailable' || knowledgePhase === 'error' ? (
                   <InlineNotice tone={knowledgePhase === 'error' ? 'critical' : 'warning'}>
-                    {knowledgeMessage ?? 'O painel de conhecimento nao ficou disponivel para este ticket.'}
+                    {knowledgeMessage ?? 'O painel de conhecimento não ficou disponível para este ticket.'}
                   </InlineNotice>
                 ) : knowledgePreviewLinks.length === 0 ? (
                   <InlineNotice>
@@ -4199,15 +4250,15 @@ function SupportWorkspaceView({
                         </StatusPill>
                       </div>
                       <p className="mt-1 text-[11px] font-semibold leading-4.5 text-[color:var(--color-ink)]">
-                        {link.articleTitle ?? 'Vinculo sem titulo visivel'}
+                        {link.articleTitle ?? 'Vínculo sem título visível'}
                       </p>
                     </div>
                   ))
                 )}
                 <p className="text-[10px] leading-5 text-[color:var(--color-muted)]">
                   {publicKnowledgeSuggestions.length > 0
-                    ? `${publicKnowledgeSuggestions.length} sugestao(oes) publicas disponiveis.`
-                    : 'Nenhuma sugestao publica pronta no momento.'}
+                    ? `${publicKnowledgeSuggestions.length} sugestão(ões) públicas disponíveis.`
+                    : 'Nenhuma sugestão pública pronta no momento.'}
                 </p>
               </div>
             </section>
@@ -4306,14 +4357,14 @@ function resolveCustomerRiskProfile(accountContext: SupportCustomerAccountContex
     return {
       label: 'Risco alto',
       tone: 'critical' as const,
-      healthLabel: 'Atencao imediata',
+      healthLabel: 'Atenção imediata',
       accentClassName: 'bg-rose-500',
     };
   }
 
   if (accountContext.operationalStatus === 'limited' || accountContext.activeAlerts.length > 0) {
     return {
-      label: 'Em atencao',
+      label: 'Em atenção',
       tone: 'warning' as const,
       healthLabel: 'Monitoramento ativo',
       accentClassName: 'bg-amber-500',
@@ -4321,9 +4372,9 @@ function resolveCustomerRiskProfile(accountContext: SupportCustomerAccountContex
   }
 
   return {
-    label: 'Operacao estavel',
+        label: 'Operação estável',
     tone: 'positive' as const,
-    healthLabel: 'Saude controlada',
+        healthLabel: 'Saúde controlada',
     accentClassName: 'bg-emerald-500',
   };
 }
@@ -4337,20 +4388,20 @@ function resolveMigrationCard(accountContext: SupportCustomerAccountContext | nu
         { label: 'Descoberta', state: 'pending' as const },
         { label: 'Planejamento', state: 'pending' as const },
         { label: 'Execucao', state: 'pending' as const },
-        { label: 'Validacao', state: 'pending' as const },
+        { label: 'Validação', state: 'pending' as const },
       ],
     };
   }
 
   if (accountContext.operationalStatus === 'onboarding') {
     return {
-      phase: 'Em migracao',
+      phase: 'Em migração',
       accentTone: 'warning' as const,
       steps: [
         { label: 'Descoberta', state: 'done' as const },
         { label: 'Planejamento', state: 'active' as const },
         { label: 'Execucao', state: 'pending' as const },
-        { label: 'Validacao', state: 'pending' as const },
+        { label: 'Validação', state: 'pending' as const },
       ],
     };
   }
@@ -4363,19 +4414,19 @@ function resolveMigrationCard(accountContext: SupportCustomerAccountContext | nu
         { label: 'Descoberta', state: 'done' as const },
         { label: 'Planejamento', state: 'done' as const },
         { label: 'Execucao', state: 'active' as const },
-        { label: 'Validacao', state: 'pending' as const },
+        { label: 'Validação', state: 'pending' as const },
       ],
     };
   }
 
   return {
-    phase: 'Operacao ativa',
+        phase: 'Operação ativa',
     accentTone: 'positive' as const,
     steps: [
       { label: 'Descoberta', state: 'done' as const },
       { label: 'Planejamento', state: 'done' as const },
       { label: 'Execucao', state: 'done' as const },
-      { label: 'Validacao', state: 'active' as const },
+      { label: 'Validação', state: 'active' as const },
     ],
   };
 }
@@ -4561,7 +4612,7 @@ export function SupportCustomersPage() {
   if (phase === 'error') {
     return (
       <ErrorState
-        description={message ?? 'Nao foi possivel carregar a carteira de clientes desta area.'}
+          description={message ?? 'Não foi possível carregar a carteira de clientes desta área.'}
         action={<AppButton onClick={() => void loadCustomers(selectedTenantId)}>Tentar novamente</AppButton>}
       />
     );
@@ -4570,8 +4621,8 @@ export function SupportCustomersPage() {
   if (customers.length === 0) {
     return (
       <EmptyState
-        title="Nenhum cliente disponivel"
-        description="Ainda nao existe conta operacional disponivel para esta area do suporte."
+        title="Nenhum cliente disponível"
+          description="Ainda não existe conta operacional disponível para esta área do suporte."
       />
     );
   }
@@ -4629,7 +4680,7 @@ export function SupportCustomersPage() {
           >
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
               <SupportCustomerMetricTile helper="contas na leitura atual" label="Clientes" value={String(totalCustomers)} />
-              <SupportCustomerMetricTile helper="contas em operacao ativa" label="Ativos" value={String(activeCustomers)} />
+            <SupportCustomerMetricTile helper="contas em operação ativa" label="Ativos" value={String(activeCustomers)} />
               <SupportCustomerMetricTile helper="itens ainda em aberto" label="Tickets abertos" value={String(openTickets)} />
               <SupportCustomerMetricTile helper="pessoas prontas para contato" label="Contatos ativos" value={String(activeContacts)} />
             </div>
@@ -4754,7 +4805,7 @@ export function SupportCustomersPage() {
                 <aside className="space-y-5">
                   <SupportCustomerDetailCard
                     className="px-4 py-4"
-                    description="Atalhos uteis para continuar a operacao."
+            description="Atalhos úteis para continuar a operação."
                     title="Proximos passos"
                   >
                     <div className="space-y-2">
@@ -4775,7 +4826,7 @@ export function SupportCustomersPage() {
 
                   <SupportCustomerDetailCard
                     className="px-4 py-4"
-                    description="Leitura do status atual sem ocupar a area principal."
+                    description="Leitura do status atual sem ocupar a área principal."
                     title="Sinais da conta"
                   >
                     <div className="flex flex-wrap gap-2">
@@ -4790,7 +4841,7 @@ export function SupportCustomersPage() {
                   <SupportCustomerDetailCard
                     className="px-4 py-4"
                     description="Ultimos dados conhecidos deste cadastro."
-                    title="Atualizacao"
+                    title="Atualização"
                   >
                     <div className="space-y-2 text-sm leading-6 text-[color:var(--color-muted)]">
                       <p>Criado em {formatDateTime(selectedCustomer.tenantCreatedAt)}</p>
@@ -4946,7 +4997,7 @@ export function SupportCustomerPage() {
   if (phase === 'error') {
     return (
       <ErrorState
-        description={message ?? 'O contexto deste cliente nao ficou disponivel neste ambiente.'}
+          description={message ?? 'O contexto deste cliente não ficou disponível neste ambiente.'}
         action={<AppButton onClick={() => void loadCustomer()}>Tentar novamente</AppButton>}
       />
     );
@@ -4955,8 +5006,8 @@ export function SupportCustomerPage() {
   if (!customer) {
     return (
       <EmptyState
-        title="Cliente nao encontrado"
-        description="O cliente solicitado nao apareceu na leitura operacional disponivel."
+        title="Cliente não encontrado"
+        description="O cliente solicitado não apareceu na leitura operacional disponível."
       />
     );
   }
@@ -4989,8 +5040,8 @@ export function SupportCustomerPage() {
     { id: 'resumo', label: 'Resumo' },
     { id: 'contatos', label: 'Contatos' },
     { id: 'tickets', label: 'Tickets' },
-    { id: 'migracao', label: 'Migracao' },
-    { id: 'saude', label: 'Saude' },
+    { id: 'migracao', label: 'Migração' },
+    { id: 'saude', label: 'Saúde' },
     { id: 'atividade', label: 'Atividade' },
   ];
 
@@ -5009,7 +5060,7 @@ export function SupportCustomerPage() {
                 {customerLabel}
               </h1>
               <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                Contexto operacional completo da conta, contatos, tickets e sinais de saude.
+                Contexto operacional completo da conta, contatos, tickets e sinais de saúde.
               </p>
             </div>
           </div>
@@ -5123,11 +5174,11 @@ export function SupportCustomerPage() {
                     ),
                   },
                   {
-                    label: 'Responsavel',
+                    label: 'Responsável',
                     value: displayCustomerValue(ownerName),
                   },
                   {
-                    label: 'Ultima atividade',
+                    label: 'Última atividade',
                     value: latestActivity ? formatDateTime(latestActivity) : 'Indisponível',
                   },
                 ].map((item) => (
@@ -5176,7 +5227,7 @@ export function SupportCustomerPage() {
                   <p>
                     Vinculo principal: {primaryContact.isPrimary ? 'Sim' : 'Indisponível'}
                   </p>
-                  <p>Usuario vinculado: {primaryContact.linkedUserId ? 'Ativo' : 'Indisponível'}</p>
+                <p>Usuário vinculado: {primaryContact.linkedUserId ? 'Ativo' : 'Indisponível'}</p>
                 </div>
               </div>
             ) : (
@@ -5221,7 +5272,7 @@ export function SupportCustomerPage() {
                   value={String(customer.openTicketCount)}
                 />
                 <SupportCustomerMetricTile
-                  helper="Itens aguardando retorno ou acao."
+                  helper="Itens aguardando retorno ou ação."
                   label="Em espera"
                   value={String(openWaitingCount)}
                 />
@@ -5260,7 +5311,7 @@ export function SupportCustomerPage() {
                     <span>Status</span>
                     <span>Ticket</span>
                     <span>Responsavel</span>
-                    <span>Atualizacao</span>
+                    <span>Atualização</span>
                   </div>
                   <div className="divide-y divide-[color:var(--color-border)]">
                     {recentTicketsWindow.tickets.map((ticket) => (
@@ -5279,7 +5330,7 @@ export function SupportCustomerPage() {
                             {ticket.title}
                           </p>
                           <p className="text-xs uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
-                            {humanizeToken(ticket.priority)} · {humanizeToken(ticket.severity)}
+                            {humanizePriority(ticket.priority)} · {humanizeSeverity(ticket.severity)}
                           </p>
                         </div>
                         <div className="min-w-0 text-sm text-[color:var(--color-muted)]">
@@ -5301,7 +5352,7 @@ export function SupportCustomerPage() {
             title="Timeline operacional"
           >
             {recentEventsWindow.events.length === 0 ? (
-              <InlineNotice>Nenhuma atividade operacional recente ficou disponivel.</InlineNotice>
+                  <InlineNotice>Nenhuma atividade operacional recente ficou disponível.</InlineNotice>
             ) : (
               <div className="space-y-4" id="atividade">
                 {recentEventsWindow.events.map((event, index) => (
@@ -5338,12 +5389,12 @@ export function SupportCustomerPage() {
         <aside className="space-y-5">
           <SupportCustomerDetailCard
             className="px-4 py-4"
-            description="Leitura curta da conta para decidir se a tratativa pede atencao extra."
-            title="Saude da conta"
+            description="Leitura curta da conta para decidir se a tratativa pede atenção extra."
+            title="Saúde da conta"
           >
             <div className="space-y-4" id="saude">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-medium text-[color:var(--color-ink)]">Saude geral</p>
+              <p className="text-sm font-medium text-[color:var(--color-ink)]">Saúde geral</p>
                 <StatusPill tone={riskProfile.tone}>{riskProfile.healthLabel}</StatusPill>
               </div>
               <div className="h-3 overflow-hidden rounded-full bg-slate-200">
@@ -5360,7 +5411,7 @@ export function SupportCustomerPage() {
               </div>
               <div className="space-y-2 text-sm leading-6 text-[color:var(--color-muted)]">
                 <p>{visibleAlerts.length} alerta(s) ativo(s) na leitura operacional.</p>
-                <p>{highRiskCustomizations.length} customizacao(oes) com atencao operacional.</p>
+                <p>{highRiskCustomizations.length} customização(ões) com atenção operacional.</p>
                 <p>{customer.openTicketCount} ticket(s) ainda em aberto para esta conta.</p>
               </div>
             </div>
@@ -5369,7 +5420,7 @@ export function SupportCustomerPage() {
           <SupportCustomerDetailCard
             className="px-4 py-4"
             description="Passos e sinais que mostram o momento operacional da conta."
-            title="Migracao"
+            title="Migração"
           >
             <div className="space-y-4" id="migracao">
               <div className="flex items-center justify-between gap-3">
@@ -5401,9 +5452,9 @@ export function SupportCustomerPage() {
                 ))}
               </div>
               <div className="grid gap-2 text-sm leading-6 text-[color:var(--color-muted)]">
-                <p>Integracoes operacionais: {visibleIntegrations.length}</p>
+                <p>Integrações operacionais: {visibleIntegrations.length}</p>
                 <p>Features ativas: {visibleFeatures.length}</p>
-                <p>Ultima consolidacao: {latestActivity ? formatDateTime(latestActivity) : 'Indisponível'}</p>
+                <p>Última consolidação: {latestActivity ? formatDateTime(latestActivity) : 'Indisponível'}</p>
               </div>
             </div>
           </SupportCustomerDetailCard>

@@ -21,7 +21,7 @@ export async function listPublicKnowledgeSpaces() {
     .order('route_kind', { ascending: true });
 
   if (error) {
-    throw toAppError(error, 'Falha ao carregar os knowledge spaces publicos.');
+    throw toAppError(error, 'Falha ao carregar as centrais públicas disponíveis.');
   }
 
   return (data ?? []) as PublicKnowledgeSpaceResolverRow[];
@@ -37,7 +37,7 @@ export async function getPublicKnowledgeSpace(spaceSlug: string) {
     .order('route_kind', { ascending: true });
 
   if (error) {
-    throw toAppError(error, 'Falha ao resolver o knowledge space publico.');
+    throw toAppError(error, 'Falha ao localizar a central pública solicitada.');
   }
 
   return (data ?? []) as PublicKnowledgeSpaceResolverRow[];
@@ -53,7 +53,7 @@ export async function listPublicKnowledgeNavigation(spaceSlug: string) {
     .order('category_name', { ascending: true });
 
   if (error) {
-    throw toAppError(error, 'Falha ao carregar a navegacao publica.');
+    throw toAppError(error, 'Falha ao carregar a navegação pública.');
   }
 
   return (data ?? []).map((row) => ({
@@ -74,7 +74,7 @@ export async function listPublicKnowledgeArticles(spaceSlug: string) {
     .order('title', { ascending: true });
 
   if (error) {
-    throw toAppError(error, 'Falha ao carregar os artigos publicos.');
+    throw toAppError(error, 'Falha ao carregar os artigos públicos.');
   }
 
   return (data ?? []) as PublicKnowledgeArticleListRow[];
@@ -93,7 +93,7 @@ export async function getPublicKnowledgeArticle(
     .maybeSingle();
 
   if (error) {
-    throw toAppError(error, 'Falha ao carregar o artigo publico.');
+    throw toAppError(error, 'Falha ao carregar o artigo público.');
   }
 
   return (data ?? null) as PublicKnowledgeArticleDetailRow | null;
@@ -115,7 +115,7 @@ export async function searchPublicKnowledgeArticles(
   );
 
   if (error) {
-    throw toAppError(error, 'Falha ao buscar artigos publicos.');
+    throw toAppError(error, 'Falha ao buscar artigos públicos.');
   }
 
   return (data ?? []) as PublicKnowledgeSearchArticleRow[];

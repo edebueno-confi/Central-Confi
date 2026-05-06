@@ -19,7 +19,7 @@ function sanitizeAdminMessage(message: string, fallbackMessage: string) {
     lowered.includes('ja existe') ||
     lowered.includes('já existe')
   ) {
-    return 'Ja existe um registro com os mesmos dados principais. Revise os campos e tente novamente.';
+    return 'Já existe um registro com os mesmos dados principais. Revise os campos e tente novamente.';
   }
 
   if (
@@ -32,7 +32,7 @@ function sanitizeAdminMessage(message: string, fallbackMessage: string) {
     lowered.includes('editorial revision') ||
     lowered.includes('only published knowledge articles support editorial revision')
   ) {
-    return 'Nao foi possivel concluir a acao na etapa atual. Revise o status e os campos obrigatorios antes de tentar novamente.';
+    return 'Não foi possível concluir a ação na etapa atual. Revise o status e os campos obrigatórios antes de tentar novamente.';
   }
 
   if (
@@ -40,7 +40,7 @@ function sanitizeAdminMessage(message: string, fallbackMessage: string) {
     lowered.includes('permission denied') ||
     lowered.includes('row-level security')
   ) {
-    return 'Sua sessao nao tem permissao para concluir esta acao agora.';
+    return 'Sua sessão não tem permissão para concluir esta ação agora.';
   }
 
   if (

@@ -57,7 +57,7 @@ export function HelpCenterHomePage() {
     } catch (error) {
       const classified = classifyAdminError(
         error,
-        'Nao foi possivel executar a busca publica da Central de Ajuda.',
+        'Não foi possível executar a busca pública da Central de Ajuda.',
       );
       setSearchResults([]);
       setSearchMessage(classified.message);
@@ -119,13 +119,13 @@ export function HelpCenterHomePage() {
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(280px,0.85fr)]">
           <div className="space-y-4">
             <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-[var(--help-muted)]">
-              Visao geral
+              Visão geral
             </p>
             <h2 className="text-4xl font-semibold tracking-[-0.06em] text-[var(--help-ink-strong)]">
-              Encontre rapido a orientacao certa para operar a plataforma.
+              Encontre rápido a orientação certa para operar a plataforma.
             </h2>
             <p className="max-w-3xl text-base leading-8 text-[var(--help-muted)]">
-              Esta central concentra somente conteudo publicado e aprovado. O objetivo aqui e reduzir friccao de uso, configuracao e integracao sem expor conteudo interno.
+              Esta central reúne apenas conteúdo publicado e aprovado.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link to={`/help/${context.primaryRoute.knowledge_space_slug}/articles`}>
@@ -141,14 +141,14 @@ export function HelpCenterHomePage() {
             >
               <label className="grid gap-2" htmlFor="help-center-search">
                 <span className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[var(--help-muted)]">
-                  Buscar artigo
+                Buscar artigo
                 </span>
                 <input
                   id="help-center-search"
                   autoComplete="off"
                   className="h-12 rounded-[20px] border border-[var(--help-border)] bg-[var(--help-surface)] px-4 text-sm text-[var(--help-ink-strong)] outline-none transition placeholder:text-[var(--help-muted)] focus:border-[var(--help-accent)] focus:ring-2 focus:ring-[color:var(--help-accent-soft)]"
                   onChange={(event) => setSearchInput(event.target.value)}
-                  placeholder="Ex.: integracao, configuracao, transportadora"
+                  placeholder="Ex.: integração, configuração, transportadora"
                   type="search"
                   value={searchInput}
                 />
@@ -166,14 +166,14 @@ export function HelpCenterHomePage() {
           <div className="grid gap-4 rounded-[30px] border border-[var(--help-border)] bg-white/74 p-5">
             <div>
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[var(--help-muted)]">
-                Como esta camada funciona
+              Como funciona
               </p>
               <p className="mt-3 text-sm leading-7 text-[var(--help-ink)]">
-                Esta central mostra apenas orientacoes publicas e aprovadas. O conteudo visivel aqui foi organizado para facilitar configuracao, uso e integracao sem expor material interno.
+                Aqui você encontra apenas orientações públicas e aprovadas.
               </p>
             </div>
             <InlineNotice>
-              Cada artigo desta central passa por revisao antes de aparecer aqui. Conteudo interno ou rascunhos continuam fora da experiencia publica.
+              Cada artigo passa por revisão antes de aparecer aqui.
             </InlineNotice>
             {supportContacts.email || supportContacts.docsUrl || supportContacts.statusPageUrl ? (
               <div className="grid gap-2 text-sm">
@@ -192,7 +192,7 @@ export function HelpCenterHomePage() {
                     rel="noreferrer"
                     target="_blank"
                   >
-                    Abrir documentacao oficial
+                    Abrir documentação oficial
                   </a>
                 ) : null}
                 {supportContacts.statusPageUrl ? (
@@ -218,10 +218,10 @@ export function HelpCenterHomePage() {
               Resultado da busca
             </p>
             <h3 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--help-ink-strong)]">
-              Procurar artigos publicados
+            Procurar artigos publicados
             </h3>
             <p className="max-w-3xl text-sm leading-7 text-[var(--help-muted)]">
-              Use a busca para encontrar rapidamente orientacoes publicas desta central sem sair do fluxo principal.
+              Use a busca para encontrar orientações públicas desta central.
             </p>
           </div>
           {activeQuery ? (
@@ -234,21 +234,21 @@ export function HelpCenterHomePage() {
         <div className="mt-5">
           {searchPhase === 'idle' ? (
             <div className="rounded-[24px] border border-dashed border-[var(--help-border)] bg-white/56 px-5 py-5 text-sm leading-7 text-[var(--help-muted)]">
-              Digite pelo menos 2 caracteres para procurar configuracoes, fluxos e integracoes publicadas nesta central.
+              Digite pelo menos 2 caracteres para procurar artigos nesta central.
             </div>
           ) : null}
 
           {searchPhase === 'loading' ? (
             <LoadingState
               title="Buscando artigos publicados"
-              description="Estamos consultando apenas conteudo publico e aprovado desta central."
+              description="Estamos consultando o conteúdo público desta central."
             />
           ) : null}
 
           {searchPhase === 'contract-unavailable' ? (
             <ErrorState
-              title="Busca publica indisponivel"
-              description="A busca desta central nao ficou disponivel neste ambiente agora."
+              title="Busca pública indisponível"
+              description="A busca desta central não está disponível neste ambiente agora."
             />
           ) : null}
 
@@ -257,7 +257,7 @@ export function HelpCenterHomePage() {
               title="Falha ao executar a busca"
               description={
                 searchMessage ??
-                'A camada publica nao conseguiu consultar os artigos publicados neste ambiente.'
+                'Não foi possível consultar os artigos publicados neste ambiente.'
               }
               action={
                 <GhostButton onClick={() => void loadSearch(activeQuery)}>
@@ -270,12 +270,12 @@ export function HelpCenterHomePage() {
           {searchPhase === 'empty' ? (
             activeQuery.length < 2 ? (
               <div className="rounded-[24px] border border-dashed border-[var(--help-border)] bg-white/56 px-5 py-5 text-sm leading-7 text-[var(--help-muted)]">
-                Use pelo menos 2 caracteres para manter a busca publica objetiva e legivel.
+                Use pelo menos 2 caracteres para pesquisar.
               </div>
             ) : (
               <EmptyState
                 title="Nenhum artigo encontrado"
-                description="Nenhum artigo publicado corresponde a esta consulta neste knowledge space. Tente um termo mais direto ou navegue pelas categorias abaixo."
+                description="Nenhum artigo publicado corresponde a esta busca. Tente outro termo ou navegue pelas categorias abaixo."
               />
             )
           ) : null}
@@ -292,14 +292,14 @@ export function HelpCenterHomePage() {
                     <div className="space-y-2">
                       <div className="flex flex-wrap gap-2">
                         <StatusPill tone="accent">
-                          {article.category_name ?? 'Artigo publico'}
+                          {article.category_name ?? 'Artigo público'}
                         </StatusPill>
                       </div>
                       <h4 className="text-lg font-semibold tracking-[-0.03em] text-[var(--help-ink-strong)]">
                         {article.title}
                       </h4>
                       <p className="max-w-3xl text-sm leading-7 text-[var(--help-muted)]">
-                        {article.summary ?? 'Artigo tecnico B2B publicado sem resumo adicional.'}
+                        {article.summary ?? 'Artigo publicado sem resumo adicional.'}
                       </p>
                     </div>
                     <div className="text-left text-xs leading-5 text-[var(--help-muted)] sm:text-right">
@@ -321,21 +321,21 @@ export function HelpCenterHomePage() {
       <section className="rounded-[30px] border border-[var(--help-border)] bg-[var(--help-panel)] p-6 shadow-[var(--shadow-panel)] backdrop-blur sm:p-8">
         <div className="space-y-2">
           <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[var(--help-muted)]">
-            Navegar por categoria
+              Navegar por categoria
           </p>
           <h3 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--help-ink-strong)]">
             Acesse os temas principais sem depender da busca.
           </h3>
           <p className="max-w-3xl text-sm leading-7 text-[var(--help-muted)]">
-            As categorias abaixo organizam apenas artigos publicos e publicados deste knowledge space.
+            As categorias abaixo organizam os artigos públicos desta central.
           </p>
         </div>
         <div className="mt-5 grid gap-4 xl:grid-cols-2">
         {rootCategories.length === 0 ? (
           <div className="xl:col-span-2">
             <EmptyState
-              title="Sem categorias publicas visiveis"
-              description="Ainda nao existem categorias publicas com artigos publicados para este knowledge space."
+              title="Sem categorias públicas visíveis"
+              description="Ainda não existem categorias públicas com artigos publicados nesta central."
             />
           </div>
         ) : (
@@ -354,7 +354,7 @@ export function HelpCenterHomePage() {
                   </h3>
                   <p className="text-sm leading-7 text-[var(--help-muted)]">
                     {category.category_description ??
-                      'Categoria publica aprovada para orientar configuracao, uso e integracao.'}
+                      'Categoria pública aprovada para orientar uso e integração.'}
                   </p>
                 </div>
                 <StatusPill tone={toneForCategoryCount(category.subtree_article_count)}>
@@ -373,14 +373,14 @@ export function HelpCenterHomePage() {
                         {article.title}
                       </p>
                       <p className="mt-1 text-xs leading-5 text-[var(--help-muted)]">
-                        {article.summary ?? 'Artigo publico publicado.'}
+                        {article.summary ?? 'Artigo publicado.'}
                       </p>
                     </Link>
                   ))}
                 </div>
               ) : (
                 <div className="mt-5 rounded-[22px] border border-dashed border-[var(--help-border)] px-4 py-4 text-sm leading-6 text-[var(--help-muted)]">
-                  A categoria ja esta publica, mas ainda nao possui artigos publicados diretamente nela.
+                  A categoria já está pública, mas ainda não possui artigos publicados diretamente nela.
                 </div>
               )}
             </article>
@@ -396,7 +396,7 @@ export function HelpCenterHomePage() {
               Publicados recentemente
             </p>
             <h3 className="text-2xl font-semibold tracking-[-0.04em] text-[var(--help-ink-strong)]">
-              Ultimos artigos visiveis
+              Últimos artigos visíveis
             </h3>
           </div>
           <Link to={`/help/${context.primaryRoute.knowledge_space_slug}/articles`}>
@@ -407,7 +407,7 @@ export function HelpCenterHomePage() {
           <div className="mt-5">
             <EmptyState
               title="Nenhum artigo publicado ainda"
-              description="O knowledge space ainda nao tem artigos publicos publicados para leitura."
+              description="Esta central ainda não tem artigos públicos publicados."
             />
           </div>
         ) : (
@@ -424,7 +424,7 @@ export function HelpCenterHomePage() {
                       {article.title}
                     </p>
                     <p className="text-sm leading-6 text-[var(--help-muted)]">
-                      {article.summary ?? 'Artigo tecnico B2B publicado.'}
+                      {article.summary ?? 'Artigo publicado.'}
                     </p>
                   </div>
                   <StatusPill tone="default">

@@ -44,10 +44,10 @@ export function LoginPage() {
     return (
       <div className="mx-auto flex min-h-screen w-full max-w-4xl items-center px-6 py-12">
         <ErrorState
-          title="Ambiente de acesso indisponivel"
+          title="Ambiente de acesso indisponível"
           description={
             configError ??
-            'As configuracoes minimas deste ambiente ainda nao foram liberadas.'
+            'As configurações mínimas deste ambiente ainda não foram liberadas.'
           }
         />
       </div>
@@ -58,8 +58,8 @@ export function LoginPage() {
     return (
       <div className="mx-auto flex min-h-screen w-full max-w-4xl items-center px-6 py-12">
         <LoadingState
-          title="Carregando sessao"
-          description="Estamos validando sua sessao antes de abrir o workspace."
+          title="Carregando sessão"
+          description="Estamos validando seu acesso."
         />
       </div>
     );
@@ -93,7 +93,7 @@ export function LoginPage() {
         <ErrorState
           description={
             gate.message ??
-            'Sua sessao foi encontrada, mas o acesso ao workspace nao conseguiu ser validado.'
+            'Sua sessão foi encontrada, mas o acesso ao workspace não pôde ser validado.'
           }
         />
       </div>
@@ -131,19 +131,19 @@ export function LoginPage() {
                     <p className="text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-white/58">
                       Genius
                     </p>
-                    <p className="text-base font-semibold text-white">Support Workspace</p>
+                    <p className="text-base font-semibold text-white">Support OS</p>
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <p className="text-[0.72rem] font-semibold uppercase tracking-[0.32em] text-white/58">
-                    Entrada do workspace
+                    Acesso interno
                   </p>
                   <h1 className="max-w-2xl text-[clamp(2.8rem,5vw,4.4rem)] font-semibold tracking-[-0.07em] leading-[1.02] text-white">
-                    Acesse a operacao interna da Genius com foco em atendimento, clientes e governanca.
+                    Entrar no Genius Support OS
                   </h1>
                   <p className="max-w-xl text-base leading-8 text-white/74">
-                    Entre para abrir a fila operacional, tratar tickets, revisar clientes B2B e acompanhar as superficies internas aprovadas.
+                    Acesse sua área de trabalho autorizada.
                   </p>
                 </div>
               </div>
@@ -153,44 +153,23 @@ export function LoginPage() {
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="rounded-[26px] border border-white/12 bg-white/8 p-5">
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-white/55">
-                  Atendimento
-                </p>
-                <p className="mt-3 text-sm leading-7 text-white/78">
-                  Fila, conversa, contexto do cliente e conhecimento relacionado na mesma rotina.
-                </p>
-              </div>
-              <div className="rounded-[26px] border border-white/12 bg-white/8 p-5">
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-white/55">
-                  Governanca
-                </p>
-                <p className="mt-3 text-sm leading-7 text-white/78">
-                  Tenants, acessos, knowledge e observabilidade administrativa com leitura operacional.
-                </p>
-              </div>
-              <div className="rounded-[26px] border border-white/12 bg-white/8 p-5">
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-white/55">
-                  Continuidade
-                </p>
-                <p className="mt-3 text-sm leading-7 text-white/78">
-                  Entre com sua conta aprovada para retomar exatamente a area onde a operacao parou.
-                </p>
-              </div>
+            <div className="rounded-[26px] border border-white/12 bg-white/8 p-5">
+              <p className="text-sm leading-7 text-white/78">
+                Use sua conta aprovada para entrar no ambiente interno.
+              </p>
             </div>
           </div>
         </section>
 
         <Panel
           title="Entrar"
-          description="Use sua conta aprovada para abrir o workspace interno da Genius."
+          description="Acesse sua área de trabalho autorizada."
           className="rounded-[34px] border-white/70 bg-white/94 p-7 shadow-[0_30px_64px_rgba(20,31,71,0.12)] sm:p-8"
         >
           <form className="space-y-5" onSubmit={handleSubmit}>
             {sessionExpired ? (
               <InlineNotice tone="warning">
-                Sua sessao anterior expirou. Entre novamente para retomar o workspace.
+                Sua sessão expirou. Entre novamente para continuar.
               </InlineNotice>
             ) : null}
 
@@ -222,7 +201,7 @@ export function LoginPage() {
 
             <div className="flex flex-wrap gap-3">
               <AppButton disabled={submitting} type="submit">
-                {submitting ? 'Validando acesso...' : 'Entrar no workspace'}
+                {submitting ? 'Validando acesso...' : 'Entrar'}
               </AppButton>
               <GhostButton
                 disabled={submitting}
@@ -239,10 +218,10 @@ export function LoginPage() {
 
             <div className="rounded-[22px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-                Dica
+                Acesso
               </p>
               <p className="mt-2 text-sm leading-7 text-[color:var(--color-muted)]">
-                Depois do login, a navegacao abre a area autorizada da sua rotina sem expor informacoes fora do seu escopo.
+                Use sua conta aprovada para acessar o ambiente interno.
               </p>
             </div>
           </form>

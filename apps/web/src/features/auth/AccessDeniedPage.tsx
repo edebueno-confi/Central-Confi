@@ -5,22 +5,22 @@ import { useAuthContext } from './auth-context';
 
 function describeReason(reason: unknown) {
   if (reason === 'missing-profile') {
-    return 'Sua conta foi autenticada, mas ainda nao tem acesso liberado para esta area.';
+    return 'Sua conta foi autenticada, mas ainda não tem acesso liberado para esta área.';
   }
 
   if (reason === 'inactive-profile') {
-    return 'Sua conta existe, mas esta inativa neste momento. Fale com quem administra o acesso para voltar a operar.';
+    return 'Sua conta existe, mas está inativa neste momento. Fale com quem administra o acesso para voltar a operar.';
   }
 
   if (reason === 'missing-platform-admin') {
-    return 'Sua conta nao tem permissao para abrir esta area do workspace.';
+    return 'Sua conta não tem permissão para abrir esta área.';
   }
 
   if (reason === 'backend-permission') {
-    return 'Esta area nao esta liberada para a sua conta agora. Se voce acredita que deveria entrar, revise seu acesso com a equipe responsavel.';
+    return 'Esta área não está liberada para a sua conta agora. Se você acredita que deveria entrar, revise seu acesso com a equipe responsável.';
   }
 
-  return 'Sua conta nao tem permissao para abrir esta area agora.';
+  return 'Sua conta não tem permissão para abrir esta área agora.';
 }
 
 export function AccessDeniedPage() {
@@ -37,8 +37,8 @@ export function AccessDeniedPage() {
         description={describeReason((location.state as { reason?: unknown } | null)?.reason)}
         action={
           <>
-            <AppButton onClick={() => void signOut()}>Encerrar sessao</AppButton>
-            <GhostButton onClick={() => window.history.back()}>Voltar para o inicio</GhostButton>
+            <AppButton onClick={() => void signOut()}>Encerrar sessão</AppButton>
+            <GhostButton onClick={() => window.history.back()}>Voltar ao início</GhostButton>
           </>
         }
       />

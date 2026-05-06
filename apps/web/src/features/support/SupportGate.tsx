@@ -10,7 +10,7 @@ import { AppButton, GhostButton, StatusPill, cx } from '../../components/ui';
 import { useAuthContext } from '../auth/auth-context';
 
 function SupportGateBootShell() {
-  const navItems = ['Fila', 'Tickets', 'Clientes', 'Knowledge', 'Admin'];
+  const navItems = ['Fila', 'Tickets', 'Clientes', 'Conhecimento', 'Admin'];
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#eef4ff_0%,#f7faff_42%,#f3f6fb_100%)] text-[color:var(--color-ink)]">
@@ -24,7 +24,7 @@ function SupportGateBootShell() {
                   Genius
                 </p>
                 <h1 className="text-[0.96rem] font-semibold tracking-[-0.04em] leading-tight">
-                  Support Workspace
+                  Suporte
                 </h1>
               </div>
             </div>
@@ -74,8 +74,8 @@ function SupportGateBootShell() {
                 QA
               </div>
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-white">Sessao local</p>
-                <p className="truncate text-[0.72rem] text-white/62">Aguardando validacao</p>
+              <p className="truncate text-sm font-semibold text-white">Sessão local</p>
+                <p className="truncate text-[0.72rem] text-white/62">Aguardando validação</p>
               </div>
             </div>
           </div>
@@ -85,11 +85,11 @@ function SupportGateBootShell() {
           <header className="rounded-[22px] border border-[color:var(--color-border)] bg-white/92 px-4 py-3 shadow-[0_14px_28px_rgba(19,33,79,0.08)] backdrop-blur sm:px-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2">
-                <StatusPill tone="accent">development</StatusPill>
-                <StatusPill>support workspace</StatusPill>
+                <StatusPill tone="accent">Acesso interno</StatusPill>
+                <StatusPill>Suporte</StatusPill>
               </div>
               <GhostButton className="min-h-10 border-[rgba(48,127,226,0.18)] px-4 text-[color:var(--color-brand-blue)]">
-                Encerrar sessao
+                  Encerrar sessão
               </GhostButton>
             </div>
           </header>
@@ -106,8 +106,8 @@ function SupportGateBootShell() {
 
             <section className="rounded-[28px] border border-[color:var(--color-border)] bg-white/92 px-5 py-5 shadow-[0_18px_36px_rgba(19,33,79,0.08)]">
               <LoadingState
-                title="Preparando o workspace"
-                description="Estamos liberando a fila, os tickets e o contexto do suporte para continuar sua operacao."
+                title="Preparando o suporte"
+          description="Estamos liberando a fila, os tickets e o contexto do suporte para continuar a operação."
               />
             </section>
           </div>
@@ -131,10 +131,10 @@ export function SupportGate({ children }: { children: ReactNode }) {
     return (
       <div className="mx-auto flex min-h-screen w-full max-w-4xl items-center px-6 py-12">
         <ErrorState
-          title="Configuracao do frontend indisponivel"
+          title="Configuração de acesso indisponível"
           description={
             configError ??
-            'O app ainda nao recebeu as configuracoes minimas para abrir o suporte.'
+            'Este ambiente ainda não recebeu as configurações mínimas para abrir o suporte.'
           }
         />
       </div>
@@ -145,8 +145,8 @@ export function SupportGate({ children }: { children: ReactNode }) {
     return (
       <div className="mx-auto flex min-h-screen w-full max-w-4xl items-center px-6 py-12">
         <StateFrame
-          title="Sessao expirada"
-          description="Sua sessao perdeu validade durante a operacao. Entre novamente para continuar no suporte."
+          title="Sessão expirada"
+          description="Sua sessão perdeu validade durante a operação. Entre novamente para continuar no suporte."
           eyebrow="auth"
           tone="critical"
           actions={

@@ -73,7 +73,7 @@ export async function listAdminTenants() {
     .order('created_at', { ascending: false });
 
   if (error) {
-    throw toAppError(error, 'Falha ao carregar a lista de tenants.');
+    throw toAppError(error, 'Falha ao carregar a lista de clientes.');
   }
 
   return (data ?? []) as AdminTenantsListItemRow[];
@@ -88,7 +88,7 @@ export async function getAdminTenantDetail(tenantId: string) {
     .maybeSingle();
 
   if (error) {
-    throw toAppError(error, 'Falha ao carregar o detalhe do tenant.');
+    throw toAppError(error, 'Falha ao carregar o detalhe do cliente.');
   }
 
   if (!data) {
@@ -109,7 +109,7 @@ export async function listAdminMemberships() {
     .order('tenant_display_name', { ascending: true });
 
   if (error) {
-    throw toAppError(error, 'Falha ao carregar memberships administrativos.');
+    throw toAppError(error, 'Falha ao carregar os vínculos administrativos.');
   }
 
   return (data ?? []) as AdminTenantMembershipRow[];
@@ -131,7 +131,7 @@ export async function lookupAdminUsers(rawQuery: string, limit = 8) {
     .limit(limit);
 
   if (error) {
-    throw toAppError(error, 'Falha ao buscar usuarios para memberships.');
+    throw toAppError(error, 'Falha ao buscar usuários para os vínculos.');
   }
 
   return (data ?? []) as AdminUserLookupRow[];
@@ -160,7 +160,7 @@ export async function listAdminKnowledgeSpaces() {
     .order('created_at', { ascending: false });
 
   if (error) {
-    throw toAppError(error, 'Falha ao carregar knowledge spaces administrativos.');
+    throw toAppError(error, 'Falha ao carregar as áreas de conhecimento administrativas.');
   }
 
   return (data ?? []) as AdminKnowledgeSpaceRow[];
@@ -177,7 +177,7 @@ export async function listAdminKnowledgeCategoriesV2(knowledgeSpaceId: string) {
   if (error) {
     throw toAppError(
       error,
-      'Falha ao carregar as categorias administrativas da Knowledge Base.',
+      'Falha ao carregar as categorias administrativas da central de ajuda.',
     );
   }
 
@@ -209,7 +209,7 @@ export async function listAdminKnowledgeArticlesV2(options: {
   if (error) {
     throw toAppError(
       error,
-      'Falha ao carregar a lista administrativa de artigos da Knowledge Base.',
+      'Falha ao carregar a lista administrativa de artigos da central de ajuda.',
     );
   }
 
@@ -265,7 +265,7 @@ export async function listAdminKnowledgeArticleReviewAdvisories(
   if (error) {
     throw toAppError(
       error,
-      'Falha ao carregar advisories editoriais da Knowledge Base.',
+      'Falha ao carregar os alertas editoriais da central de ajuda.',
     );
   }
 
@@ -379,7 +379,7 @@ export async function createKnowledgeCategoryV2(
   );
 
   if (error) {
-    throw toAppError(error, 'Falha ao criar categoria da Knowledge Base.');
+    throw toAppError(error, 'Falha ao criar a categoria da central de ajuda.');
   }
 
   return data as RpcAdminCreateKnowledgeCategoryV2Response;
@@ -395,7 +395,7 @@ export async function createKnowledgeArticleDraftV2(
   );
 
   if (error) {
-    throw toAppError(error, 'Falha ao criar draft da Knowledge Base.');
+    throw toAppError(error, 'Falha ao criar o rascunho da central de ajuda.');
   }
 
   return data as RpcAdminCreateKnowledgeArticleDraftV2Response;
@@ -411,7 +411,7 @@ export async function updateKnowledgeArticleDraftV2(
   );
 
   if (error) {
-    throw toAppError(error, 'Falha ao atualizar draft da Knowledge Base.');
+    throw toAppError(error, 'Falha ao atualizar o rascunho da central de ajuda.');
   }
 
   return data as RpcAdminUpdateKnowledgeArticleDraftV2Response;
@@ -429,7 +429,7 @@ export async function beginKnowledgeArticleEditorialRevisionV2(
   if (error) {
     throw toAppError(
       error,
-      'Falha ao iniciar a revisao editorial do artigo publicado.',
+      'Falha ao iniciar a revisão editorial do artigo publicado.',
     );
   }
 
@@ -448,7 +448,7 @@ export async function updateKnowledgeArticleEditorialRevisionV2(
   if (error) {
     throw toAppError(
       error,
-      'Falha ao salvar a revisao editorial do artigo publicado.',
+      'Falha ao salvar a revisão editorial do artigo publicado.',
     );
   }
 
@@ -467,7 +467,7 @@ export async function submitKnowledgeArticleForReviewV2(
   if (error) {
     throw toAppError(
       error,
-      'Falha ao enviar o artigo para revisao editorial.',
+      'Falha ao enviar o artigo para revisão editorial.',
     );
   }
 
@@ -484,7 +484,7 @@ export async function publishKnowledgeArticleV2(
   );
 
   if (error) {
-    throw toAppError(error, 'Falha ao publicar o artigo da Knowledge Base.');
+    throw toAppError(error, 'Falha ao publicar o artigo da central de ajuda.');
   }
 
   return data as RpcAdminPublishKnowledgeArticleV2Response;
@@ -500,7 +500,7 @@ export async function archiveKnowledgeArticleV2(
   );
 
   if (error) {
-    throw toAppError(error, 'Falha ao arquivar o artigo da Knowledge Base.');
+    throw toAppError(error, 'Falha ao arquivar o artigo da central de ajuda.');
   }
 
   return data as RpcAdminArchiveKnowledgeArticleV2Response;
@@ -518,7 +518,7 @@ export async function publishKnowledgeArticleEditorialRevisionV2(
   if (error) {
     throw toAppError(
       error,
-      'Falha ao publicar a atualizacao do artigo.',
+      'Falha ao publicar a atualização do artigo.',
     );
   }
 
@@ -537,7 +537,7 @@ export async function discardKnowledgeArticleEditorialRevisionV2(
   if (error) {
     throw toAppError(
       error,
-      'Falha ao descartar a revisao editorial do artigo.',
+      'Falha ao descartar a revisão editorial do artigo.',
     );
   }
 
@@ -554,7 +554,7 @@ export async function updateKnowledgeArticleReviewStatus(
   );
 
   if (error) {
-    throw toAppError(error, 'Falha ao atualizar o status da revisao editorial.');
+    throw toAppError(error, 'Falha ao atualizar o status da revisão editorial.');
   }
 
   return data as RpcAdminUpdateKnowledgeArticleReviewStatusResponse;
@@ -570,7 +570,7 @@ export async function markKnowledgeArticleReviewed(
   );
 
   if (error) {
-    throw toAppError(error, 'Falha ao marcar a revisao editorial como concluida.');
+    throw toAppError(error, 'Falha ao marcar a revisão editorial como concluída.');
   }
 
   return data as RpcAdminMarkKnowledgeArticleReviewedResponse;

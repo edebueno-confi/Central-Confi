@@ -68,7 +68,7 @@ function extractArticleSections(source: string, fallbackTitle: string) {
     return [
       {
         id: slugifyHeading(fallbackTitle) || 'visao-geral',
-        label: 'Visao geral',
+        label: 'Visão geral',
       },
     ];
   }
@@ -158,7 +158,7 @@ function PublicArticleChrome({
               <p className="text-[1.15rem] font-semibold tracking-[-0.03em] text-[var(--help-ink-strong)]">
                 {brandName}
               </p>
-              <p className="text-[0.95rem] text-[var(--help-muted)]">Support OS</p>
+              <p className="text-[0.95rem] text-[var(--help-muted)]">Central de ajuda</p>
             </div>
           </Link>
 
@@ -167,7 +167,7 @@ function PublicArticleChrome({
               className="text-base font-medium text-[var(--help-ink)] no-underline transition hover:text-[var(--help-link)]"
               to={`/help/${spaceSlug}`}
             >
-              Inicio
+              Início
             </Link>
             <Link
               className="text-base font-medium text-[var(--help-ink)] no-underline transition hover:text-[var(--help-link)]"
@@ -210,7 +210,7 @@ function PublicArticleChrome({
                     ))
                   ) : (
                     <p className="px-3 py-2 text-sm text-[var(--help-muted)]">
-                      Indisponivel
+                      Indisponível
                     </p>
                   )}
                 </div>
@@ -329,7 +329,7 @@ export function HelpCenterArticlePage() {
     ? `${article.title} | ${context.primaryRoute.brand_name}`
     : `${context.primaryRoute.brand_name} | Artigo`;
   const articleMetaDescription = article?.summary ??
-    `${context.primaryRoute.brand_name} publica guias aprovados para consulta B2B.`;
+    `${context.primaryRoute.brand_name} reúne guias aprovados para consulta B2B.`;
 
   const loadArticle = useEffectEvent(
     async (targetSpaceSlug: string, targetArticleSlug: string) => {
@@ -352,7 +352,7 @@ export function HelpCenterArticlePage() {
       } catch (error) {
         const classified = classifyAdminError(
           error,
-          'Nao foi possivel carregar o artigo publico solicitado.',
+          'Não foi possível carregar o artigo público solicitado.',
         );
         setArticle(null);
         setMessage(classified.message);
@@ -390,7 +390,7 @@ export function HelpCenterArticlePage() {
     [article?.category_id, article?.id, context.articles],
   );
   const articleSections = useMemo(
-    () => extractArticleSections(article?.body_md ?? '', article?.title ?? 'Visao geral'),
+    () => extractArticleSections(article?.body_md ?? '', article?.title ?? 'Visão geral'),
     [article?.body_md, article?.title],
   );
   const readingTime = useMemo(
@@ -402,8 +402,8 @@ export function HelpCenterArticlePage() {
     return (
       <PublicArticleChrome
         articleTitle={article?.title ?? 'Artigo'}
-        brandName={context.primaryRoute.brand_name || 'Genius Support OS'}
-        breadcrumbCategory={article?.category_name ?? 'Indisponivel'}
+        brandName={context.primaryRoute.brand_name || 'Genius Central de ajuda'}
+        breadcrumbCategory={article?.category_name ?? 'Indisponível'}
         spaceSlug={spaceSlug ?? context.primaryRoute.knowledge_space_slug}
         topCategories={topCategories}
       >
@@ -416,8 +416,8 @@ export function HelpCenterArticlePage() {
     return renderShell(
       <div className="rounded-[30px] border border-[var(--help-border)] bg-white p-8 shadow-[0_20px_44px_rgba(20,31,71,0.08)]">
         <EmptyState
-          title="Artigo nao encontrado"
-          description="A rota informada nao tem os dados necessarios para abrir este artigo."
+          title="Artigo não encontrado"
+          description="A rota informada não tem os dados necessários para abrir este artigo."
         />
       </div>,
     );
@@ -442,7 +442,7 @@ export function HelpCenterArticlePage() {
           title="Falha ao carregar o artigo"
           description={
             message ??
-            'Nao foi possivel carregar este artigo neste ambiente.'
+            'Não foi possível carregar este artigo neste ambiente.'
           }
           action={
             <GhostButton onClick={() => void loadArticle(spaceSlug, articleSlug)}>
@@ -458,8 +458,8 @@ export function HelpCenterArticlePage() {
     return renderShell(
       <div className="rounded-[30px] border border-[var(--help-border)] bg-white p-8 shadow-[0_20px_44px_rgba(20,31,71,0.08)]">
         <EmptyState
-          title="Artigo nao encontrado"
-          description="O artigo solicitado nao existe, ainda nao foi publicado ou nao esta disponivel nesta central."
+          title="Artigo não encontrado"
+          description="O artigo solicitado não existe, ainda não foi publicado ou não está disponível nesta central."
           action={
             <Link to={`/help/${spaceSlug}/articles`}>
               <GhostButton>Voltar para a lista de artigos</GhostButton>
@@ -523,7 +523,7 @@ export function HelpCenterArticlePage() {
         <div className="space-y-6">
           <div className="space-y-4">
             <StatusPill tone="accent">
-              {article.category_name ?? 'Indisponivel'}
+              {article.category_name ?? 'Indisponível'}
             </StatusPill>
             <div className="space-y-3">
               <h1 className="text-[clamp(2.8rem,4vw,4rem)] font-semibold tracking-[-0.07em] text-[var(--help-ink-strong)]">
@@ -532,7 +532,7 @@ export function HelpCenterArticlePage() {
               <div className="flex flex-wrap items-center gap-3 text-base text-[var(--help-muted)]">
                 <span>
                   Atualizado em{' '}
-                  {article.updated_at ? formatDateTime(article.updated_at) : 'Indisponivel'}
+                  {article.updated_at ? formatDateTime(article.updated_at) : 'Indisponível'}
                 </span>
                 <span aria-hidden="true">•</span>
                 <span>{readingTime} min de leitura</span>
@@ -547,7 +547,7 @@ export function HelpCenterArticlePage() {
               </div>
               <p className="max-w-4xl text-[1.02rem] font-medium leading-8 text-[var(--help-link)]">
                 {article.summary ??
-                  'Este artigo ajuda a orientar os pontos principais desta operacao publica.'}
+                  'Este artigo ajuda a orientar os pontos principais desta operação pública.'}
               </p>
             </div>
           </div>
@@ -558,7 +558,7 @@ export function HelpCenterArticlePage() {
         </div>
 
         <footer className="mt-10 border-t border-[var(--help-border)] pt-5 text-center text-sm text-[var(--help-muted)]">
-          © 2026 Genius Support OS. Todos os direitos reservados.
+          © 2026 Genius Central de ajuda. Todos os direitos reservados.
         </footer>
       </section>
 
@@ -596,7 +596,7 @@ export function HelpCenterArticlePage() {
                           {entry.title}
                         </p>
                         <p className="text-sm leading-6 text-[var(--help-muted)]">
-                          {entry.summary ?? 'Indisponivel'}
+                          {entry.summary ?? 'Indisponível'}
                         </p>
                       </div>
                     </div>
@@ -608,7 +608,7 @@ export function HelpCenterArticlePage() {
               </div>
             ) : (
               <p className="text-sm leading-7 text-[var(--help-muted)]">
-                Nenhum artigo relacionado disponivel.
+                Nenhum artigo relacionado disponível.
               </p>
             )}
           </div>
@@ -617,7 +617,7 @@ export function HelpCenterArticlePage() {
         <section className="rounded-[28px] border border-[var(--help-border)] bg-white p-6 shadow-[0_18px_42px_rgba(20,31,71,0.06)]">
           <div className="space-y-5">
             <h3 className="text-[1.7rem] font-semibold tracking-[-0.05em] text-[var(--help-ink-strong)]">
-              Este artigo foi util?
+              Este artigo foi útil?
             </h3>
             <div className="flex gap-3">
               <button

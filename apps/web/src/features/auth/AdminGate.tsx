@@ -20,10 +20,10 @@ export function AdminGate({ children }: { children: ReactNode }) {
     return (
       <div className="mx-auto flex min-h-screen w-full max-w-4xl items-center px-6 py-12">
         <ErrorState
-          title="Configuracao do frontend indisponivel"
+          title="Configuração de acesso indisponível"
           description={
             configError ??
-            'O app ainda nao recebeu as variaveis publicas minimas do Supabase.'
+            'Este ambiente ainda não recebeu as configurações mínimas de acesso.'
           }
         />
       </div>
@@ -76,10 +76,10 @@ export function AdminGate({ children }: { children: ReactNode }) {
     return (
       <div className="mx-auto flex min-h-screen w-full max-w-4xl items-center px-6 py-12">
         <ContractUnavailableState
-          contractName="gate de profile e roles globais"
+          contractName="validação de acesso administrativo"
           action={
             <GhostButton onClick={() => void refreshGate()}>
-              Revalidar backend
+              Tentar novamente
             </GhostButton>
           }
         />
@@ -93,12 +93,12 @@ export function AdminGate({ children }: { children: ReactNode }) {
         <ErrorState
           description={
             gate.message ??
-            'Nao foi possivel validar o contexto administrativo deste usuario.'
+            'Não foi possível validar o acesso administrativo deste usuário.'
           }
           action={
             <>
               <AppButton onClick={() => void refreshGate()}>Tentar novamente</AppButton>
-              <GhostButton onClick={() => void signOut()}>Encerrar sessao</GhostButton>
+              <GhostButton onClick={() => void signOut()}>Encerrar sessão</GhostButton>
             </>
           }
         />

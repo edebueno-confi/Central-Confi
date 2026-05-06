@@ -4,10 +4,10 @@ import { cx } from '../../components/ui';
 import { useAuthContext } from '../auth/auth-context';
 
 const navigation = [
-  { label: 'Tenants', to: '/admin/tenants', shortLabel: 'TEN' },
-  { label: 'Knowledge', to: '/admin/knowledge', shortLabel: 'KB' },
-  { label: 'Access', to: '/admin/access', shortLabel: 'ACC' },
-  { label: 'System', to: '/admin/system', shortLabel: 'SYS' },
+  { label: 'Clientes', to: '/admin/tenants', shortLabel: 'CLI' },
+  { label: 'Conhecimento', to: '/admin/knowledge', shortLabel: 'CON' },
+  { label: 'Acesso', to: '/admin/access', shortLabel: 'ACE' },
+  { label: 'Sistema', to: '/admin/system', shortLabel: 'SIS' },
 ];
 
 export function AdminSidebar({
@@ -40,9 +40,9 @@ export function AdminSidebar({
               {!collapsed ? (
                 <div className="space-y-1">
                   <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-white/58">
-                    Genius Support OS
+                    Genius
                   </p>
-                  <p className="text-xl font-semibold leading-6 text-white">Admin Console</p>
+                  <p className="text-xl font-semibold leading-6 text-white">Admin</p>
                 </div>
               ) : null}
             </div>
@@ -61,7 +61,7 @@ export function AdminSidebar({
 
           {!collapsed ? (
             <p className="text-[0.7rem] font-semibold uppercase tracking-[0.24em] text-white/46">
-              Admin Console
+              Painel administrativo
             </p>
           ) : null}
         </div>
@@ -81,9 +81,9 @@ export function AdminSidebar({
                 </p>
                 <div>
                   <h1 className="text-lg font-semibold tracking-[-0.04em]">
-                    Admin Console
+                    Admin
                   </h1>
-                  <p className="text-xs text-white/70">Operacao global de pos-venda</p>
+                  <p className="text-xs text-white/70">Operação administrativa</p>
                 </div>
               </div>
             ) : null}
@@ -154,27 +154,27 @@ export function AdminSidebar({
         )}
       >
         <p className="text-[0.7rem] font-semibold uppercase tracking-[0.24em] text-white/58">
-          {collapsed ? 'Sessao' : 'Operador atual'}
+          {collapsed ? 'Sessão' : 'Usuário atual'}
         </p>
         <div className="mt-3 space-y-1">
           <p className="font-medium text-white">
             {compactKnowledgeMode
-              ? 'Platform Admin'
+              ? 'Administrador'
               : collapsed
-                ? String(gate.actor?.profile.full_name ?? 'Platform Admin')
+                ? String(gate.actor?.profile.full_name ?? 'Administrador')
                     .split(' ')
                     .slice(0, 2)
                     .join(' ')
-                : (gate.actor?.profile.full_name ?? 'Platform Admin')}
+                : (gate.actor?.profile.full_name ?? 'Administrador')}
           </p>
           {!collapsed ? (
             <p className="text-xs text-white/68">
-              {compactKnowledgeMode ? 'platform_admin' : gate.actor?.profile.email}
+              {compactKnowledgeMode ? 'Acesso administrativo' : gate.actor?.profile.email}
             </p>
           ) : null}
           {!collapsed && !compactKnowledgeMode ? (
             <p className="pt-2 text-xs leading-5 text-white/60">
-              Controle institucional de tenants, acessos e rastreabilidade da operacao Genius.
+              Gerencie clientes, acessos e publicações internas.
             </p>
           ) : null}
         </div>
