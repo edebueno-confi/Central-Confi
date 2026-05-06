@@ -660,6 +660,35 @@ Documentos históricos:
     - `npm run web:build`
     - QA local real em `/admin/knowledge` com criação de categoria, criação/edição de draft, envio para revisão, publicação, preview público, erro amigável de slug duplicado e arquivamento
   - QA visual local final gerada em `.playwright-mcp/admin-knowledge-functional.png` e `.playwright-mcp/admin-knowledge-public-preview.png`.
+- Fase 7.2: Public Link Contract concluida localmente e mergeada na `main`.
+  - O backend passou a expor `public_article_path` como source of truth para elegibilidade e rota pública de artigos no fluxo Ticket -> Knowledge.
+  - `/support/tickets/:ticketId` e `/admin/knowledge` deixaram de inferir URL pública por heurística e passaram a consumir o contrato seguro vindo do backend.
+  - O contrato público agora considera espaço ativo, organização ativa, categoria pública, artigo publicado e compatibilidade controlada com legado sem `knowledge_space_id`.
+  - Validações da fase:
+    - `npm run supabase:test:db`
+    - `npm run contracts:typecheck`
+    - `npm run web:typecheck`
+    - `npm run web:build`
+    - `npm run supabase:verify`
+  - QA funcional local confirmou:
+    - artigo público elegível em `/admin/knowledge`
+    - bloqueio de artigo interno como link compartilhável
+    - abertura correta de `/help/genius/articles/:slug`
+    - cópia segura do link público
+- Fase 7.3: First Real Public Content Pack concluida localmente.
+  - A fixture local canônica de suporte passou a materializar um lote público real da Central de Ajuda Genius usando apenas o fluxo editorial v2 (`draft -> review -> published`) com autoria humana de `ede.oliveira@confi.com.vc`.
+  - O lote inicial cobre quatro categorias públicas (`Primeiros passos`, `Operacao de reversa`, `Integracoes`, `Suporte tecnico`) e seis artigos operacionais B2B publicados na Central Pública `genius`.
+  - Cada artigo nasce com `created_by_user_id` e `updated_by_user_id` atribuídos ao Eduardo, `published_at` válido e `public_article_path` conferido via contrato público do backend.
+  - A estratégia da fixture passou de recriação destrutiva para reconciliação segura, evitando conflito com auditoria append-only e mantendo reidratação local reproduzível.
+  - Limitação contratual mantida: artigos publicados continuam sem edição in-place no contrato atual; o Admin Knowledge permite inspeção, preview público, busca e gestão do ciclo editorial suportado, mas uma fase futura ainda precisa materializar revisão + republicação versionada.
+  - Validações locais da fase:
+    - `npm run supabase:db:reset`
+    - `npm run supabase:qa:local-support-fixture`
+    - `npm run contracts:typecheck`
+    - `npm run web:typecheck`
+    - `npm run web:build`
+    - `npm run supabase:verify`
+  - QA funcional local final cobrindo `/admin/knowledge`, `/help/genius`, `/help/genius/articles/:slug` e `/support/tickets/:ticketId` foi gerada em `.playwright-mcp/`.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -683,4 +712,5 @@ Documentos históricos:
 ## Próxima prioridade
 Materializar um contrato backend explícito para governar publish editorial com revisão humana concluída,
 incluindo o gate entre `review_status`, confirmações humanas e publicação efetiva,
+e abrir uma estratégia suportada para revisão e republicação de artigo já publicado,
 sem depender apenas de bloqueios de UX no frontend.

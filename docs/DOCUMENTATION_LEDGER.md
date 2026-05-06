@@ -18,9 +18,71 @@ Cada registro deve informar:
 
 ## Registros
 
+### Fase 7.3 - First Real Public Content Pack
+- fase: `7.3`
+- commit: `HEAD da branch 7.3`
+- branch: `codex/phase7-3-first-public-content-pack`
+- data: `2026-05-06`
+- resumo funcional: a fixture local canonica passou a publicar o primeiro lote real da Central de Ajuda Genius com categorias publicas B2B, seis artigos operacionais, autoria humana de `ede.oliveira@confi.com.vc` e `public_article_path` validado pelo contrato backend.
+- docs alterados:
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - consumo validado em `vw_admin_knowledge_spaces`
+  - consumo validado em `vw_admin_knowledge_categories_v2`
+  - consumo validado em `vw_admin_knowledge_articles_list_v2`
+  - consumo validado em `vw_admin_knowledge_article_detail_v2`
+  - consumo validado em `vw_public_knowledge_space_resolver`
+  - consumo validado em `vw_public_knowledge_navigation`
+  - consumo validado em `vw_public_knowledge_articles_list`
+  - consumo validado em `vw_public_knowledge_article_detail`
+  - consumo validado em `app_private.vw_knowledge_articles_public_contract`
+  - escrita operacional em `rpc_admin_create_knowledge_category_v2`
+  - escrita operacional em `rpc_admin_create_knowledge_article_draft_v2`
+  - escrita operacional em `rpc_admin_submit_knowledge_article_for_review_v2`
+  - escrita operacional em `rpc_admin_publish_knowledge_article_v2`
+- telas afetadas:
+  - `/admin/knowledge`
+  - `/help/genius`
+  - `/help/genius/articles/:slug`
+- riscos restantes:
+  - artigo publicado ainda nao e editavel in-place pelo contrato atual; uma fase futura precisa abrir revisao + republicacao versionada
+  - `published_by` nao existe como campo dedicado no modelo atual; a rastreabilidade de publish continua representada por `published_at` + `updated_by_user_id`
+- impacto na FAQ futura:
+  - cria o primeiro corpus publico oficial e citavel da Central de Ajuda Genius
+  - separa claramente conteudo B2B publico de conteudo interno/restrito no baseline local
+
+### Fase 7.2 - Public Link Contract
+- fase: `7.2`
+- commit: `10bbca7`
+- branch: `codex/phase7-2-public-link-contract`
+- data: `2026-05-06`
+- resumo funcional: o backend passou a materializar `public_article_path` como source of truth para elegibilidade e rota publica segura de artigos usados em Ticket Workspace, Admin Knowledge e Help Center, removendo heuristica fragil do frontend.
+- docs alterados:
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - `app_private.vw_knowledge_articles_public_contract`
+  - `app_private.resolve_public_knowledge_article_path`
+  - `vw_admin_knowledge_articles_list_v2`
+  - `vw_admin_knowledge_article_detail_v2`
+  - `vw_support_ticket_knowledge_links`
+  - `vw_support_knowledge_article_picker`
+  - `vw_customer_portal_ticket_knowledge_links`
+- telas afetadas:
+  - `/admin/knowledge`
+  - `/support/tickets/:ticketId`
+  - `/help/:spaceSlug/articles/:articleSlug`
+- riscos restantes:
+  - o gate de revisao humana para publish continua sendo de UX; o backend ainda nao bloqueia por `review_status = reviewed`
+  - o contrato ainda entrega caminho relativo, nao URL canonica absoluta
+- impacto na FAQ futura:
+  - torna auditavel quando um artigo publico e de fato elegivel para compartilhamento seguro
+  - elimina explicacoes baseadas em inferencia de URL no frontend
+
 ### Fase 7.1 - Admin Knowledge Functional Hardening
 - fase: `7.1`
-- commit: `a confirmar apos merge`
+- commit: `fe0d900`
 - branch: `codex/phase7-1-admin-knowledge-functional-hardening`
 - data: `2026-05-06`
 - resumo funcional: `/admin/knowledge` passou a usar preview editorial real, degradacao segura sem advisory, bloqueio de publish incoerente com categoria nao publica e mensagens de erro amigaveis, sem alterar backend.

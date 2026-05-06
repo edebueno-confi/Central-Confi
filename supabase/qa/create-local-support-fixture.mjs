@@ -9,6 +9,11 @@ const FIXTURE = {
     password: 'Local-QA-Admin-2026!',
     fullName: 'QA Local Platform Admin',
   },
+  contentAuthor: {
+    email: 'ede.oliveira@confi.com.vc',
+    password: 'Admin123!',
+    fullName: 'Eduardo Oliveira',
+  },
   agents: [
     {
       key: 'support-agent-a',
@@ -308,13 +313,6 @@ const FIXTURE = {
     categories: [
       {
         tenantSlug: 'support-qa-a',
-        name: 'Suporte publico tenant A',
-        slug: 'support-publico-tenant-a',
-        description: 'Base publica segura para respostas de suporte ao tenant A.',
-        visibility: 'public',
-      },
-      {
-        tenantSlug: 'support-qa-a',
         name: 'Suporte interno tenant A',
         slug: 'support-interno-tenant-a',
         description: 'Playbooks internos operacionais do tenant A.',
@@ -329,16 +327,6 @@ const FIXTURE = {
       },
     ],
     articles: [
-      {
-        tenantSlug: 'support-qa-a',
-        categorySlug: 'support-publico-tenant-a',
-        title: 'Webhook ERP: checklist publico de retorno',
-        slug: 'webhook-erp-checklist-publico',
-        summary: 'Checklist publico para validar o retorno do webhook ERP com o cliente.',
-        bodyMd:
-          '1. Confirmar endpoint configurado.\n2. Validar ultima chamada recebida.\n3. Compartilhar checklist publico com o cliente.',
-        visibility: 'public',
-      },
       {
         tenantSlug: 'support-qa-a',
         categorySlug: 'support-interno-tenant-a',
@@ -366,8 +354,8 @@ const FIXTURE = {
         ticketTenantSlug: 'support-qa-a',
         actorKey: 'support-manager-a',
         linkType: 'sent_to_customer',
-        articleSlug: 'webhook-erp-checklist-publico',
-        note: 'Artigo publico preparado para orientar o cliente sobre a validacao inicial.',
+        articleSlug: 'checklist-de-integracao-erp-webhook',
+        note: 'Artigo publico oficial preparado para orientar o cliente sobre a validacao inicial.',
       },
       {
         ticketTitle: 'QA Support | Webhook sem retorno na integracao ERP',
@@ -387,9 +375,197 @@ const FIXTURE = {
     ],
   },
   publicHelpCenter: {
-    categoryId: '73000000-0000-4000-8000-000000000001',
-    articleId: '74000000-0000-4000-8000-000000000001',
-    articleSlug: 'visao-geral-da-central-genius',
+    legacyCategorySlugs: ['primeiros-passos-genius'],
+    categories: [
+      {
+        name: 'Primeiros passos',
+        slug: 'primeiros-passos',
+        description:
+          'Orientacoes iniciais para equipes B2B que operam a Central Genius no dia a dia.',
+        visibility: 'public',
+      },
+      {
+        name: 'Operacao de reversa',
+        slug: 'operacao-de-reversa',
+        description:
+          'Guias objetivos para acompanhar solicitacoes, etapas e status da logistica reversa.',
+        visibility: 'public',
+      },
+      {
+        name: 'Integracoes',
+        slug: 'integracoes',
+        description:
+          'Checklists publicos para validar ERP, webhook e pontos criticos de integracao.',
+        visibility: 'public',
+      },
+      {
+        name: 'Suporte tecnico',
+        slug: 'suporte-tecnico',
+        description:
+          'Boas praticas para abrir tickets, compartilhar evidencias e acelerar o suporte.',
+        visibility: 'public',
+      },
+    ],
+    articles: [
+      {
+        title: 'Visao geral da Central Genius',
+        slug: 'visao-geral-da-central-genius',
+        categorySlug: 'primeiros-passos',
+        summary:
+          'Resumo operacional do que a Central Genius concentra e quando consultar cada orientacao publica.',
+        bodyMd: `# Visao geral da Central Genius
+
+A Central Genius reune orientacoes publicas para operacoes B2B que usam Genius Returns e Central Genius no atendimento diario.
+
+## O que voce encontra aqui
+
+- artigos publicados para operacao de troca e devolucao
+- checklists de integracao que podem ser compartilhados com times do cliente
+- orientacoes praticas para abrir tickets com contexto suficiente
+
+## Quando consultar a Central
+
+Consulte a Central antes de abrir um chamado novo, quando precisar alinhar um procedimento com outro time ou quando quiser compartilhar uma referencia publica com o cliente.
+
+## O que nao entra na Central publica
+
+Nao entram detalhes internos de engenharia, credenciais, configuracoes restritas ou anotacoes operacionais exclusivas do suporte.
+`,
+      },
+      {
+        title: 'Como acompanhar solicitacoes de troca e devolucao',
+        slug: 'acompanhar-solicitacoes-de-troca-e-devolucao',
+        categorySlug: 'operacao-de-reversa',
+        summary:
+          'Passo a passo para acompanhar uma solicitacao e alinhar expectativa com operacao, CS e cliente.',
+        bodyMd: `# Como acompanhar solicitacoes de troca e devolucao
+
+Use este roteiro para acompanhar a evolucao de uma solicitacao sem perder contexto entre atendimento, operacao e cliente.
+
+## 1. Confirme os dados basicos
+
+- numero da solicitacao
+- canal de abertura
+- cliente responsavel pelo acompanhamento
+
+## 2. Revise a ultima atualizacao valida
+
+Antes de responder, confira a ultima movimentacao registrada e valide se ainda representa a etapa atual do processo.
+
+## 3. Alinhe o proximo passo
+
+Explique sempre qual e a proxima acao esperada: coleta, analise, transporte, confirmacao do recebimento ou retorno do financeiro.
+
+## 4. Registre evidencias objetivas
+
+Quando houver atraso ou divergencia, compartilhe numero do pedido, identificador da solicitacao e uma descricao curta do impacto operacional.
+`,
+      },
+      {
+        title: 'Como interpretar status da logistica reversa',
+        slug: 'interpretar-status-da-logistica-reversa',
+        categorySlug: 'operacao-de-reversa',
+        summary:
+          'Leitura pratica dos principais status para evitar resposta ambigua durante o acompanhamento do retorno.',
+        bodyMd: `# Como interpretar status da logistica reversa
+
+Os status da logistica reversa servem para orientar a tratativa e evitar respostas prematuras ao cliente.
+
+## Status que costumam exigir atencao
+
+- solicitacao recebida: a abertura foi registrada e aguarda a proxima etapa operacional
+- coleta em andamento: existe tratativa ativa para retirada ou postagem
+- material em transito: o retorno esta no fluxo logistico e depende de atualizacao externa
+- analise concluida: a etapa operacional principal terminou e a proxima decisao pode seguir
+
+## Como responder melhor
+
+Use o status como ponto de partida, mas complemente com a ultima acao confirmada e o proximo passo previsto.
+
+## Quando escalar
+
+Escalone quando o status ficar parado alem da janela operacional combinada ou quando a etapa atual nao refletir o ocorrido no campo.
+`,
+      },
+      {
+        title: 'Checklist de integracao ERP e webhook',
+        slug: 'checklist-de-integracao-erp-webhook',
+        categorySlug: 'integracoes',
+        summary:
+          'Checklist publico para validar configuracoes minimas e reduzir retrabalho em incidentes de integracao.',
+        bodyMd: `# Checklist de integracao ERP e webhook
+
+Antes de escalar um incidente de integracao, percorra este checklist com o time responsavel.
+
+## Validacoes iniciais
+
+- confirmar a URL configurada para recebimento
+- validar se o ambiente certo esta em uso
+- revisar o ultimo evento recebido com data e horario
+
+## Confirmacoes recomendadas
+
+- o time do ERP recebeu o retorno esperado
+- nao houve mudanca recente de endpoint sem alinhamento
+- o identificador usado na conciliacao continua valido
+
+## O que compartilhar no ticket
+
+Inclua o horario do ultimo evento, o identificador afetado e a descricao objetiva do que deixou de acontecer.
+`,
+      },
+      {
+        title: 'Boas praticas antes de acionar suporte',
+        slug: 'boas-praticas-antes-de-acionar-suporte',
+        categorySlug: 'suporte-tecnico',
+        summary:
+          'Checklist curto para abrir chamados com contexto suficiente e acelerar a analise do suporte.',
+        bodyMd: `# Boas praticas antes de acionar suporte
+
+Um chamado bem contextualizado reduz o tempo de triagem e evita trocas desnecessarias.
+
+## Reuna estas informacoes
+
+- tenant ou operacao impactada
+- identificador da solicitacao, pedido ou coleta
+- horario aproximado da ocorrencia
+- impacto operacional percebido
+
+## Descreva o comportamento observado
+
+Explique o que deveria acontecer, o que aconteceu de fato e desde quando o desvio foi percebido.
+
+## Anexe apenas o necessario
+
+Prefira prints, planilhas ou logs exportados que ajudem a reproduzir o contexto sem expor dados sensiveis de outras operacoes.
+`,
+      },
+      {
+        title: 'Como compartilhar evidencias em um ticket',
+        slug: 'como-compartilhar-evidencias-em-um-ticket',
+        categorySlug: 'suporte-tecnico',
+        summary:
+          'Orientacoes objetivas para anexar evidencias uteis sem ruir a leitura do ticket.',
+        bodyMd: `# Como compartilhar evidencias em um ticket
+
+Evidencia boa e aquela que ajuda o suporte a entender o contexto sem depender de suposicoes.
+
+## Priorize evidencias objetivas
+
+- print da tela com o horario visivel
+- identificador da solicitacao ou pedido
+- arquivo exportado com os registros relacionados
+
+## Organize a descricao
+
+Ao anexar, diga em uma linha o que o material comprova e em que ponto da operacao ele foi capturado.
+
+## Evite anexos sem contexto
+
+Arquivos soltos ou capturas sem explicacao atrasam a triagem porque exigem nova rodada de perguntas.
+`,
+      },
+    ],
   },
 };
 
@@ -1195,6 +1371,17 @@ function queryKnowledgeCategoryBySlug(slug) {
   return result.rows?.[0]?.id ?? null;
 }
 
+function queryKnowledgeSpaceBySlug(slug) {
+  const result = runSupabaseDbQuery(`
+    select id::text as id
+    from public.knowledge_spaces
+    where slug = '${sqlEscape(slug)}'
+    limit 1;
+  `);
+
+  return result.rows?.[0]?.id ?? null;
+}
+
 async function ensureKnowledgeCategory(adminSession, tenantId, category) {
   const existingId = queryKnowledgeCategoryBySlug(category.slug);
   if (existingId) {
@@ -1230,6 +1417,63 @@ function queryKnowledgeArticleBySlug(slug, tenantId = null) {
     from public.knowledge_articles
     where slug = '${sqlEscape(slug)}'
       ${tenantPredicate}
+    limit 1;
+  `);
+
+  return result.rows?.[0] ?? null;
+}
+
+function queryKnowledgeCategoryBySlugInSpace(slug, knowledgeSpaceId) {
+  const result = runSupabaseDbQuery(`
+    select id::text as id
+    from public.knowledge_categories
+    where knowledge_space_id = '${sqlEscape(knowledgeSpaceId)}'::uuid
+      and slug = '${sqlEscape(slug)}'
+    limit 1;
+  `);
+
+  return result.rows?.[0]?.id ?? null;
+}
+
+function queryKnowledgeArticleBySlugInSpace(slug, knowledgeSpaceId) {
+  const result = runSupabaseDbQuery(`
+    select
+      id::text as id,
+      status::text as status
+    from public.knowledge_articles
+    where knowledge_space_id = '${sqlEscape(knowledgeSpaceId)}'::uuid
+      and slug = '${sqlEscape(slug)}'
+    limit 1;
+  `);
+
+  return result.rows?.[0] ?? null;
+}
+
+function queryPublicHelpCenterArticleContractBySlug(slug) {
+  const result = runSupabaseDbQuery(`
+    select
+      ka.id::text as article_id,
+      ka.title,
+      ka.slug,
+      kc.name as category_name,
+      creator.email::text as created_by_email,
+      creator.full_name as created_by_full_name,
+      updater.email::text as updated_by_email,
+      updater.full_name as updated_by_full_name,
+      pub.public_article_path
+    from public.knowledge_articles as ka
+    join public.knowledge_spaces as ks
+      on ks.id = ka.knowledge_space_id
+    left join public.knowledge_categories as kc
+      on kc.id = ka.category_id
+    left join public.profiles as creator
+      on creator.id = ka.created_by_user_id
+    left join public.profiles as updater
+      on updater.id = ka.updated_by_user_id
+    left join app_private.vw_knowledge_articles_public_contract as pub
+      on pub.article_id = ka.id
+    where ks.slug = 'genius'
+      and ka.slug = '${sqlEscape(slug)}'
     limit 1;
   `);
 
@@ -1294,6 +1538,117 @@ async function ensureKnowledgeArticlePublished(adminSession, tenantId, article, 
   return existing?.id ?? null;
 }
 
+async function ensureKnowledgeCategoryV2(adminSession, knowledgeSpaceId, category) {
+  const existingId = queryKnowledgeCategoryBySlugInSpace(category.slug, knowledgeSpaceId);
+  if (existingId) {
+    return existingId;
+  }
+
+  await callRpcAsUser({
+    apiUrl: adminSession.apiUrl,
+    anonKey: adminSession.anonKey,
+    accessToken: adminSession.accessToken,
+    rpcName: 'rpc_admin_create_knowledge_category_v2',
+    body: {
+      p_name: category.name,
+      p_slug: category.slug,
+      p_description: category.description,
+      p_visibility: category.visibility,
+      p_parent_category_id: null,
+      p_knowledge_space_id: knowledgeSpaceId,
+      p_tenant_id: null,
+    },
+  });
+
+  return queryKnowledgeCategoryBySlugInSpace(category.slug, knowledgeSpaceId);
+}
+
+async function ensureKnowledgeArticlePublishedV2(
+  adminSession,
+  knowledgeSpaceId,
+  article,
+  categoryId,
+) {
+  let existing = queryKnowledgeArticleBySlugInSpace(article.slug, knowledgeSpaceId);
+
+  if (!existing?.id) {
+    await callRpcAsUser({
+      apiUrl: adminSession.apiUrl,
+      anonKey: adminSession.anonKey,
+      accessToken: adminSession.accessToken,
+      rpcName: 'rpc_admin_create_knowledge_article_draft_v2',
+      body: {
+        p_title: article.title,
+        p_slug: article.slug,
+        p_summary: article.summary,
+        p_body_md: article.bodyMd,
+        p_category_id: categoryId,
+        p_visibility: 'public',
+        p_knowledge_space_id: knowledgeSpaceId,
+        p_tenant_id: null,
+        p_source_path: null,
+        p_source_hash: null,
+      },
+    });
+
+    existing = queryKnowledgeArticleBySlugInSpace(article.slug, knowledgeSpaceId);
+  }
+
+  if (!existing?.id) {
+    fail(`Nao foi possivel materializar o artigo publico ${article.slug}.`);
+  }
+
+  if (existing.status === 'draft') {
+    await callRpcAsUser({
+      apiUrl: adminSession.apiUrl,
+      anonKey: adminSession.anonKey,
+      accessToken: adminSession.accessToken,
+      rpcName: 'rpc_admin_submit_knowledge_article_for_review_v2',
+      body: {
+        p_article_id: existing.id,
+        p_knowledge_space_id: knowledgeSpaceId,
+      },
+    });
+    existing = queryKnowledgeArticleBySlugInSpace(article.slug, knowledgeSpaceId);
+  }
+
+  if (existing?.status === 'review') {
+    await callRpcAsUser({
+      apiUrl: adminSession.apiUrl,
+      anonKey: adminSession.anonKey,
+      accessToken: adminSession.accessToken,
+      rpcName: 'rpc_admin_publish_knowledge_article_v2',
+      body: {
+        p_article_id: existing.id,
+        p_knowledge_space_id: knowledgeSpaceId,
+      },
+    });
+    existing = queryKnowledgeArticleBySlugInSpace(article.slug, knowledgeSpaceId);
+  }
+
+  return existing?.id ?? null;
+}
+
+async function archiveKnowledgeArticleV2IfPresent(adminSession, knowledgeSpaceId, slug) {
+  const existing = queryKnowledgeArticleBySlugInSpace(slug, knowledgeSpaceId);
+  if (!existing?.id || existing.status === 'archived') {
+    return existing?.id ?? null;
+  }
+
+  await callRpcAsUser({
+    apiUrl: adminSession.apiUrl,
+    anonKey: adminSession.anonKey,
+    accessToken: adminSession.accessToken,
+    rpcName: 'rpc_admin_archive_knowledge_article_v2',
+    body: {
+      p_article_id: existing.id,
+      p_knowledge_space_id: knowledgeSpaceId,
+    },
+  });
+
+  return existing.id;
+}
+
 function queryTicketKnowledgeLink(ticketId, linkType, articleSlug = null) {
   const articlePredicate = articleSlug
     ? `and ka.slug = '${sqlEscape(articleSlug)}'`
@@ -1336,7 +1691,14 @@ async function ensureTicketKnowledgeLink({ actorSession, tenantId, ticketId, lin
     return created?.id ?? queryTicketKnowledgeLink(ticketId, link.linkType, null);
   }
 
-  const article = queryKnowledgeArticleBySlug(link.articleSlug, tenantId);
+  let article = queryKnowledgeArticleBySlug(link.articleSlug, tenantId);
+  if (!article?.id) {
+    const publicKnowledgeSpaceId = queryKnowledgeSpaceBySlug('genius');
+    if (publicKnowledgeSpaceId) {
+      article = queryKnowledgeArticleBySlugInSpace(link.articleSlug, publicKnowledgeSpaceId);
+    }
+  }
+
   if (!article?.id) {
     fail(`Artigo de fixture nao encontrado para o vinculo ${link.linkType}: ${link.articleSlug}.`);
   }
@@ -1633,7 +1995,7 @@ function clearFixtureTickets() {
   return null;
 }
 
-function ensurePublicHelpCenterFixture() {
+async function ensurePublicHelpCenterFixture(authorSession) {
   runSupabaseDbQuery(`
     update public.knowledge_spaces
     set status = 'active'
@@ -1680,93 +2042,62 @@ function ensurePublicHelpCenterFixture() {
         support_contacts = excluded.support_contacts;
   `);
 
-  runSupabaseDbQuery(`
-    insert into public.knowledge_categories (
-      id,
-      knowledge_space_id,
-      visibility,
-      name,
-      slug,
-      description
-    )
-    values (
-      '${FIXTURE.publicHelpCenter.categoryId}'::uuid,
-      (select id from public.knowledge_spaces where slug = 'genius'),
-      'public',
-      'Primeiros passos Genius',
-      'primeiros-passos-genius',
-      'Categoria publica minima para validacao local da central Genius.'
-    )
-    on conflict (id) do update
-    set knowledge_space_id = excluded.knowledge_space_id,
-        visibility = excluded.visibility,
-        name = excluded.name,
-        slug = excluded.slug,
-        description = excluded.description;
-  `);
+  const knowledgeSpaceId = queryKnowledgeSpaceBySlug('genius');
+  if (!knowledgeSpaceId) {
+    fail('Knowledge space publico genius nao encontrado para a fixture local.');
+  }
 
-  runSupabaseDbQuery(`
-    update public.knowledge_articles
-    set knowledge_space_id = (select id from public.knowledge_spaces where slug = 'genius'),
-        category_id = '${FIXTURE.publicHelpCenter.categoryId}'::uuid,
-        visibility = 'public',
-        status = 'published',
-        title = 'Visao geral da Central Genius',
-        slug = '${FIXTURE.publicHelpCenter.articleSlug}',
-        summary = 'Guia publico minimo para validar a leitura da central e orientar o cliente B2B.',
-        body_md = '# Visao geral da Central Genius
+  await archiveKnowledgeArticleV2IfPresent(
+    authorSession,
+    knowledgeSpaceId,
+    'space-aware-ci-fixture',
+  );
 
-Esta central publica organiza orientacoes seguras para clientes B2B da Genius.
+  const categoryMap = new Map();
+  for (const category of FIXTURE.publicHelpCenter.categories) {
+    const categoryId = await ensureKnowledgeCategoryV2(authorSession, knowledgeSpaceId, category);
+    if (!categoryId) {
+      fail(`Nao foi possivel materializar a categoria publica ${category.slug}.`);
+    }
 
-- encontre artigos publicados
-- valide orientacoes operacionais
-- compartilhe apenas conteudo publico',
-        current_revision_number = 1,
-        published_at = timezone('utc', now()),
-        updated_at = timezone('utc', now())
-    where slug = '${FIXTURE.publicHelpCenter.articleSlug}';
-  `);
+    categoryMap.set(category.slug, categoryId);
+  }
 
-  runSupabaseDbQuery(`
-    insert into public.knowledge_articles (
-      id,
-      knowledge_space_id,
-      category_id,
-      visibility,
-      status,
-      title,
-      slug,
-      summary,
-      body_md,
-      current_revision_number,
-      published_at,
-      updated_at
-    )
-    select
-      '${FIXTURE.publicHelpCenter.articleId}'::uuid,
-      (select id from public.knowledge_spaces where slug = 'genius'),
-      '${FIXTURE.publicHelpCenter.categoryId}'::uuid,
-      'public',
-      'published',
-      'Visao geral da Central Genius',
-      '${FIXTURE.publicHelpCenter.articleSlug}',
-      'Guia publico minimo para validar a leitura da central e orientar o cliente B2B.',
-      '# Visao geral da Central Genius
+  const createdArticles = [];
+  for (const article of FIXTURE.publicHelpCenter.articles) {
+    const categoryId = categoryMap.get(article.categorySlug);
+    if (!categoryId) {
+      fail(`Categoria publica ausente para o artigo ${article.slug}.`);
+    }
 
-Esta central publica organiza orientacoes seguras para clientes B2B da Genius.
-
-- encontre artigos publicados
-- valide orientacoes operacionais
-- compartilhe apenas conteudo publico',
-      1,
-      timezone('utc', now()),
-      timezone('utc', now())
-    where not exists (
-      select 1
-      from public.knowledge_articles
-      where slug = '${FIXTURE.publicHelpCenter.articleSlug}'
+    const articleId = await ensureKnowledgeArticlePublishedV2(
+      authorSession,
+      knowledgeSpaceId,
+      article,
+      categoryId,
     );
-  `);
+
+    const contract = queryPublicHelpCenterArticleContractBySlug(article.slug);
+    if (!articleId || !contract?.public_article_path) {
+      fail(`Contrato publico nao materializado para o artigo ${article.slug}.`);
+    }
+
+    createdArticles.push({
+      id: articleId,
+      title: article.title,
+      slug: article.slug,
+      category_slug: article.categorySlug,
+      public_article_path: contract.public_article_path,
+      created_by_email: contract.created_by_email,
+      updated_by_email: contract.updated_by_email,
+    });
+  }
+
+  return {
+    space_slug: 'genius',
+    author_email: FIXTURE.contentAuthor.email,
+    articles: createdArticles,
+  };
 }
 
 async function main() {
@@ -1785,6 +2116,19 @@ async function main() {
   }
 
   ensurePlatformAdminRole(profile.id);
+
+  const contentAuthor = await createOrUpdateAuthUser({
+    apiUrl,
+    serviceRoleKey,
+    ...FIXTURE.contentAuthor,
+  });
+
+  const contentAuthorProfile = queryProfileByEmail(FIXTURE.contentAuthor.email);
+  if (!contentAuthorProfile?.id || !contentAuthorProfile.is_active) {
+    fail('O profile do autor humano da central publica nao foi materializado corretamente.');
+  }
+
+  ensurePlatformAdminRole(contentAuthorProfile.id);
 
   const tenantMap = new Map();
   const contactMap = new Map();
@@ -1814,6 +2158,15 @@ async function main() {
         anonKey,
         email: FIXTURE.qaAdmin.email,
         password: FIXTURE.qaAdmin.password,
+      },
+    ],
+    [
+      'content-author',
+      {
+        apiUrl,
+        anonKey,
+        email: FIXTURE.contentAuthor.email,
+        password: FIXTURE.contentAuthor.password,
       },
     ],
   ]);
@@ -1918,6 +2271,8 @@ async function main() {
     return session;
   };
   const adminSession = await getSessionForKey('qa-admin');
+  const contentAuthorSession = await getSessionForKey('content-author');
+  const publicHelpCenter = await ensurePublicHelpCenterFixture(contentAuthorSession);
 
   for (const category of FIXTURE.knowledgeBase.categories ?? []) {
     const tenantId = tenantMap.get(category.tenantSlug);
@@ -1980,8 +2335,6 @@ async function main() {
     });
   }
 
-  ensurePublicHelpCenterFixture();
-
   console.log(
     JSON.stringify(
       {
@@ -1992,6 +2345,12 @@ async function main() {
           profile_id: profile.id,
           email: FIXTURE.qaAdmin.email,
           password: FIXTURE.qaAdmin.password,
+        },
+        content_author: {
+          user_id: contentAuthor.id,
+          profile_id: contentAuthorProfile.id,
+          email: FIXTURE.contentAuthor.email,
+          password: FIXTURE.contentAuthor.password,
         },
         support_agents: FIXTURE.agents.map((agent) => ({
           key: agent.key,
@@ -2014,10 +2373,7 @@ async function main() {
         })),
         knowledge_articles: createdKnowledgeArticles,
         knowledge_links: createdKnowledgeLinks,
-        public_help_center: {
-          space_slug: 'genius',
-          article_slug: FIXTURE.publicHelpCenter.articleSlug,
-        },
+        public_help_center: publicHelpCenter,
         tickets: createdTickets,
       },
       null,
