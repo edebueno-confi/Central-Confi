@@ -621,6 +621,30 @@ Documentos históricos:
     - `npm run web:typecheck`
     - `npm run web:build`
   - QA visual local final gerada em `.tmp/phase6-23-admin-system/admin-system-final.png`, com login real, rota final validada e sem scroll horizontal.
+- Fase 6.24: Consistencia Visual do Genius Support OS concluida localmente.
+  - O lote final de consistencia fechou estados transversais e removeu a mistura residual de shells antigos nas rotas principais, sem redesenhar do zero as telas ja aprovadas.
+  - Ajustes efetivamente aplicados:
+    - `/login` com composicao alinhada ao shell publico aprovado, copy operacional e hierarquia mais proxima da blueprint
+    - `/access-denied` com copy nao tecnica, CTA claro e estado centralizado
+    - loading autenticado do Support Workspace com shell visivel durante boot, eliminando a tela branca generica
+    - `/support/queue` com shell mais fiel a familia operacional navy, header compacto e densidade mais coerente
+    - `/support/tickets/:ticketId` com refinamento de espacamento, header menos alto, conversa mais densa e estado vazio coerente
+    - `/support/customers` materializado como hub operacional valido, sem hardcode obsoleto e sem redirecionamento quebrado
+    - `/admin/tenants` com shell compacto do Admin Console e header alinhado a familia blueprint
+  - Rotas auditadas e mantidas sem alteracao estrutural adicional:
+    - `/support/customers/:tenantId`
+    - `/admin/knowledge`
+    - `/admin/access`
+    - `/admin/system`
+    - `/help/genius`
+    - `/help/genius/articles/:slug`
+  - O lote preservou backend, Supabase, schema, migrations, RPCs, contracts e fixtures/QA.
+  - Validacoes locais da fase:
+    - `npm run contracts:typecheck`
+    - `npm run web:typecheck`
+    - `npm run web:build`
+    - `npm run supabase:qa:local-support-fixture`
+  - QA visual local final gerada em `.tmp/phase6-24-audit/`, cobrindo login, estados, suportes, admin e central publica, sem overflow horizontal e sem erro relevante de console nas rotas auditadas.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.

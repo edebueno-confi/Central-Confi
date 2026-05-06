@@ -20,6 +20,7 @@ export function AdminSidebar({
   const location = useLocation();
   const { gate } = useAuthContext();
   const compactKnowledgeMode =
+    location.pathname === '/admin/tenants' ||
     location.pathname === '/admin/knowledge' ||
     location.pathname === '/admin/access' ||
     location.pathname === '/admin/system';

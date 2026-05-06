@@ -747,7 +747,7 @@ function ConversationEntry({
 
   if (lane === 'internal') {
     return (
-      <article className="mx-auto max-w-[94%] rounded-[16px] border border-amber-200 bg-[linear-gradient(180deg,rgba(255,248,227,0.98),rgba(255,241,206,0.94))] px-4 py-3 shadow-[0_8px_18px_rgba(180,120,34,0.06)]">
+      <article className="mx-auto max-w-[94%] rounded-[16px] border border-amber-200 bg-[linear-gradient(180deg,rgba(255,248,227,0.98),rgba(255,241,206,0.94))] px-4 py-2.5 shadow-[0_8px_18px_rgba(180,120,34,0.06)]">
         <div className="flex flex-wrap items-center gap-2 text-[11px]">
           <StatusPill tone="warning">{label}</StatusPill>
           <p className="font-semibold text-[color:var(--color-ink)]">{author}</p>
@@ -768,12 +768,12 @@ function ConversationEntry({
       )}
     >
       {lane === 'customer' ? (
-        <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#f05b93,#ee3f77)] text-sm font-semibold text-white shadow-[0_8px_18px_rgba(240,91,147,0.24)]">
+        <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#f05b93,#ee3f77)] text-sm font-semibold text-white shadow-[0_8px_18px_rgba(240,91,147,0.24)]">
           {avatar}
         </div>
       ) : null}
 
-      <div className={cx('min-w-0 max-w-[min(84%,44rem)] space-y-1.5', lane === 'agent' && 'items-end')}>
+      <div className={cx('min-w-0 max-w-[min(86%,46rem)] space-y-1', lane === 'agent' && 'items-end')}>
         <div
           className={cx(
             'flex flex-wrap items-center gap-2 px-1 text-[11px]',
@@ -786,7 +786,7 @@ function ConversationEntry({
         </div>
         <article
           className={cx(
-            'min-w-0 rounded-[16px] border px-4 py-3 shadow-[0_8px_18px_rgba(19,33,79,0.05)]',
+            'min-w-0 rounded-[16px] border px-4 py-2.5 shadow-[0_8px_18px_rgba(19,33,79,0.05)]',
             lane === 'agent'
               ? 'border-[rgba(48,127,226,0.24)] bg-[linear-gradient(180deg,rgba(243,248,255,0.98),rgba(236,244,255,0.92))]'
               : 'border-[color:var(--color-border)] bg-white',
@@ -815,7 +815,7 @@ function ConversationEntry({
       </div>
 
       {lane === 'agent' ? (
-        <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#1f5dcf,#377ef7)] text-sm font-semibold text-white shadow-[0_8px_18px_rgba(55,126,247,0.2)]">
+        <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#1f5dcf,#377ef7)] text-sm font-semibold text-white shadow-[0_8px_18px_rgba(55,126,247,0.2)]">
           {avatar}
         </div>
       ) : null}
@@ -875,7 +875,7 @@ function SupportConversation({
   }
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-2">
       {dividerLabel ? (
         <div className="flex items-center justify-center">
           <span className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
@@ -889,7 +889,7 @@ function SupportConversation({
           description="A janela atual ainda nao trouxe respostas publicas nem notas internas para este ticket."
         />
       ) : (
-        <div className="space-y-2.5">
+        <div className="space-y-2">
           {conversationEntries.map((entry) => (
             <ConversationEntry
               entry={entry}
@@ -2519,7 +2519,7 @@ function SupportWorkspaceView({
         setKnowledgeArticlePicker(emptyKnowledgeArticlePicker());
         setKnowledgePhase('idle');
         setDetailPhase('error');
-      setDetailMessage('Nao foi possivel abrir o detalhe do ticket selecionado.');
+        setDetailMessage('O ticket solicitado nao apareceu na leitura operacional disponivel.');
         return;
       }
 
@@ -3202,11 +3202,20 @@ function SupportWorkspaceView({
   return (
     <div className="space-y-5">
       {variant === 'queue' ? (
-        <PageHeader
-          eyebrow="Support Workspace"
-          title="Fila operacional"
-          description="Sidebar global para navegar, subsidebar para triagem e area principal para decidir o proximo atendimento."
-        />
+        <section className="rounded-[26px] border border-[color:var(--color-border)] bg-white/95 px-5 py-5 shadow-[0_16px_30px_rgba(19,33,79,0.08)]">
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusPill tone="accent">Fila</StatusPill>
+            <StatusPill>Suporte diario</StatusPill>
+          </div>
+          <div className="mt-3 space-y-1">
+            <h1 className="text-[1.9rem] font-semibold tracking-[-0.06em] text-[color:var(--color-ink)]">
+              Fila operacional
+            </h1>
+            <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+              Subsidebar para triagem, lista dominante no centro e preview curto para decidir o proximo atendimento.
+            </p>
+          </div>
+        </section>
       ) : null}
 
       {variant === 'queue' ? (
@@ -3348,20 +3357,28 @@ function SupportWorkspaceView({
       ) : detailPhase === 'contract-unavailable' ? (
         <ContractUnavailableState contractName="detalhe do ticket, conversa recente e contexto do cliente" />
       ) : detailPhase === 'error' || !ticketDetail || !selectedTicketSummary ? (
-        <ErrorState
-          description={detailMessage ?? 'O painel operacional do ticket nao ficou disponivel.'}
-        />
+        focusTicketId ? (
+          <section className="rounded-[28px] border border-[color:var(--color-border)] bg-white/95 px-6 py-6 shadow-[0_18px_34px_rgba(19,33,79,0.08)]">
+            <EmptyState
+              title="Ticket nao encontrado"
+              description={detailMessage ?? 'O ticket solicitado nao apareceu na leitura operacional disponivel.'}
+              action={
+                <Link to="/support/queue">
+                  <AppButton>Voltar para a fila</AppButton>
+                </Link>
+              }
+            />
+          </section>
+        ) : (
+          <ErrorState
+            description={detailMessage ?? 'O painel operacional do ticket nao ficou disponivel.'}
+          />
+        )
       ) : (
         <div className="space-y-3">
-          <div className="px-1">
-            <h2 className="text-[1.08rem] font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
-              Tratativa do ticket
-            </h2>
-          </div>
-
           <section className="overflow-hidden rounded-[26px] border border-[rgba(22,42,93,0.1)] bg-white shadow-[0_18px_34px_rgba(19,33,79,0.08)]">
             <div className="px-5 py-3 sm:px-6">
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <div className="flex flex-wrap items-center gap-3">
                   <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>
                     {humanizeStatus(ticketDetail.status)}
@@ -3377,11 +3394,11 @@ function SupportWorkspaceView({
                   </span>
                 </div>
 
-                <h3 className="max-w-5xl text-[1.56rem] font-semibold tracking-[-0.05em] leading-tight text-[color:var(--color-ink)]">
+                <h3 className="max-w-5xl text-[1.46rem] font-semibold tracking-[-0.05em] leading-tight text-[color:var(--color-ink)]">
                   {ticketDetail.title}
                 </h3>
 
-                <div className="grid gap-2.5 border-t border-[color:var(--color-border)] pt-2 text-sm md:grid-cols-2 xl:grid-cols-4">
+                <div className="grid gap-2 border-t border-[color:var(--color-border)] pt-2 text-sm md:grid-cols-2 xl:grid-cols-4">
                   <div className="min-w-0">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
                       Cliente
@@ -3488,8 +3505,8 @@ function SupportWorkspaceView({
                 <SupportConversation requesterName={requesterLabel} window={timelineWindow} />
               </div>
 
-              <div className="border-t border-[color:var(--color-border)] bg-[linear-gradient(180deg,rgba(247,250,255,0.96),rgba(255,255,255,1))] px-5 py-3.5 sm:px-6">
-                <form className="space-y-2.5" onSubmit={handleSubmitComposer}>
+              <div className="border-t border-[color:var(--color-border)] bg-[linear-gradient(180deg,rgba(247,250,255,0.96),rgba(255,255,255,1))] px-5 py-3 sm:px-6">
+                <form className="space-y-2" onSubmit={handleSubmitComposer}>
                   <div className="flex flex-wrap gap-5 border-b border-[color:var(--color-border)]">
                     <button
                       className={cx(
@@ -3518,9 +3535,9 @@ function SupportWorkspaceView({
                       Nota interna
                     </button>
                   </div>
-                  <div className="rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-3.5 shadow-[0_10px_22px_rgba(19,33,79,0.04)]">
+                  <div className="rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-3 shadow-[0_10px_22px_rgba(19,33,79,0.04)]">
                     <TextareaInput
-                      className="min-h-[96px] resize-y border-0 bg-transparent px-0 py-0 text-[15px] leading-6 shadow-none focus:border-transparent focus:ring-0"
+                      className="min-h-[82px] resize-y border-0 bg-transparent px-0 py-0 text-[15px] leading-6 shadow-none focus:border-transparent focus:ring-0"
                       onChange={(event) =>
                         composerMode === 'public'
                           ? setMessageDraft(event.target.value)
@@ -4090,6 +4107,378 @@ function SupportCustomerMetricTile({
       {helper ? (
         <p className="mt-1 text-xs leading-5 text-[color:var(--color-muted)]">{helper}</p>
       ) : null}
+    </div>
+  );
+}
+
+export function SupportCustomersPage() {
+  const { markSessionExpired } = useAuthContext();
+  const didBootstrapRef = useRef(false);
+  const [backendDenied, setBackendDenied] = useState(false);
+  const [phase, setPhase] = useState<PagePhase>('loading');
+  const [message, setMessage] = useState<string | null>(null);
+  const [customers, setCustomers] = useState<SupportCustomer360[]>([]);
+  const [selectedTenantId, setSelectedTenantId] = useState<Uuid | null>(null);
+  const [query, setQuery] = useState('');
+
+  const loadCustomers = useEffectEvent(async (preferredTenantId?: Uuid | null) => {
+    try {
+      const data = await listSupportCustomers360();
+      setBackendDenied(false);
+      setCustomers(data);
+      setPhase('ready');
+      setMessage(null);
+
+      const nextSelectedTenantId =
+        preferredTenantId ??
+        (data.some((customer) => customer.tenantId === selectedTenantId)
+          ? selectedTenantId
+          : null) ??
+        data[0]?.tenantId ??
+        null;
+
+      setSelectedTenantId(nextSelectedTenantId);
+    } catch (error) {
+      const classified = classifyAdminError(
+        error,
+        'Falha ao carregar o hub de clientes do suporte.',
+      );
+
+      if (classified.kind === 'session-expired') {
+        markSessionExpired();
+        return;
+      }
+
+      if (classified.kind === 'permission-denied') {
+        setBackendDenied(true);
+        return;
+      }
+
+      setCustomers([]);
+      setSelectedTenantId(null);
+      setMessage(classified.message);
+      setPhase(
+        classified.kind === 'contract-unavailable' ? 'contract-unavailable' : 'error',
+      );
+    }
+  });
+
+  useEffect(() => {
+    if (didBootstrapRef.current) {
+      return;
+    }
+
+    didBootstrapRef.current = true;
+    void loadCustomers();
+  }, []);
+
+  const filteredCustomers = useMemo(() => {
+    const normalizedQuery = query.trim().toLocaleLowerCase('pt-BR');
+
+    if (normalizedQuery.length === 0) {
+      return customers;
+    }
+
+    return customers.filter((customer) =>
+      [
+        customer.tenantDisplayName,
+        customer.tenantLegalName,
+        customer.tenantSlug,
+      ]
+        .join(' ')
+        .toLocaleLowerCase('pt-BR')
+        .includes(normalizedQuery),
+    );
+  }, [customers, query]);
+
+  const selectedCustomer =
+    customers.find((customer) => customer.tenantId === selectedTenantId) ??
+    filteredCustomers[0] ??
+    null;
+  const totalCustomers = customers.length;
+  const activeCustomers = customers.filter((customer) => customer.tenantStatus === 'active').length;
+  const openTickets = customers.reduce((sum, customer) => sum + customer.openTicketCount, 0);
+  const activeContacts = customers.reduce((sum, customer) => sum + customer.activeContactsCount, 0);
+
+  useEffect(() => {
+    if (!selectedCustomer && filteredCustomers[0]) {
+      setSelectedTenantId(filteredCustomers[0].tenantId);
+    }
+  }, [filteredCustomers, selectedCustomer]);
+
+  if (backendDenied) {
+    return <Navigate replace state={{ reason: 'backend-permission' }} to="/access-denied" />;
+  }
+
+  if (phase === 'loading') {
+    return (
+      <div className="space-y-5">
+        <section className="rounded-[26px] border border-[color:var(--color-border)] bg-white/95 px-5 py-5 shadow-[0_16px_30px_rgba(19,33,79,0.08)]">
+          <div className="h-6 w-44 animate-pulse rounded-full bg-slate-200" />
+          <div className="mt-3 h-10 w-[420px] max-w-full animate-pulse rounded-[22px] bg-slate-200" />
+        </section>
+        <div className="grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)]">
+          <LoadingBlock className="h-[520px] rounded-[26px]" />
+          <LoadingBlock className="h-[520px] rounded-[26px]" />
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === 'contract-unavailable') {
+    return <ContractUnavailableState contractName="hub de clientes do suporte" />;
+  }
+
+  if (phase === 'error') {
+    return (
+      <ErrorState
+        description={message ?? 'Nao foi possivel carregar a carteira de clientes desta area.'}
+        action={<AppButton onClick={() => void loadCustomers(selectedTenantId)}>Tentar novamente</AppButton>}
+      />
+    );
+  }
+
+  if (customers.length === 0) {
+    return (
+      <EmptyState
+        title="Nenhum cliente disponivel"
+        description="Ainda nao existe conta operacional disponivel para esta area do suporte."
+      />
+    );
+  }
+
+  const previewLabel =
+    selectedCustomer?.tenantDisplayName ??
+    selectedCustomer?.tenantLegalName ??
+    selectedCustomer?.tenantSlug ??
+    'Indisponível';
+  const previewWaiting =
+    selectedCustomer
+      ? readCountFromJson(selectedCustomer.ticketStatusCounts as Record<string, unknown>, 'waiting_customer') +
+        readCountFromJson(selectedCustomer.ticketStatusCounts as Record<string, unknown>, 'waiting_support') +
+        readCountFromJson(selectedCustomer.ticketStatusCounts as Record<string, unknown>, 'waiting_engineering')
+      : 0;
+
+  return (
+    <div className="space-y-5">
+      <section className="rounded-[26px] border border-[color:var(--color-border)] bg-white/95 px-5 py-5 shadow-[0_16px_30px_rgba(19,33,79,0.08)]">
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusPill tone="accent">Clientes</StatusPill>
+          <StatusPill>Hub operacional</StatusPill>
+        </div>
+        <div className="mt-3 space-y-1">
+          <h1 className="text-[1.9rem] font-semibold tracking-[-0.06em] text-[color:var(--color-ink)]">
+            Carteira de clientes
+          </h1>
+          <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+            Use esta tela para localizar a conta certa antes de abrir o detalhe completo ou voltar para a fila.
+          </p>
+        </div>
+      </section>
+
+      <div className="grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)]">
+        <aside className="space-y-4">
+          <SupportCustomerDetailCard
+            description="Busca e recortes rapidos para chegar ao cliente certo."
+            title="Encontrar cliente"
+          >
+            <div className="space-y-3">
+              <TextInput
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Buscar por nome ou slug"
+                value={query}
+              />
+              <GhostButton className="min-h-11 w-full px-4" onClick={() => void loadCustomers(selectedTenantId)}>
+                Recarregar lista
+              </GhostButton>
+            </div>
+          </SupportCustomerDetailCard>
+
+          <SupportCustomerDetailCard
+            description="Pulso rapido da carteira carregada agora."
+            title="Resumo da carteira"
+          >
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+              <SupportCustomerMetricTile helper="contas na leitura atual" label="Clientes" value={String(totalCustomers)} />
+              <SupportCustomerMetricTile helper="contas em operacao ativa" label="Ativos" value={String(activeCustomers)} />
+              <SupportCustomerMetricTile helper="itens ainda em aberto" label="Tickets abertos" value={String(openTickets)} />
+              <SupportCustomerMetricTile helper="pessoas prontas para contato" label="Contatos ativos" value={String(activeContacts)} />
+            </div>
+          </SupportCustomerDetailCard>
+
+          <SupportCustomerDetailCard
+            description="Contas mais recentes dentro do recorte atual."
+            title="Clientes carregados"
+          >
+            <div className="space-y-2">
+              {filteredCustomers.length === 0 ? (
+                <InlineNotice>Nenhum cliente apareceu com este termo.</InlineNotice>
+              ) : (
+                filteredCustomers.slice(0, 8).map((customer) => {
+                  const selected = customer.tenantId === selectedCustomer?.tenantId;
+                  const label =
+                    customer.tenantDisplayName ?? customer.tenantLegalName ?? customer.tenantSlug;
+
+                  return (
+                    <button
+                      className={cx(
+                        'w-full rounded-[18px] border px-4 py-3 text-left transition',
+                        selected
+                          ? 'border-[rgba(48,127,226,0.34)] bg-[rgba(48,127,226,0.08)]'
+                          : 'border-[color:var(--color-border)] bg-[color:var(--color-surface)] hover:border-[rgba(48,127,226,0.22)] hover:bg-white',
+                      )}
+                      key={customer.tenantId}
+                      onClick={() => setSelectedTenantId(customer.tenantId)}
+                      type="button"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="min-w-0 truncate text-sm font-semibold text-[color:var(--color-ink)]">
+                          {label}
+                        </p>
+                        <StatusPill tone={customer.tenantStatus === 'active' ? 'positive' : 'warning'}>
+                          {humanizeCustomerValue(customer.tenantStatus)}
+                        </StatusPill>
+                      </div>
+                      <p className="mt-1 text-xs leading-5 text-[color:var(--color-muted)]">
+                        {customer.openTicketCount} ticket(s) aberto(s) · {customer.activeContactsCount} contato(s) ativo(s)
+                      </p>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </SupportCustomerDetailCard>
+        </aside>
+
+        <div className="space-y-5">
+          {selectedCustomer ? (
+            <>
+              <section className="rounded-[30px] border border-[color:var(--color-border)] bg-white/95 px-6 py-6 shadow-[0_18px_40px_rgba(16,30,74,0.09)]">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0 space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusPill tone={selectedCustomer.tenantStatus === 'active' ? 'positive' : 'warning'}>
+                        {humanizeCustomerValue(selectedCustomer.tenantStatus)}
+                      </StatusPill>
+                      <StatusPill>{displayCustomerValue(selectedCustomer.tenantSlug)}</StatusPill>
+                    </div>
+                    <div className="space-y-1">
+                      <h2 className="text-[2rem] font-semibold tracking-[-0.06em] text-[color:var(--color-ink)]">
+                        {previewLabel}
+                      </h2>
+                      <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                        Resumo rapido antes de abrir o detalhe completo do cliente.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <Link to={`/support/customers/${selectedCustomer.tenantId}`}>
+                      <AppButton>Abrir detalhe do cliente</AppButton>
+                    </Link>
+                    <Link to="/support/queue">
+                      <GhostButton>Voltar para a fila</GhostButton>
+                    </Link>
+                  </div>
+                </div>
+              </section>
+
+              <div className="grid gap-5 xl:grid-cols-[minmax(0,1.16fr)_318px]">
+                <div className="space-y-5">
+                  <SupportCustomerDetailCard
+                    description="Indicadores que ajudam a decidir qual conta precisa de prioridade agora."
+                    title="Resumo operacional"
+                  >
+                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                      <SupportCustomerMetricTile helper="itens ativos nesta conta" label="Tickets abertos" value={String(selectedCustomer.openTicketCount)} />
+                      <SupportCustomerMetricTile helper="historico acumulado" label="Total de tickets" value={String(selectedCustomer.totalTicketCount)} />
+                      <SupportCustomerMetricTile helper="pessoas aptas para contato" label="Contatos ativos" value={String(selectedCustomer.activeContactsCount)} />
+                      <SupportCustomerMetricTile helper="itens aguardando retorno" label="Em espera" value={String(previewWaiting)} />
+                    </div>
+                  </SupportCustomerDetailCard>
+
+                  <SupportCustomerDetailCard
+                    description="Leitura curta para comparar as contas sem sair desta tela."
+                    title="Visao rapida da conta"
+                  >
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                        <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                          Nome operacional
+                        </p>
+                        <p className="mt-2 text-sm font-semibold text-[color:var(--color-ink)]">
+                          {displayCustomerValue(selectedCustomer.tenantDisplayName)}
+                        </p>
+                      </div>
+                      <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                        <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                          Razao social
+                        </p>
+                        <p className="mt-2 text-sm font-semibold text-[color:var(--color-ink)]">
+                          {displayCustomerValue(selectedCustomer.tenantLegalName)}
+                        </p>
+                      </div>
+                    </div>
+                  </SupportCustomerDetailCard>
+                </div>
+
+                <aside className="space-y-5">
+                  <SupportCustomerDetailCard
+                    className="px-4 py-4"
+                    description="Atalhos uteis para continuar a operacao."
+                    title="Proximos passos"
+                  >
+                    <div className="space-y-2">
+                      <Link
+                        className="inline-flex min-h-11 w-full items-center justify-center rounded-[16px] bg-[linear-gradient(135deg,#1e63ff,#2e7cf5)] px-4 py-2 text-sm font-semibold text-white shadow-[0_16px_28px_rgba(18,81,213,0.35)]"
+                        to={`/support/customers/${selectedCustomer.tenantId}`}
+                      >
+                        Ver perfil completo
+                      </Link>
+                      <Link
+                        className="inline-flex min-h-11 w-full items-center justify-center rounded-[16px] border border-[color:var(--color-border)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--color-brand-blue)]"
+                        to="/support/queue"
+                      >
+                        Abrir fila operacional
+                      </Link>
+                    </div>
+                  </SupportCustomerDetailCard>
+
+                  <SupportCustomerDetailCard
+                    className="px-4 py-4"
+                    description="Leitura do status atual sem ocupar a area principal."
+                    title="Sinais da conta"
+                  >
+                    <div className="flex flex-wrap gap-2">
+                      <StatusPill tone={selectedCustomer.tenantStatus === 'active' ? 'positive' : 'warning'}>
+                        {humanizeCustomerValue(selectedCustomer.tenantStatus)}
+                      </StatusPill>
+                      <StatusPill>{displayCustomerValue(selectedCustomer.tenantSlug)}</StatusPill>
+                      <StatusPill>{String(selectedCustomer.totalTicketCount)} historico</StatusPill>
+                    </div>
+                  </SupportCustomerDetailCard>
+
+                  <SupportCustomerDetailCard
+                    className="px-4 py-4"
+                    description="Ultimos dados conhecidos deste cadastro."
+                    title="Atualizacao"
+                  >
+                    <div className="space-y-2 text-sm leading-6 text-[color:var(--color-muted)]">
+                      <p>Criado em {formatDateTime(selectedCustomer.tenantCreatedAt)}</p>
+                      <p>Atualizado em {formatDateTime(selectedCustomer.tenantUpdatedAt)}</p>
+                    </div>
+                  </SupportCustomerDetailCard>
+                </aside>
+              </div>
+            </>
+          ) : (
+            <EmptyState
+              title="Nenhum cliente selecionado"
+              description="Escolha uma conta da lista para abrir o resumo operacional."
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 }

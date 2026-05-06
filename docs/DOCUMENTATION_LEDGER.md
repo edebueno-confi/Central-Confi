@@ -1187,3 +1187,42 @@ Cada registro deve informar:
   - screenshot final em `.tmp/phase6-23-admin-system/admin-system-final.png`
 - impacto na FAQ futura:
   - formaliza `System` como tela de observabilidade administrativa do Admin Console, em vez de painel generico de cards soltos
+
+### Fase 6.24 - Consistencia Visual do Genius Support OS
+- fase: `6.24`
+- branch: `codex/phase6-24-visual-completion-batch`
+- data: `2026-05-05`
+- resumo funcional: lote final de consistencia visual que fechou estados transversais, loading autenticado, rota hub de clientes do suporte e divergencias claras de shell/densidade entre as superficies blueprint ja aprovadas.
+- docs alterados:
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- telas afetadas:
+  - `/login`
+  - `/access-denied`
+  - `/support/queue`
+  - `/support/tickets/:ticketId`
+  - `/support/customers`
+  - `/admin/tenants`
+  - `SupportWorkspaceShell` e `SupportGate` para consolidar o shell navy e o boot autenticado do suporte
+  - `AdminTopbar` e `AdminSidebar` apenas para alinhar `/admin/tenants` ao modo compacto ja aprovado na familia Admin
+- telas auditadas sem alteracao estrutural adicional:
+  - `/support/customers/:tenantId`
+  - `/admin/knowledge`
+  - `/admin/access`
+  - `/admin/system`
+  - `/help/genius`
+  - `/help/genius/articles/:slug`
+- views/RPCs afetadas:
+  - nenhuma alteracao de backend
+  - nenhuma view ou RPC nova
+- riscos restantes:
+  - `/support/queue` e `/help/genius` ficaram coerentes e estaveis, mas ainda podem receber polimento fino futuro de densidade sem reabrir o shell
+  - o ticket blueprint continua dependente do volume real da thread para ocupar mais altura util na dobra; a infraestrutura visual agora esta consistente, mas a fixture atual nao gera uma thread longa
+- validacao final:
+  - `npm run contracts:typecheck`
+  - `npm run web:typecheck`
+  - `npm run web:build`
+  - `npm run supabase:qa:local-support-fixture`
+  - auditoria visual em `.tmp/phase6-24-audit/`
+- impacto na FAQ futura:
+  - encerra a fase de virada visual do Genius Support OS com shells, estados e densidade alinhados ao contrato canonicamente versionado em `docs/design/**`

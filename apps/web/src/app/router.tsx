@@ -89,6 +89,11 @@ const SupportCustomerPage = lazy(async () => {
   return { default: module.SupportCustomerPage };
 });
 
+const SupportCustomersPage = lazy(async () => {
+  const module = await import('../features/support/SupportWorkspacePage');
+  return { default: module.SupportCustomersPage };
+});
+
 const SupportGate = lazy(async () => {
   const module = await import('../features/support/SupportGate');
   return { default: module.SupportGate };
@@ -99,7 +104,7 @@ function RouteLoading() {
     <div className="mx-auto flex min-h-screen w-full max-w-4xl items-center px-6 py-12">
       <LoadingState
         title="Carregando superficie"
-        description="O frontend esta resolvendo a rota solicitada antes de abrir a proxima camada do console."
+        description="Estamos preparando a proxima area antes de abrir a tela solicitada."
       />
     </div>
   );
@@ -198,6 +203,10 @@ export const router = createBrowserRouter([
           {
             path: 'tickets/:ticketId',
             element: withSuspense(<SupportTicketPage />),
+          },
+          {
+            path: 'customers',
+            element: withSuspense(<SupportCustomersPage />),
           },
           {
             path: 'customers/:tenantId',

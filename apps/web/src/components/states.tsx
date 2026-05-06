@@ -74,8 +74,8 @@ interface LoadingStateProps {
 }
 
 export function LoadingState({
-  title = 'Validando contexto administrativo',
-  description = 'O frontend esta aguardando a fonte de verdade responder antes de liberar o shell.',
+  title = 'Preparando a tela',
+  description = 'Estamos organizando os dados desta area para liberar a proxima etapa da operacao.',
 }: LoadingStateProps) {
   return (
     <StateFrame
@@ -85,7 +85,7 @@ export function LoadingState({
       actions={
         <div className="inline-flex items-center gap-3 rounded-full border border-[color:var(--color-border)] bg-white/90 px-4 py-2 text-sm text-[color:var(--color-ink)]">
           <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[color:var(--color-brand-blue)]" />
-          Aguarde a sincronizacao do contexto.
+          Aguarde alguns instantes.
         </div>
       }
     />
@@ -117,7 +117,7 @@ interface ErrorStateProps {
 }
 
 export function ErrorState({
-  title = 'Falha ao carregar a superficie administrativa',
+  title = 'Nao foi possivel carregar esta area',
   description,
   action,
 }: ErrorStateProps) {
@@ -139,7 +139,7 @@ interface AccessDeniedStateProps {
 }
 
 export function AccessDeniedState({
-  title = 'Acesso negado',
+  title = 'Acesso nao autorizado',
   description,
   action,
 }: AccessDeniedStateProps) {
@@ -165,9 +165,9 @@ export function ContractUnavailableState({
 }: ContractUnavailableStateProps) {
   return (
     <StateFrame
-      title="Contrato indisponivel"
-      description={`O frontend tentou consumir ${contractName}, mas o backend ainda nao expôs este contrato de forma utilizavel neste ambiente.`}
-      eyebrow="contrato"
+      title="Recurso indisponivel"
+      description={`Esta area depende de ${contractName}, mas esse recurso nao esta disponivel neste ambiente agora.`}
+      eyebrow="indisponivel"
       actions={action}
     />
   );
@@ -181,7 +181,7 @@ export function SessionExpiredState({ action }: SessionExpiredStateProps) {
   return (
     <StateFrame
       title="Sessao expirada"
-      description="Sua sessao perdeu validade durante a operacao. Faça login novamente para continuar no Admin Console."
+      description="Sua sessao perdeu validade durante a operacao. Entre novamente para continuar no workspace."
       eyebrow="auth"
       tone="critical"
       actions={action}

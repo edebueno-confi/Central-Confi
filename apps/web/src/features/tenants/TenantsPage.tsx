@@ -34,7 +34,6 @@ import {
   Field,
   GhostButton,
   InlineNotice,
-  PageHeader,
   Panel,
   SelectInput,
   StatusPill,
@@ -445,15 +444,28 @@ export function TenantsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Tenants"
-        description="Base operacional de clientes B2B. Escolha um tenant para revisar status, contatos e contexto de atendimento sem perder a lista principal."
-        action={
+      <section className="rounded-[26px] border border-[color:var(--color-border)] bg-white/95 px-5 py-5 shadow-[0_16px_30px_rgba(19,33,79,0.08)]">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusPill tone="accent">Tenants</StatusPill>
+              <StatusPill>Base operacional</StatusPill>
+            </div>
+            <div className="space-y-1">
+              <h1 className="text-[1.9rem] font-semibold tracking-[-0.06em] text-[color:var(--color-ink)]">
+                Clientes B2B
+              </h1>
+              <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                Localize a conta certa, revise status e abra o contexto do cliente sem perder a lista principal.
+              </p>
+            </div>
+          </div>
+
           <AppButton onClick={() => setShowCreateTenant((current) => !current)}>
             {showCreateTenant ? 'Fechar criacao' : 'Criar tenant'}
           </AppButton>
-        }
-      />
+        </div>
+      </section>
 
       <WorkspaceSplit
         layoutClassName="xl:grid-cols-[292px_minmax(0,1fr)]"

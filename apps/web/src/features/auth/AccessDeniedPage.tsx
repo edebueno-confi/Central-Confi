@@ -5,22 +5,22 @@ import { useAuthContext } from './auth-context';
 
 function describeReason(reason: unknown) {
   if (reason === 'missing-profile') {
-    return 'A sessao existe, mas o backend nao encontrou um profile valido para este usuario.';
+    return 'Sua conta foi autenticada, mas ainda nao tem acesso liberado para esta area.';
   }
 
   if (reason === 'inactive-profile') {
-    return 'Seu profile existe, mas esta inativo. O shell permanece bloqueado sem vazar dados administrativos.';
+    return 'Sua conta existe, mas esta inativa neste momento. Fale com quem administra o acesso para voltar a operar.';
   }
 
   if (reason === 'missing-platform-admin') {
-    return 'Seu usuario autenticado nao possui a role global platform_admin.';
+    return 'Sua conta nao tem permissao para abrir esta area do workspace.';
   }
 
   if (reason === 'backend-permission') {
-    return 'O backend negou a leitura desta superficie administrativa. O shell permanece bloqueado sem expor dados operacionais.';
+    return 'Esta area nao esta liberada para a sua conta agora. Se voce acredita que deveria entrar, revise seu acesso com a equipe responsavel.';
   }
 
-  return 'Seu usuario autenticado nao tem permissao para operar este Admin Console.';
+  return 'Sua conta nao tem permissao para abrir esta area agora.';
 }
 
 export function AccessDeniedPage() {
@@ -38,7 +38,7 @@ export function AccessDeniedPage() {
         action={
           <>
             <AppButton onClick={() => void signOut()}>Encerrar sessao</AppButton>
-            <GhostButton onClick={() => window.history.back()}>Voltar</GhostButton>
+            <GhostButton onClick={() => window.history.back()}>Voltar para o inicio</GhostButton>
           </>
         }
       />
