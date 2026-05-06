@@ -162,14 +162,15 @@ function SupportSidebar({
             </div>
           ) : null}
         </div>
-        <GhostButton
+        <button
           aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
           className={cx(
-            'mt-0.5 min-h-8 shrink-0 border-white/18 bg-white/12 px-2 text-white shadow-none hover:bg-white/18 hover:text-white',
+            'mt-0.5 inline-flex min-h-8 shrink-0 items-center justify-center rounded-full border border-white/18 bg-[rgba(255,255,255,0.14)] px-2 text-white shadow-none transition hover:bg-[rgba(255,255,255,0.2)]',
             collapsed ? 'w-8 px-0' : 'ml-auto',
           )}
           onClick={onToggle}
           title={collapsed ? 'Expandir menu' : 'Recolher menu'}
+          type="button"
         >
           <svg
             aria-hidden="true"
@@ -183,7 +184,7 @@ function SupportSidebar({
           >
             <path d="m9 18 6-6-6-6" />
           </svg>
-        </GhostButton>
+        </button>
       </div>
 
       <nav className="mt-5 grid gap-1">

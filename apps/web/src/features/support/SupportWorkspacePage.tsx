@@ -2647,6 +2647,8 @@ function SupportWorkspaceView({
   const [ticketToolbarTab, setTicketToolbarTab] = useState<
     'conversation' | 'knowledge' | 'help' | 'more'
   >('conversation');
+  const threadScrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const pendingThreadScrollRef = useRef<'idle' | 'latest'>('idle');
 
   const loadQueue = useEffectEvent(async (preferredTicketId?: string | null) => {
     try {
@@ -2689,7 +2691,13 @@ function SupportWorkspaceView({
     }
   });
 
-  const loadDetail = useEffectEvent(async (ticketId: string) => {
+  const loadDetail = useEffectEvent(
+    async (
+      ticketId: string,
+      options?: {
+        preserveSurfaceState?: boolean;
+      },
+    ) => {
     setDetailPhase('loading');
     setDetailMessage(null);
     setAgentsPhase('loading');
@@ -2734,8 +2742,22 @@ function SupportWorkspaceView({
       setDetailPhase('ready');
       setStatusDraft(detail.status === 'closed' ? 'triage' : detail.status);
       setAssignDraft(detail.assignedToUserId ?? '');
-      setTicketToolbarTab('conversation');
-      setComposerMode(detail.canAddMessage ? 'public' : detail.canAddInternalNote ? 'internal' : 'public');
+      if (!options?.preserveSurfaceState) {
+        setTicketToolbarTab('conversation');
+      }
+      setComposerMode((currentMode) => {
+        if (options?.preserveSurfaceState) {
+          if (currentMode === 'internal' && detail.canAddInternalNote) {
+            return 'internal';
+          }
+
+          if (currentMode === 'public' && detail.canAddMessage) {
+            return 'public';
+          }
+        }
+
+        return detail.canAddMessage ? 'public' : detail.canAddInternalNote ? 'internal' : 'public';
+      });
       setKnowledgeSearch('');
       setKnowledgeNoteDraft('');
 
@@ -2820,7 +2842,8 @@ function SupportWorkspaceView({
         classified.kind === 'contract-unavailable' ? 'contract-unavailable' : 'error',
       );
     }
-  });
+    },
+  );
 
   useEffect(() => {
     if (didBootstrapRef.current) {
@@ -2866,7 +2889,41 @@ function SupportWorkspaceView({
 
   useEffect(() => {
     setDetailNotice(null);
+    pendingThreadScrollRef.current = 'idle';
   }, [selectedTicketId]);
+
+  useEffect(() => {
+    if (ticketToolbarTab !== 'conversation' || pendingThreadScrollRef.current !== 'latest') {
+      return;
+    }
+
+    const syncThreadScroll = () => {
+        const threadNode = threadScrollContainerRef.current;
+
+        if (!threadNode) {
+          return;
+        }
+
+        threadNode.scrollTop = threadNode.scrollHeight;
+    };
+
+    const frame = window.requestAnimationFrame(syncThreadScroll);
+    const retries = [90, 220, 420].map((delay) =>
+      window.setTimeout(() => {
+        syncThreadScroll();
+        if (delay === 420) {
+          pendingThreadScrollRef.current = 'idle';
+        }
+      }, delay),
+    );
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      for (const retry of retries) {
+        window.clearTimeout(retry);
+      }
+    };
+  }, [detailNotice, ticketToolbarTab, timelineWindow]);
 
   const tenantOptions = useMemo(() => {
     const items = new Map<string, { id: string; label: string }>();
@@ -2987,8 +3044,13 @@ function SupportWorkspaceView({
     }
   }
 
-  async function refreshDetail(ticketId: string) {
-    await Promise.all([loadQueue(ticketId), loadDetail(ticketId)]);
+  async function refreshDetail(
+    ticketId: string,
+    options: {
+      preserveSurfaceState?: boolean;
+    } = { preserveSurfaceState: true },
+  ) {
+    await Promise.all([loadQueue(ticketId), loadDetail(ticketId, options)]);
   }
 
   function optionalKnowledgeNote() {
@@ -3198,8 +3260,10 @@ function SupportWorkspaceView({
         applySuccess('Nota interna adicionada com sucesso.');
       }
 
+      pendingThreadScrollRef.current = 'latest';
       await refreshDetail(ticketDetail.id);
     } catch (error) {
+      pendingThreadScrollRef.current = 'idle';
       const classified = classifyAdminError(
         error,
         composerMode === 'public'
@@ -3676,7 +3740,18 @@ function SupportWorkspaceView({
               </div>
             </section>
 
-            {detailNotice ? <InlineNotice tone={detailNoticeTone}>{detailNotice}</InlineNotice> : null}
+            {detailNotice ? (
+              <div
+                className={cx(
+                  'rounded-[14px] border px-3 py-2 text-[12px] leading-5 shadow-[0_6px_12px_rgba(19,33,79,0.05)]',
+                  detailNoticeTone === 'critical'
+                    ? 'border-[color:var(--color-danger-border)] bg-[color:var(--color-danger-surface)] text-[color:var(--color-danger-ink)]'
+                    : 'border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[color:var(--color-muted)]',
+                )}
+              >
+                {detailNotice}
+              </div>
+            ) : null}
 
             <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[20px] border border-[color:var(--color-border)] bg-white shadow-[0_10px_20px_rgba(19,33,79,0.06)]">
               {ticketToolbarTab === 'conversation' ? (
@@ -3684,6 +3759,7 @@ function SupportWorkspaceView({
                   <div
                     className="min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-5"
                     data-ticket-thread-scroll
+                    ref={threadScrollContainerRef}
                   >
                     <SupportConversation requesterName={requesterLabel} window={timelineWindow} />
                   </div>
