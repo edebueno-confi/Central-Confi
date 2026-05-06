@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import mascotUrl from '../../../assets/brand/genius-mascot.svg';
-import { GhostButton, StatusPill, cx } from '../../components/ui';
+import { GhostButton, cx } from '../../components/ui';
 import { useAuthContext } from '../auth/auth-context';
 
 const SIDEBAR_STORAGE_KEY = 'support-workspace-shell-collapsed';
@@ -139,24 +139,24 @@ function SupportSidebar({
   return (
     <aside
       className={cx(
-        'flex h-full flex-col rounded-[28px] bg-[linear-gradient(180deg,#06173f_0%,#0a1e53_52%,#10265f_100%)] px-3 py-4 text-white shadow-[0_26px_58px_rgba(9,20,56,0.24)] transition-[width,padding] duration-200',
-        collapsed ? 'w-[84px]' : 'w-[250px]',
+        'flex h-full flex-col rounded-[26px] bg-[linear-gradient(180deg,#06173f_0%,#0a1e53_52%,#10265f_100%)] px-2.5 py-3 text-white shadow-[0_24px_52px_rgba(9,20,56,0.24)] transition-[width,padding] duration-200',
+        collapsed ? 'w-[82px]' : 'w-[238px]',
       )}
     >
       <div
         className={cx(
-          'flex items-start gap-3 px-2',
+          'flex items-start gap-2 px-2',
           collapsed ? 'justify-center' : '',
         )}
       >
-        <div className={cx('flex min-w-0 items-center gap-3', collapsed && 'justify-center')}>
-          <img alt="Mascote Genius" className="w-11 shrink-0" src={mascotUrl} />
+        <div className={cx('flex min-w-0 items-center gap-2.5', collapsed && 'justify-center')}>
+          <img alt="Mascote Genius" className="w-10 shrink-0" src={mascotUrl} />
           {!collapsed ? (
             <div className="min-w-0 pt-0.5">
-              <p className="text-[0.62rem] font-semibold uppercase tracking-[0.22em] text-white/52">
+              <p className="text-[0.58rem] font-semibold uppercase tracking-[0.2em] text-white/46">
                 Genius
               </p>
-              <h1 className="text-[1rem] font-semibold tracking-[-0.04em] leading-tight">
+              <h1 className="text-[0.94rem] font-semibold tracking-[-0.04em] leading-tight">
                 Support Workspace
               </h1>
             </div>
@@ -165,8 +165,8 @@ function SupportSidebar({
         <GhostButton
           aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
           className={cx(
-            'mt-0.5 min-h-10 shrink-0 border-white/10 bg-white/8 px-3 text-white hover:bg-white/12 hover:text-white',
-            collapsed ? 'w-10 px-0' : 'ml-auto',
+            'mt-0.5 min-h-9 shrink-0 border-white/8 bg-white/10 px-2.5 text-white/88 hover:bg-white/14 hover:text-white',
+            collapsed ? 'w-9 px-0' : 'ml-auto',
           )}
           onClick={onToggle}
           title={collapsed ? 'Expandir menu' : 'Recolher menu'}
@@ -175,18 +175,19 @@ function SupportSidebar({
         </GhostButton>
       </div>
 
-      <nav className="mt-8 grid gap-2">
+      <nav className="mt-7 grid gap-1.5">
         {navigation.map((item) => {
           const active = item.isActive(location.pathname);
+          const badgeLabel = item.label === 'Fila' ? '8' : item.label === 'Tickets' ? '12' : '';
 
           return (
             <Link
               className={cx(
-                'group flex min-h-[56px] items-center gap-3 rounded-[16px] px-3 py-2.5 text-[0.96rem] font-medium transition',
+                'group flex min-h-[54px] items-center gap-2.5 rounded-[16px] px-3 py-2 text-[0.95rem] font-medium transition',
                 collapsed ? 'justify-center px-0' : '',
                 active
-                  ? 'bg-[linear-gradient(135deg,#1f67ff,#2f7eff)] text-white shadow-[0_16px_30px_rgba(18,81,213,0.35)]'
-                  : 'text-white/78 hover:bg-white/10 hover:text-white',
+                  ? 'bg-[linear-gradient(135deg,#1f67ff,#2f7eff)] text-white shadow-[0_14px_26px_rgba(18,81,213,0.32)]'
+                  : 'text-white/76 hover:bg-white/10 hover:text-white',
               )}
               key={`${item.label}:${item.to}`}
               title={item.label}
@@ -194,18 +195,23 @@ function SupportSidebar({
             >
               <span
                 className={cx(
-                  'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border',
+                  'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[13px] border',
                   active
-                    ? 'border-white/14 bg-white/12 text-white'
-                    : 'border-white/12 bg-white/6 text-white/88',
+                    ? 'border-white/12 bg-white/14 text-white'
+                    : 'border-white/10 bg-white/6 text-white/88',
                 )}
               >
                 <SupportNavIcon active={active} icon={item.icon} />
               </span>
               {!collapsed ? <span className="min-w-0 truncate">{item.label}</span> : null}
-              {!collapsed && active ? (
-                <span className="ml-auto inline-flex min-h-7 min-w-7 items-center justify-center rounded-full bg-white/14 px-2 text-xs font-semibold text-white">
-                  {item.label === 'Fila' ? '8' : item.label === 'Tickets' ? '12' : ''}
+              {!collapsed && badgeLabel ? (
+                <span
+                  className={cx(
+                    'ml-auto inline-flex min-h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold',
+                    active ? 'bg-white/16 text-white' : 'bg-white/10 text-white/82',
+                  )}
+                >
+                  {badgeLabel}
                 </span>
               ) : null}
             </Link>
@@ -214,8 +220,8 @@ function SupportSidebar({
       </nav>
 
       <div className="mt-auto px-1">
-        <div className={cx('flex items-center rounded-[18px] border border-white/10 bg-white/7 px-3 py-3', collapsed ? 'justify-center' : 'gap-3')}>
-          <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#f4b1c8,#ffffff)] text-sm font-semibold text-[color:var(--color-brand-navy)]">
+        <div className={cx('flex items-center rounded-[16px] border border-white/10 bg-white/8 px-2.5 py-2.5', collapsed ? 'justify-center' : 'gap-2.5')}>
+          <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#f4b1c8,#ffffff)] text-[13px] font-semibold text-[color:var(--color-brand-navy)]">
             {String(user?.user_metadata?.full_name ?? user?.email ?? 'QA')
               .split(' ')
               .slice(0, 2)
@@ -224,10 +230,10 @@ function SupportSidebar({
           </div>
           {!collapsed ? (
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-white">
+              <p className="truncate text-[13px] font-semibold text-white">
                 {String(user?.user_metadata?.full_name ?? user?.email ?? 'Operador interno')}
               </p>
-              <p className="truncate text-[0.72rem] text-white/62">
+              <p className="truncate text-[0.68rem] text-white/58">
                 {gate.actor?.roles.includes('support_manager') ? 'Manager' : 'Agente'}
               </p>
             </div>
@@ -272,28 +278,36 @@ function SupportQuickNav() {
   );
 }
 
-function SupportTopbar() {
-  const { runtimeConfig, signOut } = useAuthContext();
+function SupportTopbar({
+  compact = false,
+}: {
+  compact?: boolean;
+}) {
+  const { signOut } = useAuthContext();
 
   return (
-    <header className="rounded-[22px] border border-[color:var(--color-border)] bg-white/92 px-4 py-3 shadow-[0_14px_28px_rgba(19,33,79,0.08)] backdrop-blur sm:px-5">
+    <header
+      className={cx(
+        compact
+          ? 'px-1 py-0'
+          : 'rounded-[22px] border border-[color:var(--color-border)] bg-white/92 px-4 py-3 shadow-[0_14px_28px_rgba(19,33,79,0.08)] backdrop-blur sm:px-5',
+      )}
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <StatusPill tone="accent">{runtimeConfig?.appEnv ?? 'development'}</StatusPill>
-          <StatusPill>support workspace</StatusPill>
-        </div>
-
+        <div />
         <div className="flex flex-wrap gap-2">
           <GhostButton
-            className="min-h-10 border-[rgba(48,127,226,0.18)] px-4 text-[color:var(--color-brand-blue)]"
+            className={cx(
+              'border-[rgba(48,127,226,0.18)] px-4 text-[color:var(--color-brand-blue)]',
+              compact ? 'min-h-9 bg-white/88 text-[13px] shadow-[0_10px_20px_rgba(19,33,79,0.06)]' : 'min-h-10',
+            )}
             onClick={() => void signOut()}
           >
             Encerrar sessao
           </GhostButton>
         </div>
       </div>
-
-      <div className="mt-3">
+      <div className={cx(compact ? 'mt-2 lg:hidden' : 'mt-3')}>
         <SupportQuickNav />
       </div>
     </header>
@@ -303,10 +317,11 @@ function SupportTopbar() {
 export function SupportWorkspaceShell() {
   const [sidebarCollapsed, setSidebarCollapsed] = usePersistedSidebarState();
   const location = useLocation();
+  const isTicketRoute = /^\/support\/tickets\/[^/]+/.test(location.pathname);
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#eef4ff_0%,#f7faff_42%,#f3f6fb_100%)] text-[color:var(--color-ink)]">
-      <div className="mx-auto flex max-w-[1800px] gap-4 px-3 py-3 sm:px-4 lg:px-5">
+      <div className="mx-auto flex max-w-[1760px] gap-3 px-3 py-3 sm:px-4 lg:px-4">
         <div className="hidden shrink-0 lg:block">
           <div className="sticky top-3 h-[calc(100vh-1.5rem)]">
             <SupportSidebar
@@ -317,8 +332,8 @@ export function SupportWorkspaceShell() {
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="space-y-4">
-            <SupportTopbar />
+          <div className={cx(isTicketRoute ? 'space-y-2.5' : 'space-y-4')}>
+            <SupportTopbar compact={isTicketRoute} />
             <main className="min-w-0">
               <Outlet />
             </main>

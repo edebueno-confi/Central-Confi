@@ -747,13 +747,13 @@ function ConversationEntry({
 
   if (lane === 'internal') {
     return (
-      <article className="mx-auto max-w-[94%] rounded-[16px] border border-amber-200 bg-[linear-gradient(180deg,rgba(255,248,227,0.98),rgba(255,241,206,0.94))] px-4 py-2.5 shadow-[0_8px_18px_rgba(180,120,34,0.06)]">
-        <div className="flex flex-wrap items-center gap-2 text-[11px]">
+      <article className="mx-auto max-w-[92%] rounded-[15px] border border-amber-200 bg-[linear-gradient(180deg,rgba(255,248,227,0.98),rgba(255,241,206,0.94))] px-3.5 py-2 shadow-[0_6px_14px_rgba(180,120,34,0.05)]">
+        <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
           <StatusPill tone="warning">{label}</StatusPill>
           <p className="font-semibold text-[color:var(--color-ink)]">{author}</p>
           <span className="ml-auto text-[color:var(--color-muted)]">{timestamp}</span>
         </div>
-        <p className="mt-2 whitespace-pre-wrap text-[14px] leading-5 text-[color:var(--color-ink)]">
+        <p className="mt-1.5 whitespace-pre-wrap text-[13px] leading-[1.35rem] text-[color:var(--color-ink)]">
           {summary}
         </p>
       </article>
@@ -763,20 +763,25 @@ function ConversationEntry({
   return (
     <div
       className={cx(
-        'flex items-end gap-3',
+        'flex items-end gap-2.5',
         lane === 'agent' ? 'justify-end' : 'justify-start',
       )}
     >
       {lane === 'customer' ? (
-        <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#f05b93,#ee3f77)] text-sm font-semibold text-white shadow-[0_8px_18px_rgba(240,91,147,0.24)]">
+        <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#f05b93,#ee3f77)] text-[13px] font-semibold text-white shadow-[0_6px_14px_rgba(240,91,147,0.2)]">
           {avatar}
         </div>
       ) : null}
 
-      <div className={cx('min-w-0 max-w-[min(86%,46rem)] space-y-1', lane === 'agent' && 'items-end')}>
+      <div
+        className={cx(
+          'min-w-0 max-w-[min(88%,43rem)] space-y-0.5',
+          lane === 'agent' && 'items-end',
+        )}
+      >
         <div
           className={cx(
-            'flex flex-wrap items-center gap-2 px-1 text-[11px]',
+            'flex flex-wrap items-center gap-1.5 px-1 text-[10px]',
             lane === 'agent' ? 'justify-end' : 'justify-start',
           )}
         >
@@ -786,18 +791,18 @@ function ConversationEntry({
         </div>
         <article
           className={cx(
-            'min-w-0 rounded-[16px] border px-4 py-2.5 shadow-[0_8px_18px_rgba(19,33,79,0.05)]',
+            'min-w-0 rounded-[15px] border px-3.5 py-2 shadow-[0_6px_14px_rgba(19,33,79,0.05)]',
             lane === 'agent'
               ? 'border-[rgba(48,127,226,0.24)] bg-[linear-gradient(180deg,rgba(243,248,255,0.98),rgba(236,244,255,0.92))]'
               : 'border-[color:var(--color-border)] bg-white',
           )}
         >
-          <div className="space-y-3">
-            <p className="whitespace-pre-wrap text-[14px] leading-5 text-[color:var(--color-ink)]">
+          <div className="space-y-2">
+            <p className="whitespace-pre-wrap text-[13px] leading-[1.35rem] text-[color:var(--color-ink)]">
               {summary}
             </p>
             {attachment ? (
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-[color:var(--color-border)] bg-white/86 px-3 py-2 text-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-[11px] border border-[color:var(--color-border)] bg-white/86 px-3 py-1.5 text-[13px]">
                 <div className="min-w-0">
                   <p className="truncate font-medium text-[color:var(--color-ink)]">
                     {attachment.name}
@@ -815,7 +820,7 @@ function ConversationEntry({
       </div>
 
       {lane === 'agent' ? (
-        <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#1f5dcf,#377ef7)] text-sm font-semibold text-white shadow-[0_8px_18px_rgba(55,126,247,0.2)]">
+        <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#1f5dcf,#377ef7)] text-[13px] font-semibold text-white shadow-[0_6px_14px_rgba(55,126,247,0.18)]">
           {avatar}
         </div>
       ) : null}
@@ -875,10 +880,10 @@ function SupportConversation({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       {dividerLabel ? (
         <div className="flex items-center justify-center">
-          <span className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+          <span className="rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
             {dividerLabel}
           </span>
         </div>
@@ -889,7 +894,7 @@ function SupportConversation({
           description="A janela atual ainda nao trouxe respostas publicas nem notas internas para este ticket."
         />
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-1">
           {conversationEntries.map((entry) => (
             <ConversationEntry
               entry={entry}
@@ -966,7 +971,7 @@ function SupportTechnicalHistory({
   if (eventEntries.length === 0) {
     return (
       <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-        Nenhum registro tecnico adicional apareceu nesta janela recente.
+        Nenhum registro adicional apareceu fora da conversa principal.
       </p>
     );
   }
@@ -999,10 +1004,10 @@ function SupportKnowledgeLinkCard({
       : 'Vinculo sem artigo associado');
 
   return (
-    <article className="rounded-[14px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2.5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 flex-1 space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
+    <article className="rounded-[13px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2">
+      <div className="flex flex-wrap items-start justify-between gap-2.5">
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
             <StatusPill tone={toneForKnowledgeLinkType(link.linkType)}>
               {humanizeKnowledgeLinkType(link.linkType)}
             </StatusPill>
@@ -1013,21 +1018,21 @@ function SupportKnowledgeLinkCard({
               <StatusPill>{humanizeKnowledgeStatus(link.articleStatus)}</StatusPill>
             ) : null}
           </div>
-          <div className="space-y-1">
-            <p className="text-sm font-semibold text-[color:var(--color-ink)]">{title}</p>
+          <div className="space-y-0.5">
+            <p className="text-[13px] font-semibold text-[color:var(--color-ink)]">{title}</p>
             <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
               Registrado por {link.createdByFullName ?? 'Operador nao identificado'} em{' '}
               {formatDateTime(link.createdAt)}
             </p>
           </div>
           {link.note ? (
-            <p className="line-clamp-2 text-[13px] leading-5 text-[color:var(--color-muted)]">
+            <p className="line-clamp-2 text-[12px] leading-5 text-[color:var(--color-muted)]">
               {link.note}
             </p>
           ) : null}
         </div>
         <GhostButton
-          className="min-h-9 rounded-full px-3 text-sm"
+          className="min-h-8 rounded-full px-2.5 text-[13px]"
           disabled={disabled}
           onClick={() => onArchive(link.ticketKnowledgeLinkId)}
           type="button"
@@ -1053,33 +1058,33 @@ function SupportKnowledgePickerCard({
   onSendToCustomer: (articleId: Uuid) => void;
 }) {
   return (
-    <article className="rounded-[14px] border border-[color:var(--color-border)] bg-white px-3 py-3">
-      <div className="space-y-2">
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
+    <article className="rounded-[13px] border border-[color:var(--color-border)] bg-white px-3 py-2.5">
+      <div className="space-y-1.5">
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
             <StatusPill>{humanizeKnowledgeVisibility(article.articleVisibility)}</StatusPill>
             <StatusPill>{humanizeKnowledgeStatus(article.articleStatus)}</StatusPill>
             {article.categoryName ? <StatusPill tone="accent">{article.categoryName}</StatusPill> : null}
           </div>
-          <div className="space-y-1">
-            <p className="text-sm font-semibold text-[color:var(--color-ink)]">
+          <div className="space-y-0.5">
+            <p className="text-[13px] font-semibold text-[color:var(--color-ink)]">
               {article.articleTitle}
             </p>
-            <p className="line-clamp-2 text-sm leading-5 text-[color:var(--color-muted)]">
+            <p className="line-clamp-2 text-[13px] leading-5 text-[color:var(--color-muted)]">
               {article.articleSummary?.trim() || 'Resumo ainda nao informado para este artigo.'}
             </p>
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
             {article.isCustomerSendAllowed
               ? 'Este artigo pode ser usado como link publico ao cliente.'
               : 'Este artigo fica restrito ao uso interno do time.'}
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             <GhostButton
-              className="min-h-10 px-3 text-sm"
+              className="min-h-9 px-2.5 text-[13px]"
               disabled={disabled}
               onClick={() => onLinkInternal(article.articleId)}
               type="button"
@@ -1088,7 +1093,7 @@ function SupportKnowledgePickerCard({
             </GhostButton>
             {article.isCustomerSendAllowed ? (
               <AppButton
-                className="min-h-10 px-4"
+                className="min-h-9 px-3"
                 disabled={disabled}
                 onClick={() => onSendToCustomer(article.articleId)}
                 type="button"
@@ -1097,7 +1102,7 @@ function SupportKnowledgePickerCard({
               </AppButton>
             ) : null}
             <GhostButton
-              className="min-h-10 px-3 text-sm"
+              className="min-h-9 px-2.5 text-[13px]"
               disabled={disabled}
               onClick={() => onNeedsUpdate(article.articleId)}
               type="button"
@@ -1152,17 +1157,17 @@ function SupportKnowledgePanel({
 
   return (
     <details
-      className="rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_12px_24px_rgba(19,33,79,0.08)]"
+      className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-3.5 py-3 shadow-[0_10px_20px_rgba(19,33,79,0.07)]"
       onToggle={(event) => onToggle(event.currentTarget.open)}
       open={defaultOpen}
     >
       <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
         Conhecimento relacionado
       </summary>
-      <div className="mt-3 space-y-3">
+      <div className="mt-2.5 space-y-2.5">
         {phase === 'contract-unavailable' ? (
           <InlineNotice tone="warning">
-            {message ?? 'O contrato de conhecimento ainda nao ficou disponivel neste ambiente.'}
+            {message ?? 'O painel de conhecimento ainda nao ficou disponivel para esta tratativa.'}
           </InlineNotice>
         ) : phase === 'error' ? (
           <InlineNotice tone="critical">
@@ -1175,8 +1180,8 @@ function SupportKnowledgePanel({
           />
         ) : (
           <>
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="space-y-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-1.5">
                 <h4 className="text-sm font-semibold text-[color:var(--color-ink)]">
                   Vinculos ativos
                 </h4>
@@ -1191,7 +1196,7 @@ function SupportKnowledgePanel({
                   Nenhum artigo foi relacionado a este ticket ainda.
                 </InlineNotice>
             ) : (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {visibleLinks.map((link) => (
                     <SupportKnowledgeLinkCard
                       disabled={loading}
@@ -1209,27 +1214,28 @@ function SupportKnowledgePanel({
             )}
             </div>
 
-            <details className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3">
+            <details className="rounded-[15px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2.5">
               <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
                 Buscar e vincular
               </summary>
-              <div className="mt-3 space-y-3">
+              <div className="mt-2.5 space-y-2.5">
                 <TextInput
+                  className="min-h-10"
                   onChange={(event) => onSearchChange(event.target.value)}
                   placeholder="Buscar artigo por titulo, resumo ou categoria"
                   value={search}
                 />
 
                 <TextareaInput
-                  className="min-h-[82px]"
+                  className="min-h-[76px]"
                   onChange={(event) => onNoteChange(event.target.value)}
                   placeholder="Observacao curta opcional para o proximo operador."
                   value={noteDraft}
                 />
 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   <GhostButton
-                    className="min-h-10 px-4 text-sm"
+                    className="min-h-9 px-3 text-[13px]"
                     disabled={loading}
                     onClick={onMarkGap}
                     type="button"
@@ -1243,7 +1249,7 @@ function SupportKnowledgePanel({
                     Nenhum artigo permitido apareceu para este filtro.
                   </InlineNotice>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {visibleArticles.map((article) => (
                       <SupportKnowledgePickerCard
                         article={article}
@@ -2048,18 +2054,18 @@ function SupportTicketCustomerSnapshot({
 
   if (!accountContext || !accountContext.profileId) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-2">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 space-y-1">
             <p className="text-sm font-semibold text-[color:var(--color-ink)]">
               {customer.tenantDisplayName ?? customer.tenantLegalName ?? customer.tenantSlug}
             </p>
-            <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+            <p className="text-[12px] leading-5 text-[color:var(--color-muted)]">
               {primaryContact ? `${primaryContact.fullName} · ${primaryContact.email}` : 'Contato principal nao resolvido'}
             </p>
           </div>
           <Link
-            className="inline-flex min-h-10 items-center justify-center rounded-full border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold text-[color:var(--color-brand-blue)]"
+            className="inline-flex min-h-9 items-center justify-center rounded-full border border-[color:var(--color-border)] px-3 py-1.5 text-[13px] font-semibold text-[color:var(--color-brand-blue)]"
             to={`/support/customers/${customer.tenantId}`}
           >
             Ver detalhes do cliente
@@ -2079,13 +2085,13 @@ function SupportTicketCustomerSnapshot({
   const riskyCustomizations = visibleRiskCustomizations(accountContext, 2);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 space-y-2">
+        <div className="min-w-0 space-y-1">
           <p className="text-sm font-semibold text-[color:var(--color-ink)]">
             {customer.tenantDisplayName ?? customer.tenantLegalName ?? customer.tenantSlug}
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {accountContext.productLine ? (
               <StatusPill tone="accent">{humanizeCustomerValue(accountContext.productLine)}</StatusPill>
             ) : null}
@@ -2098,40 +2104,40 @@ function SupportTicketCustomerSnapshot({
           </div>
         </div>
         <Link
-          className="inline-flex min-h-10 items-center justify-center rounded-full border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold text-[color:var(--color-brand-blue)]"
+          className="inline-flex min-h-9 items-center justify-center rounded-full border border-[color:var(--color-border)] px-3 py-1.5 text-[13px] font-semibold text-[color:var(--color-brand-blue)]"
           to={`/support/customers/${customer.tenantId}`}
         >
           Ver detalhes do cliente
         </Link>
       </div>
 
-      <div className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
-        <dl className="grid gap-2 text-[13px] leading-5 text-[color:var(--color-muted)]">
+      <div className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2.5">
+        <dl className="grid gap-1.5 text-[12px] leading-5 text-[color:var(--color-muted)]">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <dt className="font-medium text-[color:var(--color-ink)]">Plataforma</dt>
             <dd className="text-right">
               {primaryPlatform ? primaryPlatform.provider : 'Nao registrada'}
             </dd>
           </div>
-          <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-2">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-1.5">
             <dt className="font-medium text-[color:var(--color-ink)]">Produto</dt>
             <dd className="text-right">
               {accountContext.productLine ? humanizeCustomerValue(accountContext.productLine) : 'Nao resolvido'}
             </dd>
           </div>
-          <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-2">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-1.5">
             <dt className="font-medium text-[color:var(--color-ink)]">Porte / tier</dt>
             <dd className="text-right">
               {accountContext.accountTier ?? 'Nao resolvido'}
             </dd>
           </div>
-          <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-2">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-1.5">
             <dt className="font-medium text-[color:var(--color-ink)]">Contato principal</dt>
             <dd className="text-right">
               {primaryContact ? primaryContact.fullName : 'Nao resolvido'}
             </dd>
           </div>
-          <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-2">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-1.5">
             <dt className="font-medium text-[color:var(--color-ink)]">E-mail</dt>
             <dd className="text-right break-all">
               {primaryContact?.email ?? 'Nao resolvido'}
@@ -2141,7 +2147,7 @@ function SupportTicketCustomerSnapshot({
       </div>
 
       {integrations.length > 0 ? (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
             Integracoes principais
           </p>
@@ -2154,7 +2160,7 @@ function SupportTicketCustomerSnapshot({
       ) : null}
 
       {features.length > 0 ? (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
             Features ativas
           </p>
@@ -2167,7 +2173,7 @@ function SupportTicketCustomerSnapshot({
       ) : null}
 
       {alerts.length > 0 ? (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {alerts.map((alert) => (
             <InlineNotice key={alert.id} tone={toneForAlertSeverity(alert.severity)}>
               <span className="font-semibold">{alert.title}</span>
@@ -2178,14 +2184,14 @@ function SupportTicketCustomerSnapshot({
       ) : null}
 
       {riskyCustomizations.length > 0 ? (
-        <details className="rounded-[16px] border border-[color:var(--color-border)] bg-white px-4 py-3">
+        <details className="rounded-[15px] border border-[color:var(--color-border)] bg-white px-3 py-2.5">
           <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
             Customizacoes com atencao
           </summary>
-          <div className="mt-3 space-y-2">
+          <div className="mt-2.5 space-y-1.5">
             {riskyCustomizations.map((customization) => (
               <div
-                className="rounded-[16px] bg-[color:var(--color-surface)] px-3 py-2.5"
+                className="rounded-[14px] bg-[color:var(--color-surface)] px-3 py-2"
                 key={customization.id}
               >
                 <div className="flex flex-wrap items-center gap-2">
@@ -2442,9 +2448,9 @@ function SupportWorkspaceView({
   const [submitting, setSubmitting] = useState(false);
   const [ticketRailOpen, setTicketRailOpen] = useState(true);
   const [advancedToolsOpen, setAdvancedToolsOpen] = useState(false);
-  const [knowledgePanelOpen, setKnowledgePanelOpen] = useState(true);
+  const [knowledgePanelOpen, setKnowledgePanelOpen] = useState(false);
   const [customerPanelOpen, setCustomerPanelOpen] = useState(true);
-  const [activityPanelOpen, setActivityPanelOpen] = useState(true);
+  const [activityPanelOpen, setActivityPanelOpen] = useState(false);
   const [ticketToolbarTab, setTicketToolbarTab] = useState<
     'conversation' | 'knowledge' | 'help' | 'more'
   >('conversation');
@@ -2539,9 +2545,9 @@ function SupportWorkspaceView({
       setStatusDraft(detail.status === 'closed' ? 'triage' : detail.status);
       setAssignDraft(detail.assignedToUserId ?? '');
       setAdvancedToolsOpen(false);
-      setKnowledgePanelOpen(true);
+      setKnowledgePanelOpen(false);
       setCustomerPanelOpen(true);
-      setActivityPanelOpen(true);
+      setActivityPanelOpen(false);
       setTicketToolbarTab('conversation');
       setComposerMode(detail.canAddMessage ? 'public' : detail.canAddInternalNote ? 'internal' : 'public');
       setKnowledgeSearch('');
@@ -3200,7 +3206,7 @@ function SupportWorkspaceView({
   }
 
   return (
-    <div className="space-y-5">
+    <div className={cx('space-y-5', variant === 'tickets' && 'space-y-2.5')}>
       {variant === 'queue' ? (
         <section className="rounded-[26px] border border-[color:var(--color-border)] bg-white/95 px-5 py-5 shadow-[0_16px_30px_rgba(19,33,79,0.08)]">
           <div className="flex flex-wrap items-center gap-2">
@@ -3375,59 +3381,59 @@ function SupportWorkspaceView({
           />
         )
       ) : (
-        <div className="space-y-3">
-          <section className="overflow-hidden rounded-[26px] border border-[rgba(22,42,93,0.1)] bg-white shadow-[0_18px_34px_rgba(19,33,79,0.08)]">
-            <div className="px-5 py-3 sm:px-6">
-              <div className="space-y-1.5">
-                <div className="flex flex-wrap items-center gap-3">
+        <div className="space-y-2">
+          <section className="overflow-hidden rounded-[22px] border border-[rgba(22,42,93,0.1)] bg-white shadow-[0_12px_24px_rgba(19,33,79,0.07)]">
+            <div className="px-4 py-2 sm:px-5">
+              <div className="space-y-0.5">
+                <div className="flex flex-wrap items-center gap-2.5">
                   <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>
                     {humanizeStatus(ticketDetail.status)}
                   </StatusPill>
                   <StatusPill tone={toneForPriority(ticketDetail.priority)}>
                     {humanizeToken(ticketDetail.priority)}
                   </StatusPill>
-                  <span className="text-sm font-semibold text-[color:var(--color-ink)]">
+                  <span className="text-[13px] font-semibold text-[color:var(--color-ink)]">
                     #{ticketDetail.id.slice(0, 8)}
                   </span>
-                  <span className="text-sm text-[color:var(--color-muted)]">
+                  <span className="text-[12px] text-[color:var(--color-muted)]">
                     Criado em {formatDateTime(ticketDetail.createdAt)}
                   </span>
                 </div>
 
-                <h3 className="max-w-5xl text-[1.46rem] font-semibold tracking-[-0.05em] leading-tight text-[color:var(--color-ink)]">
+                <h3 className="max-w-5xl text-[1.2rem] font-semibold tracking-[-0.05em] leading-tight text-[color:var(--color-ink)]">
                   {ticketDetail.title}
                 </h3>
 
-                <div className="grid gap-2 border-t border-[color:var(--color-border)] pt-2 text-sm md:grid-cols-2 xl:grid-cols-4">
+                <div className="grid gap-1 border-t border-[color:var(--color-border)] pt-1.5 text-[12px] md:grid-cols-2 xl:grid-cols-4">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
                       Cliente
                     </p>
-                    <p className="mt-1 truncate font-semibold text-[color:var(--color-ink)]">
+                    <p className="truncate font-semibold text-[color:var(--color-ink)]">
                       {ticketDetail.tenantDisplayName ?? ticketDetail.tenantLegalName ?? ticketDetail.tenantSlug}
                     </p>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
                       Solicitante
                     </p>
-                    <p className="mt-1 truncate font-semibold text-[color:var(--color-ink)]">
+                    <p className="truncate font-semibold text-[color:var(--color-ink)]">
                       {requesterLabel}
                     </p>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
                       Responsavel
                     </p>
-                    <p className="mt-1 truncate font-semibold text-[color:var(--color-ink)]">
+                    <p className="truncate font-semibold text-[color:var(--color-ink)]">
                       {currentAssignedLabel}
                     </p>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
                       Ultima atualizacao
                     </p>
-                    <p className="mt-1 truncate font-semibold text-[color:var(--color-ink)]">
+                    <p className="truncate font-semibold text-[color:var(--color-ink)]">
                       {formatDateTime(ticketDetail.lastMessageAt ?? ticketDetail.updatedAt)}
                     </p>
                   </div>
@@ -3435,11 +3441,11 @@ function SupportWorkspaceView({
               </div>
             </div>
 
-            <div className="border-t border-[color:var(--color-border)] px-5 sm:px-6">
-              <div className="flex items-center gap-5 overflow-x-auto">
+            <div className="border-t border-[color:var(--color-border)] px-4 sm:px-5">
+              <div className="flex items-center gap-3.5 overflow-x-auto">
                 <button
                   className={cx(
-                    'inline-flex min-h-11 shrink-0 items-center border-b-2 px-1 text-sm font-semibold transition',
+                    'inline-flex min-h-9 shrink-0 items-center border-b-2 px-1 text-[13px] font-semibold transition',
                     ticketToolbarTab === 'conversation'
                       ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
                       : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
@@ -3451,7 +3457,7 @@ function SupportWorkspaceView({
                 </button>
                 <button
                   className={cx(
-                    'inline-flex min-h-11 shrink-0 items-center border-b-2 px-1 text-sm font-semibold transition',
+                    'inline-flex min-h-9 shrink-0 items-center border-b-2 px-1 text-[13px] font-semibold transition',
                     ticketToolbarTab === 'knowledge'
                       ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
                       : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
@@ -3463,7 +3469,7 @@ function SupportWorkspaceView({
                 </button>
                 <Link
                   className={cx(
-                    'inline-flex min-h-11 shrink-0 items-center border-b-2 px-1 text-sm font-semibold transition',
+                    'inline-flex min-h-9 shrink-0 items-center border-b-2 px-1 text-[13px] font-semibold transition',
                     ticketToolbarTab === 'help'
                       ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
                       : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
@@ -3475,7 +3481,7 @@ function SupportWorkspaceView({
                 </Link>
                 <button
                   className={cx(
-                    'inline-flex min-h-11 shrink-0 items-center border-b-2 px-1 text-sm font-semibold transition',
+                    'inline-flex min-h-9 shrink-0 items-center border-b-2 px-1 text-[13px] font-semibold transition',
                     ticketToolbarTab === 'more'
                       ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
                       : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
@@ -3493,24 +3499,24 @@ function SupportWorkspaceView({
 
           <div
             className={cx(
-              'grid items-start gap-3',
-              ticketRailOpen && 'xl:grid-cols-[minmax(0,1fr)_292px]',
+              'grid items-start gap-2',
+              ticketRailOpen && 'xl:grid-cols-[minmax(0,1fr)_276px]',
             )}
           >
             <section
-              className="overflow-hidden rounded-[28px] border border-[color:var(--color-border)] bg-white shadow-[0_18px_34px_rgba(19,33,79,0.08)]"
+              className="overflow-hidden rounded-[22px] border border-[color:var(--color-border)] bg-white shadow-[0_12px_24px_rgba(19,33,79,0.07)]"
               ref={conversationSectionRef}
             >
-              <div className="px-5 py-3.5 sm:px-6">
+              <div className="px-4 py-2 sm:px-5">
                 <SupportConversation requesterName={requesterLabel} window={timelineWindow} />
               </div>
 
-              <div className="border-t border-[color:var(--color-border)] bg-[linear-gradient(180deg,rgba(247,250,255,0.96),rgba(255,255,255,1))] px-5 py-3 sm:px-6">
-                <form className="space-y-2" onSubmit={handleSubmitComposer}>
-                  <div className="flex flex-wrap gap-5 border-b border-[color:var(--color-border)]">
+              <div className="border-t border-[color:var(--color-border)] bg-[linear-gradient(180deg,rgba(247,250,255,0.96),rgba(255,255,255,1))] px-4 py-2 sm:px-5">
+                <form className="space-y-1.5" onSubmit={handleSubmitComposer}>
+                  <div className="flex flex-wrap gap-4 border-b border-[color:var(--color-border)]">
                     <button
                       className={cx(
-                        'inline-flex min-h-10 items-center border-b-2 px-1 text-sm font-semibold transition',
+                        'inline-flex min-h-9 items-center border-b-2 px-1 text-[13px] font-semibold transition',
                         composerMode === 'public'
                           ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
                           : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
@@ -3523,7 +3529,7 @@ function SupportWorkspaceView({
                     </button>
                     <button
                       className={cx(
-                        'inline-flex min-h-10 items-center border-b-2 px-1 text-sm font-semibold transition',
+                        'inline-flex min-h-9 items-center border-b-2 px-1 text-[13px] font-semibold transition',
                         composerMode === 'internal'
                           ? 'border-[color:var(--color-danger-ink)] text-[color:var(--color-danger-ink)]'
                           : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
@@ -3535,9 +3541,19 @@ function SupportWorkspaceView({
                       Nota interna
                     </button>
                   </div>
-                  <div className="rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-3 shadow-[0_10px_22px_rgba(19,33,79,0.04)]">
+                  <div
+                    className={cx(
+                      'rounded-[18px] border px-3.5 py-2.5 shadow-[0_8px_18px_rgba(19,33,79,0.04)] transition-colors',
+                      composerMode === 'internal'
+                        ? 'border-amber-200 bg-[linear-gradient(180deg,rgba(255,248,227,0.98),rgba(255,243,214,0.95))]'
+                        : 'border-[color:var(--color-border)] bg-white',
+                    )}
+                  >
                     <TextareaInput
-                      className="min-h-[82px] resize-y border-0 bg-transparent px-0 py-0 text-[15px] leading-6 shadow-none focus:border-transparent focus:ring-0"
+                      className={cx(
+                        'min-h-[108px] resize-y border-0 bg-transparent px-0 py-0 text-[14px] leading-[1.45rem] shadow-none focus:border-transparent focus:ring-0',
+                        composerMode === 'internal' && 'placeholder:text-[rgba(125,92,13,0.68)]',
+                      )}
                       onChange={(event) =>
                         composerMode === 'public'
                           ? setMessageDraft(event.target.value)
@@ -3550,28 +3566,35 @@ function SupportWorkspaceView({
                       }
                       value={composerDraft}
                     />
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--color-border)] pt-3">
+                    <div
+                      className={cx(
+                        'mt-2.5 flex flex-wrap items-center justify-between gap-2.5 pt-2.5',
+                        composerMode === 'internal'
+                          ? 'border-t border-amber-200/90'
+                          : 'border-t border-[color:var(--color-border)]',
+                      )}
+                    >
                       <div className="flex items-center gap-2 text-[color:var(--color-muted)]">
                         <button
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-sm font-semibold"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[13px] font-semibold"
                           type="button"
                         >
                           +
                         </button>
                         <button
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-sm font-semibold"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[13px] font-semibold"
                           type="button"
                         >
                           Aa
                         </button>
                         <button
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-sm font-semibold"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[13px] font-semibold"
                           type="button"
                         >
                           @
                         </button>
                         <button
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-sm font-semibold"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[13px] font-semibold"
                           type="button"
                         >
                           ...
@@ -3580,7 +3603,10 @@ function SupportWorkspaceView({
 
                       <div className="flex flex-wrap items-center gap-3">
                         <SelectInput
-                          className="min-w-[132px] rounded-full px-4 text-sm font-semibold"
+                          className={cx(
+                            'min-w-[124px] rounded-full px-3.5 text-[13px] font-semibold',
+                            composerMode === 'internal' && 'border-amber-200 bg-white/90',
+                          )}
                           onChange={(event) =>
                             setComposerMode(event.target.value === 'internal' ? 'internal' : 'public')
                           }
@@ -3592,8 +3618,8 @@ function SupportWorkspaceView({
                         <AppButton
                           className={
                             composerMode === 'internal'
-                              ? 'min-h-11 rounded-[16px] px-6 bg-[linear-gradient(135deg,#7c2648,#b63f76)]'
-                              : 'min-h-11 rounded-[16px] px-6'
+                              ? 'min-h-10 rounded-[14px] px-5 bg-[linear-gradient(135deg,#7c2648,#b63f76)]'
+                              : 'min-h-10 rounded-[14px] px-5'
                           }
                           disabled={composerDisabled}
                           type="submit"
@@ -3612,22 +3638,22 @@ function SupportWorkspaceView({
             </section>
 
             {ticketRailOpen ? (
-              <aside className="space-y-3 xl:sticky xl:top-4">
-                <section className="rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_12px_24px_rgba(19,33,79,0.08)]">
-                  <div className="space-y-3">
+              <aside className="space-y-2 xl:sticky xl:top-2.5 xl:max-h-[calc(100vh-6.25rem)] xl:overflow-y-auto xl:pr-1">
+                <section className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-3.5 py-3 shadow-[0_10px_20px_rgba(19,33,79,0.07)]">
+                  <div className="space-y-2.5">
                     <div className="flex items-center justify-between gap-3">
                       <h4 className="text-sm font-semibold tracking-[-0.02em] text-[color:var(--color-ink)]">
                         Acoes do ticket
                       </h4>
                       <GhostButton
-                        className="min-h-9 px-3 text-xs"
+                        className="min-h-8 px-2.5 text-[11px]"
                         onClick={() => setTicketRailOpen(false)}
                       >
                         Recolher
                       </GhostButton>
                     </div>
 
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                       <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>
                         {humanizeStatus(ticketDetail.status)}
                       </StatusPill>
@@ -3641,7 +3667,7 @@ function SupportWorkspaceView({
 
                     {agentsPhase === 'contract-unavailable' ? (
                       <InlineNotice tone="critical">
-                        {agentsMessage ?? 'A lista de agentes nao ficou disponivel neste ambiente.'}
+                        {agentsMessage ?? 'A lista de agentes nao ficou disponivel para esta tratativa.'}
                       </InlineNotice>
                     ) : agentsPhase === 'error' ? (
                       <InlineNotice tone="critical">
@@ -3656,7 +3682,7 @@ function SupportWorkspaceView({
                         Nenhum agente ativo ficou disponivel para este cliente.
                       </InlineNotice>
                     ) : (
-                      <form className="space-y-3" onSubmit={handleAssign}>
+                      <form className="space-y-2.5" onSubmit={handleAssign}>
                         <Field label="Responsavel">
                           <SelectInput
                             onChange={(event) => setAssignDraft(event.target.value)}
@@ -3671,7 +3697,7 @@ function SupportWorkspaceView({
                           </SelectInput>
                         </Field>
                         <AppButton
-                          className="min-h-11 w-full rounded-[16px] px-5"
+                          className="min-h-10 w-full rounded-[14px] px-4.5"
                           disabled={submitting || !ticketDetail.canAssign}
                           type="submit"
                         >
@@ -3679,7 +3705,7 @@ function SupportWorkspaceView({
                         </AppButton>
                         <div className="grid gap-2 sm:grid-cols-2">
                           <GhostButton
-                            className="min-h-10 px-4 text-sm"
+                            className="min-h-9 px-3.5 text-[13px]"
                             disabled={
                               submitting ||
                               !ticketDetail.canAssign ||
@@ -3693,7 +3719,7 @@ function SupportWorkspaceView({
                             Atribuir a mim
                           </GhostButton>
                           <GhostButton
-                            className="min-h-10 px-4 text-sm"
+                            className="min-h-9 px-3.5 text-[13px]"
                             disabled={submitting || !ticketDetail.canAssign || !ticketDetail.assignedToUserId}
                             onClick={() => void runAssignment(null)}
                             type="button"
@@ -3704,7 +3730,7 @@ function SupportWorkspaceView({
                       </form>
                     )}
 
-                    <form className="space-y-3 border-t border-[color:var(--color-border)] pt-3" onSubmit={handleUpdateStatus}>
+                    <form className="space-y-2.5 border-t border-[color:var(--color-border)] pt-2.5" onSubmit={handleUpdateStatus}>
                       <Field label="Mover status">
                         <SelectInput
                           onChange={(event) =>
@@ -3720,7 +3746,7 @@ function SupportWorkspaceView({
                         </SelectInput>
                       </Field>
                       <AppButton
-                        className="min-h-11 w-full rounded-[16px] px-5"
+                        className="min-h-10 w-full rounded-[14px] px-4.5"
                         disabled={submitting || !ticketDetail.canUpdateStatus}
                         type="submit"
                       >
@@ -3731,14 +3757,14 @@ function SupportWorkspaceView({
                 </section>
 
                 <details
-                  className="rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_12px_24px_rgba(19,33,79,0.08)]"
+                  className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-3.5 py-3 shadow-[0_10px_20px_rgba(19,33,79,0.07)]"
                   onToggle={(event) => setCustomerPanelOpen(event.currentTarget.open)}
                   open={customerPanelOpen}
                 >
                   <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
                     Cliente
                   </summary>
-                  <div className="mt-3">
+                  <div className="mt-2.5">
                     <SupportTicketCustomerSnapshot
                       accountContext={customerAccountContext}
                       customer={customer}
@@ -3772,42 +3798,42 @@ function SupportWorkspaceView({
                 </div>
 
                 <details
-                  className="rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_12px_24px_rgba(19,33,79,0.08)]"
+                  className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-3.5 py-3 shadow-[0_10px_20px_rgba(19,33,79,0.07)]"
                   onToggle={(event) => setActivityPanelOpen(event.currentTarget.open)}
                   open={activityPanelOpen}
                 >
                   <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
                     Atividade recente
                   </summary>
-                  <div className="mt-3">
+                  <div className="mt-2.5">
                     <SupportRecentActivity window={timelineWindow} />
                   </div>
                 </details>
 
                 <details
-                  className="rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_12px_24px_rgba(19,33,79,0.08)]"
+                  className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-3.5 py-3 shadow-[0_10px_20px_rgba(19,33,79,0.07)]"
                   onToggle={(event) => setAdvancedToolsOpen(event.currentTarget.open)}
                   open={advancedToolsOpen}
                   ref={advancedSectionRef}
                 >
                   <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                    Historico tecnico e mais acoes
+                    Historico detalhado e mais acoes
                   </summary>
-                  <div className="mt-4 space-y-4">
-                    <form className="space-y-3" onSubmit={handleUpdateStatus}>
+                  <div className="mt-3 space-y-3">
+                    <form className="space-y-2.5" onSubmit={handleUpdateStatus}>
                       <Field
                         label="Atualizar com observacao"
                         description="Use quando o movimento de status precisa levar um contexto curto."
                       >
                         <TextareaInput
-                          className="min-h-[96px]"
+                          className="min-h-[84px]"
                           onChange={(event) => setStatusNote(event.target.value)}
                           placeholder="Descreva o proximo passo ou o motivo da mudanca."
                           value={statusNote}
                         />
                       </Field>
                       <AppButton
-                        className="min-h-11 w-full rounded-[16px] px-5"
+                        className="min-h-10 w-full rounded-[14px] px-4.5"
                         disabled={submitting || !ticketDetail.canUpdateStatus}
                         type="submit"
                       >
@@ -3815,7 +3841,7 @@ function SupportWorkspaceView({
                       </AppButton>
                     </form>
 
-                    <form className="space-y-3" onSubmit={handleAssign}>
+                    <form className="space-y-2.5" onSubmit={handleAssign}>
                       <Field
                         label="Responsavel manual"
                         description="Use apenas em excecao, quando o seletor principal nao atender."
@@ -3827,7 +3853,7 @@ function SupportWorkspaceView({
                         />
                       </Field>
                       <AppButton
-                        className="min-h-11 w-full rounded-[16px] px-5"
+                        className="min-h-10 w-full rounded-[14px] px-4.5"
                         disabled={submitting || !ticketDetail.canAssign}
                         type="submit"
                       >
@@ -3836,9 +3862,9 @@ function SupportWorkspaceView({
                     </form>
 
                     {ticketDetail.canClose || ticketDetail.canReopen ? (
-                      <div className="space-y-4 border-t border-[color:var(--color-border)] pt-4">
+                      <div className="space-y-3 border-t border-[color:var(--color-border)] pt-3">
                         {ticketDetail.canClose ? (
-                          <form className="space-y-3" onSubmit={handleClose}>
+                          <form className="space-y-2.5" onSubmit={handleClose}>
                             <Field label="Motivo do fechamento">
                               <TextareaInput
                                 onChange={(event) => setCloseReason(event.target.value)}
@@ -3847,7 +3873,7 @@ function SupportWorkspaceView({
                               />
                             </Field>
                             <AppButton
-                              className="min-h-11 w-full rounded-[16px] bg-[linear-gradient(135deg,#8b1e3f,#c3365e)] px-5"
+                              className="min-h-10 w-full rounded-[14px] bg-[linear-gradient(135deg,#8b1e3f,#c3365e)] px-4.5"
                               disabled={submitting || closeReason.trim().length === 0}
                               type="submit"
                             >
@@ -3857,7 +3883,7 @@ function SupportWorkspaceView({
                         ) : null}
 
                         {ticketDetail.canReopen ? (
-                          <form className="space-y-3" onSubmit={handleReopen}>
+                          <form className="space-y-2.5" onSubmit={handleReopen}>
                             <Field label="Motivo da reabertura">
                               <TextareaInput
                                 onChange={(event) => setReopenReason(event.target.value)}
@@ -3865,7 +3891,7 @@ function SupportWorkspaceView({
                                 value={reopenReason}
                               />
                             </Field>
-                            <GhostButton className="min-h-11 w-full px-4" disabled={submitting} type="submit">
+                            <GhostButton className="min-h-10 w-full px-4" disabled={submitting} type="submit">
                               {submitting ? 'Reabrindo...' : 'Reabrir ticket'}
                             </GhostButton>
                           </form>
@@ -3873,11 +3899,11 @@ function SupportWorkspaceView({
                       </div>
                     ) : null}
 
-                    <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
+                    <details className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2.5">
                       <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                        Historico tecnico recente
+                        Historico detalhado recente
                       </summary>
-                      <div className="mt-3 space-y-2">
+                      <div className="mt-2.5 space-y-1.5">
                         <SupportTechnicalHistory window={timelineWindow} />
                       </div>
                     </details>
