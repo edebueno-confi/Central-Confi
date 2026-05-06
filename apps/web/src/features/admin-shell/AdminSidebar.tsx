@@ -1,13 +1,12 @@
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import mascotUrl from '../../../assets/brand/genius-mascot.svg';
 import { cx } from '../../components/ui';
-import { useAuthContext } from '../auth/auth-context';
 
 const navigation = [
-  { label: 'Clientes', to: '/admin/tenants', shortLabel: 'CLI' },
-  { label: 'Conhecimento', to: '/admin/knowledge', shortLabel: 'CON' },
-  { label: 'Acesso', to: '/admin/access', shortLabel: 'ACE' },
-  { label: 'Sistema', to: '/admin/system', shortLabel: 'SIS' },
+  { label: 'Tenants', to: '/admin/tenants', shortLabel: 'TE' },
+  { label: 'Knowledge', to: '/admin/knowledge', shortLabel: 'KN' },
+  { label: 'Access', to: '/admin/access', shortLabel: 'AC' },
+  { label: 'System', to: '/admin/system', shortLabel: 'SY' },
 ];
 
 export function AdminSidebar({
@@ -17,165 +16,90 @@ export function AdminSidebar({
   collapsed: boolean;
   onToggle: () => void;
 }) {
-  const location = useLocation();
-  const { gate } = useAuthContext();
-  const compactKnowledgeMode =
-    location.pathname === '/admin/tenants' ||
-    location.pathname === '/admin/knowledge' ||
-    location.pathname === '/admin/access' ||
-    location.pathname === '/admin/system';
-
   return (
     <aside
       className={cx(
-        'flex h-full flex-col rounded-[30px] border border-white/55 bg-[linear-gradient(180deg,rgba(20,31,71,0.98),rgba(32,60,132,0.96))] text-white shadow-[0_28px_60px_rgba(20,31,71,0.22)] transition-[width,padding] duration-200',
-        collapsed ? 'w-[96px] p-3' : 'w-[248px] p-4',
+        'relative flex h-full flex-col rounded-[26px] border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,#091734_0%,#0b1d45_56%,#0e2558_100%)] text-white shadow-[0_30px_58px_rgba(9,23,52,0.26)] transition-[width,padding] duration-200',
+        collapsed ? 'w-[96px] p-3.5' : 'w-[238px] p-5',
       )}
     >
-      {compactKnowledgeMode ? (
-        <div className={cx('space-y-4', collapsed ? 'px-1 py-1' : 'px-2 py-1')}>
-          <div className="flex items-start justify-between gap-3">
-            <div className={cx('flex items-center gap-3', collapsed && 'justify-center')}>
-              <img alt="Mascote Genius" className="w-10" src={mascotUrl} />
-              {!collapsed ? (
-                <div className="space-y-1">
-                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-white/58">
-                    Genius
-                  </p>
-                  <p className="text-xl font-semibold leading-6 text-white">Admin</p>
-                </div>
-              ) : null}
-            </div>
-
-            <button
-              className={cx(
-                'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/16 bg-white/8 text-sm font-medium text-white transition hover:bg-white/12',
-                collapsed && 'mx-auto',
-              )}
-              onClick={onToggle}
-              type="button"
-            >
-              {collapsed ? '>>' : '<<'}
-            </button>
+      <div className={cx('flex items-start justify-between gap-3', collapsed && 'justify-center')}>
+        <div className={cx('flex items-start gap-3', collapsed && 'justify-center')}>
+          <div className="flex h-11 w-11 items-center justify-center rounded-[14px] bg-[rgba(255,255,255,0.04)] ring-1 ring-white/10">
+            <img alt="Genius Support OS" className="w-8" src={mascotUrl} />
           </div>
-
           {!collapsed ? (
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.24em] text-white/46">
-              Painel administrativo
-            </p>
+            <div className="space-y-2 pt-0.5">
+              <div className="space-y-0.5">
+                <p className="text-[0.92rem] font-semibold leading-5 text-white">Genius</p>
+                <p className="text-[0.92rem] font-semibold leading-5 text-white">Support OS</p>
+              </div>
+              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-white/56">
+                Admin Console
+              </p>
+            </div>
           ) : null}
         </div>
-      ) : (
-        <>
-          <div
-            className={cx(
-              'flex items-center gap-3 rounded-[24px] border border-white/10 bg-white/6 py-3',
-              collapsed ? 'justify-center px-2' : 'px-3',
-            )}
-          >
-            <img alt="Mascote Genius" className="w-14" src={mascotUrl} />
-            {!collapsed ? (
-              <div className="space-y-1">
-                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-white/58">
-                  Genius
-                </p>
-                <div>
-                  <h1 className="text-lg font-semibold tracking-[-0.04em]">
-                    Admin
-                  </h1>
-                  <p className="text-xs text-white/70">Operação administrativa</p>
-                </div>
-              </div>
-            ) : null}
-          </div>
 
-          <div className={cx('mt-3 flex', collapsed ? 'justify-center' : 'justify-end')}>
-            <button
-              className={cx(
-                'inline-flex min-h-10 items-center justify-center rounded-full border border-white/16 bg-white/8 text-sm font-medium text-white transition hover:bg-white/12',
-                collapsed ? 'w-full px-0' : 'px-4',
-              )}
-              onClick={onToggle}
-              type="button"
-            >
-              {collapsed ? '>>' : '<<'}
-            </button>
-          </div>
-        </>
-      )}
+        <button
+          className={cx(
+            'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/12 bg-white/10 text-base font-medium text-white transition hover:bg-white/16',
+            collapsed && 'absolute right-3 top-3',
+          )}
+          onClick={onToggle}
+          type="button"
+        >
+          {collapsed ? '›' : '‹'}
+        </button>
+      </div>
 
-      <nav className="mt-5 grid gap-2">
+      <nav className="mt-6 grid gap-2.5">
         {navigation.map((item) => (
           <NavLink
             key={item.to}
             className={({ isActive }) =>
               cx(
-                'group flex min-h-12 items-center gap-3 rounded-[22px] py-3 text-sm font-medium transition',
-                collapsed ? 'justify-center px-0' : 'px-3',
+                'group flex min-h-12 items-center gap-3 rounded-[18px] py-3 text-sm font-medium transition',
+                collapsed ? 'justify-center px-0' : 'px-3.5',
                 isActive
-                  ? 'bg-white text-[color:var(--color-brand-navy)] shadow-[0_16px_34px_rgba(12,20,48,0.18)]'
-                  : 'text-white/74 hover:bg-white/10 hover:text-white',
+                  ? 'bg-[linear-gradient(135deg,#1a4fd6,#1665ef)] text-white shadow-[0_14px_32px_rgba(22,101,239,0.34)]'
+                  : 'text-white/76 hover:bg-white/8 hover:text-white',
               )
             }
             title={item.label}
             to={item.to}
           >
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-current/16 bg-current/6 text-[0.68rem] font-semibold uppercase tracking-[0.18em]">
+            <span
+              className={cx(
+                'inline-flex h-9 w-9 items-center justify-center rounded-full border text-[0.68rem] font-semibold uppercase tracking-[0.18em]',
+                'border-white/14 bg-white/6',
+              )}
+            >
               {item.shortLabel}
             </span>
             {!collapsed ? <span className="min-w-0 truncate">{item.label}</span> : null}
+            {!collapsed ? (
+              <span className="ml-auto text-base leading-none text-current/85">›</span>
+            ) : null}
           </NavLink>
         ))}
       </nav>
 
-      <div className="mt-4 lg:hidden">
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {navigation.map((item) => (
-            <Link
-              className={cx(
-                'inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition',
-                location.pathname.startsWith(item.to)
-                  ? 'border-white/24 bg-white text-[color:var(--color-brand-navy)]'
-                  : 'border-white/16 bg-white/10 text-white',
-              )}
-              key={`mobile:${item.to}`}
-              to={item.to}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </div>
-      </div>
-
       <div
         className={cx(
-          'mt-auto rounded-[24px] border border-white/10 bg-white/8',
-          collapsed ? 'p-3' : 'p-4',
+          'mt-auto rounded-[22px] border border-white/10 bg-white/8',
+          collapsed ? 'p-3' : 'px-4 py-3.5',
         )}
       >
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.24em] text-white/58">
-          {collapsed ? 'Sessão' : 'Usuário atual'}
-        </p>
-        <div className="mt-3 space-y-1">
-          <p className="font-medium text-white">
-            {compactKnowledgeMode
-              ? 'Administrador'
-              : collapsed
-                ? String(gate.actor?.profile.full_name ?? 'Administrador')
-                    .split(' ')
-                    .slice(0, 2)
-                    .join(' ')
-                : (gate.actor?.profile.full_name ?? 'Administrador')}
-          </p>
+        <div className={cx('flex items-center gap-3', collapsed && 'justify-center')}>
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(255,255,255,0.95)] text-sm font-semibold text-[color:var(--color-brand-navy)]">
+            PA
+          </span>
           {!collapsed ? (
-            <p className="text-xs text-white/68">
-              {compactKnowledgeMode ? 'Acesso administrativo' : gate.actor?.profile.email}
-            </p>
-          ) : null}
-          {!collapsed && !compactKnowledgeMode ? (
-            <p className="pt-2 text-xs leading-5 text-white/60">
-              Gerencie clientes, acessos e publicações internas.
-            </p>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-white">Platform Admin</p>
+              <p className="truncate text-xs text-white/62">platform_admin</p>
+            </div>
           ) : null}
         </div>
       </div>

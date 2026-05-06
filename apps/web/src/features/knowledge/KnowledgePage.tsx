@@ -380,6 +380,38 @@ function noticeTone(message: string) {
   return /sucesso|concluida/i.test(message) ? 'positive' : 'critical';
 }
 
+function categoryBadgeClass(name: string | null | undefined) {
+  const normalized = (name ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+
+  if (normalized.includes('integr')) {
+    return 'border-[rgba(216,70,153,0.24)] bg-[rgba(225,0,152,0.09)] text-[color:var(--color-brand-magenta)]';
+  }
+
+  if (normalized.includes('operac') || normalized.includes('reversa')) {
+    return 'border-[rgba(237,173,64,0.26)] bg-[rgba(255,239,204,0.88)] text-[color:var(--color-warning-ink)]';
+  }
+
+  if (normalized.includes('primeir')) {
+    return 'border-[rgba(182,154,255,0.28)] bg-[rgba(237,230,255,0.9)] text-[rgb(113,78,204)]';
+  }
+
+  if (normalized.includes('verifica')) {
+    return 'border-[rgba(92,184,194,0.28)] bg-[rgba(224,248,250,0.9)] text-[rgb(30,126,136)]';
+  }
+
+  return 'border-[rgba(72,133,237,0.22)] bg-[rgba(232,242,255,0.92)] text-[rgb(35,92,176)]';
+}
+
+function estimateReadingTime(body: string | null | undefined) {
+  const words = (body ?? '').trim().split(/\s+/).filter(Boolean).length;
+
+  if (words === 0) {
+    return 'Indisponível';
+  }
+
+  return `${Math.max(1, Math.ceil(words / 180))} min de leitura`;
+}
+
 function buildSourceHashCounts(articles: AdminKnowledgeArticleListItemV2Row[]) {
   const counts = new Map<string, number>();
 
@@ -609,7 +641,6 @@ export function KnowledgePage() {
   const selectedAdvisory =
     selectedArticleId ? advisoryMap.get(selectedArticleId) ?? null : null;
   const sourceHashCounts = buildSourceHashCounts(articles);
-  const duplicateHashGroupCount = countDuplicateHashGroups(sourceHashCounts);
   const filteredArticles = articles.filter((article) => {
     const articleAdvisory = advisoryMap.get(article.id);
 
@@ -655,18 +686,6 @@ export function KnowledgePage() {
     articleActionFeedback.articleId === selectedArticleId
       ? articleActionFeedback.message
       : null;
-  const draftArticleCount = articles.filter(
-    (article) => article.status === 'draft',
-  ).length;
-  const reviewArticleCount = articles.filter(
-    (article) => article.status === 'review',
-  ).length;
-  const legacyArticleCount = articles.filter(
-    (article) => article.source_path || article.source_hash,
-  ).length;
-  const restrictedArticleCount = articles.filter(
-    (article) => article.visibility === 'restricted',
-  ).length;
   const selectedArticleDuplicateCount =
     selectedAdvisory?.duplicate_group_article_count ??
     (articleDetail?.source_hash
@@ -1660,52 +1679,60 @@ export function KnowledgePage() {
   }
 
   return (
-    <div className="space-y-5">
-      <section className="rounded-[28px] border border-[color:var(--color-border)] bg-white/95 px-6 py-6 shadow-[var(--shadow-panel)]">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="space-y-1">
-            <h1 className="text-[2rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
-              Conhecimento
+    <div className="space-y-3">
+      <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white/95 px-6 py-4 shadow-[var(--shadow-panel)]">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-1.5">
+            <h1 className="text-[1.9rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
+              Knowledge
             </h1>
             <p className="text-sm leading-6 text-[color:var(--color-muted)]">
               Gerencie artigos, categorias e publicação na central de ajuda.
             </p>
           </div>
-          <AppButton disabled={!selectedSpace} onClick={openCreateArticle}>
+          <AppButton
+            className="min-h-11 gap-2 px-5 text-[13px] font-semibold"
+            disabled={!selectedSpace}
+            onClick={openCreateArticle}
+          >
             + Novo artigo
           </AppButton>
         </div>
       </section>
 
-      <div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)_280px]">
-        <aside className="rounded-[24px] border border-[color:var(--color-border)] bg-white/94 px-4 py-4 shadow-[var(--shadow-panel)]">
-          <div className="space-y-5">
-            <div className="space-y-1">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-muted)]">
+      <div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)_304px]">
+        <aside className="rounded-[20px] border border-[color:var(--color-border)] bg-white/94 px-4 py-4 shadow-[var(--shadow-panel)]">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <p className="text-[0.74rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--color-muted)]">
                 Filtros
               </p>
               <TextInput
+                className="h-10 rounded-[14px] px-3.5"
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Buscar artigos..."
                 value={searchQuery}
               />
             </div>
 
-            <Field label="Central">
-              <SelectInput
-                onChange={(event) => setSelectedSpaceId(event.target.value || null)}
-                value={selectedSpaceId ?? ''}
-              >
-                {spaces.map((space) => (
-                  <option key={space.id} value={space.id}>
-                    {space.display_name}
-                  </option>
-                ))}
-              </SelectInput>
-            </Field>
+            {spaces.length > 1 ? (
+              <Field label="Central">
+                <SelectInput
+                  className="h-10 rounded-[14px] px-3.5"
+                  onChange={(event) => setSelectedSpaceId(event.target.value || null)}
+                  value={selectedSpaceId ?? ''}
+                >
+                  {spaces.map((space) => (
+                    <option key={space.id} value={space.id}>
+                      {space.display_name}
+                    </option>
+                  ))}
+                </SelectInput>
+              </Field>
+            ) : null}
 
-            <div className="space-y-3">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-muted)]">
+            <div className="space-y-2.5">
+              <p className="text-[0.74rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--color-muted)]">
                 Status
               </p>
               <div className="space-y-1">
@@ -1718,7 +1745,7 @@ export function KnowledgePage() {
                 ].map(([value, label, count]) => (
                   <button
                     className={cx(
-                      'flex w-full items-center justify-between rounded-[14px] px-3 py-2 text-left text-sm transition',
+                      'flex w-full items-center justify-between rounded-[12px] px-3 py-1.5 text-left text-[0.95rem] transition',
                       listStatusFilter === value
                         ? 'bg-[rgba(48,127,226,0.1)] font-medium text-[color:var(--color-brand-blue)]'
                         : 'text-[color:var(--color-ink)] hover:bg-[color:var(--color-surface)]',
@@ -1734,14 +1761,14 @@ export function KnowledgePage() {
               </div>
             </div>
 
-            <div className="space-y-3">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-muted)]">
+            <div className="space-y-2.5">
+              <p className="text-[0.74rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--color-muted)]">
                 Categorias
               </p>
               <div className="space-y-1">
                 <button
                   className={cx(
-                    'flex w-full items-center justify-between rounded-[14px] px-3 py-2 text-left text-sm transition',
+                    'flex w-full items-center justify-between rounded-[12px] px-3 py-1.5 text-left text-[0.95rem] transition',
                     selectedCategoryId === 'all'
                       ? 'bg-[rgba(48,127,226,0.1)] font-medium text-[color:var(--color-brand-blue)]'
                       : 'text-[color:var(--color-ink)] hover:bg-[color:var(--color-surface)]',
@@ -1755,7 +1782,7 @@ export function KnowledgePage() {
                 {visibleCategories.map((category) => (
                   <button
                     className={cx(
-                      'flex w-full items-center justify-between rounded-[14px] px-3 py-2 text-left text-sm transition',
+                      'flex w-full items-center justify-between rounded-[12px] px-3 py-1.5 text-left text-[0.95rem] transition',
                       selectedCategoryId === category.id
                         ? 'bg-[rgba(48,127,226,0.1)] font-medium text-[color:var(--color-brand-blue)]'
                         : 'text-[color:var(--color-ink)] hover:bg-[color:var(--color-surface)]',
@@ -1770,18 +1797,26 @@ export function KnowledgePage() {
                 ))}
                 {sortedCategories.length > 5 ? (
                   <button
-                    className="rounded-[14px] px-3 py-2 text-left text-sm font-medium text-[color:var(--color-brand-blue)]"
+                    className="rounded-[12px] px-3 py-1.5 text-left text-sm font-medium text-[color:var(--color-brand-blue)]"
                     onClick={() => setShowAllCategories((current) => !current)}
                     type="button"
                   >
                     {showAllCategories ? '− Ver menos' : '+ Ver todas'}
                   </button>
                 ) : null}
+                <button
+                  className="rounded-[12px] px-3 py-1.5 text-left text-sm font-medium text-[color:var(--color-brand-blue)]"
+                  onClick={openCreateCategory}
+                  type="button"
+                >
+                  + Nova categoria
+                </button>
               </div>
             </div>
 
             <Field label="Autor">
               <SelectInput
+                className="h-10 rounded-[14px] px-3.5"
                 onChange={(event) => setSelectedAuthor(event.target.value)}
                 value={selectedAuthor}
               >
@@ -1796,6 +1831,7 @@ export function KnowledgePage() {
 
             <Field label="Data">
               <SelectInput
+                className="h-10 rounded-[14px] px-3.5"
                 onChange={(event) =>
                   setSelectedDateWindow(event.target.value as KnowledgeDateFilter)
                 }
@@ -1804,26 +1840,13 @@ export function KnowledgePage() {
                 <option value="90">Últimos 90 dias</option>
                 <option value="30">Últimos 30 dias</option>
                 <option value="7">Últimos 7 dias</option>
-                <option value="all">Todos os periodos</option>
+                <option value="all">Todos os períodos</option>
               </SelectInput>
             </Field>
 
-            <div className="space-y-2 rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-3">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-muted)]">
-                Janela atual
-              </p>
-              <div className="space-y-1 text-sm text-[color:var(--color-ink)]">
-                <p>{draftArticleCount} rascunhos</p>
-                <p>{reviewArticleCount} em revisão</p>
-                <p>{legacyArticleCount} do legado</p>
-                <p>{restrictedArticleCount} restritos</p>
-                <p>{duplicateHashGroupCount} grupos duplicados</p>
-              </div>
-            </div>
-
             <div className="flex flex-col gap-2 pt-1">
               <GhostButton
-                className="min-h-11 justify-start"
+                className="min-h-10 justify-start rounded-[14px] px-3.5"
                 disabled={!selectedSpaceId}
                 onClick={() => {
                   if (selectedSpaceId) {
@@ -1833,26 +1856,20 @@ export function KnowledgePage() {
               >
                 Atualizar lista
               </GhostButton>
-              <GhostButton
-                className="min-h-11 justify-start"
-                disabled={!selectedSpace}
-                onClick={openCreateCategory}
-              >
-                Nova categoria
-              </GhostButton>
             </div>
           </div>
         </aside>
 
-        <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white/95 shadow-[var(--shadow-panel)]">
+        <section className="overflow-hidden rounded-[20px] border border-[color:var(--color-border)] bg-white/95 shadow-[var(--shadow-panel)]">
           <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--color-border)] px-5 py-4">
             <div>
-              <h2 className="text-[1.55rem] font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
+              <h2 className="text-[1.28rem] font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
                 Artigos ({displayArticles.length})
               </h2>
             </div>
             <div className="flex items-center gap-2">
               <SelectInput
+                className="h-10 min-w-[156px] rounded-[14px] px-3.5"
                 onChange={(event) => setListSort(event.target.value as KnowledgeListSort)}
                 value={listSort}
               >
@@ -1905,14 +1922,14 @@ export function KnowledgePage() {
           ) : (
             <>
               <div className="overflow-hidden">
-                <table className="w-full table-fixed">
+                <table className="w-full table-auto">
                   <thead>
-                    <tr className="border-b border-[color:var(--color-border)] text-left text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-                      <th className="px-5 py-4">Título</th>
-                      <th className="w-[112px] px-3 py-4">Categoria</th>
-                      <th className="w-[126px] px-3 py-4">Autor</th>
-                      <th className="w-[132px] px-3 py-4">Data</th>
-                      <th className="w-[108px] px-5 py-4">Status</th>
+                    <tr className="border-b border-[color:var(--color-border)] text-left text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                      <th className="px-5 py-3.5">Título</th>
+                      <th className="w-[152px] px-3 py-3.5">Categoria</th>
+                      <th className="w-[132px] px-3 py-3.5">Autor</th>
+                      <th className="w-[142px] px-3 py-3.5">Data</th>
+                      <th className="w-[132px] px-5 py-3.5">Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1936,32 +1953,37 @@ export function KnowledgePage() {
                             setArticleActionFeedback(null);
                           }}
                         >
-                          <td className="px-5 py-4 align-top">
-                            <div className="space-y-1">
-                              <p className="truncate text-[0.98rem] font-medium text-[color:var(--color-ink)]">
+                          <td className="px-5 py-3.5 align-top">
+                            <div className="space-y-0.5">
+                              <p className="truncate text-[0.96rem] font-medium text-[color:var(--color-ink)]">
                                 {article.title || 'Indisponível'}
                               </p>
-                              <p className="line-clamp-2 text-sm leading-5 text-[color:var(--color-muted)]">
+                              <p className="line-clamp-1 text-[0.84rem] leading-5 text-[color:var(--color-muted)]">
                                 {article.summary?.trim() || 'Indisponível'}
                               </p>
                             </div>
                           </td>
-                          <td className="px-3 py-4 align-top">
-                            <StatusPill tone="accent">
-                              <span className="max-w-[84px] truncate">
+                          <td className="px-3 py-3.5 align-top">
+                            <span
+                              className={cx(
+                                'inline-flex max-w-full items-center rounded-full border px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.14em]',
+                                categoryBadgeClass(article.category_name),
+                              )}
+                            >
+                              <span className="max-w-[112px] truncate">
                                 {article.category_name ?? 'Indisponível'}
                               </span>
-                            </StatusPill>
+                            </span>
                           </td>
-                          <td className="px-3 py-4 align-top text-sm text-[color:var(--color-ink)]">
-                            <span className="line-clamp-2">
+                          <td className="px-3 py-3.5 align-top text-[0.86rem] text-[color:var(--color-ink)]">
+                            <span className="line-clamp-2 leading-5">
                               {articleContributorName(article)}
                             </span>
                           </td>
-                          <td className="px-3 py-4 align-top text-sm text-[color:var(--color-ink)]">
+                          <td className="px-3 py-3.5 align-top text-[0.86rem] text-[color:var(--color-ink)]">
                             {formatDateTime(article.updated_at)}
                           </td>
-                          <td className="px-5 py-4 align-top">
+                          <td className="px-5 py-3.5 align-top">
                             <div className="flex flex-wrap gap-2">
                               <StatusPill tone={toneForArticleStatus(article.status)}>
                                 {displayArticleStatus(article.status)}
@@ -1981,13 +2003,13 @@ export function KnowledgePage() {
                 <p>
                   Mostrando 1-{displayArticles.length} de {filteredArticles.length} artigos
                 </p>
-                <p>Pagina unica no ambiente atual.</p>
+                <p>Lista editorial atualizada nesta central.</p>
               </footer>
             </>
           )}
         </section>
 
-        <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white/95 px-4 py-4 shadow-[var(--shadow-panel)]">
+        <section className="rounded-[20px] border border-[color:var(--color-border)] bg-white/95 px-4 py-4 shadow-[var(--shadow-panel)]">
           <div className="space-y-4">
             <div className="space-y-1">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-muted)]">
@@ -2309,25 +2331,34 @@ export function KnowledgePage() {
                 />
               ) : (
                 <div className="space-y-4">
-                  <div className="space-y-3 rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+                  <div className="space-y-4 rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-4 shadow-[0_16px_36px_rgba(19,33,79,0.08)]">
                     <div className="flex flex-wrap items-start justify-between gap-3">
-                      <h2 className="text-[1.55rem] font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
-                        {articleDetail.title || 'Indisponível'}
-                      </h2>
-                      <StatusPill tone={toneForArticleStatus(articleDetail.status)}>
-                        {displayArticleStatus(articleDetail.status)}
-                      </StatusPill>
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap gap-2">
+                          <StatusPill tone={toneForArticleStatus(articleDetail.status)}>
+                            {displayArticleStatus(articleDetail.status)}
+                          </StatusPill>
+                          {publishedEditorialDraft ? (
+                            <StatusPill tone="accent">Revisão em andamento</StatusPill>
+                          ) : null}
+                        </div>
+                        <h2 className="text-[1.55rem] font-semibold leading-8 tracking-[-0.05em] text-[color:var(--color-ink)]">
+                          {articleDetail.title || 'Indisponível'}
+                        </h2>
+                      </div>
+                      {articleDetail.category_name ? (
+                        <span
+                          className={cx(
+                            'inline-flex items-center rounded-full border px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.14em]',
+                            categoryBadgeClass(articleDetail.category_name),
+                          )}
+                        >
+                          {articleDetail.category_name}
+                        </span>
+                      ) : null}
                     </div>
 
-                    <dl className="space-y-4">
-                      <div className="space-y-1">
-                        <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-                          Categoria
-                        </dt>
-                        <dd className="text-sm text-[color:var(--color-ink)]">
-                          {articleDetail.category_name ?? 'Indisponível'}
-                        </dd>
-                      </div>
+                    <dl className="grid gap-x-4 gap-y-3 border-t border-[color:var(--color-border)] pt-4 sm:grid-cols-2">
                       <div className="space-y-1">
                         <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
                           Autor
@@ -2342,6 +2373,14 @@ export function KnowledgePage() {
                         </dt>
                         <dd className="text-sm text-[color:var(--color-ink)]">
                           {formatOptionalDate(articleDetail.updated_at)}
+                        </dd>
+                      </div>
+                      <div className="space-y-1">
+                        <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                          Leitura estimada
+                        </dt>
+                        <dd className="text-sm text-[color:var(--color-ink)]">
+                          {estimateReadingTime(articleDetail.body_md)}
                         </dd>
                       </div>
                       <div className="space-y-1">
@@ -2362,46 +2401,79 @@ export function KnowledgePage() {
                       </div>
                       <div className="space-y-1">
                         <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-                          Versao
+                          Versão
                         </dt>
                         <dd className="text-sm text-[color:var(--color-ink)]">
-                        {articleDetail.current_revision_number ?? 'Indisponível'}
+                          {articleDetail.current_revision_number ?? 'Indisponível'}
                         </dd>
                       </div>
                     </dl>
 
-                    <div className="border-t border-[color:var(--color-border)] pt-4">
-                      <p className="text-sm leading-6 text-[color:var(--color-ink)]">
-                      {articleDetail.summary?.trim() || 'Indisponível'}
+                    <div className="space-y-2 border-t border-[color:var(--color-border)] pt-4">
+                      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                        Resumo editorial
+                      </p>
+                      <p className="line-clamp-4 text-sm leading-6 text-[color:var(--color-ink)]">
+                        {articleDetail.summary?.trim() || 'Indisponível'}
                       </p>
                     </div>
 
-                    <div className="space-y-3 border-t border-[color:var(--color-border)] pt-4">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-                          {editorialPreviewTitle}
-                        </p>
-                        {publicPreviewHref ? (
-                          <a
-                            className="inline-flex min-h-10 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-white/90 px-4 py-2 text-sm font-medium text-[color:var(--color-ink)] transition hover:border-[color:var(--color-brand-blue)]/40 hover:bg-[color:var(--color-surface)]"
-                            href={publicPreviewHref}
-                            rel="noreferrer"
-                            target="_blank"
-                          >
+                    <div className="space-y-2 border-t border-[color:var(--color-border)] pt-4">
+                      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                        Link público
+                      </p>
+                      {publicPreviewHref ? (
+                        <a
+                          className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-[color:var(--color-border)] bg-white px-4 py-2 text-sm font-medium text-[color:var(--color-ink)] transition hover:border-[color:var(--color-brand-blue)]/40 hover:bg-[color:var(--color-surface)]"
+                          href={publicPreviewHref}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
                           Abrir artigo público
-                          </a>
-                        ) : (
-                          <span className="text-[12px] leading-5 text-[color:var(--color-muted)]">
-                            {publicPreviewMessage}
-                          </span>
-                        )}
-                      </div>
-                      <div className="max-h-72 overflow-y-auto rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
-                        <div className="whitespace-pre-wrap text-sm leading-6 text-[color:var(--color-ink)]">
-                        {editorialPreviewBody.trim() || 'Indisponível'}
-                        </div>
-                      </div>
+                        </a>
+                      ) : (
+                        <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                          {publicPreviewMessage}
+                        </p>
+                      )}
                     </div>
+
+                    {(articleDetail.status === 'published' ||
+                      articleDetail.status === 'review' ||
+                      articleDetail.status === 'draft') ? (
+                      <div className="space-y-2 border-t border-[color:var(--color-border)] pt-4">
+                        <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                          Ação principal
+                        </p>
+                        {articleDetail.status === 'published' ? (
+                          <GhostButton
+                            className="min-h-11 w-full justify-center"
+                            disabled={articleActionSubmitting}
+                            onClick={() => void openEditArticle()}
+                          >
+                            {publishedEditorialDraft ? 'Editar revisão' : 'Iniciar revisão'}
+                          </GhostButton>
+                        ) : null}
+                        {articleDetail.status === 'review' ? (
+                          <AppButton
+                            className="min-h-11 w-full"
+                            disabled={articleActionSubmitting || !canPublishArticle}
+                            onClick={() => void handlePublish()}
+                          >
+                            {articleActionSubmitting ? 'Publicando...' : 'Publicar'}
+                          </AppButton>
+                        ) : null}
+                        {articleDetail.status === 'draft' ? (
+                          <AppButton
+                            className="min-h-11 w-full"
+                            disabled={articleActionSubmitting || !canSubmitForReview}
+                            onClick={() => void handleSubmitForReview()}
+                          >
+                            {articleActionSubmitting ? 'Enviando...' : 'Enviar para revisão'}
+                          </AppButton>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </div>
 
                   {articleActionMessage ? (
@@ -2422,93 +2494,104 @@ export function KnowledgePage() {
 
                   {articleHasPublicCategoryMismatch ? (
                     <InlineNotice tone="warning">
-                    Este artigo está marcado como público, mas a categoria atual não está pública. Enquanto essa coerência não for ajustada, o artigo não aparece na central de ajuda.
+                      Este artigo está marcado como público, mas a categoria atual não está pública. Enquanto essa coerência não for ajustada, o artigo não aparece na central de ajuda.
                     </InlineNotice>
                   ) : null}
 
                   {publishedEditorialDraft ? (
                     <InlineNotice tone="warning">
-                    Existe uma revisão editorial em andamento. A versão pública continua estável até você publicar a atualização.
+                      Existe uma revisão editorial em andamento. A versão pública continua estável até você publicar a atualização.
                     </InlineNotice>
                   ) : null}
 
                   {editorialDraftHasPublicCategoryMismatch ? (
                     <InlineNotice tone="warning">
-                    A revisão em andamento está marcada como pública, mas a categoria escolhida ainda não está pública. Ajuste essa coerência antes de publicar a atualização.
+                      A revisão em andamento está marcada como pública, mas a categoria escolhida ainda não está pública. Ajuste essa coerência antes de publicar a atualização.
                     </InlineNotice>
                   ) : null}
 
-                  <div className="space-y-2">
+                  <div className="space-y-3 rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
                     <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
                       Ações
                     </p>
-                    <div className="grid gap-2">
+                    <div className="grid gap-2.5">
                       {(articleDetail.status === 'draft' || articleDetail.status === 'review') ? (
-                        <GhostButton className="min-h-11 justify-start" disabled={articleActionSubmitting} onClick={() => void openEditArticle()}>
+                        <GhostButton className="min-h-11 justify-center" disabled={articleActionSubmitting} onClick={() => void openEditArticle()}>
                           Editar
                         </GhostButton>
                       ) : null}
                       {articleDetail.status === 'published' ? (
                         <GhostButton
-                          className="min-h-11 justify-start"
+                          className="min-h-11 justify-center"
                           disabled={articleActionSubmitting}
                           onClick={() => void openEditArticle()}
                         >
-                    {publishedEditorialDraft ? 'Editar revisão' : 'Iniciar revisão'}
+                          {publishedEditorialDraft ? 'Editar revisão' : 'Iniciar revisão'}
                         </GhostButton>
                       ) : null}
                       {articleDetail.status === 'draft' ? (
-                        <GhostButton className="min-h-11 justify-start" disabled={articleActionSubmitting || !canSubmitForReview} onClick={() => void handleSubmitForReview()}>
-                    {articleActionSubmitting ? 'Enviando...' : 'Enviar para revisão'}
-                        </GhostButton>
+                        <AppButton className="min-h-11" disabled={articleActionSubmitting || !canSubmitForReview} onClick={() => void handleSubmitForReview()}>
+                          {articleActionSubmitting ? 'Enviando...' : 'Enviar para revisão'}
+                        </AppButton>
                       ) : null}
                       {articleDetail.status === 'review' ? (
-                        <GhostButton className="min-h-11 justify-start" disabled={articleActionSubmitting || !canPublishArticle} onClick={() => void handlePublish()}>
+                        <AppButton className="min-h-11" disabled={articleActionSubmitting || !canPublishArticle} onClick={() => void handlePublish()}>
                           {articleActionSubmitting ? 'Publicando...' : 'Publicar'}
-                        </GhostButton>
+                        </AppButton>
                       ) : null}
                       {articleDetail.status === 'published' && publishedEditorialDraft ? (
-                        <GhostButton
-                          className="min-h-11 justify-start"
+                        <AppButton
+                          className="min-h-11"
                           disabled={articleActionSubmitting || !canPublishEditorialRevision}
                           onClick={() => void handlePublishEditorialRevision()}
                         >
                           {articleActionSubmitting ? 'Publicando...' : 'Publicar atualização'}
-                        </GhostButton>
+                        </AppButton>
                       ) : null}
                       {articleDetail.status === 'published' && publishedEditorialDraft ? (
                         <GhostButton
-                          className="min-h-11 justify-start"
+                          className="min-h-11 justify-center"
                           disabled={articleActionSubmitting}
                           onClick={() => void handleDiscardEditorialRevision()}
                         >
-                    {articleActionSubmitting ? 'Descartando...' : 'Descartar revisão'}
+                          {articleActionSubmitting ? 'Descartando...' : 'Descartar revisão'}
                         </GhostButton>
                       ) : null}
                       {articleDetail.status !== 'archived' ? (
-                        <GhostButton className="min-h-11 justify-start border-[color:var(--color-danger-border)] text-[color:var(--color-danger-ink)]" disabled={articleActionSubmitting} onClick={() => void handleArchive()}>
+                        <GhostButton className="min-h-11 justify-center border-[color:var(--color-danger-border)] text-[color:var(--color-danger-ink)]" disabled={articleActionSubmitting} onClick={() => void handleArchive()}>
                           {articleActionSubmitting ? 'Arquivando...' : 'Arquivar'}
                         </GhostButton>
                       ) : null}
                     </div>
                     {articleDetail.status === 'draft' && !canSubmitForReview ? (
                       <p className="text-xs leading-5 text-[color:var(--color-muted)]">
-                    Complete título, resumo, categoria e corpo principal antes de enviar para revisão.
+                        Complete título, resumo, categoria e conteúdo principal antes de enviar para revisão.
                       </p>
                     ) : null}
                     {articleDetail.status === 'review' && !canPublishArticle ? (
                       <p className="text-xs leading-5 text-[color:var(--color-muted)]">
                         {advisoryMessage
-                      ? 'Recarregue os sinais de revisão editorial antes de publicar este artigo.'
-                      : 'Conclua a revisão editorial persistida antes de publicar este artigo.'}
+                          ? 'Recarregue os sinais de revisão editorial antes de publicar este artigo.'
+                          : 'Conclua a revisão editorial persistida antes de publicar este artigo.'}
                       </p>
                     ) : null}
                     {articleDetail.status === 'published' && publishedEditorialDraft && !canPublishEditorialRevision ? (
                       <p className="text-xs leading-5 text-[color:var(--color-muted)]">
-                    Conclua título, categoria e conteúdo principal da revisão antes de publicar a atualização.
+                        Conclua título, categoria e conteúdo principal da revisão antes de publicar a atualização.
                       </p>
                     ) : null}
                   </div>
+
+                  <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                    <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                      {editorialPreviewTitle}
+                    </summary>
+                    <div className="mt-3 max-h-72 overflow-y-auto rounded-[16px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+                      <div className="whitespace-pre-wrap text-sm leading-6 text-[color:var(--color-ink)]">
+                        {editorialPreviewBody.trim() || 'Indisponível'}
+                      </div>
+                    </div>
+                  </details>
 
                   <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
                     <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">

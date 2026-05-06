@@ -32,8 +32,8 @@ export function AdminConsoleShell() {
   const [sidebarCollapsed, setSidebarCollapsed] = usePersistedSidebarState();
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#eef4ff_0%,#f8fbff_42%,#f3f6fb_100%)] text-[color:var(--color-ink)]">
-      <div className="mx-auto flex max-w-[1880px] gap-4 px-3 py-3 sm:px-5 lg:px-6">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#eef4ff_0%,#f7faff_44%,#f2f6fb_100%)] text-[color:var(--color-ink)]">
+      <div className="flex w-full gap-4 px-0 py-0 xl:px-4 xl:py-4">
         <div className="hidden shrink-0 xl:block">
           <div className="sticky top-4 h-[calc(100vh-2rem)]">
             <AdminSidebar
@@ -43,12 +43,9 @@ export function AdminConsoleShell() {
           </div>
         </div>
 
-        <div className="min-w-0 flex-1">
-          <div className="space-y-4">
-            <AdminTopbar
-              onToggleSidebar={() => setSidebarCollapsed((current) => !current)}
-              sidebarCollapsed={sidebarCollapsed}
-            />
+        <div className="min-w-0 flex-1 px-3 py-3 sm:px-5 sm:py-5 xl:px-0 xl:py-0">
+          <div className="mx-auto flex max-w-[1680px] flex-col gap-3">
+            <AdminTopbar />
             <main className="min-w-0">
               <Outlet />
             </main>
