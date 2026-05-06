@@ -60,8 +60,8 @@ export function AdminTopbar() {
     <header className="rounded-[24px] border border-[color:var(--color-border)] bg-white/94 px-6 py-3 shadow-[var(--shadow-panel)]">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgba(28,46,86,0.08)] pb-3">
         <div className="flex flex-wrap items-center gap-2.5">
-          <AdminContextPill label="Development" tone="accent" />
-          <AdminContextPill label="Platform_admin" />
+          <AdminContextPill label="Admin Console" tone="accent" />
+          <AdminContextPill label="Knowledge" />
         </div>
 
         <GhostButton

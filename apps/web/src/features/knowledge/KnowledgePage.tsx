@@ -56,8 +56,6 @@ import {
 } from '../admin/admin-api';
 import { classifyAdminError } from '../admin/admin-errors';
 import {
-  KNOWLEDGE_ADVISORY_CLASSIFICATIONS,
-  KNOWLEDGE_ARTICLE_STATUSES,
   KNOWLEDGE_ARTICLE_REVIEW_STATUSES,
   KNOWLEDGE_VISIBILITIES,
 } from '../../contracts/admin-contracts';
@@ -75,6 +73,7 @@ type ArticleClassificationFilter = KnowledgeAdvisoryClassification | 'all' | 'wi
 type EditorialChecklistTone = 'default' | 'positive' | 'warning' | 'critical' | 'accent';
 type KnowledgeListSort = 'recent' | 'oldest' | 'title';
 type KnowledgeDateFilter = 'all' | '90' | '30' | '7';
+type DetailTab = 'preview' | 'review' | 'classification' | 'checklist' | 'advanced';
 
 interface EditorialChecklistItem {
   label: string;
@@ -402,6 +401,28 @@ function categoryBadgeClass(name: string | null | undefined) {
   return 'border-[rgba(72,133,237,0.22)] bg-[rgba(232,242,255,0.92)] text-[rgb(35,92,176)]';
 }
 
+function compactCategoryLabel(name: string | null | undefined) {
+  const normalized = (name ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+
+  if (normalized.includes('operacao') || normalized.includes('reversa')) {
+    return 'Operação';
+  }
+
+  if (normalized.includes('suporte tecnico')) {
+    return 'Suporte';
+  }
+
+  if (normalized.includes('primeiros')) {
+    return 'Primeiros';
+  }
+
+  if (normalized.includes('verificacao')) {
+    return 'Verificação';
+  }
+
+  return name ?? 'Indisponível';
+}
+
 function estimateReadingTime(body: string | null | undefined) {
   const words = (body ?? '').trim().split(/\s+/).filter(Boolean).length;
 
@@ -424,18 +445,6 @@ function buildSourceHashCounts(articles: AdminKnowledgeArticleListItemV2Row[]) {
   }
 
   return counts;
-}
-
-function countDuplicateHashGroups(sourceHashCounts: Map<string, number>) {
-  let total = 0;
-
-  for (const count of sourceHashCounts.values()) {
-    if (count > 1) {
-      total += 1;
-    }
-  }
-
-  return total;
 }
 
 function containsLegacyHtml(value: string) {
@@ -609,6 +618,7 @@ export function KnowledgePage() {
   const [detailMessage, setDetailMessage] = useState<string | null>(null);
   const [articleDetail, setArticleDetail] = useState<AdminKnowledgeArticleDetailV2Row | null>(null);
   const [panelMode, setPanelMode] = useState<PanelMode>('detail');
+  const [detailTab, setDetailTab] = useState<DetailTab>('preview');
   const [statusFilter, setStatusFilter] = useState<ArticleStatusFilter>('all');
   const [visibilityFilter, setVisibilityFilter] = useState<ArticleVisibilityFilter>('all');
   const [originFilter, setOriginFilter] = useState<ArticleOriginFilter>('all');
@@ -1024,6 +1034,7 @@ export function KnowledgePage() {
 
   useEffect(() => {
     setPanelMode('detail');
+    setDetailTab('preview');
     setArticleForm(emptyArticleForm());
     setCategoryForm(emptyCategoryForm());
     setArticleFormMessage(null);
@@ -1058,6 +1069,7 @@ export function KnowledgePage() {
       return;
     }
 
+    setDetailTab('preview');
     void loadArticleDetail(selectedArticleId);
   }, [selectedArticleId]);
 
@@ -1700,7 +1712,7 @@ export function KnowledgePage() {
         </div>
       </section>
 
-      <div className="grid gap-4 xl:grid-cols-[220px_minmax(0,1fr)_304px]">
+      <div className="grid gap-4 xl:grid-cols-[256px_minmax(0,1fr)_400px]">
         <aside className="rounded-[20px] border border-[color:var(--color-border)] bg-white/94 px-4 py-4 shadow-[var(--shadow-panel)]">
           <div className="space-y-4">
             <div className="space-y-2">
@@ -1791,7 +1803,7 @@ export function KnowledgePage() {
                     onClick={() => setSelectedCategoryId(category.id)}
                     type="button"
                   >
-                    <span className="truncate">{category.name}</span>
+                    <span className="min-w-0 flex-1 truncate">{category.name}</span>
                     <span className="pl-3 text-[color:var(--color-muted)]">{category.article_count}</span>
                   </button>
                 ))}
@@ -1922,14 +1934,14 @@ export function KnowledgePage() {
           ) : (
             <>
               <div className="overflow-hidden">
-                <table className="w-full table-auto">
+                <table className="w-full table-fixed">
                   <thead>
                     <tr className="border-b border-[color:var(--color-border)] text-left text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
                       <th className="px-5 py-3.5">Título</th>
-                      <th className="w-[152px] px-3 py-3.5">Categoria</th>
-                      <th className="w-[132px] px-3 py-3.5">Autor</th>
-                      <th className="w-[142px] px-3 py-3.5">Data</th>
-                      <th className="w-[132px] px-5 py-3.5">Status</th>
+                      <th className="w-[132px] px-3 py-3.5">Categoria</th>
+                      <th className="w-[126px] px-3 py-3.5">Autor</th>
+                      <th className="w-[122px] px-3 py-3.5">Data</th>
+                      <th className="w-[116px] px-5 py-3.5">Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1955,10 +1967,10 @@ export function KnowledgePage() {
                         >
                           <td className="px-5 py-3.5 align-top">
                             <div className="space-y-0.5">
-                              <p className="truncate text-[0.96rem] font-medium text-[color:var(--color-ink)]">
+                              <p className="truncate text-[0.94rem] font-medium text-[color:var(--color-ink)]">
                                 {article.title || 'Indisponível'}
                               </p>
-                              <p className="line-clamp-1 text-[0.84rem] leading-5 text-[color:var(--color-muted)]">
+                              <p className="line-clamp-1 text-[0.82rem] leading-5 text-[color:var(--color-muted)]">
                                 {article.summary?.trim() || 'Indisponível'}
                               </p>
                             </div>
@@ -1966,30 +1978,32 @@ export function KnowledgePage() {
                           <td className="px-3 py-3.5 align-top">
                             <span
                               className={cx(
-                                'inline-flex max-w-full items-center rounded-full border px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.14em]',
+                                'inline-flex max-w-full items-center rounded-full border px-2.5 py-1 text-[0.66rem] font-semibold',
                                 categoryBadgeClass(article.category_name),
                               )}
                             >
-                              <span className="max-w-[112px] truncate">
-                                {article.category_name ?? 'Indisponível'}
+                              <span className="max-w-full truncate leading-4">
+                                {compactCategoryLabel(article.category_name)}
                               </span>
                             </span>
                           </td>
-                          <td className="px-3 py-3.5 align-top text-[0.86rem] text-[color:var(--color-ink)]">
-                            <span className="line-clamp-2 leading-5">
+                          <td className="px-3 py-3.5 align-top text-[0.84rem] text-[color:var(--color-ink)]">
+                            <span className="block leading-5">
                               {articleContributorName(article)}
                             </span>
                           </td>
-                          <td className="px-3 py-3.5 align-top text-[0.86rem] text-[color:var(--color-ink)]">
+                          <td className="px-3 py-3.5 align-top text-[0.8rem] text-[color:var(--color-ink)]">
                             {formatDateTime(article.updated_at)}
                           </td>
                           <td className="px-5 py-3.5 align-top">
-                            <div className="flex flex-wrap gap-2">
+                            <div className="space-y-1">
                               <StatusPill tone={toneForArticleStatus(article.status)}>
                                 {displayArticleStatus(article.status)}
                               </StatusPill>
                               {article.has_editorial_draft ? (
-                                <StatusPill tone="accent">Revisão em andamento</StatusPill>
+                                <p className="text-[0.74rem] leading-4 text-[color:var(--color-muted)]">
+                                  Revisão ativa
+                                </p>
                               ) : null}
                             </div>
                           </td>
@@ -1999,27 +2013,21 @@ export function KnowledgePage() {
                   </tbody>
                 </table>
               </div>
-              <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--color-border)] px-5 py-4 text-sm text-[color:var(--color-muted)]">
+              <footer className="flex flex-wrap items-center gap-3 border-t border-[color:var(--color-border)] px-5 py-4 text-sm text-[color:var(--color-muted)]">
                 <p>
                   Mostrando 1-{displayArticles.length} de {filteredArticles.length} artigos
                 </p>
-                <p>Lista editorial atualizada nesta central.</p>
               </footer>
             </>
           )}
         </section>
 
-        <section className="rounded-[20px] border border-[color:var(--color-border)] bg-white/95 px-4 py-4 shadow-[var(--shadow-panel)]">
-          <div className="space-y-4">
+        <section className="self-start rounded-[20px] border border-[color:var(--color-border)] bg-white/95 px-4 py-4 shadow-[var(--shadow-panel)] xl:sticky xl:top-0">
+          <div className="space-y-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto xl:pr-1">
             <div className="space-y-1">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-muted)]">
                 Pré-visualização
               </p>
-              {selectedSpace ? (
-                <p className="text-sm text-[color:var(--color-muted)]">
-                  {selectedSpace.display_name}
-                </p>
-              ) : null}
             </div>
 
             <div className="space-y-3">
@@ -2349,11 +2357,11 @@ export function KnowledgePage() {
                       {articleDetail.category_name ? (
                         <span
                           className={cx(
-                            'inline-flex items-center rounded-full border px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.14em]',
+                            'inline-flex max-w-full items-center rounded-full border px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.14em]',
                             categoryBadgeClass(articleDetail.category_name),
                           )}
                         >
-                          {articleDetail.category_name}
+                          <span className="truncate">{articleDetail.category_name}</span>
                         </span>
                       ) : null}
                     </div>
@@ -2438,42 +2446,94 @@ export function KnowledgePage() {
                       )}
                     </div>
 
-                    {(articleDetail.status === 'published' ||
-                      articleDetail.status === 'review' ||
-                      articleDetail.status === 'draft') ? (
-                      <div className="space-y-2 border-t border-[color:var(--color-border)] pt-4">
+                    <div className="space-y-3 border-t border-[color:var(--color-border)] pt-4">
+                      <div className="flex items-center justify-between gap-3">
                         <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-                          Ação principal
+                          Ações
                         </p>
-                        {articleDetail.status === 'published' ? (
+                        {publishedEditorialDraft ? (
+                          <StatusPill tone="accent">Revisão ativa</StatusPill>
+                        ) : null}
+                      </div>
+                      <div className="grid gap-2.5">
+                        {articleDetail.status === 'draft' ? (
+                          <>
+                            <AppButton className="min-h-11" disabled={articleActionSubmitting || !canSubmitForReview} onClick={() => void handleSubmitForReview()}>
+                              {articleActionSubmitting ? 'Enviando...' : 'Enviar para revisão'}
+                            </AppButton>
+                            <GhostButton className="min-h-11 justify-center" disabled={articleActionSubmitting} onClick={() => void openEditArticle()}>
+                              Editar
+                            </GhostButton>
+                          </>
+                        ) : null}
+                        {articleDetail.status === 'review' ? (
+                          <>
+                            <AppButton className="min-h-11" disabled={articleActionSubmitting || !canPublishArticle} onClick={() => void handlePublish()}>
+                              {articleActionSubmitting ? 'Publicando...' : 'Publicar'}
+                            </AppButton>
+                            <GhostButton className="min-h-11 justify-center" disabled={articleActionSubmitting} onClick={() => void openEditArticle()}>
+                              Editar
+                            </GhostButton>
+                          </>
+                        ) : null}
+                        {articleDetail.status === 'published' && !publishedEditorialDraft ? (
                           <GhostButton
-                            className="min-h-11 w-full justify-center"
+                            className="min-h-11 justify-center"
                             disabled={articleActionSubmitting}
                             onClick={() => void openEditArticle()}
                           >
-                            {publishedEditorialDraft ? 'Editar revisão' : 'Iniciar revisão'}
+                            Iniciar revisão
                           </GhostButton>
                         ) : null}
-                        {articleDetail.status === 'review' ? (
-                          <AppButton
-                            className="min-h-11 w-full"
-                            disabled={articleActionSubmitting || !canPublishArticle}
-                            onClick={() => void handlePublish()}
-                          >
-                            {articleActionSubmitting ? 'Publicando...' : 'Publicar'}
-                          </AppButton>
+                        {articleDetail.status === 'published' && publishedEditorialDraft ? (
+                          <>
+                            <AppButton
+                              className="min-h-11"
+                              disabled={articleActionSubmitting || !canPublishEditorialRevision}
+                              onClick={() => void handlePublishEditorialRevision()}
+                            >
+                              {articleActionSubmitting ? 'Publicando...' : 'Publicar atualização'}
+                            </AppButton>
+                            <GhostButton
+                              className="min-h-11 justify-center"
+                              disabled={articleActionSubmitting}
+                              onClick={() => void openEditArticle()}
+                            >
+                              Editar revisão
+                            </GhostButton>
+                            <GhostButton
+                              className="min-h-11 justify-center"
+                              disabled={articleActionSubmitting}
+                              onClick={() => void handleDiscardEditorialRevision()}
+                            >
+                              {articleActionSubmitting ? 'Descartando...' : 'Descartar revisão'}
+                            </GhostButton>
+                          </>
                         ) : null}
-                        {articleDetail.status === 'draft' ? (
-                          <AppButton
-                            className="min-h-11 w-full"
-                            disabled={articleActionSubmitting || !canSubmitForReview}
-                            onClick={() => void handleSubmitForReview()}
-                          >
-                            {articleActionSubmitting ? 'Enviando...' : 'Enviar para revisão'}
-                          </AppButton>
+                        {articleDetail.status !== 'archived' ? (
+                          <GhostButton className="min-h-11 justify-center border-[color:var(--color-danger-border)] text-[color:var(--color-danger-ink)]" disabled={articleActionSubmitting} onClick={() => void handleArchive()}>
+                            {articleActionSubmitting ? 'Arquivando...' : 'Arquivar'}
+                          </GhostButton>
                         ) : null}
                       </div>
-                    ) : null}
+                      {articleDetail.status === 'draft' && !canSubmitForReview ? (
+                        <p className="text-xs leading-5 text-[color:var(--color-muted)]">
+                          Complete título, resumo, categoria e conteúdo principal antes de enviar para revisão.
+                        </p>
+                      ) : null}
+                      {articleDetail.status === 'review' && !canPublishArticle ? (
+                        <p className="text-xs leading-5 text-[color:var(--color-muted)]">
+                          {advisoryMessage
+                            ? 'Recarregue os sinais de revisão editorial antes de publicar este artigo.'
+                            : 'Conclua a revisão editorial persistida antes de publicar este artigo.'}
+                        </p>
+                      ) : null}
+                      {articleDetail.status === 'published' && publishedEditorialDraft && !canPublishEditorialRevision ? (
+                        <p className="text-xs leading-5 text-[color:var(--color-muted)]">
+                          Conclua título, categoria e conteúdo principal da revisão antes de publicar a atualização.
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
 
                   {articleActionMessage ? (
@@ -2510,260 +2570,229 @@ export function KnowledgePage() {
                     </InlineNotice>
                   ) : null}
 
-                  <div className="space-y-3 rounded-[20px] border border-[color:var(--color-border)] bg-white px-4 py-4">
-                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-                      Ações
-                    </p>
-                    <div className="grid gap-2.5">
-                      {(articleDetail.status === 'draft' || articleDetail.status === 'review') ? (
-                        <GhostButton className="min-h-11 justify-center" disabled={articleActionSubmitting} onClick={() => void openEditArticle()}>
-                          Editar
-                        </GhostButton>
-                      ) : null}
-                      {articleDetail.status === 'published' ? (
-                        <GhostButton
-                          className="min-h-11 justify-center"
-                          disabled={articleActionSubmitting}
-                          onClick={() => void openEditArticle()}
+                  <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                    <div className="grid grid-cols-3 gap-2 border-b border-[color:var(--color-border)] pb-3">
+                      {[
+                        ['preview', 'Prévia'],
+                        ['review', 'Revisão'],
+                        ['classification', 'Classificação'],
+                        ['checklist', 'Checklist'],
+                        ['advanced', 'Avançado'],
+                      ].map(([value, label]) => (
+                        <button
+                          key={value}
+                          className={cx(
+                            'inline-flex min-h-10 items-center justify-center rounded-full border px-3.5 text-[0.78rem] font-semibold transition',
+                            detailTab === value
+                              ? 'border-[rgba(22,101,239,0.26)] bg-[rgba(22,101,239,0.1)] text-[color:var(--color-brand-blue)]'
+                              : 'border-[color:var(--color-border)] bg-white text-[color:var(--color-ink)] hover:bg-[color:var(--color-surface)]',
+                          )}
+                          onClick={() => setDetailTab(value as DetailTab)}
+                          type="button"
                         >
-                          {publishedEditorialDraft ? 'Editar revisão' : 'Iniciar revisão'}
-                        </GhostButton>
-                      ) : null}
-                      {articleDetail.status === 'draft' ? (
-                        <AppButton className="min-h-11" disabled={articleActionSubmitting || !canSubmitForReview} onClick={() => void handleSubmitForReview()}>
-                          {articleActionSubmitting ? 'Enviando...' : 'Enviar para revisão'}
-                        </AppButton>
-                      ) : null}
-                      {articleDetail.status === 'review' ? (
-                        <AppButton className="min-h-11" disabled={articleActionSubmitting || !canPublishArticle} onClick={() => void handlePublish()}>
-                          {articleActionSubmitting ? 'Publicando...' : 'Publicar'}
-                        </AppButton>
-                      ) : null}
-                      {articleDetail.status === 'published' && publishedEditorialDraft ? (
-                        <AppButton
-                          className="min-h-11"
-                          disabled={articleActionSubmitting || !canPublishEditorialRevision}
-                          onClick={() => void handlePublishEditorialRevision()}
-                        >
-                          {articleActionSubmitting ? 'Publicando...' : 'Publicar atualização'}
-                        </AppButton>
-                      ) : null}
-                      {articleDetail.status === 'published' && publishedEditorialDraft ? (
-                        <GhostButton
-                          className="min-h-11 justify-center"
-                          disabled={articleActionSubmitting}
-                          onClick={() => void handleDiscardEditorialRevision()}
-                        >
-                          {articleActionSubmitting ? 'Descartando...' : 'Descartar revisão'}
-                        </GhostButton>
-                      ) : null}
-                      {articleDetail.status !== 'archived' ? (
-                        <GhostButton className="min-h-11 justify-center border-[color:var(--color-danger-border)] text-[color:var(--color-danger-ink)]" disabled={articleActionSubmitting} onClick={() => void handleArchive()}>
-                          {articleActionSubmitting ? 'Arquivando...' : 'Arquivar'}
-                        </GhostButton>
-                      ) : null}
+                          {label}
+                        </button>
+                      ))}
                     </div>
-                    {articleDetail.status === 'draft' && !canSubmitForReview ? (
-                      <p className="text-xs leading-5 text-[color:var(--color-muted)]">
-                        Complete título, resumo, categoria e conteúdo principal antes de enviar para revisão.
-                      </p>
-                    ) : null}
-                    {articleDetail.status === 'review' && !canPublishArticle ? (
-                      <p className="text-xs leading-5 text-[color:var(--color-muted)]">
-                        {advisoryMessage
-                          ? 'Recarregue os sinais de revisão editorial antes de publicar este artigo.'
-                          : 'Conclua a revisão editorial persistida antes de publicar este artigo.'}
-                      </p>
-                    ) : null}
-                    {articleDetail.status === 'published' && publishedEditorialDraft && !canPublishEditorialRevision ? (
-                      <p className="text-xs leading-5 text-[color:var(--color-muted)]">
-                        Conclua título, categoria e conteúdo principal da revisão antes de publicar a atualização.
-                      </p>
-                    ) : null}
-                  </div>
 
-                  <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
-                    <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                      {editorialPreviewTitle}
-                    </summary>
-                    <div className="mt-3 max-h-72 overflow-y-auto rounded-[16px] border border-[color:var(--color-border)] bg-white px-4 py-4">
-                      <div className="whitespace-pre-wrap text-sm leading-6 text-[color:var(--color-ink)]">
-                        {editorialPreviewBody.trim() || 'Indisponível'}
-                      </div>
-                    </div>
-                  </details>
-
-                  <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
-                    <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                      Revisão e classificação
-                    </summary>
-                    <div className="mt-3 space-y-3">
-                      {selectedAdvisory ? (
-                        <>
-                          <div className="flex flex-wrap gap-2">
-                            <StatusPill tone={toneForAdvisoryClassification(selectedAdvisory.suggested_classification)}>
-                              {selectedAdvisory.suggested_classification}
-                            </StatusPill>
-                            <StatusPill tone={toneForVisibility(selectedAdvisory.suggested_visibility)}>
-                              {selectedAdvisory.suggested_visibility}
-                            </StatusPill>
-                            <StatusPill tone={toneForReviewStatus(selectedAdvisory.review_status)}>
-                              {selectedAdvisory.review_status}
-                            </StatusPill>
-                          </div>
-                          <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                            {selectedAdvisory.classification_reason || 'Indisponível'}
+                    <div className="mt-4">
+                      {detailTab === 'preview' ? (
+                        <div className="space-y-3">
+                          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                            {editorialPreviewTitle}
                           </p>
-                          {advisoryRiskFlags.length > 0 ? (
+                          <div className="max-h-72 overflow-y-auto rounded-[16px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+                            <div className="whitespace-pre-wrap text-sm leading-6 text-[color:var(--color-ink)]">
+                              {editorialPreviewBody.trim() || 'Indisponível'}
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {detailTab === 'review' ? (
+                        selectedAdvisory ? (
+                          <div className="space-y-4">
+                            <Field label="Status da revisão">
+                              <SelectInput
+                                onChange={(event) =>
+                                  setReviewStatusDraft(
+                                    event.target.value as KnowledgeArticleReviewStatus,
+                                  )
+                                }
+                                value={reviewStatusDraft}
+                              >
+                                {KNOWLEDGE_ARTICLE_REVIEW_STATUSES.map((status) => (
+                                  <option key={status} value={status}>
+                                    {status}
+                                  </option>
+                                ))}
+                              </SelectInput>
+                            </Field>
+
+                            <Field label="Notas da revisão">
+                              <TextareaInput
+                                className="min-h-24"
+                                onChange={(event) => setReviewNotesDraft(event.target.value)}
+                                placeholder="Registre orientações objetivas para a etapa editorial."
+                                value={reviewNotesDraft}
+                              />
+                            </Field>
+
+                            <div className="space-y-2">
+                              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                                Confirmações humanas
+                              </p>
+                              <div className="space-y-2">
+                                {HUMAN_CONFIRMATION_FIELDS.map((field) => (
+                                  <label
+                                    className="flex items-start gap-3 rounded-[16px] border border-[color:var(--color-border)] bg-white px-3 py-3"
+                                    key={field.key}
+                                  >
+                                    <input
+                                      checked={humanConfirmationsDraft[field.key] === true}
+                                      className="mt-1 h-4 w-4 rounded border-[color:var(--color-border)] text-[color:var(--color-brand-blue)]"
+                                      onChange={(event) =>
+                                        updateHumanConfirmation(field.key, event.target.checked)
+                                      }
+                                      type="checkbox"
+                                    />
+                                    <span className="space-y-1">
+                                      <span className="block text-sm font-medium text-[color:var(--color-ink)]">
+                                        {field.label}
+                                      </span>
+                                      <span className="block text-xs leading-5 text-[color:var(--color-muted)]">
+                                        {field.help}
+                                      </span>
+                                    </span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap gap-3">
+                              <AppButton
+                                disabled={reviewAdvisorySubmitting}
+                                onClick={() => void handleSaveReviewAdvisoryStatus()}
+                              >
+                                {reviewAdvisorySubmitting ? 'Salvando...' : 'Salvar revisão'}
+                              </AppButton>
+                              <GhostButton
+                                disabled={reviewAdvisorySubmitting}
+                                onClick={() => void handleMarkReviewAdvisoryReviewed()}
+                              >
+                                {reviewAdvisorySubmitting
+                                  ? 'Concluindo...'
+                                  : 'Marcar como revisado'}
+                              </GhostButton>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                            Inicie uma revisão ou carregue sinais editoriais para abrir este painel.
+                          </p>
+                        )
+                      ) : null}
+
+                      {detailTab === 'classification' ? (
+                        selectedAdvisory ? (
+                          <div className="space-y-3">
                             <div className="flex flex-wrap gap-2">
-                              {advisoryRiskFlags.map((flag) => (
-                                <StatusPill key={flag} tone="critical">
-                                  {flag}
-                                </StatusPill>
+                              <StatusPill tone={toneForAdvisoryClassification(selectedAdvisory.suggested_classification)}>
+                                {selectedAdvisory.suggested_classification}
+                              </StatusPill>
+                              <StatusPill tone={toneForVisibility(selectedAdvisory.suggested_visibility)}>
+                                {selectedAdvisory.suggested_visibility}
+                              </StatusPill>
+                              <StatusPill tone={toneForReviewStatus(selectedAdvisory.review_status)}>
+                                {selectedAdvisory.review_status}
+                              </StatusPill>
+                            </div>
+                            <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                              {selectedAdvisory.classification_reason || 'Indisponível'}
+                            </p>
+                            {advisoryRiskFlags.length > 0 ? (
+                              <div className="flex flex-wrap gap-2">
+                                {advisoryRiskFlags.map((flag) => (
+                                  <StatusPill key={flag} tone="critical">
+                                    {flag}
+                                  </StatusPill>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : (
+                          <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                            Classificação indisponível para este artigo no momento.
+                          </p>
+                        )
+                      ) : null}
+
+                      {detailTab === 'checklist' ? (
+                        <div className="space-y-4">
+                          {editorialChecklist ? (
+                            <div className="space-y-3">
+                              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                                Sinais automáticos
+                              </p>
+                              {editorialChecklist.automated.map((item) => (
+                                <div key={item.label} className="rounded-[14px] border border-[color:var(--color-border)] bg-white px-3 py-3">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <StatusPill tone={item.tone}>{item.label}</StatusPill>
+                                  </div>
+                                  <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
+                                    {item.description}
+                                  </p>
+                                </div>
                               ))}
                             </div>
                           ) : null}
-                        </>
-                      ) : (
-                        <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                          Indisponível
-                        </p>
-                      )}
-                    </div>
-                  </details>
 
-                  {selectedAdvisory ? (
-                    <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
-                      <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                        Revisão editorial
-                      </summary>
-                      <div className="mt-3 space-y-4">
-                        <Field label="Status da revisão">
-                          <SelectInput
-                            onChange={(event) =>
-                              setReviewStatusDraft(
-                                event.target.value as KnowledgeArticleReviewStatus,
-                              )
-                            }
-                            value={reviewStatusDraft}
-                          >
-                            {KNOWLEDGE_ARTICLE_REVIEW_STATUSES.map((status) => (
-                              <option key={status} value={status}>
-                                {status}
-                              </option>
-                            ))}
-                          </SelectInput>
-                        </Field>
-
-                        <Field label="Notas da revisão">
-                          <TextareaInput
-                            className="min-h-24"
-                            onChange={(event) => setReviewNotesDraft(event.target.value)}
-                            placeholder="Registre orientações objetivas para a etapa editorial."
-                            value={reviewNotesDraft}
-                          />
-                        </Field>
-
-                        <div className="space-y-2">
-                          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
-                            Confirmações humanas
-                          </p>
-                          <div className="space-y-2">
-                            {HUMAN_CONFIRMATION_FIELDS.map((field) => (
-                              <label
-                                className="flex items-start gap-3 rounded-[16px] border border-[color:var(--color-border)] bg-white px-3 py-3"
-                                key={field.key}
-                              >
-                                <input
-                                  checked={humanConfirmationsDraft[field.key] === true}
-                                  className="mt-1 h-4 w-4 rounded border-[color:var(--color-border)] text-[color:var(--color-brand-blue)]"
-                                  onChange={(event) =>
-                                    updateHumanConfirmation(field.key, event.target.checked)
-                                  }
-                                  type="checkbox"
-                                />
-                                <span className="space-y-1">
-                                  <span className="block text-sm font-medium text-[color:var(--color-ink)]">
-                                    {field.label}
-                                  </span>
-                                  <span className="block text-xs leading-5 text-[color:var(--color-muted)]">
-                                    {field.help}
-                                  </span>
-                                </span>
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="flex flex-wrap gap-3">
-                          <AppButton
-                            disabled={reviewAdvisorySubmitting}
-                            onClick={() => void handleSaveReviewAdvisoryStatus()}
-                          >
-                            {reviewAdvisorySubmitting ? 'Salvando...' : 'Salvar revisão'}
-                          </AppButton>
-                          <GhostButton
-                            disabled={reviewAdvisorySubmitting}
-                            onClick={() => void handleMarkReviewAdvisoryReviewed()}
-                          >
-                            {reviewAdvisorySubmitting
-                              ? 'Concluindo...'
-                              : 'Marcar como revisado'}
-                          </GhostButton>
-                        </div>
-                      </div>
-                    </details>
-                  ) : null}
-
-                  {editorialChecklist ? (
-                    <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
-                      <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                        Checklist editorial
-                      </summary>
-                      <div className="mt-3 space-y-3">
-                        {editorialChecklist.automated.map((item) => (
-                          <div key={item.label} className="rounded-[14px] border border-[color:var(--color-border)] bg-white px-3 py-3">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <StatusPill tone={item.tone}>{item.label}</StatusPill>
-                            </div>
-                            <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
-                              {item.description}
+                          <div className="space-y-3">
+                            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                              Confirmações humanas
                             </p>
+                            {persistedHumanChecklist.map((item) => (
+                              <div key={item.label} className="rounded-[14px] border border-[color:var(--color-border)] bg-white px-3 py-3">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <StatusPill tone={item.tone}>{item.label}</StatusPill>
+                                </div>
+                                <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
+                                  {item.description}
+                                </p>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    </details>
-                  ) : null}
+                        </div>
+                      ) : null}
 
-                  <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
-                    <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                      Informações avançadas
-                    </summary>
-                    <div className="mt-3 space-y-3 text-sm leading-6 text-[color:var(--color-muted)]">
-                      <p>Central: {articleDetail.knowledge_space_display_name || 'Indisponível'}</p>
-                      <p>Slug: {articleDetail.slug || 'Indisponível'}</p>
-                      <p>Origem: {articleDetail.source_path || 'Indisponível'}</p>
-                      <p>Hash: {articleDetail.source_hash || 'Indisponível'}</p>
-                      <p>Revisões: {articleDetail.revisions.length}</p>
-                      <p>
-                        Revisão em andamento:{' '}
-                        {publishedEditorialDraft ? 'Sim' : 'Não'}
-                      </p>
-                      {publishedEditorialDraft ? (
-                        <>
-                          <p>Slug em revisão: {publishedEditorialDraft.slug || 'Indisponível'}</p>
+                      {detailTab === 'advanced' ? (
+                        <div className="space-y-3 text-sm leading-6 text-[color:var(--color-muted)]">
+                          <p>Central: {articleDetail.knowledge_space_display_name || 'Indisponível'}</p>
+                          <p>Slug: {articleDetail.slug || 'Indisponível'}</p>
+                          <p>Origem: {articleDetail.source_path || 'Indisponível'}</p>
+                          <p>Hash: {articleDetail.source_hash || 'Indisponível'}</p>
+                          <p>Revisões: {articleDetail.revisions.length}</p>
                           <p>
-                            Revisão iniciada da versão:{' '}
-                            {publishedEditorialDraft.based_on_revision_number}
+                            Revisão em andamento:{' '}
+                            {publishedEditorialDraft ? 'Sim' : 'Não'}
                           </p>
-                          <p>
-                            Revisão atualizada em:{' '}
-                            {formatOptionalDate(publishedEditorialDraft.updated_at)}
-                          </p>
-                        </>
+                          {publishedEditorialDraft ? (
+                            <>
+                              <p>Slug em revisão: {publishedEditorialDraft.slug || 'Indisponível'}</p>
+                              <p>
+                                Revisão iniciada da versão:{' '}
+                                {publishedEditorialDraft.based_on_revision_number}
+                              </p>
+                              <p>
+                                Revisão atualizada em:{' '}
+                                {formatOptionalDate(publishedEditorialDraft.updated_at)}
+                              </p>
+                            </>
+                          ) : null}
+                        </div>
                       ) : null}
                     </div>
-                  </details>
+                  </div>
                 </div>
               )}
             </div>
