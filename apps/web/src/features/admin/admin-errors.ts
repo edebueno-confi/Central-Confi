@@ -5,6 +5,55 @@ export interface ClassifiedAdminError {
   message: string;
 }
 
+function sanitizeAdminMessage(message: string, fallbackMessage: string) {
+  const normalized = message.trim();
+  const lowered = normalized.toLowerCase();
+
+  if (!normalized) {
+    return fallbackMessage;
+  }
+
+  if (
+    lowered.includes('duplicate key') ||
+    lowered.includes('already exists') ||
+    lowered.includes('ja existe') ||
+    lowered.includes('já existe')
+  ) {
+    return 'Ja existe um registro com os mesmos dados principais. Revise os campos e tente novamente.';
+  }
+
+  if (
+    lowered.includes('violates check constraint') ||
+    lowered.includes('status transition') ||
+    lowered.includes('invalid input value for enum') ||
+    lowered.includes('must be in') ||
+    lowered.includes('cannot be')
+  ) {
+    return 'Nao foi possivel concluir a acao na etapa atual. Revise o status e os campos obrigatorios antes de tentar novamente.';
+  }
+
+  if (
+    lowered.includes('jwt') ||
+    lowered.includes('permission denied') ||
+    lowered.includes('row-level security')
+  ) {
+    return 'Sua sessao nao tem permissao para concluir esta acao agora.';
+  }
+
+  if (
+    lowered.includes('constraint') ||
+    lowered.includes('postgres') ||
+    lowered.includes('sql') ||
+    lowered.includes('supabase') ||
+    lowered.includes('rpc_') ||
+    lowered.includes('vw_')
+  ) {
+    return fallbackMessage;
+  }
+
+  return normalized;
+}
+
 export function classifyAdminError(
   error: unknown,
   fallbackMessage: string,
@@ -33,14 +82,14 @@ export function classifyAdminError(
 
     return {
       kind: 'error',
-      message: error.message || fallbackMessage,
+      message: sanitizeAdminMessage(error.message || fallbackMessage, fallbackMessage),
     };
   }
 
   if (error instanceof Error) {
     return {
       kind: 'error',
-      message: error.message || fallbackMessage,
+      message: sanitizeAdminMessage(error.message || fallbackMessage, fallbackMessage),
     };
   }
 

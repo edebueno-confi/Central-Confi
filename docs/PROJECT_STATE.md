@@ -200,6 +200,9 @@ Documentos históricos:
 - O pipeline legado `scripts/knowledge/import-octadesk-drafts.mjs` já foi validado em `dry-run` e em `apply` local controlado para o `knowledge_space` `genius`, sempre em `draft`, sem publicação automática e preservando `source_path`/`source_hash`.
 - A rota `/admin/knowledge` agora destaca origem legado/manual, hash curto na listagem e `source_path`/`source_hash` no detalhe para acelerar curadoria humana.
 - A rota `/admin/knowledge` agora também oferece filtro por duplicidade de `source_hash`, checklist editorial visual e destaque cauteloso para artigos `internal`/`restricted`.
+- A rota `/admin/knowledge` agora degrada graciosamente quando o advisory editorial não estiver disponível, preservando lista, detalhe e CRUD principal com aviso operacional em vez de derrubar a superfície inteira.
+- A rota `/admin/knowledge` agora exibe preview editorial real de `body_md`, abre o artigo público quando o estado atual é coerente e bloqueia publish de artigo `public` vinculado a categoria não pública.
+- A rota `/admin/knowledge` agora também expõe controles condicionais de revisão editorial humana (`review_status`, notas e confirmações) quando houver advisory persistido no dataset atual, usando apenas os contratos já existentes.
 - Estados obrigatórios do frontend materializados: loading, vazio, erro, acesso negado, contrato indisponível e sessão expirada.
 - Build do frontend agora usa code-splitting por rota.
 - Fixture local de QA controlado materializado em `supabase/qa/create-local-admin-fixture.mjs`.
@@ -645,6 +648,18 @@ Documentos históricos:
     - `npm run web:build`
     - `npm run supabase:qa:local-support-fixture`
   - QA visual local final gerada em `.tmp/phase6-24-audit/`, cobrindo login, estados, suportes, admin e central publica, sem overflow horizontal e sem erro relevante de console nas rotas auditadas.
+- Fase 7.1: Admin Knowledge Functional Hardening concluida localmente.
+  - `/admin/knowledge` passou a operar com preview editorial real, feedback mais amigável e coerência explícita entre estado interno e estado público, sem backend novo.
+  - O painel direito agora mostra `body_md`, abre o artigo público quando o contrato atual permite e mantém CRUD editorial funcional mesmo se o contrato de advisory não estiver disponível naquele ambiente.
+  - O frontend também passou a bloquear `publish` de artigo `public` em categoria não pública, evitando falso positivo de publicação bem-sucedida no Admin com ausência na Central Pública.
+  - Os controles condicionais de revisão editorial humana foram conectados às RPCs já existentes `rpc_admin_update_knowledge_article_review_status` e `rpc_admin_mark_knowledge_article_reviewed`, para uso quando houver advisory persistido no dataset local.
+  - Erros administrativos de slug/constraint/permissão agora são sanitizados no frontend para não expor mensagem técnica crua ao operador.
+  - Validações locais da fase:
+    - `npm run contracts:typecheck`
+    - `npm run web:typecheck`
+    - `npm run web:build`
+    - QA local real em `/admin/knowledge` com criação de categoria, criação/edição de draft, envio para revisão, publicação, preview público, erro amigável de slug duplicado e arquivamento
+  - QA visual local final gerada em `.playwright-mcp/admin-knowledge-functional.png` e `.playwright-mcp/admin-knowledge-public-preview.png`.
 
 ## Ajustes de auditoria concluídos
 - Documentação redundante herdada removida da rota principal.
@@ -666,7 +681,6 @@ Documentos históricos:
 - Não permitir leitura do Admin Console fora das views `vw_admin_*`.
 
 ## Próxima prioridade
-Materializar o contrato minimo seguro para copia/envio de link publico de artigo a partir do ticket,
-sem concatenacao fragil no frontend,
-mantendo o picker geral separado da superficie especializada de rota publica,
-e preservando `public` + `published` em `knowledge_space` ativo como pre-requisito de envio ao cliente.
+Materializar um contrato backend explícito para governar publish editorial com revisão humana concluída,
+incluindo o gate entre `review_status`, confirmações humanas e publicação efetiva,
+sem depender apenas de bloqueios de UX no frontend.

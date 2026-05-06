@@ -18,6 +18,39 @@ Cada registro deve informar:
 
 ## Registros
 
+### Fase 7.1 - Admin Knowledge Functional Hardening
+- fase: `7.1`
+- commit: `a confirmar apos merge`
+- branch: `codex/phase7-1-admin-knowledge-functional-hardening`
+- data: `2026-05-06`
+- resumo funcional: `/admin/knowledge` passou a usar preview editorial real, degradacao segura sem advisory, bloqueio de publish incoerente com categoria nao publica e mensagens de erro amigaveis, sem alterar backend.
+- docs alterados:
+  - `docs/PROJECT_STATE.md`
+  - `docs/DOCUMENTATION_LEDGER.md`
+- views/RPCs afetadas:
+  - consumo mantido em `vw_admin_knowledge_spaces`
+  - consumo mantido em `vw_admin_knowledge_categories_v2`
+  - consumo mantido em `vw_admin_knowledge_articles_list_v2`
+  - consumo mantido em `vw_admin_knowledge_article_detail_v2`
+  - consumo condicional em `vw_admin_knowledge_article_review_advisories`
+  - escrita mantida em `rpc_admin_create_knowledge_category_v2`
+  - escrita mantida em `rpc_admin_create_knowledge_article_draft_v2`
+  - escrita mantida em `rpc_admin_update_knowledge_article_draft_v2`
+  - escrita mantida em `rpc_admin_submit_knowledge_article_for_review_v2`
+  - escrita mantida em `rpc_admin_publish_knowledge_article_v2`
+  - escrita mantida em `rpc_admin_archive_knowledge_article_v2`
+  - escrita condicional em `rpc_admin_update_knowledge_article_review_status`
+  - escrita condicional em `rpc_admin_mark_knowledge_article_reviewed`
+- telas afetadas:
+  - `/admin/knowledge`
+  - `/help/:spaceSlug/articles/:articleSlug`
+- riscos restantes:
+  - `publish` ainda nao e bloqueado pelo backend a partir de `review_status = reviewed`; o gate continua sendo apenas de UX nesta fase
+  - a fixture local atual nao garantiu advisory persistido para validar mutacao real de revisao humana ponta a ponta
+- impacto na FAQ futura:
+  - melhora a rastreabilidade entre estado editorial interno e publicacao visivel na Central Publica
+  - documenta que coerencia `public + published + categoria publica` continua sendo pre-requisito real de exposicao publica
+
 ### Fase 4.7 - Public Help Center Branding Contract
 - fase: `4.7`
 - commit: `68a44ea`

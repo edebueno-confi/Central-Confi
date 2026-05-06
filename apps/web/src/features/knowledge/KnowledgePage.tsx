@@ -356,6 +356,18 @@ function categoryDisplayName(category: AdminKnowledgeCategoryV2Row) {
     : category.name;
 }
 
+function noticeTone(message: string) {
+  return /sucesso|concluida/i.test(message) ? 'positive' : 'critical';
+}
+
+function buildPublicPreviewHref(article: AdminKnowledgeArticleDetailV2Row) {
+  if (article.status !== 'published' || article.visibility !== 'public') {
+    return null;
+  }
+
+  return `/help/${article.knowledge_space_slug}/articles/${article.slug}`;
+}
+
 function buildSourceHashCounts(articles: AdminKnowledgeArticleListItemV2Row[]) {
   const counts = new Map<string, number>();
 
@@ -536,6 +548,7 @@ export function KnowledgePage() {
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
   const [contentPhase, setContentPhase] = useState<ContentPhase>('idle');
   const [contentMessage, setContentMessage] = useState<string | null>(null);
+  const [advisoryMessage, setAdvisoryMessage] = useState<string | null>(null);
   const [categories, setCategories] = useState<AdminKnowledgeCategoryV2Row[]>([]);
   const [articles, setArticles] = useState<AdminKnowledgeArticleListItemV2Row[]>([]);
   const [advisories, setAdvisories] = useState<AdminKnowledgeArticleReviewAdvisoryRow[]>([]);
@@ -579,6 +592,7 @@ export function KnowledgePage() {
     spaces.find((space) => space.id === selectedSpaceId) ?? null;
   const selectedArticleSummary =
     articles.find((article) => article.id === selectedArticleId) ?? null;
+  const articleCategoryMap = new Map(categories.map((category) => [category.id, category]));
   const advisoryMap = new Map(advisories.map((advisory) => [advisory.article_id, advisory]));
   const selectedAdvisory =
     selectedArticleId ? advisoryMap.get(selectedArticleId) ?? null : null;
@@ -646,9 +660,37 @@ export function KnowledgePage() {
     (articleDetail?.source_hash
       ? sourceHashCounts.get(articleDetail.source_hash) ?? 0
       : 0);
+  const selectedArticleCategory =
+    articleDetail?.category_id
+      ? articleCategoryMap.get(articleDetail.category_id) ?? null
+      : null;
+  const articleFormCategory =
+    articleForm.categoryId
+      ? articleCategoryMap.get(articleForm.categoryId) ?? null
+      : null;
+  const articleHasPublicCategoryMismatch =
+    articleDetail?.visibility === 'public' &&
+    articleDetail.category_id !== null &&
+    selectedArticleCategory?.visibility !== 'public';
+  const articleFormHasPublicCategoryMismatch =
+    articleForm.visibility === 'public' &&
+    articleForm.categoryId !== '' &&
+    articleFormCategory?.visibility !== 'public';
+  const publicPreviewHref =
+    articleDetail && !articleHasPublicCategoryMismatch
+      ? buildPublicPreviewHref(articleDetail)
+      : null;
   const editorialChecklist = articleDetail
     ? buildEditorialChecklist(articleDetail, selectedArticleDuplicateCount)
     : null;
+  const canSubmitForReview =
+    articleDetail?.status === 'draft' &&
+    (editorialChecklist?.automatedReady ?? false);
+  const canPublishArticle =
+    articleDetail?.status === 'review' &&
+    !advisoryMessage &&
+    (!selectedAdvisory || selectedAdvisory.review_status === 'reviewed') &&
+    !articleHasPublicCategoryMismatch;
   const persistedHumanChecklist = buildPersistedHumanChecklist(humanConfirmationsDraft);
   const advisoryRiskFlags = normalizeRiskFlags(selectedAdvisory?.risk_flags);
   const statusCounts = {
@@ -778,9 +820,10 @@ export function KnowledgePage() {
     async (knowledgeSpaceId: string, preferredArticleId?: string | null) => {
       setContentPhase('loading');
       setContentMessage(null);
+      setAdvisoryMessage(null);
 
       try {
-        const [categoriesData, articlesData, advisoriesData] = await Promise.all([
+        const [categoriesResult, articlesResult, advisoriesResult] = await Promise.allSettled([
           listAdminKnowledgeCategoriesV2(knowledgeSpaceId),
           listAdminKnowledgeArticlesV2({
             knowledgeSpaceId,
@@ -790,12 +833,40 @@ export function KnowledgePage() {
           listAdminKnowledgeArticleReviewAdvisories(knowledgeSpaceId),
         ]);
 
+        if (categoriesResult.status === 'rejected') {
+          throw categoriesResult.reason;
+        }
+
+        if (articlesResult.status === 'rejected') {
+          throw articlesResult.reason;
+        }
+
+        const categoriesData = categoriesResult.value;
+        const articlesData = articlesResult.value;
+
         setCategories(categoriesData);
         setArticles(articlesData);
-        setAdvisories(advisoriesData);
         setContentPhase('ready');
         setContentMessage(null);
         setBackendDenied(false);
+
+        if (advisoriesResult.status === 'fulfilled') {
+          setAdvisories(advisoriesResult.value);
+          setAdvisoryMessage(null);
+        } else {
+          const advisoryError = classifyAdminError(
+            advisoriesResult.reason,
+            'Os sinais de revisao editorial nao ficaram disponiveis neste ambiente.',
+          );
+
+          if (advisoryError.kind === 'session-expired') {
+            markSessionExpired();
+            return;
+          }
+
+          setAdvisories([]);
+          setAdvisoryMessage(advisoryError.message);
+        }
 
         const preservedArticleId =
           preferredArticleId ??
@@ -909,6 +980,7 @@ export function KnowledgePage() {
       setSelectedArticleId(null);
       setContentPhase('idle');
       setContentMessage(null);
+      setAdvisoryMessage(null);
       return;
     }
 
@@ -1795,11 +1867,7 @@ export function KnowledgePage() {
                   </Field>
 
                   {categoryFormMessage ? (
-                    <InlineNotice
-                      tone={
-                        categoryFormMessage.includes('sucesso') ? 'warning' : 'critical'
-                      }
-                    >
+                    <InlineNotice tone={noticeTone(categoryFormMessage)}>
                       {categoryFormMessage}
                     </InlineNotice>
                   ) : null}
@@ -1886,6 +1954,12 @@ export function KnowledgePage() {
                       ))}
                     </SelectInput>
                   </Field>
+
+                  {articleFormHasPublicCategoryMismatch ? (
+                    <InlineNotice tone="warning">
+                      Artigos publicos so aparecem na central quando a categoria selecionada tambem estiver publica. Ajuste a categoria ou a visibilidade antes de publicar.
+                    </InlineNotice>
+                  ) : null}
 
                   <Field label="Visibilidade">
                     <SelectInput
@@ -2072,28 +2146,50 @@ export function KnowledgePage() {
                         {articleDetail.summary?.trim() || 'Indisponivel'}
                       </p>
                     </div>
+
+                    <div className="space-y-3 border-t border-[color:var(--color-border)] pt-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                          Preview editorial
+                        </p>
+                        {publicPreviewHref ? (
+                          <a
+                            className="inline-flex min-h-10 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-white/90 px-4 py-2 text-sm font-medium text-[color:var(--color-ink)] transition hover:border-[color:var(--color-brand-blue)]/40 hover:bg-[color:var(--color-surface)]"
+                            href={publicPreviewHref}
+                            rel="noreferrer"
+                            target="_blank"
+                          >
+                            Abrir artigo publico
+                          </a>
+                        ) : null}
+                      </div>
+                      <div className="max-h-72 overflow-y-auto rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                        <div className="whitespace-pre-wrap text-sm leading-6 text-[color:var(--color-ink)]">
+                          {articleDetail.body_md.trim() || 'Indisponivel'}
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   {articleActionMessage ? (
-                    <InlineNotice
-                      tone={
-                        articleActionMessage.includes('sucesso') ? 'warning' : 'critical'
-                      }
-                    >
+                    <InlineNotice tone={noticeTone(articleActionMessage)}>
                       {articleActionMessage}
                     </InlineNotice>
                   ) : null}
 
                   {reviewAdvisoryMessage ? (
-                    <InlineNotice
-                      tone={
-                        reviewAdvisoryMessage.includes('sucesso') ||
-                        reviewAdvisoryMessage.includes('concluida')
-                          ? 'warning'
-                          : 'critical'
-                      }
-                    >
+                    <InlineNotice tone={noticeTone(reviewAdvisoryMessage)}>
                       {reviewAdvisoryMessage}
+                    </InlineNotice>
+                  ) : null}
+
+                  {advisoryMessage ? (
+                    <InlineNotice tone="warning">{advisoryMessage}</InlineNotice>
+                  ) : null}
+
+                  {articleHasPublicCategoryMismatch ? (
+                    <InlineNotice tone="warning">
+                      Este artigo esta marcado como publico, mas a categoria atual nao esta publica. Enquanto essa coerencia nao for ajustada, o artigo nao aparece na central de ajuda.
                     </InlineNotice>
                   ) : null}
 
@@ -2108,12 +2204,12 @@ export function KnowledgePage() {
                         </GhostButton>
                       ) : null}
                       {articleDetail.status === 'draft' ? (
-                        <GhostButton className="min-h-11 justify-start" disabled={articleActionSubmitting} onClick={() => void handleSubmitForReview()}>
+                        <GhostButton className="min-h-11 justify-start" disabled={articleActionSubmitting || !canSubmitForReview} onClick={() => void handleSubmitForReview()}>
                           {articleActionSubmitting ? 'Enviando...' : 'Enviar para revisao'}
                         </GhostButton>
                       ) : null}
                       {articleDetail.status === 'review' ? (
-                        <GhostButton className="min-h-11 justify-start" disabled={articleActionSubmitting} onClick={() => void handlePublish()}>
+                        <GhostButton className="min-h-11 justify-start" disabled={articleActionSubmitting || !canPublishArticle} onClick={() => void handlePublish()}>
                           {articleActionSubmitting ? 'Publicando...' : 'Publicar'}
                         </GhostButton>
                       ) : null}
@@ -2123,6 +2219,18 @@ export function KnowledgePage() {
                         </GhostButton>
                       ) : null}
                     </div>
+                    {articleDetail.status === 'draft' && !canSubmitForReview ? (
+                      <p className="text-xs leading-5 text-[color:var(--color-muted)]">
+                        Complete titulo, resumo, categoria e corpo principal antes de enviar para revisao.
+                      </p>
+                    ) : null}
+                    {articleDetail.status === 'review' && !canPublishArticle ? (
+                      <p className="text-xs leading-5 text-[color:var(--color-muted)]">
+                        {advisoryMessage
+                          ? 'Recarregue os sinais de revisao editorial antes de publicar este artigo.'
+                          : 'Conclua a revisao editorial persistida antes de publicar este artigo.'}
+                      </p>
+                    ) : null}
                   </div>
 
                   <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
@@ -2163,6 +2271,89 @@ export function KnowledgePage() {
                       )}
                     </div>
                   </details>
+
+                  {selectedAdvisory ? (
+                    <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                      <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                        Revisao editorial
+                      </summary>
+                      <div className="mt-3 space-y-4">
+                        <Field label="Status da revisao">
+                          <SelectInput
+                            onChange={(event) =>
+                              setReviewStatusDraft(
+                                event.target.value as KnowledgeArticleReviewStatus,
+                              )
+                            }
+                            value={reviewStatusDraft}
+                          >
+                            {KNOWLEDGE_ARTICLE_REVIEW_STATUSES.map((status) => (
+                              <option key={status} value={status}>
+                                {status}
+                              </option>
+                            ))}
+                          </SelectInput>
+                        </Field>
+
+                        <Field label="Notas da revisao">
+                          <TextareaInput
+                            className="min-h-24"
+                            onChange={(event) => setReviewNotesDraft(event.target.value)}
+                            placeholder="Registre orientacoes objetivas para a etapa editorial."
+                            value={reviewNotesDraft}
+                          />
+                        </Field>
+
+                        <div className="space-y-2">
+                          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+                            Confirmacoes humanas
+                          </p>
+                          <div className="space-y-2">
+                            {HUMAN_CONFIRMATION_FIELDS.map((field) => (
+                              <label
+                                className="flex items-start gap-3 rounded-[16px] border border-[color:var(--color-border)] bg-white px-3 py-3"
+                                key={field.key}
+                              >
+                                <input
+                                  checked={humanConfirmationsDraft[field.key] === true}
+                                  className="mt-1 h-4 w-4 rounded border-[color:var(--color-border)] text-[color:var(--color-brand-blue)]"
+                                  onChange={(event) =>
+                                    updateHumanConfirmation(field.key, event.target.checked)
+                                  }
+                                  type="checkbox"
+                                />
+                                <span className="space-y-1">
+                                  <span className="block text-sm font-medium text-[color:var(--color-ink)]">
+                                    {field.label}
+                                  </span>
+                                  <span className="block text-xs leading-5 text-[color:var(--color-muted)]">
+                                    {field.help}
+                                  </span>
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-3">
+                          <AppButton
+                            disabled={reviewAdvisorySubmitting}
+                            onClick={() => void handleSaveReviewAdvisoryStatus()}
+                          >
+                            {reviewAdvisorySubmitting ? 'Salvando...' : 'Salvar revisao'}
+                          </AppButton>
+                          <GhostButton
+                            disabled={reviewAdvisorySubmitting}
+                            onClick={() => void handleMarkReviewAdvisoryReviewed()}
+                          >
+                            {reviewAdvisorySubmitting
+                              ? 'Concluindo...'
+                              : 'Marcar como revisado'}
+                          </GhostButton>
+                        </div>
+                      </div>
+                    </details>
+                  ) : null}
 
                   {editorialChecklist ? (
                     <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">

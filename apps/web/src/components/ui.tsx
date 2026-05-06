@@ -412,10 +412,12 @@ export function InlineNotice({
   tone = 'default',
 }: {
   children: ReactNode;
-  tone?: 'default' | 'warning' | 'critical';
+  tone?: 'default' | 'positive' | 'warning' | 'critical';
 }) {
   const toneClass =
-    tone === 'warning'
+    tone === 'positive'
+      ? 'border-[color:var(--color-success-border)] bg-[color:var(--color-success-surface)] text-[color:var(--color-success-ink)]'
+      : tone === 'warning'
       ? 'border-[color:var(--color-warning-border)] bg-[color:var(--color-warning-surface)] text-[color:var(--color-warning-ink)]'
       : tone === 'critical'
         ? 'border-[color:var(--color-danger-border)] bg-[color:var(--color-danger-surface)] text-[color:var(--color-danger-ink)]'
