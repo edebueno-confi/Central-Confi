@@ -6,20 +6,35 @@ Este documento é o contrato canônico de design visual do **Genius Support OS**
 
 Ele deve orientar qualquer refatoração de interface feita por Codex, Lovable, Antigravity ou outro agente de implementação.
 
-As imagens blueprint aprovadas são referências visuais importantes, mas este documento define as regras textuais obrigatórias de layout, densidade, composição, comportamento e aparência.
+As imagens blueprint aprovadas são referências visuais obrigatórias. Este documento define as regras textuais globais de layout, densidade, composição, comportamento e aparência.
 
-A regra principal é simples:
+Regra principal:
 
 > A implementação precisa parecer imediatamente derivada da blueprint aprovada, não apenas “inspirada” por ela.
 
 ---
 
-## 2. Princípios de produto
+## 2. Hierarquia de decisão
+
+Para qualquer refatoração visual, a prioridade é:
+
+1. Blueprint PNG aprovada da tela.
+2. Screen spec da tela.
+3. Este Design System.
+4. Contratos de dados existentes.
+5. Implementação antiga.
+
+A implementação antiga nunca deve justificar layout genérico, espaçamento excessivo, dupla rolagem, componentes falsos ou comportamento visual inferior.
+
+Quando o screen spec contradizer a blueprint, o agente deve seguir a blueprint e registrar a divergência no relatório final.
+
+---
+
+## 3. Princípios de produto
 
 O Genius Support OS é uma plataforma interna de operação CX B2B técnica para SaaS de logística reversa.
 
 Não é:
-
 - SAC B2C.
 - Dashboard genérico.
 - Landing page.
@@ -27,7 +42,6 @@ Não é:
 - Central de cards administrativos reaproveitados.
 
 É uma ferramenta operacional para:
-
 - suporte técnico;
 - CS;
 - tickets;
@@ -39,8 +53,7 @@ Não é:
 
 Cada tela deve ser desenhada a partir da tarefa real do usuário.
 
-Exemplo:
-
+Exemplos:
 - Tela de ticket deve parecer estação de atendimento.
 - Tela de fila deve parecer bancada de triagem.
 - Tela de cliente deve parecer cockpit de conta B2B.
@@ -49,12 +62,11 @@ Exemplo:
 
 ---
 
-## 3. Linguagem visual geral
+## 4. Linguagem visual geral
 
-### 3.1 Personalidade visual
+### 4.1 Personalidade visual
 
 A interface deve transmitir:
-
 - produto SaaS enterprise;
 - operação técnica;
 - clareza;
@@ -64,33 +76,30 @@ A interface deve transmitir:
 - acabamento premium;
 - uso diário por equipe interna.
 
-### 3.2 Cores
+### 4.2 Cores
 
 Base visual:
-
 - fundo geral claro, entre branco, cinza frio e azul muito suave;
 - sidebar navy profunda;
 - azul vivo para ações primárias;
 - branco para superfícies principais;
 - cinza azulado para bordas, divisores e textos secundários;
-- amarelo suave para estados de espera ou atenção;
+- amarelo suave para estados de espera, atenção e nota interna;
 - verde suave para estados saudáveis/ativos;
 - vermelho suave para risco, erro ou criticidade;
-- roxo/pink apenas como acento controlado em ambiente ou marca.
+- roxo/pink apenas como acento controlado.
 
 Evitar:
-
 - cores saturadas em excesso;
 - múltiplas cores competindo;
 - fundos escuros fora da sidebar, exceto cards de preview destacados;
 - gradientes chamativos sem função.
 
-### 3.3 Tipografia
+### 4.3 Tipografia
 
 A tipografia deve ser moderna, limpa e funcional.
 
 Regras:
-
 - títulos fortes, mas compactos;
 - labels em caixa alta apenas para pequenos marcadores, eyebrows e metadados;
 - textos secundários em cinza azulado;
@@ -98,8 +107,15 @@ Regras:
 - preferir microcopy objetiva;
 - não usar copy técnica de implementação em telas de usuário.
 
-Proibido em interface de usuário:
+Escala recomendada para telas operacionais:
+- page title: 20px a 24px, peso 650 a 700;
+- section title: 14px a 16px, peso 600;
+- labels/metadados: 10px a 12px, peso 600, letter spacing leve;
+- body: 12px a 14px;
+- pills: 10px a 12px;
+- botões compactos: 12px a 14px.
 
+Proibido em interface de usuário comum:
 - Supabase Auth;
 - backend;
 - views;
@@ -107,61 +123,97 @@ Proibido em interface de usuário:
 - schema;
 - role global;
 - contratos internos;
+- environment;
+- DEVELOPMENT;
+- dev;
+- platform_admin cru;
 - termos técnicos que exponham arquitetura.
+
+Exceção:
+- telas explicitamente técnicas para platform_admin podem mostrar detalhes operacionais técnicos quando forem necessários para diagnóstico, nunca como decoração.
 
 ---
 
-## 4. Regras de densidade
+## 5. Regras de densidade
 
 A UI deve ter densidade operacional.
 
 Não usar:
-
 - cards gigantes sem necessidade;
 - headers altos demais;
 - espaços vazios extensos;
 - listas com espaçamento exagerado;
-- composer separado como um bloco inflado;
+- composer separado como bloco inflado;
 - painel lateral verboso;
-- duplicação de títulos e headers.
+- duplicação de títulos e headers;
+- dupla rolagem;
+- toolbars decorativas;
+- componentes sem função.
 
 Usar:
-
 - headers compactos;
 - cards com padding moderado;
 - listas densas;
 - metadados em linhas curtas;
-- painéis laterais estreitos e contextuais;
+- painéis laterais contextuais;
 - abas para troca de contexto;
 - hierarquia clara sem inflar a tela.
 
 Referência de densidade:
-
 - ferramenta de trabalho usada o dia todo;
 - visual limpo, mas não vazio;
-- cada bloco precisa justificar espaço ocupado.
+- cada bloco precisa justificar o espaço ocupado.
 
 ---
 
-## 5. Layout base do Support Workspace
+## 6. Regras de viewport e scroll
 
-### 5.1 Estrutura geral
+### 6.1 Regra geral
+
+Em telas operacionais de atendimento, especialmente o Ticket Workspace, a viewport desktop deve ser tratada como cockpit.
+
+A tela deve usar a largura total disponível do notebook wide.
+
+Evitar:
+- container central estreito demais;
+- margem lateral externa grande;
+- header que ocupa largura indevida;
+- scroll da página combinado com scroll interno.
+
+### 6.2 Scroll
+
+É proibido:
+- dupla rolagem;
+- rolagem vertical da página na visão principal de atendimento;
+- scrollbar interna precoce em textarea;
+- scroll horizontal indevido.
+
+Se conteúdo real exceder a viewport:
+1. compactar tipografia;
+2. reduzir padding e gaps;
+3. mover conteúdo secundário para tabs;
+4. manter um único scroll controlado apenas no container correto.
+
+A visão principal de atendimento deve caber inteira em desktop padrão sempre que possível.
+
+---
+
+## 7. Layout base do Support Workspace
+
+### 7.1 Estrutura geral
 
 O Support Workspace usa:
-
 - sidebar fixa à esquerda;
 - fundo claro no workspace;
-- topbar compacta;
 - conteúdo operacional em grid;
-- painéis contextuais à direita quando necessário;
+- painéis contextuais à direita;
 - tabs quando houver troca de contexto.
 
-### 5.2 Sidebar do Support Workspace
+### 7.2 Sidebar do Support Workspace
 
-A sidebar deve ser navy profunda, refinada e compacta.
+A sidebar deve ser navy profunda, refinada, compacta e encostada ao canto esquerdo da viewport.
 
 Itens canônicos:
-
 - Fila;
 - Tickets;
 - Clientes;
@@ -169,257 +221,102 @@ Itens canônicos:
 - Admin.
 
 Regras:
-
-- item ativo com fundo azul vivo;
+- item ativo com fundo azul vivo integrado ao menu, sem pílula inflada;
 - ícones simples e consistentes;
 - logo no topo;
-- card de usuário no rodapé;
-- não ocupar largura excessiva;
+- card/menu de usuário no rodapé;
+- botão de colapso translúcido, integrado à sidebar, com ícone legível;
+- badge pequeno e alinhado;
+- densidade vertical compacta;
 - não parecer menu improvisado;
 - não renderizar texto solto durante loading.
 
-### 5.3 Topbar
+### 7.3 Topbar do Support Workspace
 
-A topbar deve conter:
+A topbar técnica com badges como `DEVELOPMENT` ou `AGENT WORKSPACE` não deve aparecer no Ticket Workspace.
 
-- pill `DEVELOPMENT`, quando ambiente local/dev;
-- pill `AGENT WORKSPACE`;
-- botão `Encerrar sessão` no canto direito.
+O botão `Encerrar sessão` deve ficar no card/menu do usuário na base da sidebar, não em uma faixa branca superior.
 
 Evitar:
-
 - múltiplas barras de topo;
 - headers redundantes;
+- card branco superior com apenas uma ação de sessão;
 - botões de ação fora de contexto.
 
 ---
 
-## 6. Layout base do Admin Console
+## 8. Componentes canônicos
 
-O Admin Console é um control plane para platform admin.
-
-### 6.1 Sidebar
-
-A sidebar também deve ser navy, mas com identidade de Admin Console.
-
-Itens canônicos:
-
-- Tenants;
-- Knowledge;
-- Access;
-- System.
-
-### 6.2 Header
-
-Deve conter:
-
-- pill `DEVELOPMENT`;
-- pill `PLATFORM_ADMIN`;
-- título da área;
-- subtítulo operacional;
-- ações compactas no canto direito.
-
-### 6.3 Grid preferencial
-
-O layout padrão do Admin Console deve usar 3 colunas:
-
-1. ferramentas/filtros/resumo;
-2. lista/base principal;
-3. painel contextual do item selecionado.
-
-A coluna direita deve ser útil e densa, não decorativa.
-
----
-
-## 7. Layout base da Central Pública
-
-A Central Pública não deve usar a sidebar navy interna.
-
-Ela deve parecer help center público, mas alinhado ao produto.
-
-Estrutura:
-
-- coluna esquerda clara com cards contextuais;
-- hero central com busca;
-- painel lateral informativo;
-- cards de categorias;
-- artigos publicados;
-- linguagem simples e pública.
-
-Regras:
-
-- mostrar apenas conteúdo público e aprovado;
-- não expor material interno;
-- não usar termos de backend;
-- visual confiável, leve e organizado.
-
----
-
-## 8. Tabs
-
-Tabs são obrigatórias quando houver troca de contexto dentro da mesma entidade ou área.
-
-Não criar outra tela quando a troca for contextual.
-
-Exemplos canônicos:
-
-### Ticket
-
-- Conversar;
-- Conhecimento;
-- Central de ajuda;
-- Mais ações.
-
-### Clientes
-
-- Contas;
-- Contatos;
-- Migrações;
-- Saúde.
-
-### Tenant/Admin
-
-- Resumo;
-- Membros;
-- Status;
-- Atividade.
-
-### Central Pública
-
-- Visão geral;
-- Artigos;
-- Categorias.
-
-Regras:
-
-- aba ativa com underline azul;
-- tabs compactas;
-- não usar tabs como decoração;
-- cada tab precisa mudar contexto real.
-
----
-
-## 9. Componentes canônicos
-
-### 9.1 Cards
+### 8.1 Cards
 
 Cards devem ter:
-
 - fundo branco;
 - borda sutil;
 - raio moderado;
 - sombra leve;
 - padding controlado.
 
-Evitar:
+Referência:
+- padding interno padrão: 16px;
+- gap entre cards: 12px a 16px em telas de alta densidade;
+- evitar 24px+ em ticket workspace, salvo se a blueprint exigir.
 
-- cards enormes;
-- cards aninhados sem necessidade;
-- excesso de bordas fortes;
-- muitos cards para informação simples.
-
-### 9.2 Pills
-
-Usar pills para:
-
-- status;
-- prioridade;
-- severidade;
-- plano;
-- ambiente;
-- contadores compactos.
-
-Pills devem ser pequenas, legíveis e consistentes.
-
-### 9.3 Botões
-
-Botão primário:
-
-- azul vivo;
-- usado para ação principal da seção.
-
-Botão secundário:
-
-- branco ou transparente;
-- borda sutil;
-- texto navy/azul.
-
-Proibido criar botões fora do contrato da tela.
-
-### 9.4 Rails direitos
+### 8.2 Rails direitos
 
 Rails direitos devem ser:
-
-- estreitos;
 - contextuais;
 - densos;
 - úteis para decisão;
-- organizados em seções empilhadas.
+- organizados em cards empilhados;
+- suficientemente largos para evitar quebras ruins.
 
-Não devem parecer dashboard lateral genérico.
+Para Ticket Workspace:
+- largura recomendada: 320px a 360px em desktop wide;
+- não comprimir tanto a ponto de quebrar labels e botões;
+- não usar accordions fechados como estrutura principal.
 
-### 9.5 List rows
+### 8.3 Botões
 
-Listas devem ser densas e escaneáveis.
-
-Cada linha deve conter:
-
-- título forte;
-- status/pill;
-- metadados essenciais;
-- última atividade;
-- ação contextual discreta.
-
-Linha selecionada:
-
-- fundo azul muito claro;
-- borda ou indicador azul;
-- sem exagero visual.
-
-### 9.6 Empty states
-
-Estados vazios devem estar dentro do shell correto.
-
-Nunca renderizar:
-
-- tela branca solta;
-- texto bruto;
-- loading genérico fora do layout;
-- erro sem contexto.
-
-### 9.7 Loading states
-
-Loading deve preservar:
-
-- sidebar;
-- topbar;
-- estrutura geral da tela;
-- skeletons ou scaffolds coerentes.
+Regras:
+- texto sempre legível;
+- não usar botão desabilitado com contraste ilegível;
+- não criar botões fora do contrato da tela;
+- botões sem funcionalidade real devem ser removidos.
 
 ---
 
-## 10. Ticket Workspace
+## 9. Ticket Workspace
 
 A tela de ticket é uma estação de atendimento.
 
-Ela deve ser centrada em thread/chat profissional.
+Ela deve ser centrada em thread/chat profissional e caber como cockpit operacional.
 
-### 10.1 Estrutura obrigatória
+### 9.1 Estrutura obrigatória
 
-- sidebar navy;
-- topbar compacta;
+- sidebar navy encostada à esquerda;
+- sem topbar técnica;
 - header compacto do ticket;
 - tabs: Conversar, Conhecimento, Central de ajuda, Mais ações;
 - thread central;
 - composer integrado;
 - rail direito contextual.
 
-### 10.2 Header do ticket
+### 9.2 Grid de ticket
 
-Deve ser compacto.
+Composição desktop:
+- sidebar fixa à esquerda;
+- coluna central de conversa;
+- rail direito com 320px a 360px;
+- gaps entre áreas: 12px a 16px;
+- sem margem externa ampla.
+
+A coluna central deve ceder largura suficiente para o rail direito não quebrar.
+
+### 9.3 Header do ticket
+
+Deve ser compacto e alinhado à coluna central, não ocupar largura que pertença ao rail direito.
 
 Conteúdo:
-
 - status;
 - prioridade;
 - short id;
@@ -429,215 +326,98 @@ Conteúdo:
 - responsável;
 - última atualização.
 
-Não pode dominar a página.
+Não pode:
+- dominar a página;
+- colar texto sem padding;
+- duplicar pills sem necessidade;
+- virar card de largura total por cima do rail.
 
-### 10.3 Thread
-
-A thread deve parecer conversa real.
+### 9.4 Thread
 
 Regras:
-
 - cliente à esquerda;
 - agente à direita;
 - nota interna com visual próprio;
 - timestamps discretos;
 - bolhas compactas;
 - anexos em pills;
-- sem aparência de lista de cards administrativos.
+- sem aparência de lista de cards administrativos;
+- usar altura flexível para preencher o espaço entre header e composer.
 
-### 10.4 Composer
-
-O composer deve ser acoplado ao fim da conversa.
+### 9.5 Composer
 
 Deve conter:
-
 - abas ou toggle: Resposta pública / Nota interna;
-- área de texto;
-- ícones de ação;
-- seletor de visibilidade;
-- botão Enviar resposta.
-
-Não deve parecer card gigante separado.
-
-### 10.5 Rail direito do ticket
-
-Seções:
-
-- Ações do ticket;
-- Cliente;
-- Conhecimento relacionado;
-- Atividade recente.
+- área de texto dominante;
+- botão primário contextual.
 
 Regras:
+- remover seletor duplicado Público/Interno;
+- modo é definido por Resposta pública / Nota interna;
+- botão deve mudar conforme modo:
+  - `Enviar resposta`;
+  - `Salvar nota interna`;
+- textarea ocupa a maior parte do composer;
+- sem scrollbar interna precoce;
+- botões inferiores só podem existir se tiverem funcionalidade real.
 
-- CTA de cliente apenas no card Cliente;
-- não adicionar `Abrir ERP`;
-- não adicionar `Abrir cliente` na toolbar superior;
-- rail deve ser compacto.
+Nota interna:
+- fundo amarelo claro no composer/textarea;
+- contraste legível;
+- deve sinalizar claramente conteúdo interno.
 
----
+### 9.6 Rail direito do ticket
 
-## 11. Fila operacional
+Ordem obrigatória:
+1. Cliente;
+2. Ações do ticket;
+3. Conhecimento relacionado;
+4. Atividade recente.
 
-A tela de fila é bancada de triagem.
+Card Cliente:
+- informações principais visíveis;
+- CTA: `Ver detalhes do cliente`;
+- não esconder conteúdo principal em accordion.
 
-Estrutura:
-
-- tabs de contexto no topo;
-- KPIs compactos;
-- coluna esquerda com triagem e filtros;
-- lista central de tickets;
-- preview lateral do ticket selecionado.
-
-Objetivo:
-
-- decidir rapidamente qual atendimento puxar;
-- priorizar urgência, responsável e estado;
-- evitar entrar em ticket sem contexto.
-
-Não deve parecer apenas lista genérica.
-
----
-
-## 12. Clientes
-
-A tela de clientes é cockpit de contas B2B.
-
-Estrutura:
-
-- tabs: Contas, Contatos, Migrações, Saúde;
-- KPIs de base;
-- segmentação/filtros à esquerda;
-- lista central de contas prioritárias;
-- preview contextual à direita.
-
-O cliente selecionado deve exibir:
-
-- plataforma;
-- produto;
+Card Ações do ticket:
 - responsável;
-- saúde/risco;
-- contato principal;
-- sinais da conta;
-- ações operacionais.
+- salvar alterações;
+- atribuir/desatribuir;
+- status;
+- salvar andamento.
+
+Proibido:
+- `Abrir ERP`;
+- `Abrir cliente` na toolbar superior;
+- accordions fechados como estrutura principal;
+- rail estreito demais;
+- sobrepor header.
 
 ---
 
-## 13. Admin Tenants
+## 10. Estados de erro
 
-A tela de Tenants é control plane de clientes B2B.
+Erro técnico cru não pode aparecer no front.
 
-Estrutura:
+Exemplo proibido:
+`invalid ticket status transition: waiting_customer -> triage`
 
-- sidebar Admin Console;
-- ferramentas de tenants à esquerda;
-- base de tenants no centro;
-- tenant selecionado à direita;
-- tabs internas no detalhe: Resumo, Membros, Status, Atividade.
+Mostrar mensagem amigável:
+`Não foi possível alterar o status. Verifique a etapa atual do ticket e tente novamente.`
 
-Não deve parecer apenas CRUD.
-
-Deve permitir:
-
-- localizar tenant;
-- verificar status;
-- entender memberships;
-- abrir contexto operacional;
-- revisar atividade recente.
+Erros técnicos podem ir para console/log, não para UI de agente.
 
 ---
 
-## 14. Help Center Público
-
-A central pública é uma camada aprovada de conhecimento externo.
-
-Estrutura:
-
-- coluna esquerda clara;
-- hero com headline e busca;
-- painel explicativo;
-- navegação por artigos/categorias;
-- últimos publicados.
-
-Não usar sidebar interna navy.
-
-Não expor:
-
-- rascunhos;
-- conteúdo interno;
-- termos técnicos de implementação;
-- dados sensíveis.
-
----
-
-## 15. Regras de campos indisponíveis
-
-Quando valores retornarem `null`, vazios ou não disponíveis, a UI deve exibir:
-
-> Indisponível
-
-Nunca ocultar o campo silenciosamente quando ele fizer parte do contrato visual.
-
-Exemplos:
-
-- responsável;
-- contato;
-- telefone;
-- plano;
-- última atividade;
-- status derivado.
-
----
-
-## 16. Proibições visuais globais
-
-É proibido:
-
-- transformar a tela em dashboard genérico;
-- reaproveitar cards antigos sem adaptar à função da tela;
-- criar tela branca/loading solto;
-- esconder campos contratados;
-- criar ações fora do contrato visual;
-- usar textos técnicos de backend em tela de usuário;
-- inflar headers;
-- usar composer gigante separado;
-- transformar thread em lista espaçada;
-- adicionar `Abrir ERP`;
-- adicionar `Abrir cliente` na toolbar superior do ticket;
-- deixar sidebar ou shell quebrados durante boot;
-- considerar HTTP 200 como sucesso visual.
-
----
-
-## 17. Processo obrigatório para implementação
-
-Antes de refatorar qualquer tela, o agente deve:
-
-1. Ler este documento.
-2. Ler o screen spec da tela, se existir.
-3. Verificar a blueprint PNG aprovada da tela.
-4. Auditar a tela atual.
-5. Identificar diferenças visuais objetivas.
-6. Implementar apenas a tela solicitada.
-7. Não alterar backend, schema, migrations, RPCs, contracts ou fixtures sem autorização explícita.
-8. Preservar contratos de dados existentes.
-9. Gerar screenshot final.
-10. Reportar limitações visuais restantes.
-
----
-
-## 18. Critérios de aceite visual
+## 11. Critérios de aceite visual
 
 Uma tela só pode ser considerada aprovada se:
-
 - lembrar imediatamente a blueprint aprovada;
 - respeitar composição e densidade;
-- não parecer apenas uma adaptação da tela antiga;
-- usar os componentes canônicos;
-- preservar o shell correto;
+- não parecer adaptação da tela antiga;
 - não tiver texto bruto solto;
 - não tiver scroll horizontal indevido;
-- não tiver loading quebrado;
+- não tiver dupla rolagem;
 - não expuser termos técnicos internos;
 - passar typecheck/build;
 - tiver screenshot final validável por humano.
@@ -645,50 +425,3 @@ Uma tela só pode ser considerada aprovada se:
 Não basta estar mais bonita.
 
 Tem que estar correta para a função operacional do domínio.
-
----
-
-## 19. Ordem recomendada de redesign por tela
-
-Telas já com direção visual aprovada:
-
-- Login;
-- Support Ticket Workspace;
-- Support Queue;
-- Support Clientes;
-- Help Center Público;
-- Admin Tenants.
-
-Próximas telas recomendadas:
-
-1. Support Customer Detail;
-2. Knowledge interno do suporte;
-3. Admin Knowledge;
-4. Admin Access;
-5. Admin System;
-6. Artigo público;
-7. Lista pública de artigos;
-8. Access denied;
-9. Estados vazios/loading/erro.
-
----
-
-## 20. Regra final
-
-Sempre que houver conflito entre:
-
-- tela antiga;
-- componente reaproveitado;
-- interpretação livre do agente;
-- blueprint aprovada;
-- este documento;
-
-A prioridade é:
-
-1. este documento;
-2. screen spec da tela;
-3. blueprint PNG aprovada;
-4. contratos de dados existentes;
-5. implementação antiga.
-
-A implementação antiga nunca deve ser usada como justificativa para manter layout genérico, espaçamento excessivo ou comportamento visual inferior.
