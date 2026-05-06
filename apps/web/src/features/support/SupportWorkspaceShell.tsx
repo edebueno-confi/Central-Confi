@@ -139,8 +139,8 @@ function SupportSidebar({
   return (
     <aside
       className={cx(
-        'flex h-full flex-col rounded-[26px] bg-[linear-gradient(180deg,#06173f_0%,#0a1e53_52%,#10265f_100%)] px-2.5 py-3 text-white shadow-[0_24px_52px_rgba(9,20,56,0.24)] transition-[width,padding] duration-200',
-        collapsed ? 'w-[82px]' : 'w-[238px]',
+        'flex h-full flex-col rounded-[22px] bg-[linear-gradient(180deg,#06173f_0%,#082058_54%,#0b2a68_100%)] px-2 py-2.5 text-white shadow-[0_20px_42px_rgba(9,20,56,0.22)] transition-[width,padding] duration-200',
+        collapsed ? 'w-[72px]' : 'w-[214px]',
       )}
     >
       <div
@@ -150,13 +150,13 @@ function SupportSidebar({
         )}
       >
         <div className={cx('flex min-w-0 items-center gap-2.5', collapsed && 'justify-center')}>
-          <img alt="Mascote Genius" className="w-10 shrink-0" src={mascotUrl} />
+          <img alt="Mascote Genius" className="w-9 shrink-0" src={mascotUrl} />
           {!collapsed ? (
             <div className="min-w-0 pt-0.5">
-              <p className="text-[0.58rem] font-semibold uppercase tracking-[0.2em] text-white/46">
+              <p className="text-[0.56rem] font-semibold uppercase tracking-[0.2em] text-white/46">
                 Genius
               </p>
-              <h1 className="text-[0.94rem] font-semibold tracking-[-0.04em] leading-tight">
+              <h1 className="text-[0.86rem] font-semibold tracking-[-0.03em] leading-tight">
                 Support Workspace
               </h1>
             </div>
@@ -165,17 +165,28 @@ function SupportSidebar({
         <GhostButton
           aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
           className={cx(
-            'mt-0.5 min-h-9 shrink-0 border-white/8 bg-white/10 px-2.5 text-white/88 hover:bg-white/14 hover:text-white',
-            collapsed ? 'w-9 px-0' : 'ml-auto',
+            'mt-0.5 min-h-8 shrink-0 border-white/12 bg-white/8 px-2 text-white/82 shadow-none hover:bg-white/14 hover:text-white',
+            collapsed ? 'w-8 px-0' : 'ml-auto',
           )}
           onClick={onToggle}
           title={collapsed ? 'Expandir menu' : 'Recolher menu'}
         >
-          {collapsed ? '>' : '<'}
+          <svg
+            aria-hidden="true"
+            className={cx('h-3.5 w-3.5', !collapsed && 'rotate-180')}
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <path d="m9 18 6-6-6-6" />
+          </svg>
         </GhostButton>
       </div>
 
-      <nav className="mt-7 grid gap-1.5">
+      <nav className="mt-6 grid gap-1">
         {navigation.map((item) => {
           const active = item.isActive(location.pathname);
           const badgeLabel = item.label === 'Fila' ? '8' : item.label === 'Tickets' ? '12' : '';
@@ -183,11 +194,11 @@ function SupportSidebar({
           return (
             <Link
               className={cx(
-                'group flex min-h-[54px] items-center gap-2.5 rounded-[16px] px-3 py-2 text-[0.95rem] font-medium transition',
+                'group flex min-h-[46px] items-center gap-2 rounded-[13px] px-2.5 py-1.5 text-[0.88rem] font-medium transition',
                 collapsed ? 'justify-center px-0' : '',
                 active
-                  ? 'bg-[linear-gradient(135deg,#1f67ff,#2f7eff)] text-white shadow-[0_14px_26px_rgba(18,81,213,0.32)]'
-                  : 'text-white/76 hover:bg-white/10 hover:text-white',
+                  ? 'bg-[linear-gradient(135deg,rgba(31,103,255,0.95),rgba(47,126,255,0.95))] text-white shadow-[0_10px_20px_rgba(18,81,213,0.24)]'
+                  : 'text-white/74 hover:bg-white/9 hover:text-white',
               )}
               key={`${item.label}:${item.to}`}
               title={item.label}
@@ -207,7 +218,7 @@ function SupportSidebar({
               {!collapsed && badgeLabel ? (
                 <span
                   className={cx(
-                    'ml-auto inline-flex min-h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold',
+                    'ml-auto inline-flex min-h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-semibold',
                     active ? 'bg-white/16 text-white' : 'bg-white/10 text-white/82',
                   )}
                 >
@@ -219,9 +230,9 @@ function SupportSidebar({
         })}
       </nav>
 
-      <div className="mt-auto px-1">
-        <div className={cx('flex items-center rounded-[16px] border border-white/10 bg-white/8 px-2.5 py-2.5', collapsed ? 'justify-center' : 'gap-2.5')}>
-          <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#f4b1c8,#ffffff)] text-[13px] font-semibold text-[color:var(--color-brand-navy)]">
+      <div className="mt-auto px-0.5">
+        <div className={cx('flex items-center rounded-[14px] border border-white/10 bg-white/7 px-2 py-2', collapsed ? 'justify-center' : 'gap-2')}>
+          <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#f4b1c8,#ffffff)] text-[12px] font-semibold text-[color:var(--color-brand-navy)]">
             {String(user?.user_metadata?.full_name ?? user?.email ?? 'QA')
               .split(' ')
               .slice(0, 2)
@@ -230,7 +241,7 @@ function SupportSidebar({
           </div>
           {!collapsed ? (
             <div className="min-w-0">
-              <p className="truncate text-[13px] font-semibold text-white">
+              <p className="truncate text-[12px] font-semibold text-white">
                 {String(user?.user_metadata?.full_name ?? user?.email ?? 'Operador interno')}
               </p>
               <p className="truncate text-[0.68rem] text-white/58">
@@ -320,10 +331,10 @@ export function SupportWorkspaceShell() {
   const isTicketRoute = /^\/support\/tickets\/[^/]+/.test(location.pathname);
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#eef4ff_0%,#f7faff_42%,#f3f6fb_100%)] text-[color:var(--color-ink)]">
-      <div className="mx-auto flex max-w-[1760px] gap-3 px-3 py-3 sm:px-4 lg:px-4">
+    <div className={cx('bg-[linear-gradient(180deg,#eef4ff_0%,#f7faff_42%,#f3f6fb_100%)] text-[color:var(--color-ink)]', isTicketRoute ? 'h-screen overflow-hidden' : 'min-h-screen')}>
+      <div className={cx('mx-auto flex max-w-[1760px] gap-3 px-3 sm:px-4 lg:px-4', isTicketRoute ? 'h-full py-2' : 'py-3')}>
         <div className="hidden shrink-0 lg:block">
-          <div className="sticky top-3 h-[calc(100vh-1.5rem)]">
+          <div className={cx('sticky h-[calc(100vh-1.5rem)]', isTicketRoute ? 'top-2 h-[calc(100vh-1rem)]' : 'top-3')}>
             <SupportSidebar
               collapsed={sidebarCollapsed}
               onToggle={() => setSidebarCollapsed((current) => !current)}
@@ -331,10 +342,10 @@ export function SupportWorkspaceShell() {
           </div>
         </div>
 
-        <div className="min-w-0 flex-1">
-          <div className={cx(isTicketRoute ? 'space-y-2.5' : 'space-y-4')}>
+        <div className={cx('min-w-0 flex-1', isTicketRoute && 'min-h-0')}>
+          <div className={cx(isTicketRoute ? 'flex h-full min-h-0 flex-col gap-2' : 'space-y-4')}>
             <SupportTopbar compact={isTicketRoute} />
-            <main className="min-w-0">
+            <main className={cx('min-w-0', isTicketRoute && 'min-h-0 flex-1 overflow-hidden')}>
               <Outlet />
             </main>
           </div>

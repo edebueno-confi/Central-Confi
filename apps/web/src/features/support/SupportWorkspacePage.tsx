@@ -905,11 +905,9 @@ function SupportConversation({
         </div>
       )}
 
-      {(window.hasMore || eventEntries.length > 0) ? (
+      {window.hasMore ? (
         <p className="text-xs leading-5 text-[color:var(--color-muted)]">
-          {window.hasMore
-            ? 'Parte do historico continua recolhida para manter a leitura rapida.'
-            : `${eventEntries.length} registro(s) de apoio seguem no rail lateral.`}
+          Historico anterior recolhido para manter a leitura rapida.
         </p>
       ) : null}
     </div>
@@ -2079,14 +2077,14 @@ function SupportTicketCustomerSnapshot({
   }
 
   const primaryPlatform = primaryPlatformFromContext(accountContext);
-  const integrations = visibleOperationalIntegrations(accountContext, 2);
-  const features = visibleFeatureSlice(accountContext, 3);
-  const alerts = visibleAlertSlice(accountContext, 2);
-  const riskyCustomizations = visibleRiskCustomizations(accountContext, 2);
+  const integrations: SupportCustomerAccountIntegration[] = [];
+  const features: SupportCustomerAccountFeature[] = [];
+  const alerts: SupportCustomerAccountAlert[] = [];
+  const riskyCustomizations: SupportCustomerAccountCustomization[] = [];
 
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="space-y-1.5">
+      <div className="space-y-1.5">
         <div className="min-w-0 space-y-1">
           <p className="text-sm font-semibold text-[color:var(--color-ink)]">
             {customer.tenantDisplayName ?? customer.tenantLegalName ?? customer.tenantSlug}
@@ -2104,40 +2102,40 @@ function SupportTicketCustomerSnapshot({
           </div>
         </div>
         <Link
-          className="inline-flex min-h-9 items-center justify-center rounded-full border border-[color:var(--color-border)] px-3 py-1.5 text-[13px] font-semibold text-[color:var(--color-brand-blue)]"
+          className="inline-flex min-h-8 w-full items-center justify-center rounded-full border border-[rgba(48,127,226,0.26)] px-3 py-1.5 text-[12px] font-semibold text-[color:var(--color-brand-blue)]"
           to={`/support/customers/${customer.tenantId}`}
         >
           Ver detalhes do cliente
         </Link>
       </div>
 
-      <div className="rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2.5">
-        <dl className="grid gap-1.5 text-[12px] leading-5 text-[color:var(--color-muted)]">
-          <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="rounded-[14px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-2.5 py-2">
+        <dl className="grid gap-1 text-[12px] leading-5 text-[color:var(--color-muted)]">
+          <div className="flex items-start justify-between gap-3">
             <dt className="font-medium text-[color:var(--color-ink)]">Plataforma</dt>
             <dd className="text-right">
               {primaryPlatform ? primaryPlatform.provider : 'Nao registrada'}
             </dd>
           </div>
-          <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-1.5">
+          <div className="flex items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-1">
             <dt className="font-medium text-[color:var(--color-ink)]">Produto</dt>
             <dd className="text-right">
               {accountContext.productLine ? humanizeCustomerValue(accountContext.productLine) : 'Nao resolvido'}
             </dd>
           </div>
-          <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-1.5">
+          <div className="flex items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-1">
             <dt className="font-medium text-[color:var(--color-ink)]">Porte / tier</dt>
             <dd className="text-right">
               {accountContext.accountTier ?? 'Nao resolvido'}
             </dd>
           </div>
-          <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-1.5">
+          <div className="flex items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-1">
             <dt className="font-medium text-[color:var(--color-ink)]">Contato principal</dt>
             <dd className="text-right">
               {primaryContact ? primaryContact.fullName : 'Nao resolvido'}
             </dd>
           </div>
-          <div className="flex flex-wrap items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-1.5">
+          <div className="flex items-start justify-between gap-3 border-t border-[color:var(--color-border)] pt-1">
             <dt className="font-medium text-[color:var(--color-ink)]">E-mail</dt>
             <dd className="text-right break-all">
               {primaryContact?.email ?? 'Nao resolvido'}
@@ -3381,11 +3379,11 @@ function SupportWorkspaceView({
           />
         )
       ) : (
-        <div className="space-y-2">
-          <section className="overflow-hidden rounded-[22px] border border-[rgba(22,42,93,0.1)] bg-white shadow-[0_12px_24px_rgba(19,33,79,0.07)]">
+        <div className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
+          <section className="shrink-0 overflow-hidden rounded-[20px] border border-[rgba(22,42,93,0.1)] bg-white shadow-[0_10px_20px_rgba(19,33,79,0.06)]">
             <div className="px-4 py-2 sm:px-5">
-              <div className="space-y-0.5">
-                <div className="flex flex-wrap items-center gap-2.5">
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
                   <StatusPill tone={toneForTicketStatus(ticketDetail.status)}>
                     {humanizeStatus(ticketDetail.status)}
                   </StatusPill>
@@ -3400,7 +3398,7 @@ function SupportWorkspaceView({
                   </span>
                 </div>
 
-                <h3 className="max-w-5xl text-[1.2rem] font-semibold tracking-[-0.05em] leading-tight text-[color:var(--color-ink)]">
+                <h3 className="max-w-5xl truncate text-[1.12rem] font-semibold tracking-[-0.04em] leading-tight text-[color:var(--color-ink)]">
                   {ticketDetail.title}
                 </h3>
 
@@ -3445,7 +3443,7 @@ function SupportWorkspaceView({
               <div className="flex items-center gap-3.5 overflow-x-auto">
                 <button
                   className={cx(
-                    'inline-flex min-h-9 shrink-0 items-center border-b-2 px-1 text-[13px] font-semibold transition',
+                    'inline-flex min-h-8 shrink-0 items-center border-b-2 px-1 text-[13px] font-semibold transition',
                     ticketToolbarTab === 'conversation'
                       ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
                       : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
@@ -3457,7 +3455,7 @@ function SupportWorkspaceView({
                 </button>
                 <button
                   className={cx(
-                    'inline-flex min-h-9 shrink-0 items-center border-b-2 px-1 text-[13px] font-semibold transition',
+                    'inline-flex min-h-8 shrink-0 items-center border-b-2 px-1 text-[13px] font-semibold transition',
                     ticketToolbarTab === 'knowledge'
                       ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
                       : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
@@ -3469,7 +3467,7 @@ function SupportWorkspaceView({
                 </button>
                 <Link
                   className={cx(
-                    'inline-flex min-h-9 shrink-0 items-center border-b-2 px-1 text-[13px] font-semibold transition',
+                    'inline-flex min-h-8 shrink-0 items-center border-b-2 px-1 text-[13px] font-semibold transition',
                     ticketToolbarTab === 'help'
                       ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
                       : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
@@ -3481,7 +3479,7 @@ function SupportWorkspaceView({
                 </Link>
                 <button
                   className={cx(
-                    'inline-flex min-h-9 shrink-0 items-center border-b-2 px-1 text-[13px] font-semibold transition',
+                    'inline-flex min-h-8 shrink-0 items-center border-b-2 px-1 text-[13px] font-semibold transition',
                     ticketToolbarTab === 'more'
                       ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
                       : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
@@ -3499,24 +3497,24 @@ function SupportWorkspaceView({
 
           <div
             className={cx(
-              'grid items-start gap-2',
-              ticketRailOpen && 'xl:grid-cols-[minmax(0,1fr)_276px]',
+              'grid min-h-0 flex-1 items-start gap-2 overflow-visible',
+              ticketRailOpen && 'xl:grid-cols-[minmax(0,1fr)_300px]',
             )}
           >
             <section
-              className="overflow-hidden rounded-[22px] border border-[color:var(--color-border)] bg-white shadow-[0_12px_24px_rgba(19,33,79,0.07)]"
+              className="flex min-h-0 flex-col overflow-hidden rounded-[20px] border border-[color:var(--color-border)] bg-white shadow-[0_10px_20px_rgba(19,33,79,0.06)]"
               ref={conversationSectionRef}
             >
-              <div className="px-4 py-2 sm:px-5">
+              <div className="min-h-0 flex-1 overflow-y-auto px-4 py-2 sm:px-5">
                 <SupportConversation requesterName={requesterLabel} window={timelineWindow} />
               </div>
 
-              <div className="border-t border-[color:var(--color-border)] bg-[linear-gradient(180deg,rgba(247,250,255,0.96),rgba(255,255,255,1))] px-4 py-2 sm:px-5">
+              <div className="shrink-0 border-t border-[color:var(--color-border)] bg-[linear-gradient(180deg,rgba(247,250,255,0.96),rgba(255,255,255,1))] px-4 py-2 sm:px-5">
                 <form className="space-y-1.5" onSubmit={handleSubmitComposer}>
                   <div className="flex flex-wrap gap-4 border-b border-[color:var(--color-border)]">
                     <button
                       className={cx(
-                        'inline-flex min-h-9 items-center border-b-2 px-1 text-[13px] font-semibold transition',
+                        'inline-flex min-h-8 items-center border-b-2 px-1 text-[13px] font-semibold transition',
                         composerMode === 'public'
                           ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
                           : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
@@ -3529,7 +3527,7 @@ function SupportWorkspaceView({
                     </button>
                     <button
                       className={cx(
-                        'inline-flex min-h-9 items-center border-b-2 px-1 text-[13px] font-semibold transition',
+                        'inline-flex min-h-8 items-center border-b-2 px-1 text-[13px] font-semibold transition',
                         composerMode === 'internal'
                           ? 'border-[color:var(--color-danger-ink)] text-[color:var(--color-danger-ink)]'
                           : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
@@ -3551,7 +3549,7 @@ function SupportWorkspaceView({
                   >
                     <TextareaInput
                       className={cx(
-                        'min-h-[108px] resize-y border-0 bg-transparent px-0 py-0 text-[14px] leading-[1.45rem] shadow-none focus:border-transparent focus:ring-0',
+                        'h-[126px] min-h-[126px] w-full resize-none overflow-hidden border-0 !bg-transparent px-0 py-0 text-[14px] leading-[1.45rem] shadow-none focus:border-transparent focus:ring-0',
                         composerMode === 'internal' && 'placeholder:text-[rgba(125,92,13,0.68)]',
                       )}
                       onChange={(event) =>
@@ -3568,43 +3566,16 @@ function SupportWorkspaceView({
                     />
                     <div
                       className={cx(
-                        'mt-2.5 flex flex-wrap items-center justify-between gap-2.5 pt-2.5',
+                        'mt-2 flex flex-wrap items-center justify-end gap-2.5 pt-2',
                         composerMode === 'internal'
                           ? 'border-t border-amber-200/90'
                           : 'border-t border-[color:var(--color-border)]',
                       )}
                     >
-                      <div className="flex items-center gap-2 text-[color:var(--color-muted)]">
-                        <button
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[13px] font-semibold"
-                          type="button"
-                        >
-                          +
-                        </button>
-                        <button
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[13px] font-semibold"
-                          type="button"
-                        >
-                          Aa
-                        </button>
-                        <button
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[13px] font-semibold"
-                          type="button"
-                        >
-                          @
-                        </button>
-                        <button
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[13px] font-semibold"
-                          type="button"
-                        >
-                          ...
-                        </button>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-2.5">
                         <SelectInput
                           className={cx(
-                            'min-w-[124px] rounded-full px-3.5 text-[13px] font-semibold',
+                            'h-9 min-w-[124px] rounded-full px-3.5 text-[13px] font-semibold',
                             composerMode === 'internal' && 'border-amber-200 bg-white/90',
                           )}
                           onChange={(event) =>
@@ -3618,8 +3589,8 @@ function SupportWorkspaceView({
                         <AppButton
                           className={
                             composerMode === 'internal'
-                              ? 'min-h-10 rounded-[14px] px-5 bg-[linear-gradient(135deg,#7c2648,#b63f76)]'
-                              : 'min-h-10 rounded-[14px] px-5'
+                              ? 'min-h-9 rounded-[13px] px-5 bg-[linear-gradient(135deg,#7c2648,#b63f76)]'
+                              : 'min-h-9 rounded-[13px] px-5'
                           }
                           disabled={composerDisabled}
                           type="submit"
@@ -3638,9 +3609,9 @@ function SupportWorkspaceView({
             </section>
 
             {ticketRailOpen ? (
-              <aside className="space-y-2 xl:sticky xl:top-2.5 xl:max-h-[calc(100vh-6.25rem)] xl:overflow-y-auto xl:pr-1">
-                <section className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-3.5 py-3 shadow-[0_10px_20px_rgba(19,33,79,0.07)]">
-                  <div className="space-y-2.5">
+              <aside className="min-h-0 space-y-2 overflow-hidden xl:-mt-[120px] xl:h-[calc(100%+120px)]">
+                <section className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-3 py-2.5 shadow-[0_8px_16px_rgba(19,33,79,0.06)]">
+                  <div className="space-y-2">
                     <div className="flex items-center justify-between gap-3">
                       <h4 className="text-sm font-semibold tracking-[-0.02em] text-[color:var(--color-ink)]">
                         Acoes do ticket
@@ -3685,6 +3656,7 @@ function SupportWorkspaceView({
                       <form className="space-y-2.5" onSubmit={handleAssign}>
                         <Field label="Responsavel">
                           <SelectInput
+                            className="h-9 rounded-[13px] px-3 text-[13px]"
                             onChange={(event) => setAssignDraft(event.target.value)}
                             value={assignDraft}
                           >
@@ -3697,7 +3669,7 @@ function SupportWorkspaceView({
                           </SelectInput>
                         </Field>
                         <AppButton
-                          className="min-h-10 w-full rounded-[14px] px-4.5"
+                          className="min-h-9 w-full rounded-[13px] px-4"
                           disabled={submitting || !ticketDetail.canAssign}
                           type="submit"
                         >
@@ -3705,7 +3677,7 @@ function SupportWorkspaceView({
                         </AppButton>
                         <div className="grid gap-2 sm:grid-cols-2">
                           <GhostButton
-                            className="min-h-9 px-3.5 text-[13px]"
+                            className="min-h-8 px-3 text-[12px]"
                             disabled={
                               submitting ||
                               !ticketDetail.canAssign ||
@@ -3719,7 +3691,7 @@ function SupportWorkspaceView({
                             Atribuir a mim
                           </GhostButton>
                           <GhostButton
-                            className="min-h-9 px-3.5 text-[13px]"
+                            className="min-h-8 px-3 text-[12px]"
                             disabled={submitting || !ticketDetail.canAssign || !ticketDetail.assignedToUserId}
                             onClick={() => void runAssignment(null)}
                             type="button"
@@ -3730,9 +3702,10 @@ function SupportWorkspaceView({
                       </form>
                     )}
 
-                    <form className="space-y-2.5 border-t border-[color:var(--color-border)] pt-2.5" onSubmit={handleUpdateStatus}>
+                    <form className="space-y-2 border-t border-[color:var(--color-border)] pt-2" onSubmit={handleUpdateStatus}>
                       <Field label="Mover status">
                         <SelectInput
+                          className="h-9 rounded-[13px] px-3 text-[13px]"
                           onChange={(event) =>
                             setStatusDraft(event.target.value as TicketStatusUpdateTarget)
                           }
@@ -3746,7 +3719,7 @@ function SupportWorkspaceView({
                         </SelectInput>
                       </Field>
                       <AppButton
-                        className="min-h-10 w-full rounded-[14px] px-4.5"
+                        className="min-h-9 w-full rounded-[13px] px-4"
                         disabled={submitting || !ticketDetail.canUpdateStatus}
                         type="submit"
                       >
@@ -3757,14 +3730,14 @@ function SupportWorkspaceView({
                 </section>
 
                 <details
-                  className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-3.5 py-3 shadow-[0_10px_20px_rgba(19,33,79,0.07)]"
+                  className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-3 py-2.5 shadow-[0_8px_16px_rgba(19,33,79,0.06)]"
                   onToggle={(event) => setCustomerPanelOpen(event.currentTarget.open)}
                   open={customerPanelOpen}
                 >
                   <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
                     Cliente
                   </summary>
-                  <div className="mt-2.5">
+                  <div className="mt-2">
                     <SupportTicketCustomerSnapshot
                       accountContext={customerAccountContext}
                       customer={customer}
@@ -3798,14 +3771,14 @@ function SupportWorkspaceView({
                 </div>
 
                 <details
-                  className="rounded-[20px] border border-[color:var(--color-border)] bg-white px-3.5 py-3 shadow-[0_10px_20px_rgba(19,33,79,0.07)]"
+                  className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-3 py-2.5 shadow-[0_8px_16px_rgba(19,33,79,0.06)]"
                   onToggle={(event) => setActivityPanelOpen(event.currentTarget.open)}
                   open={activityPanelOpen}
                 >
                   <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
                     Atividade recente
                   </summary>
-                  <div className="mt-2.5">
+                  <div className="mt-2">
                     <SupportRecentActivity window={timelineWindow} />
                   </div>
                 </details>
