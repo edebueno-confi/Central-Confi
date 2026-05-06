@@ -36,7 +36,7 @@ exception
 end;
 $$;
 
-select plan(19);
+select plan(21);
 
 select is(
   (
@@ -260,6 +260,14 @@ values
     'Inativa',
     'inativa',
     'Categoria de space inativo'
+  ),
+  (
+    '30000000-0000-4000-8000-000000000005',
+    null,
+    'public',
+    'Legado publico',
+    'legado-publico',
+    'Categoria publica legada sem knowledge_space_id explicito'
   );
 
 update public.knowledge_categories
@@ -378,6 +386,20 @@ values
     1,
     timezone('utc', now()),
     timezone('utc', now())
+  ),
+  (
+    '40000000-0000-4000-8000-000000000008',
+    null,
+    '30000000-0000-4000-8000-000000000005',
+    'public',
+    'published',
+    'Artigo legado publico',
+    'artigo-legado-publico',
+    'Compatibilidade publica para artigo sem knowledge_space_id.',
+    '## Legado publico\n\nEste artigo continua publico na trilha canonica genius.',
+    1,
+    timezone('utc', now()),
+    timezone('utc', now())
   );
 
 set local role anon;
@@ -414,8 +436,8 @@ select is(
       from public.vw_public_knowledge_articles_list
       where knowledge_space_slug = 'genius'$$
   ),
-  2::bigint,
-  'anon le somente os dois artigos publicados e publicos do space ativo'
+  3::bigint,
+  'anon le os artigos publicados e publicos do space ativo, incluindo compatibilidade legado sem knowledge_space_id'
 );
 
 select is(
@@ -474,8 +496,8 @@ select is(
       from public.vw_public_knowledge_navigation
       where knowledge_space_slug = 'genius'$$
   ),
-  2::bigint,
-  'navigation retorna apenas as duas categorias publicas relevantes'
+  3::bigint,
+  'navigation retorna as categorias publicas relevantes, incluindo a categoria legada sem knowledge_space_id'
 );
 
 select is(
@@ -516,6 +538,26 @@ select is(
   ),
   0::bigint,
   'artigo publico ligado a categoria interna nao vaza na lista publica'
+);
+
+select is(
+  pg_temp.safe_text(
+    $$select knowledge_space_slug
+      from public.vw_public_knowledge_article_detail
+      where slug = 'artigo-legado-publico'$$
+  ),
+  'genius',
+  'artigo publico legado sem knowledge_space_id resolve no knowledge_space canonico genius'
+);
+
+select is(
+  pg_temp.safe_text(
+    $$select category_slug
+      from public.vw_public_knowledge_article_detail
+      where slug = 'artigo-legado-publico'$$
+  ),
+  'legado-publico',
+  'categoria publica legada sem knowledge_space_id permanece navegavel na camada publica'
 );
 
 reset role;

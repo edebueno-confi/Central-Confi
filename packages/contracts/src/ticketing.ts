@@ -506,6 +506,7 @@ export interface SupportTicketKnowledgeLink {
   articleSlug: string | null;
   articleVisibility: KnowledgeArticleVisibility | null;
   articleStatus: KnowledgeArticleStatus | null;
+  publicArticlePath: string | null;
   isCustomerSendAllowed: boolean;
 }
 
@@ -518,6 +519,7 @@ export interface SupportKnowledgeArticlePickerItem {
   categoryName: string | null;
   articleVisibility: KnowledgeArticleVisibility;
   articleStatus: KnowledgeArticleStatus;
+  publicArticlePath: string | null;
   isCustomerSendAllowed: boolean;
 }
 

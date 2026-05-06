@@ -192,6 +192,29 @@ function humanizeKnowledgeStatus(status: KnowledgeArticleStatus) {
   return humanizeToken(status).replaceAll('_', ' ');
 }
 
+function extractPublicArticleBasePath(publicArticlePath: string | null | undefined) {
+  if (!publicArticlePath) {
+    return null;
+  }
+
+  const marker = '/articles/';
+  const markerIndex = publicArticlePath.indexOf(marker);
+
+  if (markerIndex <= 0) {
+    return null;
+  }
+
+  return publicArticlePath.slice(0, markerIndex);
+}
+
+function buildAbsoluteAppUrl(path: string) {
+  if (typeof window === 'undefined') {
+    return path;
+  }
+
+  return new URL(path, window.location.origin).toString();
+}
+
 function LoadingBlock({ className }: { className?: string }) {
   return (
     <div
@@ -997,10 +1020,12 @@ function SupportTechnicalHistory({
 function SupportKnowledgeLinkCard({
   link,
   disabled,
+  onCopyPublicLink,
   onArchive,
 }: {
   link: SupportTicketKnowledgeLink;
   disabled: boolean;
+  onCopyPublicLink: (publicArticlePath: string) => void;
   onArchive: (linkId: Uuid) => void;
 }) {
   const title =
@@ -1036,6 +1061,30 @@ function SupportKnowledgeLinkCard({
               {link.note}
             </p>
           ) : null}
+          {link.publicArticlePath ? (
+            <div className="flex flex-wrap gap-1.5 pt-0.5">
+              <a
+                className="inline-flex min-h-8 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-white px-2.5 text-[12px] font-medium text-[color:var(--color-ink)] transition hover:border-[color:var(--color-brand-blue)]/35 hover:text-[color:var(--color-brand-blue)]"
+                href={link.publicArticlePath}
+                rel="noreferrer"
+                target="_blank"
+              >
+                Abrir artigo publico
+              </a>
+              <GhostButton
+                className="min-h-8 rounded-full px-2.5 text-[12px]"
+                disabled={disabled}
+                onClick={() => onCopyPublicLink(link.publicArticlePath!)}
+                type="button"
+              >
+                Copiar link
+              </GhostButton>
+            </div>
+          ) : link.linkType === 'sent_to_customer' ? (
+            <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
+              Link publico indisponivel para este conteudo no estado atual.
+            </p>
+          ) : null}
         </div>
         <GhostButton
           className="min-h-8 rounded-full px-2.5 text-[13px]"
@@ -1053,12 +1102,14 @@ function SupportKnowledgeLinkCard({
 function SupportKnowledgePickerCard({
   article,
   disabled,
+  onCopyPublicLink,
   onLinkInternal,
   onNeedsUpdate,
   onSendToCustomer,
 }: {
   article: SupportKnowledgeArticlePickerItem;
   disabled: boolean;
+  onCopyPublicLink: (publicArticlePath: string) => void;
   onLinkInternal: (articleId: Uuid) => void;
   onNeedsUpdate: (articleId: Uuid) => void;
   onSendToCustomer: (articleId: Uuid) => void;
@@ -1084,9 +1135,9 @@ function SupportKnowledgePickerCard({
 
         <div className="space-y-1.5">
           <p className="text-[11px] leading-5 text-[color:var(--color-muted)]">
-            {article.isCustomerSendAllowed
+            {article.isCustomerSendAllowed && article.publicArticlePath
               ? 'Este artigo pode ser usado como link publico ao cliente.'
-              : 'Este artigo fica restrito ao uso interno do time.'}
+              : 'Link publico indisponivel. Este artigo segue apenas para uso interno no estado atual.'}
           </p>
           <div className="flex flex-wrap gap-1.5">
             <GhostButton
@@ -1097,7 +1148,7 @@ function SupportKnowledgePickerCard({
             >
               Referencia interna
             </GhostButton>
-            {article.isCustomerSendAllowed ? (
+            {article.isCustomerSendAllowed && article.publicArticlePath ? (
               <AppButton
                 className="min-h-9 px-3"
                 disabled={disabled}
@@ -1106,6 +1157,26 @@ function SupportKnowledgePickerCard({
               >
                 Marcar como link ao cliente
               </AppButton>
+            ) : null}
+            {article.publicArticlePath ? (
+              <>
+                <a
+                  className="inline-flex min-h-9 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-white px-2.5 text-[13px] font-medium text-[color:var(--color-ink)] transition hover:border-[color:var(--color-brand-blue)]/35 hover:text-[color:var(--color-brand-blue)]"
+                  href={article.publicArticlePath}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  Abrir artigo
+                </a>
+                <GhostButton
+                  className="min-h-9 px-2.5 text-[13px]"
+                  disabled={disabled}
+                  onClick={() => onCopyPublicLink(article.publicArticlePath!)}
+                  type="button"
+                >
+                  Copiar link
+                </GhostButton>
+              </>
             ) : null}
             <GhostButton
               className="min-h-9 px-2.5 text-[13px]"
@@ -1128,6 +1199,7 @@ function SupportKnowledgePanel({
   loading,
   noteDraft,
   onArchive,
+  onCopyPublicLink,
   onLinkInternal,
   onMarkGap,
   onNeedsUpdate,
@@ -1143,6 +1215,7 @@ function SupportKnowledgePanel({
   loading: boolean;
   noteDraft: string;
   onArchive: (linkId: Uuid) => void;
+  onCopyPublicLink: (publicArticlePath: string) => void;
   onLinkInternal: (articleId: Uuid) => void;
   onMarkGap: () => void;
   onNeedsUpdate: (articleId: Uuid) => void;
@@ -1213,6 +1286,7 @@ function SupportKnowledgePanel({
                       disabled={loading}
                       key={link.ticketKnowledgeLinkId}
                       link={link}
+                      onCopyPublicLink={onCopyPublicLink}
                       onArchive={onArchive}
                     />
                   ))}
@@ -1281,6 +1355,7 @@ function SupportKnowledgePanel({
                     article={article}
                     disabled={loading}
                     key={article.articleId}
+                    onCopyPublicLink={onCopyPublicLink}
                     onLinkInternal={onLinkInternal}
                     onNeedsUpdate={onNeedsUpdate}
                     onSendToCustomer={onSendToCustomer}
@@ -1304,18 +1379,26 @@ function SupportKnowledgePanel({
 function SupportHelpPanel({
   articles,
   links,
+  onCopyPublicLink,
 }: {
   articles: SupportKnowledgeArticlePickerItem[];
   links: SupportTicketKnowledgeLink[];
+  onCopyPublicLink: (publicArticlePath: string) => void;
 }) {
-  const publicArticles = articles.filter((article) => article.isCustomerSendAllowed).slice(0, 3);
+  const publicArticles = articles
+    .filter((article) => article.isCustomerSendAllowed && article.publicArticlePath)
+    .slice(0, 3);
   const publicLinks = links
     .filter(
       (link) =>
-        link.linkType === 'sent_to_customer' ||
-        (link.articleVisibility != null && link.articleVisibility !== 'internal'),
+        link.publicArticlePath &&
+        (link.linkType === 'sent_to_customer' || link.isCustomerSendAllowed),
     )
     .slice(0, 3);
+  const helpCenterBasePath =
+    extractPublicArticleBasePath(publicArticles[0]?.publicArticlePath) ??
+    extractPublicArticleBasePath(publicLinks[0]?.publicArticlePath) ??
+    '/help/genius';
 
   return (
     <section className="space-y-3">
@@ -1339,7 +1422,7 @@ function SupportHelpPanel({
             </h4>
             <Link
               className="text-[12px] font-semibold text-[color:var(--color-brand-blue)]"
-              to="/help/genius"
+              to={helpCenterBasePath}
             >
               Abrir central
             </Link>
@@ -1368,6 +1451,23 @@ function SupportHelpPanel({
                   <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-[color:var(--color-muted)]">
                     {article.articleSummary?.trim() || 'Resumo ainda nao informado para este artigo.'}
                   </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <a
+                      className="inline-flex min-h-8 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-white px-2.5 text-[12px] font-medium text-[color:var(--color-ink)] transition hover:border-[color:var(--color-brand-blue)]/35 hover:text-[color:var(--color-brand-blue)]"
+                      href={article.publicArticlePath!}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      Abrir artigo
+                    </a>
+                    <GhostButton
+                      className="min-h-8 rounded-full px-2.5 text-[12px]"
+                      onClick={() => onCopyPublicLink(article.publicArticlePath!)}
+                      type="button"
+                    >
+                      Copiar link
+                    </GhostButton>
+                  </div>
                 </article>
               ))}
             </div>
@@ -1403,6 +1503,23 @@ function SupportHelpPanel({
                   <p className="mt-1 text-[11px] leading-5 text-[color:var(--color-muted)]">
                     Vinculado em {formatDateTime(link.createdAt)}
                   </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <a
+                      className="inline-flex min-h-8 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-2.5 text-[12px] font-medium text-[color:var(--color-ink)] transition hover:border-[color:var(--color-brand-blue)]/35 hover:text-[color:var(--color-brand-blue)]"
+                      href={link.publicArticlePath!}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      Abrir artigo
+                    </a>
+                    <GhostButton
+                      className="min-h-8 rounded-full px-2.5 text-[12px]"
+                      onClick={() => onCopyPublicLink(link.publicArticlePath!)}
+                      type="button"
+                    >
+                      Copiar link
+                    </GhostButton>
+                  </div>
                 </div>
               ))}
             </div>
@@ -3017,6 +3134,23 @@ function SupportWorkspaceView({
     setDetailNoticeTone('critical');
   }
 
+  async function handleCopyPublicKnowledgeLink(publicArticlePath: string) {
+    try {
+      if (
+        typeof navigator === 'undefined' ||
+        !navigator.clipboard ||
+        typeof navigator.clipboard.writeText !== 'function'
+      ) {
+        throw new Error('clipboard unavailable');
+      }
+
+      await navigator.clipboard.writeText(buildAbsoluteAppUrl(publicArticlePath));
+      applySuccess('Link publico copiado com sucesso.');
+    } catch {
+      applyFailure('Nao foi possivel copiar o link publico agora.');
+    }
+  }
+
   async function runAssignment(targetUserId: string | null) {
     if (!ticketDetail) {
       return;
@@ -3425,7 +3559,9 @@ function SupportWorkspaceView({
     formatAssignedAgentSummary(currentAssignedAgent) ??
     ticketDetail?.assignedToFullName ??
     'Sem responsavel definido';
-  const publicKnowledgeSuggestions = filteredKnowledgeArticles.filter((article) => article.isCustomerSendAllowed);
+  const publicKnowledgeSuggestions = filteredKnowledgeArticles.filter(
+    (article) => article.isCustomerSendAllowed && article.publicArticlePath,
+  );
   const knowledgePreviewLinks = knowledgeLinks.slice(0, 2);
 
   function openConversationSurface() {
@@ -3867,6 +4003,9 @@ function SupportWorkspaceView({
                       message={knowledgeMessage}
                       noteDraft={knowledgeNoteDraft}
                       onArchive={(linkId) => void handleArchiveKnowledgeLink(linkId)}
+                      onCopyPublicLink={(publicArticlePath) =>
+                        void handleCopyPublicKnowledgeLink(publicArticlePath)
+                      }
                       onLinkInternal={(articleId) =>
                         void handleLinkKnowledgeArticle(articleId, 'reference_internal')
                       }
@@ -3881,7 +4020,13 @@ function SupportWorkspaceView({
                       search={knowledgeSearch}
                     />
                   ) : ticketToolbarTab === 'help' ? (
-                    <SupportHelpPanel articles={filteredKnowledgeArticles} links={knowledgeLinks} />
+                    <SupportHelpPanel
+                      articles={filteredKnowledgeArticles}
+                      links={knowledgeLinks}
+                      onCopyPublicLink={(publicArticlePath) =>
+                        void handleCopyPublicKnowledgeLink(publicArticlePath)
+                      }
+                    />
                   ) : (
                     <SupportMoreActionsPanel
                       canClose={ticketDetail.canClose}

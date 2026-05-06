@@ -360,14 +360,6 @@ function noticeTone(message: string) {
   return /sucesso|concluida/i.test(message) ? 'positive' : 'critical';
 }
 
-function buildPublicPreviewHref(article: AdminKnowledgeArticleDetailV2Row) {
-  if (article.status !== 'published' || article.visibility !== 'public') {
-    return null;
-  }
-
-  return `/help/${article.knowledge_space_slug}/articles/${article.slug}`;
-}
-
 function buildSourceHashCounts(articles: AdminKnowledgeArticleListItemV2Row[]) {
   const counts = new Map<string, number>();
 
@@ -678,8 +670,16 @@ export function KnowledgePage() {
     articleFormCategory?.visibility !== 'public';
   const publicPreviewHref =
     articleDetail && !articleHasPublicCategoryMismatch
-      ? buildPublicPreviewHref(articleDetail)
+      ? articleDetail.public_article_path
       : null;
+  const publicPreviewMessage =
+    articleHasPublicCategoryMismatch
+      ? 'Indisponivel enquanto a categoria do artigo nao estiver publica.'
+      : articleDetail?.visibility !== 'public'
+        ? 'Indisponivel enquanto o artigo permanecer interno.'
+        : articleDetail?.status !== 'published'
+          ? 'Indisponivel enquanto o artigo nao estiver publicado.'
+          : 'Indisponivel neste ambiente.';
   const editorialChecklist = articleDetail
     ? buildEditorialChecklist(articleDetail, selectedArticleDuplicateCount)
     : null;
@@ -2161,7 +2161,11 @@ export function KnowledgePage() {
                           >
                             Abrir artigo publico
                           </a>
-                        ) : null}
+                        ) : (
+                          <span className="text-[12px] leading-5 text-[color:var(--color-muted)]">
+                            {publicPreviewMessage}
+                          </span>
+                        )}
                       </div>
                       <div className="max-h-72 overflow-y-auto rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
                         <div className="whitespace-pre-wrap text-sm leading-6 text-[color:var(--color-ink)]">

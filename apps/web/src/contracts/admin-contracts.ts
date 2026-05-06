@@ -396,6 +396,7 @@ export interface AdminKnowledgeArticleListItemV2Row {
   summary: string | null;
   source_path: string | null;
   source_hash: string | null;
+  public_article_path: string | null;
   current_revision_number: number;
   revision_count: number;
   latest_revision_at: IsoTimestamp | null;
@@ -461,6 +462,7 @@ export interface AdminKnowledgeArticleDetailV2Row {
   body_md: string;
   source_path: string | null;
   source_hash: string | null;
+  public_article_path: string | null;
   current_revision_number: number;
   submitted_for_review_at: IsoTimestamp | null;
   published_at: IsoTimestamp | null;

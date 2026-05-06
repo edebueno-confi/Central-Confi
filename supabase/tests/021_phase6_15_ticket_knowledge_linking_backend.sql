@@ -409,6 +409,34 @@ reset role;
 reset request.jwt.claim.role;
 reset request.jwt.claim.sub;
 
+update public.knowledge_spaces
+set status = 'active'
+where slug = 'genius';
+
+update public.knowledge_categories
+set knowledge_space_id = (select id from public.knowledge_spaces where slug = 'genius')
+where slug in (
+  'publico-tenant-a',
+  'interno-tenant-a',
+  'restrito-tenant-a',
+  'interno-tenant-b'
+)
+  and knowledge_space_id is null;
+
+update public.knowledge_articles
+set knowledge_space_id = (select id from public.knowledge_spaces where slug = 'genius')
+where slug in (
+  'artigo-publico-publicado',
+  'artigo-interno-publicado',
+  'artigo-restrito-publicado',
+  'artigo-interno-tenant-b'
+)
+  and knowledge_space_id is null;
+
+reset role;
+reset request.jwt.claim.role;
+reset request.jwt.claim.sub;
+
 set local role authenticated;
 set local request.jwt.claim.role = 'authenticated';
 set local request.jwt.claim.sub = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
