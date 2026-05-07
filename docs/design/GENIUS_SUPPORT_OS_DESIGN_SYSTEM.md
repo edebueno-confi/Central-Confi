@@ -1,457 +1,941 @@
-# Genius Support OS Design System
+# Genius Support OS — Design System V3
 
-## 1. Propósito do documento
+## 1. Finalidade
 
-Este documento é o contrato canônico de design visual do **Genius Support OS**.
+Este documento é o contrato visual canônico do **Genius Support OS** para implementação no projeto via Codex.
 
-Ele deve orientar qualquer refatoração de interface feita por Codex, Lovable, Antigravity ou outro agente de implementação.
+Ele substitui regras visuais antigas quando houver conflito.
 
-As imagens blueprint aprovadas são referências visuais obrigatórias. Este documento define as regras textuais globais de layout, densidade, composição, comportamento e aparência.
+A implementação precisa parecer derivada diretamente dos blueprints aprovados, não apenas inspirada neles.
 
-Regra principal:
-
-> A implementação precisa parecer imediatamente derivada da blueprint aprovada, não apenas “inspirada” por ela.
-
----
-
-## 2. Hierarquia de decisão
-
-Para qualquer refatoração visual, a prioridade é:
-
-1. Blueprint PNG aprovada da tela.
-2. Screen spec da tela.
-3. Este Design System.
-4. Contratos de dados existentes.
-5. Implementação antiga.
-
-A implementação antiga nunca deve justificar layout genérico, espaçamento excessivo, dupla rolagem, componentes falsos ou comportamento visual inferior.
-
-Quando o screen spec contradizer a blueprint, o agente deve seguir a blueprint e registrar a divergência no relatório final.
+Este documento define:
+- identidade visual;
+- paleta light e dark;
+- viewport canônica;
+- arquitetura de scroll;
+- grid e proporções;
+- tipografia;
+- espaçamento;
+- comportamento de telas operacionais;
+- regras de UX e copy;
+- contratos visuais por domínio/tela.
 
 ---
 
-## 3. Princípios de produto
+## 2. Princípio absoluto
 
-O Genius Support OS é uma plataforma interna de operação CX B2B técnica para SaaS de logística reversa.
+O Genius Support OS é um cockpit operacional B2B.
 
 Não é:
-- SAC B2C.
-- Dashboard genérico.
-- Landing page.
-- CRM visual genérico.
-- Central de cards administrativos reaproveitados.
+- dashboard genérico;
+- CRM genérico;
+- tela CRUD empilhada;
+- landing page;
+- SAC B2C;
+- coleção de cards administrativos.
 
-É uma ferramenta operacional para:
-- suporte técnico;
-- CS;
-- tickets;
-- base de conhecimento;
-- governança;
-- contexto de clientes B2B;
-- triagem e priorização;
-- operação interna entre clientes, suporte e desenvolvimento.
+É:
+- estação de trabalho para suporte técnico;
+- central de operação de tickets;
+- cockpit de clientes B2B;
+- gestão editorial de base de conhecimento;
+- control plane administrativo;
+- base futura para Omni Work, chat interno e chat com cliente.
 
-Cada tela deve ser desenhada a partir da tarefa real do usuário.
-
-Exemplos:
-- Tela de ticket deve parecer estação de atendimento.
-- Tela de fila deve parecer bancada de triagem.
-- Tela de cliente deve parecer cockpit de conta B2B.
-- Tela de admin deve parecer control plane operacional.
-- Central pública deve parecer help center confiável e aprovado.
+Cada tela deve comunicar a tarefa pelo layout, não por textos explicativos longos.
 
 ---
 
-## 4. Linguagem visual geral
+## 3. Hierarquia de decisão
 
-### 4.1 Personalidade visual
+Para qualquer implementação visual, seguir esta ordem:
 
-A interface deve transmitir:
-- produto SaaS enterprise;
-- operação técnica;
-- clareza;
-- confiança;
-- densidade útil;
-- baixo ruído;
-- acabamento premium;
-- uso diário por equipe interna.
+1. Blueprint PNG aprovado da tela.
+2. Screen spec da tela em `docs/design/screens/*.md`.
+3. Este Design System.
+4. Contratos reais de dados, views, RPCs e permissões.
+5. Implementação atual.
 
-### 4.2 Cores
+A implementação antiga nunca é argumento para manter:
+- layout genérico;
+- truncamento ruim;
+- scroll global indevido;
+- componente inflado;
+- componente falso;
+- texto técnico no front;
+- baixa fidelidade ao blueprint.
 
-Base visual:
-- fundo geral claro, entre branco, cinza frio e azul muito suave;
-- sidebar navy profunda;
-- azul vivo para ações primárias;
-- branco para superfícies principais;
-- cinza azulado para bordas, divisores e textos secundários;
-- amarelo suave para estados de espera, atenção e nota interna;
-- verde suave para estados saudáveis/ativos;
-- vermelho suave para risco, erro ou criticidade;
-- roxo/pink apenas como acento controlado.
+Se a implementação atual divergir do blueprint, corrigir para o blueprint.
 
-Evitar:
-- cores saturadas em excesso;
-- múltiplas cores competindo;
-- fundos escuros fora da sidebar, exceto cards de preview destacados;
-- gradientes chamativos sem função.
+---
 
-### 4.3 Tipografia
+## 4. Viewport canônica
 
-A tipografia deve ser moderna, limpa e funcional.
+### 4.1 Design principal
+
+A interface deve ser desenhada primeiro para:
+
+```text
+1920x1080
+```
+
+### 4.2 Validação secundária
+
+Validar também em:
+
+```text
+1440x900
+```
+
+### 4.3 Breakpoint mínimo desktop operacional
+
+```text
+1366px
+```
+
+### 4.4 Proibições
+
+Não usar `1024px` ou `1280px` como base principal de composição.
+
+Não comprimir:
+- rails;
+- tabelas;
+- filtros;
+- lista central;
+- cards de detalhe;
+- sidebars.
+
+Se a tela parece boa apenas em 1280px, mas apertada ou pobre em 1920px, está errada.
+
+Em Full HD, a tela deve parecer ampla, profissional e operacional.
+
+---
+
+## 5. Arquitetura de scroll
+
+### 5.1 Regra global para cockpits operacionais
+
+Em telas operacionais com sidebar, grid, lista, thread ou rail:
+
+- `body/page` não deve rolar verticalmente;
+- sidebar fica fixa;
+- header/topbar fica estável;
+- rail direito fica fixo quando existir;
+- lista/tabela central rola internamente;
+- thread/conversa rola internamente;
+- rail direito rola internamente somente se exceder a altura;
+- filtros rolam internamente apenas quando inevitável;
+- composer fica fixo no rodapé da coluna de conversa;
+- não pode haver scroll horizontal;
+- não pode haver dupla rolagem descontrolada.
+
+### 5.2 Exceções
+
+Páginas públicas/documentais podem rolar naturalmente:
+- `/help/genius`
+- `/help/genius/articles/:slug`
+- `/login`
+- `/access-denied`
+
+Mesmo nessas páginas:
+- evitar overflow horizontal;
+- preservar hierarquia;
+- não quebrar visual.
+
+### 5.3 Ordem de correção quando algo não cabe
+
+1. Remover texto desnecessário.
+2. Reduzir altura de cards.
+3. Reduzir padding e gaps.
+4. Reduzir fonte secundária.
+5. Mover conteúdo secundário para tabs.
+6. Permitir scroll interno no componente correto.
+7. Nunca recorrer a scroll global da página como primeira solução.
+
+---
+
+## 6. Paleta oficial
+
+### 6.1 Brand core
+
+| Uso | Hex |
+|---|---|
+| Navy principal | `#061B54` |
+| Navy profundo | `#04133D` |
+| Azul principal | `#2F6BFF` |
+| Azul hover/ativo | `#1F58E7` |
+| Rosa principal | `#F04AAE` |
+| Rosa hover | `#D93898` |
+
+### 6.2 Apoio
+
+| Uso | Hex |
+|---|---|
+| Azul suave | `#EAF2FF` |
+| Azul badge | `#D9E9FF` |
+| Rosa suave | `#FFE6F3` |
+| Rosa badge | `#FFD4EA` |
+
+### 6.3 Interface light
+
+| Uso | Hex |
+|---|---|
+| Fundo da aplicação | `#F4F7FC` |
+| Superfície/card | `#FFFFFF` |
+| Borda padrão | `#DCE4F2` |
+| Divisor suave | `#E8EEF7` |
+| Texto principal | `#162443` |
+| Texto secundário | `#6B7892` |
+| Texto fraco | `#98A3B8` |
+| Texto sobre navy | `#FFFFFF` |
+
+### 6.4 Estados
+
+| Uso | Hex |
+|---|---|
+| Success | `#22C55E` |
+| Success soft | `#EAF9F0` |
+| Warning | `#F5B83D` |
+| Warning soft | `#FFF4D9` |
+| Danger | `#EF4444` |
+| Danger soft | `#FDEBEC` |
+| Nota interna | `#FFF4D9` |
+
+---
+
+## 7. Dark mode
+
+Dark mode é tema secundário suportado.
+
+Não é nova marca. Não é modo preto puro. Não deve trocar a identidade visual.
+
+### 7.1 Paleta dark
+
+| Uso | Hex |
+|---|---|
+| Fundo dark | `#071126` |
+| Fundo elevado | `#0B1733` |
+| Card dark | `#0F1D3A` |
+| Card soft dark | `#132445` |
+| Card forte dark | `#172C52` |
+| Borda dark | `#263A63` |
+| Divisor dark | `#1E3157` |
+| Sidebar dark | `#04133D` |
+| Sidebar deep dark | `#020A22` |
+| Azul dark | `#5B86FF` |
+| Azul strong dark | `#2F6BFF` |
+| Rosa dark | `#FF6CBE` |
+| Rosa strong dark | `#F04AAE` |
+| Texto principal dark | `#F5F8FF` |
+| Texto secundário dark | `#B7C3DD` |
+| Texto fraco dark | `#7F8EAD` |
+| Success dark | `#4ADE80` |
+| Success soft dark | `#0F2F23` |
+| Warning dark | `#FACC15` |
+| Warning soft dark | `#352A0D` |
+| Danger dark | `#F87171` |
+| Danger soft dark | `#3B1418` |
+| Nota interna dark | `#3A2D10` |
+| Borda nota interna dark | `#6B5215` |
+
+### 7.2 Regras dark
+
+- Não usar preto puro como fundo principal.
+- Usar navy e azul escuro como base.
+- Cards precisam se destacar do fundo.
+- Texto precisa manter contraste alto.
+- Rosa continua sendo rosa, não roxo.
+- Layout, spacing e hierarquia são os mesmos do light mode.
+- Não criar design diferente para dark mode.
+
+### 7.3 Toggle de tema
+
+Se existir toggle:
+- Label: `Tema`
+- Opções: `Claro`, `Escuro`, `Sistema`
+- Não expor labels técnicos como `light`, `dark`, `system`.
+
+---
+
+## 8. Uso de cores
+
+### 8.1 Sidebar
+
+- Fundo: navy principal ou profundo.
+- Item ativo: azul principal.
+- Texto e ícones: branco/azul muito claro.
+- Badge: pequeno, com fundo azul ou rosa conforme contexto.
+- Não usar roxo.
+- Não usar preto puro.
+
+### 8.2 CTAs
+
+- CTA principal: azul principal ou navy.
+- CTA secundário: branco com borda suave.
+- Ações destrutivas: vermelho/danger.
+- Botões desabilitados precisam ter contraste legível.
+
+### 8.3 Rosa Genius
+
+Usar rosa para:
+- acentos de marca;
+- detalhes editoriais;
+- badges especiais;
+- destaques pequenos;
+- indicadores não críticos.
+
+Não substituir por roxo/lilás.
+
+---
+
+## 9. Tipografia
+
+### 9.1 Escala operacional
+
+| Elemento | Tamanho | Peso |
+|---|---:|---:|
+| Título de página | 24–32px | 700 |
+| Título de card forte | 17–20px | 700 |
+| Título de seção | 15–17px | 650–700 |
+| Texto de lista/tabela | 13–14px | 500 |
+| Texto de mensagem/chat | 13–14px | 500 |
+| Metadados | 11–13px | 500 |
+| Labels uppercase | 10–11px | 600 |
+| Pills/badges | 10–12px | 600 |
+| Botões | 13–14px | 600 |
+
+### 9.2 Regras
+
+- Títulos fortes, mas compactos.
+- Não usar fonte pesada em tudo.
+- Labels em uppercase apenas para metadados curtos.
+- Evitar parágrafos longos em telas operacionais.
+- Reduzir tipografia secundária antes de criar scroll global.
+- A tela deve parecer “zoom out Full HD”, não inflada.
+
+---
+
+## 10. Espaçamento e dimensões
+
+### 10.1 Dimensões base
+
+| Elemento | Valor recomendado |
+|---|---:|
+| Padding da página | 24–28px |
+| Gap entre colunas | 16–20px |
+| Gap compacto | 12–16px |
+| Padding de card | 16px |
+| Padding denso | 12–14px |
+| Radius de card | 18–24px |
+| Altura de linha de tabela | 56–72px |
+| Altura de KPI compacto | 86–96px |
+| Sidebar | 240–260px |
+| Coluna de filtros | 260–300px |
+| Rail direito | 360–440px |
+
+### 10.2 Regras
+
+- Cards não podem colar texto nas bordas.
+- Rails não podem ficar espremidos.
+- Lista central deve dominar em telas de operação.
+- Se houver truncamento feio, redistribuir colunas.
+- Evitar cards com 24px+ de padding em telas densas, salvo blueprint.
+
+---
+
+## 11. Shells
+
+### 11.1 Support Workspace
+
+Usado em:
+- `/support/queue`
+- `/support/tickets/:ticketId`
+- `/support/customers`
+- `/support/customers/:tenantId`
+- futuras telas de chat cliente e Omni Work
+
+Estrutura:
+- sidebar fixa navy;
+- área principal full height;
+- grid operacional;
+- rails contextuais;
+- tabs quando houver contexto.
+
+Itens:
+- Fila
+- Tickets
+- Clientes
+- Conhecimento
+- Admin
 
 Regras:
-- títulos fortes, mas compactos;
-- labels em caixa alta apenas para pequenos marcadores, eyebrows e metadados;
-- textos secundários em cinza azulado;
-- evitar blocos longos em telas operacionais;
-- preferir microcopy objetiva;
-- não usar copy técnica de implementação em telas de usuário.
+- logout no card/menu de usuário;
+- não usar faixa branca superior apenas para logout;
+- não exibir `DEVELOPMENT` ou `AGENT WORKSPACE` em UI final;
+- sidebar sempre integrada ao layout.
 
-Escala recomendada para telas operacionais:
-- page title: 20px a 24px, peso 650 a 700;
-- section title: 14px a 16px, peso 600;
-- labels/metadados: 10px a 12px, peso 600, letter spacing leve;
-- body: 12px a 14px;
-- pills: 10px a 12px;
-- botões compactos: 12px a 14px.
+### 11.2 Admin Console
 
-Proibido em interface de usuário comum:
-- Supabase Auth;
-- backend;
-- views;
-- RPCs;
-- schema;
-- role global;
-- contratos internos;
-- environment;
-- DEVELOPMENT;
-- dev;
-- platform_admin cru;
-- termos técnicos que exponham arquitetura.
+Usado em:
+- `/admin/tenants`
+- `/admin/knowledge`
+- `/admin/access`
+- `/admin/system`
 
-Exceção:
-- telas explicitamente técnicas para platform_admin podem mostrar detalhes operacionais técnicos quando forem necessários para diagnóstico, nunca como decoração.
+Estrutura:
+- sidebar fixa navy;
+- label Admin Console;
+- header compacto;
+- grid preferencial de 3 colunas;
+- lista/feed central dominante;
+- rail direito forte.
+
+Itens:
+- Clientes B2B ou Tenants
+- Knowledge ou Conhecimento
+- Acesso
+- Sistema
+
+Regras:
+- não usar navegação horizontal improvisada;
+- não parecer CRUD simples;
+- usar control plane visual.
 
 ---
 
-## 5. Regras de densidade
+## 12. Componentes
 
-A UI deve ter densidade operacional.
+### 12.1 Cards
+
+Devem ter:
+- fundo branco/light ou card dark;
+- borda sutil;
+- radius 18–24px;
+- sombra leve;
+- padding 12–16px;
+- título claro;
+- conteúdo justificado pelo espaço ocupado.
 
 Não usar:
-- cards gigantes sem necessidade;
-- headers altos demais;
-- espaços vazios extensos;
-- listas com espaçamento exagerado;
-- composer separado como bloco inflado;
-- painel lateral verboso;
-- duplicação de títulos e headers;
-- dupla rolagem;
-- toolbars decorativas;
-- componentes sem função.
+- cards enormes sem função;
+- cards aninhados excessivos;
+- cards decorativos sem dado/ação.
 
-Usar:
-- headers compactos;
-- cards com padding moderado;
-- listas densas;
-- metadados em linhas curtas;
-- painéis laterais contextuais;
-- abas para troca de contexto;
-- hierarquia clara sem inflar a tela.
+### 12.2 Pills
 
-Referência de densidade:
-- ferramenta de trabalho usada o dia todo;
-- visual limpo, mas não vazio;
-- cada bloco precisa justificar o espaço ocupado.
-
----
-
-## 6. Regras de viewport e scroll
-
-### 6.1 Regra geral
-
-Em telas operacionais de atendimento e administração, a viewport desktop deve ser tratada como cockpit.
-
-Viewport canônica de desenho:
-- Full HD: `1920x1080`
-
-Faixa aceitável de validação desktop:
-- `1440x900` até `1920x1080`
-
-Breakpoint mínimo para desktop operacional:
-- `1366px`
-
-Não otimizar a composição principal para `1024px` ou `1280px`.
-
-A tela deve usar a largura útil real do desktop wide.
-
-Evitar:
-- container central estreito demais;
-- margem lateral externa grande;
-- header que ocupa largura indevida;
-- scroll da página combinado com scroll interno.
-
-Em cockpits operacionais:
-- `body/page` não deve rolar verticalmente;
-- sidebar deve permanecer fixa;
-- header/topbar deve permanecer estável;
-- rail direito deve permanecer fixo quando existir;
-- a área central deve ocupar a altura útil da viewport.
-
-### 6.2 Scroll
-
-É proibido:
-- dupla rolagem;
-- rolagem vertical da página na visão principal de atendimento;
-- scrollbar interna precoce em textarea;
-- scroll horizontal indevido.
-
-Se conteúdo real exceder a viewport:
-1. compactar tipografia;
-2. reduzir padding e gaps;
-3. mover conteúdo secundário para tabs;
-4. manter um único scroll controlado apenas no container correto.
-
-Ordem correta de rolagem em telas operacionais:
-- lista/tabela central: `overflow-y-auto`;
-- thread/conversa: `overflow-y-auto`;
-- rail direito: `overflow-y-auto`;
-- filtros: `overflow-y-auto` apenas quando necessário;
-- composer: fixo, nunca empurrando a página.
-
-Exceções:
-- páginas públicas;
-- artigos/documentação;
-- login e estados institucionais.
-
-Nessas superfícies, a página pode rolar normalmente se isso fizer parte da leitura.
-
----
-
-## 7. Layout base do Support Workspace
-
-### 7.1 Estrutura geral
-
-O Support Workspace usa:
-- sidebar fixa à esquerda;
-- fundo claro no workspace;
-- conteúdo operacional em grid;
-- painéis contextuais à direita;
-- tabs quando houver troca de contexto.
-
-### 7.2 Sidebar do Support Workspace
-
-A sidebar deve ser navy profunda, refinada, compacta e encostada ao canto esquerdo da viewport.
-
-Itens canônicos:
-- Fila;
-- Tickets;
-- Clientes;
-- Knowledge;
-- Admin.
-
-Regras:
-- item ativo com fundo azul vivo integrado ao menu, sem pílula inflada;
-- ícones simples e consistentes;
-- logo no topo;
-- card/menu de usuário no rodapé;
-- botão de colapso translúcido, integrado à sidebar, com ícone legível;
-- badge pequeno e alinhado;
-- densidade vertical compacta;
-- não parecer menu improvisado;
-- não renderizar texto solto durante loading.
-
-### 7.3 Topbar do Support Workspace
-
-A topbar técnica com badges como `DEVELOPMENT` ou `AGENT WORKSPACE` não deve aparecer no Ticket Workspace.
-
-O botão `Encerrar sessão` deve ficar no card/menu do usuário na base da sidebar, não em uma faixa branca superior.
-
-Evitar:
-- múltiplas barras de topo;
-- headers redundantes;
-- card branco superior com apenas uma ação de sessão;
-- botões de ação fora de contexto.
-
----
-
-## 8. Componentes canônicos
-
-### 8.1 Cards
-
-Cards devem ter:
-- fundo branco;
-- borda sutil;
-- raio moderado;
-- sombra leve;
-- padding controlado.
-
-Referência:
-- padding interno padrão: 16px;
-- gap entre cards: 12px a 16px em telas de alta densidade;
-- evitar 24px+ em ticket workspace, salvo se a blueprint exigir.
-
-### 8.2 Rails direitos
-
-Rails direitos devem ser:
-- contextuais;
-- densos;
-- úteis para decisão;
-- organizados em cards empilhados;
-- suficientemente largos para evitar quebras ruins.
-
-Para Ticket Workspace:
-- largura recomendada: 320px a 360px em desktop wide;
-- não comprimir tanto a ponto de quebrar labels e botões;
-- não usar accordions fechados como estrutura principal.
-
-### 8.3 Botões
-
-Regras:
-- texto sempre legível;
-- não usar botão desabilitado com contraste ilegível;
-- não criar botões fora do contrato da tela;
-- botões sem funcionalidade real devem ser removidos.
-
----
-
-## 9. Ticket Workspace
-
-A tela de ticket é uma estação de atendimento.
-
-Ela deve ser centrada em thread/chat profissional e caber como cockpit operacional.
-
-### 9.1 Estrutura obrigatória
-
-- sidebar navy encostada à esquerda;
-- sem topbar técnica;
-- header compacto do ticket;
-- tabs: Conversar, Conhecimento, Central de ajuda, Mais ações;
-- thread central;
-- composer integrado;
-- rail direito contextual.
-
-### 9.2 Grid de ticket
-
-Composição desktop:
-- sidebar fixa à esquerda;
-- coluna central de conversa;
-- rail direito com 320px a 360px;
-- gaps entre áreas: 12px a 16px;
-- sem margem externa ampla.
-
-A coluna central deve ceder largura suficiente para o rail direito não quebrar.
-
-### 9.3 Header do ticket
-
-Deve ser compacto e alinhado à coluna central, não ocupar largura que pertença ao rail direito.
-
-Conteúdo:
+Usar para:
 - status;
 - prioridade;
-- short id;
+- categoria;
+- visibilidade;
+- saúde;
+- porte;
+- revisão;
+- publicação.
+
+Regras:
+- pequenas;
+- legíveis;
+- sem saturação excessiva;
+- sem truncar informação crítica.
+
+### 12.3 Botões
+
+- Primário: azul/navy.
+- Secundário: branco/transparente com borda.
+- Destrutivo: danger.
+- Sem função real: remover.
+- Botões disabled precisam parecer intencionais.
+
+### 12.4 Tabelas/listas
+
+Regras:
+- lista central domina a tela;
+- linhas densas;
+- título legível;
+- subtexto compacto;
+- status/categoria/autor visíveis;
+- linha selecionada destacada;
+- sem truncamento feio de campos essenciais.
+
+### 12.5 Rails direitos
+
+Devem conter:
+- resumo;
+- metadados;
+- ações;
+- detalhes;
+- contexto útil.
+
+Largura:
+- 360–440px em Full HD.
+
+Não usar:
+- rail fraco/decorativo;
+- accordions fechados como estrutura principal;
+- rail comprimido;
+- ações escondidas demais.
+
+### 12.6 Tabs
+
+Usar quando houver troca real de contexto.
+
+Regras:
+- tab ativa com underline ou estado azul;
+- não usar tabs decorativas;
+- se funcionalidade ainda não existe, mostrar estado vazio útil.
+
+---
+
+## 13. Regras de copy
+
+Idioma:
+- Português brasileiro correto.
+- Acentuação obrigatória.
+- Copy curta e operacional.
+
+Proibido na UI comum:
+- Supabase
+- RPC
+- schema
+- views
+- backend
+- RLS
+- fixture
+- seed
+- contract/contrato técnico
+- role global
+- platform_admin cru
+- environment
+- DEVELOPMENT
+- stack trace
+
+A tela deve dizer apenas o que o usuário precisa saber no contexto.
+
+Exemplos bons:
+- Entrar
+- Fila operacional
+- Clientes
+- Conhecimento
+- Acesso
+- Sistema
+- Enviar resposta
+- Salvar nota interna
+- Iniciar revisão
+- Publicar atualização
+- Ver cliente
+
+---
+
+## 14. Estados
+
+### 14.1 Loading
+
+- Loading deve acontecer dentro do shell correto.
+- Nunca tela branca solta.
+- Nunca texto bruto.
+- Usar skeleton/scaffold quando possível.
+
+### 14.2 Empty state
+
+- Curto.
+- Útil.
+- Dentro do card/seção correspondente.
+- Sem parágrafo longo.
+
+### 14.3 Erro
+
+Erro técnico cru não aparece no front.
+
+Exemplo proibido:
+`invalid ticket status transition`
+
+Exemplo correto:
+`Não foi possível alterar o status. Verifique a etapa atual do ticket e tente novamente.`
+
+### 14.4 Dados ausentes
+
+Quando campo contratado não tiver valor:
+
+```text
+Indisponível
+```
+
+Não ocultar silenciosamente.
+
+---
+
+## 15. Tela: Ticket Workspace
+
+Rota:
+`/support/tickets/:ticketId`
+
+Objetivo:
+estação de atendimento B2B.
+
+Estrutura:
+- sidebar fixa;
+- sem topbar técnica;
+- header compacto;
+- tabs: Conversar, Conhecimento, Central de ajuda, Mais ações;
+- thread central;
+- composer fixo;
+- rail direito.
+
+Rail direito:
+1. Cliente
+2. Ações do ticket
+3. Conhecimento relacionado
+4. Atividade recente
+
+Composer:
+- Resposta pública / Nota interna;
+- sem seletor duplicado;
+- nota interna com fundo amarelo claro;
+- botão muda para `Enviar resposta` ou `Salvar nota interna`.
+
+Scroll:
+- thread rola internamente;
+- composer fixo;
+- body não rola.
+
+---
+
+## 16. Tela: Support Queue
+
+Rota:
+`/support/queue`
+
+Objetivo:
+bancada de triagem operacional.
+
+Estrutura:
+- sidebar Support;
+- header compacto;
+- coluna esquerda com filtros/triagem;
+- lista central dominante;
+- preview direito.
+
+Lista central:
+- status;
+- prioridade;
 - título;
 - cliente;
-- solicitante;
+- responsável;
+- última atividade.
+
+Preview direito:
+- título;
+- status/prioridade;
+- cliente;
+- contexto;
+- ação principal: Atender ticket;
+- ação secundária: Ver cliente, se houver contrato.
+
+---
+
+## 17. Tela: Clientes / Hub de Clientes
+
+Rotas:
+- `/support/customers`
+- `/support/customers/:tenantId`
+
+Objetivo:
+cockpit de contas B2B e futura base para CS.
+
+Estrutura:
+- tabs: Contas, Contatos, Migrações, Saúde, Carteiras;
+- filtros/segmentação;
+- lista central de contas;
+- rail de preview.
+
+Conceitos futuros:
+- grupo econômico;
+- marcas/contas;
+- carteira CSM;
+- porte do cliente;
+- saúde da conta;
+- migração;
+- contato principal.
+
+Não simular grupo econômico sem contrato real.
+
+---
+
+## 18. Tela: Admin Knowledge
+
+Rota:
+`/admin/knowledge`
+
+Objetivo:
+cockpit editorial da base de conhecimento.
+
+Estrutura:
+- sidebar Admin;
+- header Knowledge;
+- grid 3 colunas:
+  1. filtros editoriais;
+  2. lista dominante de artigos;
+  3. rail editorial.
+
+Lista:
+- título;
+- categoria;
+- autor;
+- data;
+- status.
+
+Rail:
+- título;
+- status;
+- categoria;
+- autor;
+- atualizado em;
+- visibilidade;
+- versão;
+- link público;
+- ações editoriais.
+
+Ações:
+- Iniciar revisão;
+- Editar revisão;
+- Publicar atualização;
+- Descartar revisão;
+- Arquivar.
+
+Se necessário, usar tabs no rail:
+- Prévia
+- Revisão
+- Classificação
+- Checklist
+- Avançado
+
+Não usar accordions fracos como estrutura principal.
+
+---
+
+## 19. Tela: Admin Access
+
+Rota:
+`/admin/access`
+
+Objetivo:
+control plane de usuários, papéis, convites e permissões.
+
+Estrutura:
+- sidebar Admin;
+- header compacto;
+- tabs: Usuários, Papéis, Convites, Permissões;
+- coluna esquerda com filtros;
+- lista central;
+- rail de detalhe.
+
+Lista:
+- usuário/email;
+- papel;
+- cliente/tenant;
+- status;
+- último acesso/criado em.
+
+Rail:
+- detalhe do usuário/convite/papel;
+- ações reais disponíveis;
+- nada de UI falsa.
+
+---
+
+## 20. Tela: Admin System
+
+Rota:
+`/admin/system`
+
+Objetivo:
+observabilidade administrativa.
+
+Estrutura:
+- sidebar Admin;
+- header System;
+- tabs: Saúde, Auditoria, Jobs, Segurança;
+- KPIs compactos;
+- coluna esquerda de monitoramento;
+- feed central dominante;
+- rail de detalhe.
+
+KPIs:
+- Checks verdes;
+- Alertas;
+- Eventos recentes;
+- Falhas.
+
+Feed:
+- tipo;
+- severidade;
+- origem;
+- resumo;
+- data;
+- situação.
+
+Rail:
+- detalhe operacional;
+- contexto;
+- impacto;
+- ação recomendada.
+
+Não parecer dashboard genérico.
+
+---
+
+## 21. Tela: Admin Tenants / Clientes B2B
+
+Rota:
+`/admin/tenants`
+
+Objetivo:
+control plane de clientes B2B da Genius.
+
+Linguagem:
+- preferir Clientes B2B na UI;
+- evitar termo técnico tenant quando não necessário.
+
+Estrutura:
+- sidebar Admin;
+- header compacto;
+- coluna esquerda com filtros/ferramentas;
+- lista central dominante;
+- rail de cliente selecionado.
+
+Lista:
+- cliente/conta;
+- grupo, se houver contrato;
+- status;
+- produto/plano;
 - responsável;
 - última atualização.
 
-Não pode:
-- dominar a página;
-- colar texto sem padding;
-- duplicar pills sem necessidade;
-- virar card de largura total por cima do rail.
+Rail:
+- resumo da conta;
+- contatos;
+- produto/plano;
+- status/saúde;
+- sinais operacionais;
+- ações reais.
 
-### 9.4 Thread
-
-Regras:
-- cliente à esquerda;
-- agente à direita;
-- nota interna com visual próprio;
-- timestamps discretos;
-- bolhas compactas;
-- anexos em pills;
-- sem aparência de lista de cards administrativos;
-- usar altura flexível para preencher o espaço entre header e composer.
-
-### 9.5 Composer
-
-Deve conter:
-- abas ou toggle: Resposta pública / Nota interna;
-- área de texto dominante;
-- botão primário contextual.
-
-Regras:
-- remover seletor duplicado Público/Interno;
-- modo é definido por Resposta pública / Nota interna;
-- botão deve mudar conforme modo:
-  - `Enviar resposta`;
-  - `Salvar nota interna`;
-- textarea ocupa a maior parte do composer;
-- sem scrollbar interna precoce;
-- botões inferiores só podem existir se tiverem funcionalidade real.
-
-Nota interna:
-- fundo amarelo claro no composer/textarea;
-- contraste legível;
-- deve sinalizar claramente conteúdo interno.
-
-### 9.6 Rail direito do ticket
-
-Ordem obrigatória:
-1. Cliente;
-2. Ações do ticket;
-3. Conhecimento relacionado;
-4. Atividade recente.
-
-Card Cliente:
-- informações principais visíveis;
-- CTA: `Ver detalhes do cliente`;
-- não esconder conteúdo principal em accordion.
-
-Card Ações do ticket:
-- responsável;
-- salvar alterações;
-- atribuir/desatribuir;
-- status;
-- salvar andamento.
-
-Proibido:
-- `Abrir ERP`;
-- `Abrir cliente` na toolbar superior;
-- accordions fechados como estrutura principal;
-- rail estreito demais;
-- sobrepor header.
+Grupo econômico:
+- se contrato existir, mostrar;
+- se não existir, exibir Indisponível ou registrar lacuna;
+- não simular por nome/slug.
 
 ---
 
-## 10. Estados de erro
+## 22. Tela: Help Center Público
 
-Erro técnico cru não pode aparecer no front.
+Rotas:
+- `/help/genius`
+- `/help/genius/articles/:slug`
 
-Exemplo proibido:
-`invalid ticket status transition: waiting_customer -> triage`
+Objetivo:
+central pública de conhecimento.
 
-Mostrar mensagem amigável:
-`Não foi possível alterar o status. Verifique a etapa atual do ticket e tente novamente.`
-
-Erros técnicos podem ir para console/log, não para UI de agente.
+Regras:
+- não usar sidebar interna navy;
+- não expor rascunhos;
+- não expor conteúdo interno;
+- não usar termos técnicos;
+- pode rolar como página documental.
 
 ---
 
-## 11. Critérios de aceite visual
+## 23. Futuros domínios
 
-Uma tela só pode ser considerada aprovada se:
-- lembrar imediatamente a blueprint aprovada;
-- respeitar composição e densidade;
-- não parecer adaptação da tela antiga;
-- não tiver texto bruto solto;
-- não tiver scroll horizontal indevido;
-- não tiver dupla rolagem;
-- não expuser termos técnicos internos;
-- passar typecheck/build;
-- tiver screenshot final validável por humano.
+### 23.1 Omni Work interno
 
-Não basta estar mais bonita.
+Objetivo:
+chat interno entre equipes/setores.
 
-Tem que estar correta para a função operacional do domínio.
+Estrutura futura:
+- sidebar Support;
+- coluna de canais;
+- feed central;
+- composer;
+- rail de contexto.
+
+Canais exemplo:
+- suporte-operação;
+- cs-migrações;
+- incidentes;
+- integrações;
+- produto;
+- engenharia.
+
+### 23.2 Chat cliente B2B
+
+Objetivo:
+substituir gradualmente grupos de WhatsApp.
+
+Estrutura futura:
+- inbox à esquerda;
+- conversa central;
+- composer;
+- rail de cliente/tickets/contexto.
+
+### 23.3 CS / carteiras
+
+Objetivo:
+evoluir clientes para operação CS.
+
+Conceitos:
+- carteira por CSM;
+- porte: pequeno, médio, grande;
+- grupo econômico;
+- marcas/contas;
+- saúde da conta;
+- risco;
+- migração.
+
+Não implementar sem auditoria de backend/contratos.
+
+---
+
+## 24. Processo obrigatório para Codex
+
+Antes de implementar qualquer tela:
+
+1. Ler blueprint PNG.
+2. Ler screen spec.
+3. Ler este Design System.
+4. Auditar a tela atual.
+5. Descrever divergências objetivas.
+6. Implementar apenas o escopo.
+7. Gerar screenshots em 1920x1080.
+8. Validar 1440x900 quando solicitado.
+9. Confirmar scroll correto.
+10. Rodar typecheck/build.
+11. Reportar limitações.
+
+Se a tela não parecer derivada do blueprint, não está pronta.
+
+---
+
+## 25. Critérios de aceite
+
+Uma tela só é aprovada se:
+
+- parece derivada diretamente do blueprint;
+- usa a paleta oficial;
+- respeita Full HD;
+- não parece comprimida;
+- não parece dashboard genérico;
+- sidebar é fixa e consistente;
+- rail direito é forte;
+- lista/feed/thread central domina;
+- não há truncamento feio de campos essenciais;
+- não há overflow horizontal;
+- não há scroll global indevido em cockpits;
+- copy está em PT-BR com acentuação;
+- não há termos técnicos internos no front;
+- passa typecheck/build;
+- possui screenshot validável por humano.
+
+Não basta estar “melhor”.
+
+Precisa estar correta para a operação.
