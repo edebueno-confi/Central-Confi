@@ -33,12 +33,12 @@ export function AdminConsoleShell() {
   const [sidebarCollapsed, setSidebarCollapsed] = usePersistedSidebarState();
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#eef4ff_0%,#f7faff_44%,#f2f6fb_100%)] text-[color:var(--color-ink)]">
-      <div className="flex w-full gap-4 px-0 py-0 xl:px-4 xl:py-4">
+    <div className="min-h-dvh bg-[linear-gradient(180deg,#eef4ff_0%,#f7faff_44%,#f2f6fb_100%)] text-[color:var(--color-ink)]">
+      <div className="flex w-full gap-4 px-0 py-0 xl:min-h-dvh xl:px-4 xl:py-4">
         <div className="hidden shrink-0 xl:block">
           <div
             className={cx(
-              'sticky top-4 relative h-[calc(100vh-2rem)] transition-[width] duration-200',
+              'sticky top-4 relative h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] transition-[width] duration-200',
               sidebarCollapsed ? 'w-[88px]' : 'w-[242px]',
             )}
           >

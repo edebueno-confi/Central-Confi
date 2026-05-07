@@ -138,25 +138,25 @@ export function AdminSidebar({
 
       <div
         className={cx(
-          'mt-auto space-y-3 rounded-[22px] border border-white/10 bg-white/8',
-          collapsed ? 'p-3' : 'px-4 py-3.5',
+          'mt-auto space-y-2.5 rounded-[22px] border border-white/10 bg-white/8',
+          collapsed ? 'p-2.5' : 'px-3.5 py-3',
         )}
       >
         <div className={cx('flex items-center gap-3', collapsed && 'justify-center')}>
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(255,255,255,0.95)] text-sm font-semibold text-[color:var(--color-brand-navy)]">
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[rgba(255,255,255,0.95)] text-[0.82rem] font-semibold text-[color:var(--color-brand-navy)]">
             PA
           </span>
           {!collapsed ? (
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-white">Platform Admin</p>
-              <p className="truncate text-xs text-white/62">platform_admin</p>
+              <p className="truncate text-[0.82rem] font-medium text-white">Platform Admin</p>
+              <p className="truncate text-[0.68rem] text-white/62">platform_admin</p>
             </div>
           ) : null}
         </div>
 
         <button
           className={cx(
-            'inline-flex min-h-11 w-full items-center justify-center rounded-full border border-white/12 bg-white/10 px-4 text-sm font-medium text-white transition hover:bg-white/16 focus:outline-none focus:ring-2 focus:ring-white/20',
+            'inline-flex min-h-10 w-full items-center justify-center rounded-full border border-white/12 bg-white/10 px-4 text-[0.88rem] font-medium text-white transition hover:bg-white/16 focus:outline-none focus:ring-2 focus:ring-white/20',
             collapsed ? 'px-0' : 'gap-2',
           )}
           onClick={() => void signOut()}
