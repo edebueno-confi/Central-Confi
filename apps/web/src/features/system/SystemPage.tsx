@@ -464,26 +464,24 @@ export function SystemPage() {
   }
 
   return (
-    <div className="space-y-4 xl:flex xl:h-[calc(100dvh-2rem)] xl:flex-col xl:overflow-hidden">
-      <section className="rounded-[30px] border border-[color:var(--color-border)] bg-white/96 px-6 py-6 shadow-[0_18px_40px_rgba(16,30,74,0.08)]">
+    <div className="space-y-3 xl:flex xl:h-[calc(100dvh-2rem)] xl:flex-col xl:overflow-hidden">
+      <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white/96 px-6 py-4 shadow-[0_18px_40px_rgba(16,30,74,0.08)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="space-y-2">
-            <h1 className="text-[2.08rem] font-semibold tracking-[-0.055em] text-[color:var(--color-ink)]">
+          <div className="space-y-1">
+            <h1 className="text-[1.88rem] font-semibold tracking-[-0.055em] text-[color:var(--color-ink)]">
               System
             </h1>
-            <p className="max-w-3xl text-sm leading-6 text-[color:var(--color-muted)]">
-              Auditoria, saúde do sistema e eventos operacionais em uma superfície administrativa única.
+            <p className="text-[0.84rem] leading-5 text-[color:var(--color-muted)]">
+              Auditoria, saúde do sistema e eventos operacionais.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <GhostButton className="min-h-11 rounded-full px-4" onClick={() => void loadSurface()}>
-              Recarregar
-            </GhostButton>
-          </div>
+          <GhostButton className="min-h-10 rounded-full px-4 text-[13px]" onClick={() => void loadSurface()}>
+            Recarregar
+          </GhostButton>
         </div>
 
-        <nav className="mt-5 flex flex-wrap gap-6 border-b border-[color:var(--color-border)] pb-2">
+        <nav className="mt-4 flex flex-wrap gap-5 border-b border-[color:var(--color-border)] pb-2">
           {[
             { id: 'health', label: 'Saúde' },
             { id: 'audit', label: 'Auditoria' },
@@ -492,7 +490,7 @@ export function SystemPage() {
           ].map((tab) => (
             <button
               className={cx(
-                'inline-flex min-h-11 items-center border-b-2 border-transparent px-1 pb-3 text-[0.98rem] font-semibold transition',
+                'inline-flex min-h-10 items-center border-b-2 border-transparent px-1 pb-2.5 text-[0.92rem] font-semibold transition',
                 activeTab === tab.id
                   ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
                   : 'text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
@@ -505,152 +503,125 @@ export function SystemPage() {
             </button>
           ))}
         </nav>
-
-        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <SystemMetricCard helper="Eventos com leitura estável." label="Checks verdes" value={String(checksOkCount)} />
-          <SystemMetricCard helper="Itens que pedem atenção." label="Alertas" value={String(alertCount)} />
-          <SystemMetricCard helper="Ocorrências nas últimas 24h." label="Eventos recentes" value={String(recentCount)} />
-          <SystemMetricCard helper="Registros críticos no feed." label="Falhas" value={String(failureCount)} />
-        </div>
       </section>
 
-      <div className="grid gap-4 xl:min-h-0 xl:flex-1 xl:grid-cols-[264px_minmax(0,1fr)_392px]">
-        <aside className="space-y-5 xl:min-h-0 xl:overflow-y-auto xl:pr-1">
-          <SystemSurfaceCard
-            description="Filtros compactos para recortar o feed sem disputar espaço com a leitura central."
-            title="Monitoramento"
-          >
-            <div className="space-y-4">
-              <div className="space-y-2">
-                {[
-                  { id: 'health', label: 'Saúde geral', helper: `${checksOkCount} checks estáveis` },
-                  { id: 'audit', label: 'Auditoria', helper: `${auditFeed.length} eventos carregados` },
-                  { id: 'jobs', label: 'Falhas recentes', helper: `${failureCount} itens críticos` },
-                  { id: 'security', label: 'Segurança', helper: `${activeMembershipCount} associações ativas` },
-                ].map((item) => (
-                  <button
-                    className={cx(
-                      'flex w-full items-center justify-between rounded-[18px] border px-4 py-3 text-left transition',
-                      activeTab === item.id
-                        ? 'border-[rgba(48,127,226,0.3)] bg-[rgba(48,127,226,0.08)]'
-                        : 'border-[color:var(--color-border)] bg-[color:var(--color-surface)] hover:bg-white',
-                    )}
-                    key={item.id}
-                    onClick={() => setActiveTab(item.id as SystemTab)}
-                    type="button"
-                  >
-                    <div className="space-y-1">
-                      <p className="text-sm font-semibold text-[color:var(--color-ink)]">{item.label}</p>
-                      <p className="text-xs leading-5 text-[color:var(--color-muted)]">{item.helper}</p>
-                    </div>
-                    <span className="text-sm text-[color:var(--color-muted)]">›</span>
-                  </button>
+      <div className="grid gap-4 xl:min-h-0 xl:flex-1 xl:grid-cols-[264px_minmax(0,1fr)_396px] 2xl:grid-cols-[272px_minmax(0,1fr)_408px]">
+        <aside className="rounded-[22px] border border-[color:var(--color-border)] bg-white/96 p-4 shadow-[0_16px_34px_rgba(16,30,74,0.08)]">
+          <div className="space-y-3.5">
+            <div className="space-y-1">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--color-muted)]">
+                Monitoramento
+              </p>
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+              {[
+                { id: 'health', label: 'Saúde geral', count: `${checksOkCount} checks` },
+                { id: 'audit', label: 'Auditoria', count: `${auditFeed.length} eventos` },
+                { id: 'jobs', label: 'Falhas recentes', count: `${failureCount} críticos` },
+                { id: 'security', label: 'Segurança', count: `${activeMembershipCount} acessos` },
+              ].map((item) => (
+                <button
+                  className={cx(
+                    'flex w-full items-center justify-between rounded-[16px] border px-3 py-2.5 text-left transition',
+                    activeTab === item.id
+                      ? 'border-[rgba(48,127,226,0.3)] bg-[rgba(48,127,226,0.08)]'
+                      : 'border-[color:var(--color-border)] bg-[color:var(--color-surface)] hover:bg-white',
+                  )}
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id as SystemTab)}
+                  type="button"
+                >
+                  <span className="text-[0.84rem] font-semibold text-[color:var(--color-ink)]">{item.label}</span>
+                  <span className="text-[0.76rem] text-[color:var(--color-muted)]">{item.count}</span>
+                </button>
+              ))}
+            </div>
+
+            <label className="grid gap-1.5">
+              <span className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">Tipo</span>
+              <SelectInput className="h-9 rounded-[14px] px-3.5 text-[13px]" onChange={(event) => setActionFilter(event.target.value)} value={actionFilter}>
+                <option value="all">Todos</option>
+                {distinctActions.map((action) => (
+                  <option key={action} value={action}>
+                    {humanizeToken(action).replaceAll('_', ' ')}
+                  </option>
                 ))}
-              </div>
+              </SelectInput>
+            </label>
 
-              <div className="grid gap-3">
-                <label className="grid gap-2">
-                  <span className="text-sm font-medium text-[color:var(--color-ink)]">Tipo</span>
-                  <SelectInput onChange={(event) => setActionFilter(event.target.value)} value={actionFilter}>
-                    <option value="all">Todos</option>
-                    {distinctActions.map((action) => (
-                      <option key={action} value={action}>
-                        {humanizeToken(action).replaceAll('_', ' ')}
-                      </option>
-                    ))}
-                  </SelectInput>
-                </label>
+            <label className="grid gap-1.5">
+              <span className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">Severidade</span>
+              <SelectInput
+                className="h-9 rounded-[14px] px-3.5 text-[13px]"
+                onChange={(event) => setSeverityFilter(event.target.value as 'all' | SystemSeverity)}
+                value={severityFilter}
+              >
+                <option value="all">Todas</option>
+                <option value="ok">Estável</option>
+                <option value="attention">Atenção</option>
+                <option value="critical">Crítico</option>
+              </SelectInput>
+            </label>
 
-                <label className="grid gap-2">
-                  <span className="text-sm font-medium text-[color:var(--color-ink)]">Severidade</span>
-                  <SelectInput
-                    onChange={(event) =>
-                      setSeverityFilter(event.target.value as 'all' | SystemSeverity)
-                    }
-                    value={severityFilter}
-                  >
-                    <option value="all">Todas</option>
-                    <option value="ok">Estavel</option>
-                    <option value="attention">Atenção</option>
-                    <option value="critical">Critico</option>
-                  </SelectInput>
-                </label>
+            <label className="grid gap-1.5">
+              <span className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">Período</span>
+              <SelectInput
+                className="h-9 rounded-[14px] px-3.5 text-[13px]"
+                onChange={(event) => setPeriodFilter(event.target.value as SystemPeriodFilter)}
+                value={periodFilter}
+              >
+                <option value="24h">Últimas 24h</option>
+                <option value="7d">Últimos 7 dias</option>
+                <option value="30d">Últimos 30 dias</option>
+                <option value="all">Todo o feed</option>
+              </SelectInput>
+            </label>
 
-                <label className="grid gap-2">
-                  <span className="text-sm font-medium text-[color:var(--color-ink)]">Periodo</span>
-                  <SelectInput
-                    onChange={(event) =>
-                      setPeriodFilter(event.target.value as SystemPeriodFilter)
-                    }
-                    value={periodFilter}
-                  >
-                    <option value="24h">Ultimas 24h</option>
-                    <option value="7d">Ultimos 7 dias</option>
-                    <option value="30d">Ultimos 30 dias</option>
-                    <option value="all">Todo o feed</option>
-                  </SelectInput>
-                </label>
+            <label className="grid gap-1.5">
+              <span className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">Serviço</span>
+              <SelectInput className="h-9 rounded-[14px] px-3.5 text-[13px]" onChange={(event) => setServiceFilter(event.target.value)} value={serviceFilter}>
+                <option value="all">Todos</option>
+                {distinctServices.map((service) => (
+                  <option key={service} value={service}>
+                    {humanizeSystemService(service)}
+                  </option>
+                ))}
+              </SelectInput>
+            </label>
 
-                <label className="grid gap-2">
-                  <span className="text-sm font-medium text-[color:var(--color-ink)]">Serviço</span>
-                  <SelectInput onChange={(event) => setServiceFilter(event.target.value)} value={serviceFilter}>
-                    <option value="all">Todos</option>
-                    {distinctServices.map((service) => (
-                      <option key={service} value={service}>
-                        {humanizeSystemService(service)}
-                      </option>
-                    ))}
-                  </SelectInput>
-                </label>
+            <label className="grid gap-1.5">
+              <span className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">Buscar</span>
+              <TextInput
+                className="h-9 rounded-[14px] px-3.5 text-[13px]"
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Pessoa, cliente ou serviço"
+                value={query}
+              />
+            </label>
 
-                <label className="grid gap-2">
-                  <span className="text-sm font-medium text-[color:var(--color-ink)]">Buscar</span>
-                  <TextInput
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Buscar por pessoa, cliente ou serviço"
-                    value={query}
-                  />
-                </label>
-
-                <AppButton className="min-h-11 w-full px-4" onClick={() => void loadSurface()}>
-                  Recarregar
-                </AppButton>
-              </div>
-            </div>
-          </SystemSurfaceCard>
-
-          <SystemSurfaceCard
-            description="Leitura rápida do estado atual sem transformar a tela em dashboard genérico."
-            title="Checks rápidos"
-          >
-            <div className="grid gap-3 text-sm leading-6 text-[color:var(--color-muted)]">
-              <div className="flex items-center justify-between gap-3 rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
-                <span>Clientes ativos</span>
-                <span className="font-semibold text-[color:var(--color-ink)]">{activeTenantCount}</span>
-              </div>
-              <div className="flex items-center justify-between gap-3 rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
-                <span>Clientes em atenção</span>
-                <span className="font-semibold text-[color:var(--color-ink)]">{suspendedTenantCount}</span>
-              </div>
-              <div className="flex items-center justify-between gap-3 rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
-                <span>Memberships ativas</span>
-                <span className="font-semibold text-[color:var(--color-ink)]">{activeMembershipCount}</span>
-              </div>
-            </div>
-          </SystemSurfaceCard>
+            <AppButton className="min-h-9 w-full px-4 text-[13px]" onClick={() => void loadSurface()}>
+              Recarregar
+            </AppButton>
+          </div>
         </aside>
 
-        <div className="min-w-0 space-y-5 xl:flex xl:min-h-0 xl:flex-col xl:overflow-hidden">
+        <div className="min-w-0 xl:flex xl:min-h-0 xl:flex-col xl:overflow-hidden">
           <SystemSurfaceCard
             actions={
-              <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+              <div className="flex flex-wrap items-center gap-2 text-[0.72rem] uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
                 <span>{filteredFeed.length} itens visíveis</span>
               </div>
             }
             className="xl:flex xl:min-h-0 xl:flex-1 xl:flex-col"
-            description="Feed operacional denso para rastrear mudanças, alertas e sequência administrativa."
             title="Feed operacional"
           >
+            <div className="mb-4 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+              <SystemMetricCard helper="Em leitura estável." label="Checks verdes" value={String(checksOkCount)} />
+              <SystemMetricCard helper="Exigem atenção." label="Alertas" value={String(alertCount)} />
+              <SystemMetricCard helper="Nas últimas 24h." label="Eventos recentes" value={String(recentCount)} />
+              <SystemMetricCard helper="Exigem escalação." label="Falhas" value={String(failureCount)} />
+            </div>
             {auditFeed.length === 0 ? (
               <EmptyState
                 description="Ainda não existem eventos de auditoria nesta área."
@@ -725,17 +696,18 @@ export function SystemPage() {
           </SystemSurfaceCard>
         </div>
 
-        <aside className="space-y-5 xl:min-h-0 xl:overflow-y-auto xl:pr-1">
-          <SystemSurfaceCard
-            className="xl:min-h-0"
-            description="Leitura operacional do item selecionado para decidir o próximo passo."
-            title="Detalhe operacional"
-          >
+        <aside className="rounded-[22px] border border-[color:var(--color-border)] bg-white/96 p-4 shadow-[0_16px_34px_rgba(16,30,74,0.08)] xl:flex xl:min-h-0 xl:flex-col xl:overflow-hidden">
+          <div className="space-y-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1">
+            <div className="space-y-1">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--color-muted)]">
+                Detalhe operacional
+              </p>
+            </div>
             {!selectedEntry ? (
               <InlineNotice>Nenhum evento ficou disponível para abrir detalhes neste recorte.</InlineNotice>
             ) : (
               <div className="space-y-4">
-                <section className="rounded-[24px] bg-[linear-gradient(180deg,#081d4a_0%,#102c6d_100%)] px-4 py-4 text-white shadow-[0_18px_34px_rgba(12,25,66,0.28)]">
+                <section className="rounded-[22px] bg-[linear-gradient(180deg,#081d4a_0%,#102c6d_100%)] px-4 py-4 text-white shadow-[0_18px_34px_rgba(12,25,66,0.28)]">
                   <div className="space-y-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <StatusPill tone={toneForSystemSeverity(selectedSeverity)}>
@@ -759,51 +731,39 @@ export function SystemPage() {
                   </div>
                 </section>
 
-                <SystemSurfaceCard
-                  className="border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4 shadow-none"
-                  description="Escopo afetado e ator envolvido."
-                  title="Contexto"
-                >
-                  <div className="grid gap-2 text-sm leading-6 text-[color:var(--color-muted)]">
+                <section className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                  <h3 className="text-[0.98rem] font-semibold text-[color:var(--color-ink)]">Contexto</h3>
+                  <div className="mt-3 grid gap-2 text-sm leading-6 text-[color:var(--color-muted)]">
                     <p>Cliente: {selectedEntry.tenant_display_name ?? 'Indisponível'}</p>
                     <p>Slug: {selectedEntry.tenant_slug ?? 'Indisponível'}</p>
                     <p>Operador: {selectedEntry.actor_full_name ?? selectedEntry.actor_email ?? 'Indisponível'}</p>
                   </div>
-                </SystemSurfaceCard>
+                </section>
 
-                <SystemSurfaceCard
-                  className="border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4 shadow-none"
-                  description="Leitura objetiva do impacto atual."
-                  title="Impacto"
-                >
-                  <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                <section className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                  <h3 className="text-[0.98rem] font-semibold text-[color:var(--color-ink)]">Impacto</h3>
+                  <p className="mt-3 text-sm leading-6 text-[color:var(--color-muted)]">
                     {buildSystemImpact(selectedEntry)}
                   </p>
-                </SystemSurfaceCard>
+                </section>
 
-                <SystemSurfaceCard
-                  className="border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4 shadow-none"
-                  description="Passos sugeridos usando apenas o contexto atual."
-                  title="Ações recomendadas"
-                >
-                  <ul className="space-y-2 text-sm leading-6 text-[color:var(--color-muted)]">
+                <section className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                  <h3 className="text-[0.98rem] font-semibold text-[color:var(--color-ink)]">Ações recomendadas</h3>
+                  <ul className="mt-3 space-y-2 text-sm leading-6 text-[color:var(--color-muted)]">
                     {buildSystemActions(selectedEntry).map((item) => (
                       <li key={item}>{item}</li>
                     ))}
                   </ul>
-                </SystemSurfaceCard>
+                </section>
 
-                <SystemSurfaceCard
-                  className="border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4 shadow-none"
-                  description="Registros proximos para fechar a leitura do evento."
-                  title="Historico relacionado"
-                >
+                <section className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                  <h3 className="text-[0.98rem] font-semibold text-[color:var(--color-ink)]">Histórico relacionado</h3>
                   {relatedEntries.length === 0 ? (
-                    <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                    <p className="mt-3 text-sm leading-6 text-[color:var(--color-muted)]">
                       Indisponível.
                     </p>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="mt-3 space-y-2">
                       {relatedEntries.map((entry) => (
                         <div
                           className="rounded-[16px] border border-[color:var(--color-border)] bg-white px-3 py-3"
@@ -824,22 +784,20 @@ export function SystemPage() {
                       ))}
                     </div>
                   )}
-                </SystemSurfaceCard>
+                </section>
 
-                <details className="rounded-[22px] border border-[color:var(--color-border)] bg-white px-4 py-4">
-                  <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                    Detalhes do registro
-                  </summary>
+                <section className="rounded-[18px] border border-[color:var(--color-border)] bg-white px-4 py-4">
+                  <h3 className="text-[0.98rem] font-semibold text-[color:var(--color-ink)]">Registro bruto</h3>
                   <div className="mt-3 space-y-3 text-sm leading-6 text-[color:var(--color-muted)]">
                     <p>Referência interna: {selectedEntry.entity_id ?? 'Indisponível'}</p>
                     <p>Metadata resumida: {stringifyJsonPreview(selectedEntry.metadata)}</p>
                     <p>Antes: {stringifyJsonPreview(selectedEntry.before_state)}</p>
                     <p>Depois: {stringifyJsonPreview(selectedEntry.after_state)}</p>
                   </div>
-                </details>
+                </section>
               </div>
             )}
-          </SystemSurfaceCard>
+          </div>
         </aside>
       </div>
     </div>

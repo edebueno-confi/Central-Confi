@@ -2024,16 +2024,16 @@ export function KnowledgePage() {
     <div className="space-y-3 xl:flex xl:h-[calc(100dvh-2rem)] xl:flex-col xl:overflow-hidden">
       <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white/95 px-6 py-4 shadow-[var(--shadow-panel)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="space-y-1.5">
-            <h1 className="text-[1.9rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
+          <div className="space-y-1">
+            <h1 className="text-[1.82rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
               Knowledge
             </h1>
-            <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+            <p className="text-[0.84rem] leading-5 text-[color:var(--color-muted)]">
               Gerencie artigos, categorias e publicação na central de ajuda.
             </p>
           </div>
           <AppButton
-            className="min-h-11 gap-2 px-5 text-[13px] font-semibold"
+            className="min-h-10 gap-2 px-5 text-[13px] font-semibold"
             disabled={!selectedSpace}
             onClick={openCreateArticle}
           >
@@ -2042,15 +2042,15 @@ export function KnowledgePage() {
         </div>
       </section>
 
-      <div className="grid gap-4 xl:min-h-0 xl:flex-1 xl:grid-cols-[256px_minmax(0,1fr)_400px]">
-        <aside className="rounded-[20px] border border-[color:var(--color-border)] bg-white/94 px-4 py-4 shadow-[var(--shadow-panel)] xl:flex xl:min-h-0 xl:flex-col xl:overflow-hidden">
-          <div className="space-y-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1">
-            <div className="space-y-2">
+      <div className="grid gap-4 xl:min-h-0 xl:flex-1 xl:grid-cols-[264px_minmax(0,1fr)_392px] 2xl:grid-cols-[272px_minmax(0,1fr)_404px]">
+        <aside className="rounded-[20px] border border-[color:var(--color-border)] bg-white/94 px-4 py-4 shadow-[var(--shadow-panel)]">
+          <div className="space-y-3.5">
+            <div className="space-y-1.5">
               <p className="text-[0.74rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--color-muted)]">
                 Filtros
               </p>
               <TextInput
-                className="h-10 rounded-[14px] px-3.5"
+                className="h-9 rounded-[14px] px-3.5 text-[13px]"
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Buscar artigos..."
                 value={searchQuery}
@@ -2060,7 +2060,7 @@ export function KnowledgePage() {
             {spaces.length > 1 ? (
               <Field label="Central">
                 <SelectInput
-                  className="h-10 rounded-[14px] px-3.5"
+                  className="h-9 rounded-[14px] px-3.5 text-[13px]"
                   onChange={(event) => setSelectedSpaceId(event.target.value || null)}
                   value={selectedSpaceId ?? ''}
                 >
@@ -2073,7 +2073,7 @@ export function KnowledgePage() {
               </Field>
             ) : null}
 
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               <p className="text-[0.74rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--color-muted)]">
                 Status
               </p>
@@ -2087,7 +2087,7 @@ export function KnowledgePage() {
                 ].map(([value, label, count]) => (
                   <button
                     className={cx(
-                      'flex w-full items-center justify-between rounded-[12px] px-3 py-1.5 text-left text-[0.95rem] transition',
+                      'flex w-full items-center justify-between rounded-[12px] px-3 py-1.5 text-left text-[0.84rem] transition',
                       listStatusFilter === value
                         ? 'bg-[rgba(48,127,226,0.1)] font-medium text-[color:var(--color-brand-blue)]'
                         : 'text-[color:var(--color-ink)] hover:bg-[color:var(--color-surface)]',
@@ -2103,14 +2103,14 @@ export function KnowledgePage() {
               </div>
             </div>
 
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               <p className="text-[0.74rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--color-muted)]">
                 Categorias
               </p>
               <div className="space-y-1">
                 <button
                   className={cx(
-                    'flex w-full items-center justify-between rounded-[12px] px-3 py-1.5 text-left text-[0.95rem] transition',
+                    'flex w-full items-center justify-between rounded-[12px] px-3 py-1.5 text-left text-[0.84rem] transition',
                     selectedCategoryId === 'all'
                       ? 'bg-[rgba(48,127,226,0.1)] font-medium text-[color:var(--color-brand-blue)]'
                       : 'text-[color:var(--color-ink)] hover:bg-[color:var(--color-surface)]',
@@ -2124,7 +2124,7 @@ export function KnowledgePage() {
                 {visibleCategories.map((category) => (
                   <button
                     className={cx(
-                      'flex w-full items-center justify-between rounded-[12px] px-3 py-1.5 text-left text-[0.95rem] transition',
+                      'flex w-full items-center justify-between rounded-[12px] px-3 py-1.5 text-left text-[0.84rem] transition',
                       selectedCategoryId === category.id
                         ? 'bg-[rgba(48,127,226,0.1)] font-medium text-[color:var(--color-brand-blue)]'
                         : 'text-[color:var(--color-ink)] hover:bg-[color:var(--color-surface)]',
@@ -2141,65 +2141,46 @@ export function KnowledgePage() {
                 ))}
                 {sortedCategories.length > 5 ? (
                   <button
-                    className="rounded-[12px] px-3 py-1.5 text-left text-sm font-medium text-[color:var(--color-brand-blue)]"
+                    className="rounded-[12px] px-3 py-1 text-left text-[0.8rem] font-medium text-[color:var(--color-brand-blue)]"
                     onClick={() => setShowAllCategories((current) => !current)}
                     type="button"
                   >
                     {showAllCategories ? '− Ver menos' : '+ Ver todas'}
                   </button>
                 ) : null}
-                <button
-                  className="rounded-[12px] px-3 py-1.5 text-left text-sm font-medium text-[color:var(--color-brand-blue)]"
-                  onClick={openCreateCategory}
-                  type="button"
-                >
-                  + Nova categoria
-                </button>
               </div>
             </div>
 
-            <Field label="Autor">
-              <SelectInput
-                className="h-10 rounded-[14px] px-3.5"
-                onChange={(event) => setSelectedAuthor(event.target.value)}
-                value={selectedAuthor}
-              >
-                <option value="all">Todos</option>
-                {availableAuthors.map((author) => (
-                  <option key={author} value={author}>
-                    {author}
-                  </option>
-                ))}
-              </SelectInput>
-            </Field>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+              <Field label="Autor">
+                <SelectInput
+                  className="h-9 rounded-[14px] px-3.5 text-[13px]"
+                  onChange={(event) => setSelectedAuthor(event.target.value)}
+                  value={selectedAuthor}
+                >
+                  <option value="all">Todos</option>
+                  {availableAuthors.map((author) => (
+                    <option key={author} value={author}>
+                      {author}
+                    </option>
+                  ))}
+                </SelectInput>
+              </Field>
 
-            <Field label="Data">
-              <SelectInput
-                className="h-10 rounded-[14px] px-3.5"
-                onChange={(event) =>
-                  setSelectedDateWindow(event.target.value as KnowledgeDateFilter)
-                }
-                value={selectedDateWindow}
-              >
-                <option value="90">Últimos 90 dias</option>
-                <option value="30">Últimos 30 dias</option>
-                <option value="7">Últimos 7 dias</option>
-                <option value="all">Todos os períodos</option>
-              </SelectInput>
-            </Field>
-
-            <div className="flex flex-col gap-2 pt-1">
-              <GhostButton
-                className="min-h-10 justify-start rounded-[14px] px-3.5"
-                disabled={!selectedSpaceId}
-                onClick={() => {
-                  if (selectedSpaceId) {
-                    void refreshSelectedSpace();
+              <Field label="Data">
+                <SelectInput
+                  className="h-9 rounded-[14px] px-3.5 text-[13px]"
+                  onChange={(event) =>
+                    setSelectedDateWindow(event.target.value as KnowledgeDateFilter)
                   }
-                }}
-              >
-                Atualizar lista
-              </GhostButton>
+                  value={selectedDateWindow}
+                >
+                  <option value="90">Últimos 90 dias</option>
+                  <option value="30">Últimos 30 dias</option>
+                  <option value="7">Últimos 7 dias</option>
+                  <option value="all">Todos os períodos</option>
+                </SelectInput>
+              </Field>
             </div>
           </div>
         </aside>

@@ -675,31 +675,31 @@ export function AccessPage() {
   }
 
   return (
-    <div className="space-y-4 xl:flex xl:h-[calc(100dvh-2rem)] xl:flex-col xl:overflow-hidden">
-      <header className="rounded-[30px] border border-[color:var(--color-border)] bg-white/96 px-6 py-6 shadow-[0_18px_40px_rgba(16,30,74,0.08)]">
+    <div className="space-y-3 xl:flex xl:h-[calc(100dvh-2rem)] xl:flex-col xl:overflow-hidden">
+      <header className="rounded-[24px] border border-[color:var(--color-border)] bg-white/96 px-6 py-4 shadow-[0_18px_40px_rgba(16,30,74,0.08)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-[2.08rem] font-semibold tracking-[-0.055em] text-[color:var(--color-ink)]">
+            <h1 className="text-[1.88rem] font-semibold tracking-[-0.055em] text-[color:var(--color-ink)]">
             Access
             </h1>
-            <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+            <p className="text-[0.84rem] leading-5 text-[color:var(--color-muted)]">
               Gerencie usuários, papéis, permissões e convites da plataforma.
             </p>
           </div>
 
-          <AppButton className="min-h-11 gap-2 rounded-full px-5" onClick={() => setRailMode('invite')}>
+          <AppButton className="min-h-10 gap-2 rounded-full px-5 text-[13px]" onClick={() => setRailMode('invite')}>
             + Convidar usuário
           </AppButton>
         </div>
       </header>
 
       <div className="shrink-0 border-b border-[color:var(--color-border)]">
-        <div className="flex flex-wrap gap-6 px-1">
+        <div className="flex flex-wrap gap-5 px-1">
           {TABS.map((tab) => (
             <button
               key={tab.key}
               className={cx(
-                'border-b-2 px-1 pb-3 text-[0.98rem] font-semibold transition',
+                'border-b-2 px-1 pb-2.5 text-[0.92rem] font-semibold transition',
                 activeTab === tab.key
                   ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
                   : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
@@ -716,9 +716,9 @@ export function AccessPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 xl:min-h-0 xl:flex-1 xl:grid-cols-[264px_minmax(0,1fr)_392px]">
-        <section className="rounded-[28px] border border-[color:var(--color-border)] bg-white/96 p-5 shadow-[0_16px_34px_rgba(16,30,74,0.08)] xl:flex xl:min-h-0 xl:flex-col xl:overflow-hidden">
-          <div className="space-y-5 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1">
+      <div className="grid gap-4 xl:min-h-0 xl:flex-1 xl:grid-cols-[256px_minmax(0,1fr)_396px] 2xl:grid-cols-[264px_minmax(0,1fr)_408px]">
+        <section className="rounded-[22px] border border-[color:var(--color-border)] bg-white/96 p-4 shadow-[0_16px_34px_rgba(16,30,74,0.08)]">
+          <div className="space-y-3.5">
             <div className="space-y-1">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--color-muted)]">
                 Filtros
@@ -727,6 +727,7 @@ export function AccessPage() {
 
             <Field label="Buscar">
               <TextInput
+                className="h-9 rounded-[14px] px-3.5 text-[13px]"
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Buscar usuários..."
                 value={query}
@@ -735,6 +736,7 @@ export function AccessPage() {
 
             <Field label="Papel">
               <SelectInput
+                className="h-9 rounded-[14px] px-3.5 text-[13px]"
                 onChange={(event) => setSelectedRoleFilter(event.target.value)}
                 value={selectedRoleFilter}
               >
@@ -747,9 +749,9 @@ export function AccessPage() {
               </SelectInput>
             </Field>
 
-            <div className="space-y-3">
-              <p className="text-sm font-medium text-[color:var(--color-ink)]">Situação</p>
-              <label className="flex items-center gap-3 text-sm text-[color:var(--color-ink)]">
+            <div className="space-y-2">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--color-muted)]">Situação</p>
+              <label className="flex items-center gap-2.5 text-[0.84rem] text-[color:var(--color-ink)]">
                 <input
                   checked={selectedSituations.length === SITUATION_FILTERS.length}
                   className="h-4 w-4 rounded border-[color:var(--color-border)] text-[color:var(--color-brand-blue)]"
@@ -766,7 +768,7 @@ export function AccessPage() {
               </label>
               {SITUATION_FILTERS.map((item) => (
                 <label
-                  className="flex items-center gap-3 text-sm text-[color:var(--color-ink)]"
+                  className="flex items-center gap-2.5 text-[0.84rem] text-[color:var(--color-ink)]"
                   key={item.key}
                 >
                   <input
@@ -782,6 +784,7 @@ export function AccessPage() {
 
             <Field label="Tenant">
               <SelectInput
+                className="h-9 rounded-[14px] px-3.5 text-[13px]"
                 onChange={(event) => setSelectedTenantFilter(event.target.value)}
                 value={selectedTenantFilter}
               >
@@ -794,13 +797,13 @@ export function AccessPage() {
               </SelectInput>
             </Field>
 
-            <GhostButton className="min-h-11 w-full" onClick={resetFilters}>
+            <GhostButton className="min-h-9 w-full text-[13px]" onClick={resetFilters}>
               Limpar filtros
             </GhostButton>
           </div>
         </section>
 
-        <section className="min-w-0 rounded-[28px] border border-[color:var(--color-border)] bg-white/96 shadow-[0_16px_34px_rgba(16,30,74,0.08)] xl:flex xl:min-h-0 xl:flex-col xl:overflow-hidden">
+        <section className="min-w-0 rounded-[22px] border border-[color:var(--color-border)] bg-white/96 shadow-[0_16px_34px_rgba(16,30,74,0.08)] xl:flex xl:min-h-0 xl:flex-col xl:overflow-hidden">
           <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--color-border)] px-5 py-4">
             <div>
               <h2 className="text-[1.65rem] font-semibold tracking-[-0.045em] text-[color:var(--color-ink)]">
@@ -1123,7 +1126,7 @@ export function AccessPage() {
           )}
         </section>
 
-        <aside className="rounded-[28px] border border-[color:var(--color-border)] bg-white/96 p-5 shadow-[0_16px_34px_rgba(16,30,74,0.08)] xl:flex xl:min-h-0 xl:flex-col xl:overflow-hidden">
+        <aside className="rounded-[22px] border border-[color:var(--color-border)] bg-white/96 p-4 shadow-[0_16px_34px_rgba(16,30,74,0.08)] xl:flex xl:min-h-0 xl:flex-col xl:overflow-hidden">
           {railMode === 'invite' ? (
             <div className="space-y-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1">
               <div className="flex items-center justify-between gap-3">
