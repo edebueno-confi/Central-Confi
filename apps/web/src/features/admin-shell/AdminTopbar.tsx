@@ -3,7 +3,7 @@ import { cx } from '../../components/ui';
 
 function AdminQuickNav() {
   const items = [
-    { label: 'Tenants', to: '/admin/tenants' },
+    { label: 'Clientes', to: '/admin/tenants' },
     { label: 'Knowledge', to: '/admin/knowledge' },
     { label: 'Access', to: '/admin/access' },
     { label: 'System', to: '/admin/system' },

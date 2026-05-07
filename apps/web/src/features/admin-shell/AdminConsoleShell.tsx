@@ -57,7 +57,7 @@ export function AdminConsoleShell() {
           <div
             className={cx(
               'mx-auto flex w-full flex-col gap-3 transition-[max-width] duration-200',
-              sidebarCollapsed ? 'max-w-[1780px]' : 'max-w-[1680px]',
+              sidebarCollapsed ? 'max-w-[1880px]' : 'max-w-[1780px]',
             )}
           >
             <AdminTopbar />

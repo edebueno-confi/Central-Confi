@@ -3,7 +3,7 @@ import { cx } from '../../components/ui';
 import { useAuthContext } from '../auth/auth-context';
 
 const navigation = [
-  { label: 'Tenants', to: '/admin/tenants', icon: 'tenants' },
+  { label: 'Clientes', to: '/admin/tenants', icon: 'tenants' },
   { label: 'Knowledge', to: '/admin/knowledge', icon: 'knowledge' },
   { label: 'Access', to: '/admin/access', icon: 'access' },
   { label: 'System', to: '/admin/system', icon: 'system' },
