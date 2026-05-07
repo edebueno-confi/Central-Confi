@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { cx } from '../../components/ui';
+import { useAuthContext } from '../auth/auth-context';
 
 const navigation = [
   { label: 'Tenants', to: '/admin/tenants', icon: 'tenants' },
@@ -75,19 +76,19 @@ function SidebarIcon({
 
 export function AdminSidebar({
   collapsed,
-  onToggle,
 }: {
   collapsed: boolean;
-  onToggle: () => void;
 }) {
+  const { signOut } = useAuthContext();
+
   return (
     <aside
       className={cx(
         'relative flex h-full flex-col rounded-[26px] border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,#091734_0%,#0b1d45_56%,#0e2558_100%)] text-white shadow-[0_30px_58px_rgba(9,23,52,0.26)] transition-[width,padding] duration-200',
-        collapsed ? 'w-[96px] p-3.5' : 'w-[242px] p-5',
+        collapsed ? 'w-[88px] p-3' : 'w-[242px] p-5',
       )}
     >
-      <div className={cx('flex items-start justify-between gap-3', collapsed && 'justify-center')}>
+      <div className={cx('flex items-start gap-3', collapsed && 'justify-center')}>
         <div className={cx('flex items-start gap-3', collapsed && 'justify-center')}>
           <div className="flex h-11 w-11 items-center justify-center rounded-[14px] bg-[rgba(255,255,255,0.04)] ring-1 ring-white/10">
             <BrandMark />
@@ -104,17 +105,6 @@ export function AdminSidebar({
             </div>
           ) : null}
         </div>
-
-        <button
-          className={cx(
-            'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/12 bg-white/10 text-base font-medium text-white transition hover:bg-white/16',
-            collapsed && 'absolute right-3 top-3',
-          )}
-          onClick={onToggle}
-          type="button"
-        >
-          {collapsed ? '›' : '‹'}
-        </button>
       </div>
 
       <nav className="mt-6 grid gap-2.5">
@@ -148,7 +138,7 @@ export function AdminSidebar({
 
       <div
         className={cx(
-          'mt-auto rounded-[22px] border border-white/10 bg-white/8',
+          'mt-auto space-y-3 rounded-[22px] border border-white/10 bg-white/8',
           collapsed ? 'p-3' : 'px-4 py-3.5',
         )}
       >
@@ -163,6 +153,19 @@ export function AdminSidebar({
             </div>
           ) : null}
         </div>
+
+        <button
+          className={cx(
+            'inline-flex min-h-11 w-full items-center justify-center rounded-full border border-white/12 bg-white/10 px-4 text-sm font-medium text-white transition hover:bg-white/16 focus:outline-none focus:ring-2 focus:ring-white/20',
+            collapsed ? 'px-0' : 'gap-2',
+          )}
+          onClick={() => void signOut()}
+          title="Encerrar sessão"
+          type="button"
+        >
+          <span aria-hidden="true" className="text-base leading-none">↪</span>
+          {!collapsed ? <span>Encerrar sessão</span> : null}
+        </button>
       </div>
     </aside>
   );
