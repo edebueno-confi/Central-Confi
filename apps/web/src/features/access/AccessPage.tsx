@@ -675,29 +675,31 @@ export function AccessPage() {
   }
 
   return (
-    <div className="space-y-5">
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-[color:var(--color-border)] pb-5">
-        <div className="space-y-1">
-          <h1 className="text-[2rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
-            Acesso
-          </h1>
-          <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-            Gerencie usuários, papéis, permissões e convites da plataforma.
-          </p>
-        </div>
+    <div className="space-y-4">
+      <header className="rounded-[30px] border border-[color:var(--color-border)] bg-white/96 px-6 py-6 shadow-[0_18px_40px_rgba(16,30,74,0.08)]">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-[2.08rem] font-semibold tracking-[-0.055em] text-[color:var(--color-ink)]">
+            Access
+            </h1>
+            <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+              Gerencie usuários, papéis, permissões e convites da plataforma.
+            </p>
+          </div>
 
-        <AppButton className="min-h-11 gap-2 px-5" onClick={() => setRailMode('invite')}>
-          + Convidar usuário
-        </AppButton>
+          <AppButton className="min-h-11 gap-2 rounded-full px-5" onClick={() => setRailMode('invite')}>
+            + Convidar usuário
+          </AppButton>
+        </div>
       </header>
 
       <div className="border-b border-[color:var(--color-border)]">
-        <div className="flex flex-wrap gap-5">
+        <div className="flex flex-wrap gap-6 px-1">
           {TABS.map((tab) => (
             <button
               key={tab.key}
               className={cx(
-                'border-b-2 px-1 pb-3 text-sm font-semibold transition',
+                'border-b-2 px-1 pb-3 text-[0.98rem] font-semibold transition',
                 activeTab === tab.key
                   ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
                   : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
@@ -714,15 +716,12 @@ export function AccessPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[240px_minmax(0,1fr)_320px]">
-        <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white p-4 shadow-[var(--shadow-panel)]">
+      <div className="grid gap-4 xl:grid-cols-[264px_minmax(0,1fr)_392px]">
+        <section className="rounded-[28px] border border-[color:var(--color-border)] bg-white/96 p-5 shadow-[0_16px_34px_rgba(16,30,74,0.08)]">
           <div className="space-y-5">
             <div className="space-y-1">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--color-muted)]">
                 Filtros
-              </p>
-              <p className="text-sm leading-6 text-[color:var(--color-muted)]">
-                Refine a base principal sem tirar o foco da gestão de acessos.
               </p>
             </div>
 
@@ -801,10 +800,10 @@ export function AccessPage() {
           </div>
         </section>
 
-        <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white shadow-[var(--shadow-panel)]">
+        <section className="min-w-0 rounded-[28px] border border-[color:var(--color-border)] bg-white/96 shadow-[0_16px_34px_rgba(16,30,74,0.08)]">
           <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--color-border)] px-5 py-4">
             <div>
-              <h2 className="text-[1.55rem] font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
+              <h2 className="text-[1.65rem] font-semibold tracking-[-0.045em] text-[color:var(--color-ink)]">
                 {activeTab === 'users'
                   ? `Usuários (${filteredMemberships.length})`
                   : activeTab === 'roles'
@@ -816,7 +815,7 @@ export function AccessPage() {
             </div>
 
             <SelectInput
-              className="w-[150px]"
+              className="w-[170px]"
               onChange={(event) => setPageSize(Number(event.target.value) as (typeof PAGE_SIZE_OPTIONS)[number])}
               value={String(pageSize)}
             >
@@ -847,7 +846,39 @@ export function AccessPage() {
           ) : (
             <>
               <div className="overflow-hidden">
-                <table className="min-w-full border-collapse text-left">
+                <table className="min-w-full table-fixed border-collapse text-left">
+                  {activeTab === 'users' ? (
+                    <colgroup>
+                      <col className="w-[32%]" />
+                      <col className="w-[16%]" />
+                      <col className="w-[20%]" />
+                      <col className="w-[16%]" />
+                      <col className="w-[16%]" />
+                    </colgroup>
+                  ) : activeTab === 'roles' ? (
+                    <colgroup>
+                      <col className="w-[42%]" />
+                      <col className="w-[14%]" />
+                      <col className="w-[14%]" />
+                      <col className="w-[14%]" />
+                      <col className="w-[16%]" />
+                    </colgroup>
+                  ) : activeTab === 'invites' ? (
+                    <colgroup>
+                      <col className="w-[28%]" />
+                      <col className="w-[22%]" />
+                      <col className="w-[16%]" />
+                      <col className="w-[18%]" />
+                      <col className="w-[16%]" />
+                    </colgroup>
+                  ) : (
+                    <colgroup>
+                      <col className="w-[20%]" />
+                      <col className="w-[44%]" />
+                      <col className="w-[16%]" />
+                      <col className="w-[20%]" />
+                    </colgroup>
+                  )}
                   <thead>
                     <tr className="border-b border-[color:var(--color-border)] text-[0.72rem] uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
                       {activeTab === 'users' ? (
@@ -904,11 +935,11 @@ export function AccessPage() {
                               }}
                             >
                               <td className="px-4 py-3">
-                                <div className="space-y-1">
-                                  <p className="font-semibold text-[color:var(--color-ink)]">
+                                <div className="min-w-0 space-y-1">
+                                  <p className="line-clamp-1 font-semibold text-[color:var(--color-ink)]">
                                     {getDisplayName(membership)}
                                   </p>
-                                  <p className="text-[color:var(--color-muted)]">
+                                  <p className="line-clamp-1 text-[color:var(--color-muted)]">
                                     {getDisplayEmail(membership)}
                                   </p>
                                 </div>
@@ -980,16 +1011,16 @@ export function AccessPage() {
                                     setRailMode('detail');
                                   }}
                                 >
-                                  <td className="px-4 py-3">
-                                    <div className="space-y-1">
-                                      <p className="font-semibold text-[color:var(--color-ink)]">
-                                        {getDisplayName(membership)}
-                                      </p>
-                                      <p className="text-[color:var(--color-muted)]">
-                                        {getDisplayEmail(membership)}
-                                      </p>
-                                    </div>
-                                  </td>
+                              <td className="px-4 py-3">
+                                <div className="min-w-0 space-y-1">
+                                  <p className="line-clamp-1 font-semibold text-[color:var(--color-ink)]">
+                                    {getDisplayName(membership)}
+                                  </p>
+                                  <p className="line-clamp-1 text-[color:var(--color-muted)]">
+                                    {getDisplayEmail(membership)}
+                                  </p>
+                                </div>
+                              </td>
                                   <td className="px-4 py-3 text-[color:var(--color-ink)]">
                                 {membership.tenant_display_name || 'Indisponível'}
                                   </td>
@@ -1092,7 +1123,7 @@ export function AccessPage() {
           )}
         </section>
 
-        <aside className="rounded-[24px] border border-[color:var(--color-border)] bg-white p-4 shadow-[var(--shadow-panel)]">
+        <aside className="rounded-[28px] border border-[color:var(--color-border)] bg-white/96 p-5 shadow-[0_16px_34px_rgba(16,30,74,0.08)]">
           {railMode === 'invite' ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-3">

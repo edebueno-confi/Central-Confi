@@ -226,11 +226,11 @@ function SystemMetricCard({
   helper: string;
 }) {
   return (
-    <div className="rounded-[22px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+    <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3.5">
       <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
         {label}
       </p>
-      <p className="mt-2 text-[1.85rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
+      <p className="mt-1.5 text-[1.55rem] font-semibold tracking-[-0.045em] text-[color:var(--color-ink)]">
         {value}
       </p>
       <p className="mt-1 text-xs leading-5 text-[color:var(--color-muted)]">{helper}</p>
@@ -464,26 +464,26 @@ export function SystemPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-[30px] border border-[color:var(--color-border)] bg-white/95 px-6 py-6 shadow-[0_18px_40px_rgba(16,30,74,0.09)]">
+    <div className="space-y-4">
+      <section className="rounded-[30px] border border-[color:var(--color-border)] bg-white/96 px-6 py-6 shadow-[0_18px_40px_rgba(16,30,74,0.08)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-2">
-            <h1 className="text-[2.18rem] font-semibold tracking-[-0.06em] text-[color:var(--color-ink)]">
-              Sistema
+            <h1 className="text-[2.08rem] font-semibold tracking-[-0.055em] text-[color:var(--color-ink)]">
+              System
             </h1>
             <p className="max-w-3xl text-sm leading-6 text-[color:var(--color-muted)]">
-              Auditoria, saúde do sistema e eventos operacionais em uma única superfície administrativa.
+              Auditoria, saúde do sistema e eventos operacionais em uma superfície administrativa única.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <GhostButton className="min-h-11 px-4" onClick={() => void loadSurface()}>
+            <GhostButton className="min-h-11 rounded-full px-4" onClick={() => void loadSurface()}>
               Recarregar
             </GhostButton>
           </div>
         </div>
 
-        <nav className="mt-5 flex flex-wrap gap-2 border-b border-[color:var(--color-border)] pb-2">
+        <nav className="mt-5 flex flex-wrap gap-6 border-b border-[color:var(--color-border)] pb-2">
           {[
             { id: 'health', label: 'Saúde' },
             { id: 'audit', label: 'Auditoria' },
@@ -492,10 +492,10 @@ export function SystemPage() {
           ].map((tab) => (
             <button
               className={cx(
-                'inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold transition',
+                'inline-flex min-h-11 items-center border-b-2 border-transparent px-1 pb-3 text-[0.98rem] font-semibold transition',
                 activeTab === tab.id
-                  ? 'bg-[rgba(48,127,226,0.1)] text-[color:var(--color-brand-blue)] shadow-[inset_0_-2px_0_var(--color-brand-blue)]'
-                  : 'text-[color:var(--color-muted)] hover:bg-[color:var(--color-surface)] hover:text-[color:var(--color-ink)]',
+                  ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
+                  : 'text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
               )}
               key={tab.id}
               onClick={() => setActiveTab(tab.id as SystemTab)}
@@ -514,10 +514,10 @@ export function SystemPage() {
         </div>
       </section>
 
-      <div className="grid gap-5 xl:grid-cols-[292px_minmax(0,1.24fr)_332px]">
+      <div className="grid gap-4 xl:grid-cols-[264px_minmax(0,1fr)_392px]">
         <aside className="space-y-5">
           <SystemSurfaceCard
-            description="Use listas rápidas e filtros para recortar o feed sem inflar a área central."
+            description="Filtros compactos para recortar o feed sem disputar espaço com a leitura central."
             title="Monitoramento"
           >
             <div className="space-y-4">
@@ -620,10 +620,10 @@ export function SystemPage() {
           </SystemSurfaceCard>
 
           <SystemSurfaceCard
-            description="Pulso atual da operação administrativa."
+            description="Leitura rápida do estado atual sem transformar a tela em dashboard genérico."
             title="Checks rápidos"
           >
-            <div className="space-y-3 text-sm leading-6 text-[color:var(--color-muted)]">
+            <div className="grid gap-3 text-sm leading-6 text-[color:var(--color-muted)]">
               <div className="flex items-center justify-between gap-3 rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
                 <span>Clientes ativos</span>
                 <span className="font-semibold text-[color:var(--color-ink)]">{activeTenantCount}</span>
@@ -640,15 +640,15 @@ export function SystemPage() {
           </SystemSurfaceCard>
         </aside>
 
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-5">
           <SystemSurfaceCard
             actions={
               <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
                 <span>{filteredFeed.length} itens visíveis</span>
               </div>
             }
-            description="Checks e eventos administrativos para rastrear mudancas, alertas e contexto operacional do control plane."
-            title="Eventos e checks"
+            description="Feed operacional denso para rastrear mudanças, alertas e sequência administrativa."
+            title="Feed operacional"
           >
             {auditFeed.length === 0 ? (
               <EmptyState
@@ -662,13 +662,13 @@ export function SystemPage() {
               />
             ) : (
               <div className="overflow-hidden rounded-[20px] border border-[color:var(--color-border)]">
-                <div className="hidden grid-cols-[138px_112px_170px_minmax(0,1fr)_148px_122px] gap-3 border-b border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)] lg:grid">
+                <div className="hidden grid-cols-[136px_112px_150px_minmax(0,1fr)_144px_114px] gap-3 border-b border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)] lg:grid">
                   <span>Tipo</span>
                   <span>Severidade</span>
-                  <span>Serviço</span>
-                  <span>Mensagem</span>
-                  <span>Timestamp</span>
-                  <span>Status</span>
+                  <span>Origem</span>
+                  <span>Resumo</span>
+                  <span>Data</span>
+                  <span>Situação</span>
                 </div>
                 <div className="divide-y divide-[color:var(--color-border)]">
                   {filteredFeed.map((entry) => {
@@ -678,7 +678,7 @@ export function SystemPage() {
                     return (
                       <button
                         className={cx(
-                          'grid w-full gap-3 px-4 py-4 text-left transition lg:grid-cols-[138px_112px_170px_minmax(0,1fr)_148px_122px]',
+                          'grid w-full gap-3 px-4 py-4 text-left transition lg:grid-cols-[136px_112px_150px_minmax(0,1fr)_144px_114px]',
                           selected
                             ? 'bg-[rgba(48,127,226,0.08)]'
                             : 'bg-white hover:bg-[color:var(--color-surface)]',
@@ -688,7 +688,7 @@ export function SystemPage() {
                         type="button"
                       >
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-[color:var(--color-ink)]">
+                          <p className="line-clamp-1 text-sm font-semibold text-[color:var(--color-ink)]">
                             {humanizeToken(entry.action).replaceAll('_', ' ')}
                           </p>
                         </div>
@@ -726,7 +726,7 @@ export function SystemPage() {
 
         <aside className="space-y-5">
           <SystemSurfaceCard
-            description="Leitura curta do evento selecionado para decidir o proximo passo."
+            description="Leitura operacional do item selecionado para decidir o próximo passo."
             title="Detalhe operacional"
           >
             {!selectedEntry ? (
