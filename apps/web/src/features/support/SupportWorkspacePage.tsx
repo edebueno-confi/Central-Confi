@@ -3632,7 +3632,7 @@ function SupportWorkspaceView({
       className={cx(
         variant === 'tickets'
           ? 'flex h-full min-h-0 flex-col gap-2.5 overflow-hidden'
-          : 'space-y-5',
+          : 'space-y-5 xl:flex xl:h-full xl:min-h-0 xl:flex-col xl:overflow-hidden',
       )}
     >
       {variant === 'queue' ? (
@@ -3654,6 +3654,7 @@ function SupportWorkspaceView({
 
       {variant === 'queue' ? (
         <WorkspaceSplit
+          className="xl:min-h-0 xl:flex-1"
           layoutClassName="xl:grid-cols-[292px_minmax(0,1fr)]"
           sidebar={
             <ContextSubsidebar
@@ -3697,28 +3698,32 @@ function SupportWorkspaceView({
                 description="Ajuste o recorte sem ocupar a área de trabalho principal."
                 title="Filtros"
               >
-                <SupportQueueToolbar
-                  assigneeOptions={assigneeOptions}
-                  embedded
-                  filters={filters}
-                  onChange={setFilters}
-                  onRefresh={() => void loadQueue(focusTicketId ?? null)}
-                  tenantOptions={tenantOptions}
-                />
+                <div className="xl:max-h-[calc(100dvh-18rem)] xl:overflow-y-auto xl:pr-1">
+                  <SupportQueueToolbar
+                    assigneeOptions={assigneeOptions}
+                    embedded
+                    filters={filters}
+                    onChange={setFilters}
+                    onRefresh={() => void loadQueue(focusTicketId ?? null)}
+                    tenantOptions={tenantOptions}
+                  />
+                </div>
               </ContextSubsidebarSection>
             </ContextSubsidebar>
           }
           main={
-            <div className="space-y-4">
-              <SupportSummaryStrip
-                highAttention={highAttention}
-                totalOpen={totalOpen}
-                unassigned={unassigned}
-                waitingCustomer={waitingCustomer}
-              />
+            <div className="space-y-4 xl:flex xl:min-h-0 xl:flex-1 xl:flex-col xl:overflow-hidden">
+              <div className="shrink-0">
+                <SupportSummaryStrip
+                  highAttention={highAttention}
+                  totalOpen={totalOpen}
+                  unassigned={unassigned}
+                  waitingCustomer={waitingCustomer}
+                />
+              </div>
 
-              <div className="grid gap-5 xl:grid-cols-[minmax(0,0.72fr)_minmax(320px,0.28fr)]">
-                <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-5 py-5 shadow-[0_14px_28px_rgba(19,33,79,0.08)]">
+              <div className="grid gap-5 xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(0,0.72fr)_minmax(320px,0.28fr)]">
+                <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-5 py-5 shadow-[0_14px_28px_rgba(19,33,79,0.08)] xl:flex xl:min-h-0 xl:flex-col xl:overflow-hidden">
                   <div className="mb-4 space-y-1">
                     <h2 className="text-lg font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
                       Fila dominante
@@ -3733,7 +3738,7 @@ function SupportWorkspaceView({
                       description="Nenhum ticket apareceu com esse recorte. Ajuste os filtros ou recarregue a fila."
                     />
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-3 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1">
                       {tickets.map((ticket) => (
                         <SupportQueueItem
                           isSelected={ticket.id === selectedTicketId}
@@ -3746,7 +3751,7 @@ function SupportWorkspaceView({
                   )}
                 </section>
 
-                <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-5 py-5 shadow-[0_14px_28px_rgba(19,33,79,0.08)] xl:sticky xl:top-4">
+                <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white px-5 py-5 shadow-[0_14px_28px_rgba(19,33,79,0.08)] xl:flex xl:min-h-0 xl:flex-col xl:overflow-hidden">
                   <div className="mb-4 space-y-1">
                     <h2 className="text-lg font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
                       Preview do ticket
@@ -3765,7 +3770,9 @@ function SupportWorkspaceView({
                   ) : detailPhase === 'error' ? (
                     <ErrorState description={detailMessage ?? 'A prévia do ticket não ficou disponível.'} />
                   ) : (
-                    <SupportTicketPreview customer={customer} detail={previewTicket} ticket={selectedQueueTicket} />
+                    <div className="xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1">
+                      <SupportTicketPreview customer={customer} detail={previewTicket} ticket={selectedQueueTicket} />
+                    </div>
                   )}
                 </section>
               </div>
@@ -4640,7 +4647,7 @@ export function SupportCustomersPage() {
       : 0;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 xl:flex xl:h-full xl:min-h-0 xl:flex-col xl:overflow-hidden">
       <section className="rounded-[26px] border border-[color:var(--color-border)] bg-white/95 px-5 py-5 shadow-[0_16px_30px_rgba(19,33,79,0.08)]">
         <div className="flex flex-wrap items-center gap-2">
           <StatusPill tone="accent">Clientes</StatusPill>
@@ -4656,8 +4663,8 @@ export function SupportCustomersPage() {
         </div>
       </section>
 
-      <div className="grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)]">
-        <aside className="space-y-4">
+      <div className="grid gap-5 xl:min-h-0 xl:flex-1 xl:grid-cols-[320px_minmax(0,1fr)]">
+        <aside className="space-y-4 xl:min-h-0 xl:overflow-y-auto xl:pr-1">
           <SupportCustomerDetailCard
             description="Busca e recortes rapidos para chegar ao cliente certo."
             title="Encontrar cliente"
@@ -4730,7 +4737,7 @@ export function SupportCustomersPage() {
           </SupportCustomerDetailCard>
         </aside>
 
-        <div className="space-y-5">
+        <div className="space-y-5 xl:min-h-0 xl:overflow-y-auto xl:pr-1">
           {selectedCustomer ? (
             <>
               <section className="rounded-[30px] border border-[color:var(--color-border)] bg-white/95 px-6 py-6 shadow-[0_18px_40px_rgba(16,30,74,0.09)]">
@@ -5046,7 +5053,7 @@ export function SupportCustomerPage() {
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 xl:flex xl:h-full xl:min-h-0 xl:flex-col xl:overflow-hidden">
       <section className="rounded-[30px] border border-[color:var(--color-border)] bg-white/95 px-6 py-6 shadow-[0_18px_40px_rgba(16,30,74,0.09)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 space-y-2">
@@ -5134,8 +5141,8 @@ export function SupportCustomerPage() {
         </nav>
       </section>
 
-      <div className="grid gap-5 xl:grid-cols-[294px_minmax(0,1.28fr)_318px]">
-        <aside className="space-y-5">
+      <div className="grid gap-5 xl:min-h-0 xl:flex-1 xl:grid-cols-[294px_minmax(0,1.28fr)_318px]">
+        <aside className="space-y-5 xl:min-h-0 xl:overflow-y-auto xl:pr-1">
           <section className="overflow-hidden rounded-[28px] bg-[linear-gradient(180deg,#071942_0%,#0b235b_58%,#103071_100%)] px-4 py-5 text-white shadow-[0_22px_42px_rgba(8,22,61,0.28)]">
             <div className="space-y-4">
               <div className="flex items-start justify-between gap-3">
@@ -5259,7 +5266,7 @@ export function SupportCustomerPage() {
           </SupportCustomerDetailCard>
         </aside>
 
-        <div className="space-y-5">
+        <div className="space-y-5 xl:min-h-0 xl:overflow-y-auto xl:pr-1">
           <div id="resumo">
             <SupportCustomerDetailCard
               title="Resumo operacional"
@@ -5386,7 +5393,7 @@ export function SupportCustomerPage() {
           </SupportCustomerDetailCard>
         </div>
 
-        <aside className="space-y-5">
+        <aside className="space-y-5 xl:min-h-0 xl:overflow-y-auto xl:pr-1">
           <SupportCustomerDetailCard
             className="px-4 py-4"
             description="Leitura curta da conta para decidir se a tratativa pede atenção extra."

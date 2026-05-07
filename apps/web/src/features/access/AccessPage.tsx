@@ -675,7 +675,7 @@ export function AccessPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 xl:flex xl:h-[calc(100dvh-2rem)] xl:flex-col xl:overflow-hidden">
       <header className="rounded-[30px] border border-[color:var(--color-border)] bg-white/96 px-6 py-6 shadow-[0_18px_40px_rgba(16,30,74,0.08)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-1">
@@ -693,7 +693,7 @@ export function AccessPage() {
         </div>
       </header>
 
-      <div className="border-b border-[color:var(--color-border)]">
+      <div className="shrink-0 border-b border-[color:var(--color-border)]">
         <div className="flex flex-wrap gap-6 px-1">
           {TABS.map((tab) => (
             <button
@@ -716,9 +716,9 @@ export function AccessPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[264px_minmax(0,1fr)_392px]">
-        <section className="rounded-[28px] border border-[color:var(--color-border)] bg-white/96 p-5 shadow-[0_16px_34px_rgba(16,30,74,0.08)]">
-          <div className="space-y-5">
+      <div className="grid gap-4 xl:min-h-0 xl:flex-1 xl:grid-cols-[264px_minmax(0,1fr)_392px]">
+        <section className="rounded-[28px] border border-[color:var(--color-border)] bg-white/96 p-5 shadow-[0_16px_34px_rgba(16,30,74,0.08)] xl:flex xl:min-h-0 xl:flex-col xl:overflow-hidden">
+          <div className="space-y-5 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1">
             <div className="space-y-1">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--color-muted)]">
                 Filtros
@@ -800,7 +800,7 @@ export function AccessPage() {
           </div>
         </section>
 
-        <section className="min-w-0 rounded-[28px] border border-[color:var(--color-border)] bg-white/96 shadow-[0_16px_34px_rgba(16,30,74,0.08)]">
+        <section className="min-w-0 rounded-[28px] border border-[color:var(--color-border)] bg-white/96 shadow-[0_16px_34px_rgba(16,30,74,0.08)] xl:flex xl:min-h-0 xl:flex-col xl:overflow-hidden">
           <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--color-border)] px-5 py-4">
             <div>
               <h2 className="text-[1.65rem] font-semibold tracking-[-0.045em] text-[color:var(--color-ink)]">
@@ -845,7 +845,7 @@ export function AccessPage() {
             </div>
           ) : (
             <>
-              <div className="overflow-hidden">
+              <div className="overflow-hidden xl:min-h-0 xl:flex-1 xl:overflow-y-auto">
                 <table className="min-w-full table-fixed border-collapse text-left">
                   {activeTab === 'users' ? (
                     <colgroup>
@@ -1123,9 +1123,9 @@ export function AccessPage() {
           )}
         </section>
 
-        <aside className="rounded-[28px] border border-[color:var(--color-border)] bg-white/96 p-5 shadow-[0_16px_34px_rgba(16,30,74,0.08)]">
+        <aside className="rounded-[28px] border border-[color:var(--color-border)] bg-white/96 p-5 shadow-[0_16px_34px_rgba(16,30,74,0.08)] xl:flex xl:min-h-0 xl:flex-col xl:overflow-hidden">
           {railMode === 'invite' ? (
-            <div className="space-y-4">
+            <div className="space-y-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1">
               <div className="flex items-center justify-between gap-3">
                 <div className="space-y-1">
                   <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--color-muted)]">
@@ -1304,7 +1304,7 @@ export function AccessPage() {
               </form>
             </div>
           ) : activeTab === 'roles' ? (
-            <div className="space-y-4">
+            <div className="space-y-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--color-muted)]">
                 Detalhes do papel
               </p>

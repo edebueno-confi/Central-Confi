@@ -464,7 +464,7 @@ export function SystemPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 xl:flex xl:h-[calc(100dvh-2rem)] xl:flex-col xl:overflow-hidden">
       <section className="rounded-[30px] border border-[color:var(--color-border)] bg-white/96 px-6 py-6 shadow-[0_18px_40px_rgba(16,30,74,0.08)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-2">
@@ -514,8 +514,8 @@ export function SystemPage() {
         </div>
       </section>
 
-      <div className="grid gap-4 xl:grid-cols-[264px_minmax(0,1fr)_392px]">
-        <aside className="space-y-5">
+      <div className="grid gap-4 xl:min-h-0 xl:flex-1 xl:grid-cols-[264px_minmax(0,1fr)_392px]">
+        <aside className="space-y-5 xl:min-h-0 xl:overflow-y-auto xl:pr-1">
           <SystemSurfaceCard
             description="Filtros compactos para recortar o feed sem disputar espaço com a leitura central."
             title="Monitoramento"
@@ -640,13 +640,14 @@ export function SystemPage() {
           </SystemSurfaceCard>
         </aside>
 
-        <div className="min-w-0 space-y-5">
+        <div className="min-w-0 space-y-5 xl:flex xl:min-h-0 xl:flex-col xl:overflow-hidden">
           <SystemSurfaceCard
             actions={
               <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
                 <span>{filteredFeed.length} itens visíveis</span>
               </div>
             }
+            className="xl:flex xl:min-h-0 xl:flex-1 xl:flex-col"
             description="Feed operacional denso para rastrear mudanças, alertas e sequência administrativa."
             title="Feed operacional"
           >
@@ -661,7 +662,7 @@ export function SystemPage() {
                 title="Nenhum registro bateu com o recorte"
               />
             ) : (
-              <div className="overflow-hidden rounded-[20px] border border-[color:var(--color-border)]">
+              <div className="overflow-hidden rounded-[20px] border border-[color:var(--color-border)] xl:min-h-0 xl:flex-1 xl:overflow-y-auto">
                 <div className="hidden grid-cols-[136px_112px_150px_minmax(0,1fr)_144px_114px] gap-3 border-b border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)] lg:grid">
                   <span>Tipo</span>
                   <span>Severidade</span>
@@ -724,8 +725,9 @@ export function SystemPage() {
           </SystemSurfaceCard>
         </div>
 
-        <aside className="space-y-5">
+        <aside className="space-y-5 xl:min-h-0 xl:overflow-y-auto xl:pr-1">
           <SystemSurfaceCard
+            className="xl:min-h-0"
             description="Leitura operacional do item selecionado para decidir o próximo passo."
             title="Detalhe operacional"
           >

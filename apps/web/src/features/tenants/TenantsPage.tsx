@@ -741,20 +741,20 @@ export function TenantsPage() {
   }
 
   return (
-    <div className="space-y-4 xl:flex xl:h-[calc(100vh-2rem)] xl:flex-col xl:overflow-hidden">
-      <section className="rounded-[30px] border border-[color:var(--color-border)] bg-white/96 px-6 py-5 shadow-[0_18px_40px_rgba(16,30,74,0.08)]">
+    <div className="space-y-3 xl:flex xl:h-[calc(100dvh-2rem)] xl:flex-col xl:overflow-hidden">
+      <section className="rounded-[30px] border border-[color:var(--color-border)] bg-white/96 px-6 py-4 shadow-[0_18px_40px_rgba(16,30,74,0.08)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-[2.08rem] font-semibold tracking-[-0.055em] text-[color:var(--color-ink)]">
+            <h1 className="text-[1.92rem] font-semibold tracking-[-0.055em] text-[color:var(--color-ink)]">
               Clientes B2B
             </h1>
-            <p className="max-w-3xl text-sm leading-6 text-[color:var(--color-muted)]">
-              Revise status, contatos e contexto operacional de cada cliente.
+            <p className="max-w-3xl text-[0.92rem] leading-5 text-[color:var(--color-muted)]">
+              Revise status e contexto de cada cliente.
             </p>
           </div>
 
           <AppButton
-            className="min-h-10 gap-2 rounded-full px-5"
+            className="min-h-9 gap-2 rounded-full px-5 text-[0.92rem]"
             onClick={() => setShowCreateTenant((current) => !current)}
           >
             + Novo cliente
@@ -762,23 +762,15 @@ export function TenantsPage() {
         </div>
       </section>
 
-      <div className="grid gap-4 xl:min-h-0 xl:flex-1 xl:grid-cols-[288px_minmax(0,1fr)_420px] 2xl:grid-cols-[296px_minmax(0,1fr)_432px]">
+      <div className="grid gap-3 xl:min-h-0 xl:flex-1 xl:grid-cols-[292px_minmax(0,1fr)_424px] 2xl:grid-cols-[300px_minmax(0,1fr)_436px]">
         <aside className="space-y-4 xl:min-h-0">
-          <section className="rounded-[28px] border border-[color:var(--color-border)] bg-white/96 p-3.5 shadow-[0_16px_34px_rgba(16,30,74,0.08)] xl:flex xl:h-full xl:min-h-0 xl:flex-col xl:overflow-hidden">
-            <div className="space-y-2.5 xl:flex xl:h-full xl:flex-col">
-              <div className="space-y-1">
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--color-muted)]">
-                  Ferramentas
-                </p>
-                <h2 className="text-[1rem] font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
-                  Ferramentas de clientes
-                </h2>
-                <p className="text-[0.76rem] leading-[1.25rem] text-[color:var(--color-muted)]">
-                  Indicadores, atalhos e filtros para manter a base organizada.
-                </p>
-              </div>
+          <section className="rounded-[28px] border border-[color:var(--color-border)] bg-white/96 p-3 shadow-[0_16px_34px_rgba(16,30,74,0.08)] xl:flex xl:h-full xl:min-h-0 xl:flex-col xl:overflow-hidden">
+            <div className="space-y-2 xl:flex xl:h-full xl:flex-col">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--color-muted)]">
+                Ferramentas
+              </p>
 
-              <div className="space-y-1.5 rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
+              <div className="space-y-1.5 rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-2.5">
                 <p className="text-[0.84rem] font-semibold text-[color:var(--color-ink)]">Resumo da base</p>
                 <div className="grid grid-cols-2 gap-1.5">
                   <TenantMetricTile helper="base atual" label="Clientes" value={String(totalTenants)} />
@@ -802,7 +794,7 @@ export function TenantsPage() {
                 </div>
               </div>
 
-              <div className="space-y-1.5 rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
+              <div className="space-y-1.5 rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-2.5">
                 <p className="text-[0.84rem] font-semibold text-[color:var(--color-ink)]">Ações rápidas</p>
                 <div className="grid gap-1.5">
                   <AppButton
@@ -825,7 +817,7 @@ export function TenantsPage() {
                 </div>
               </div>
 
-              <div className="space-y-2 rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3 xl:flex-1">
+              <div className="space-y-1.5 rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-2.5 xl:flex-1">
                 <p className="text-[0.84rem] font-semibold text-[color:var(--color-ink)]">Filtros</p>
 
                 <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
@@ -895,25 +887,25 @@ export function TenantsPage() {
         </aside>
 
         <section className="min-w-0 rounded-[28px] border border-[color:var(--color-border)] bg-white/96 shadow-[0_16px_34px_rgba(16,30,74,0.08)] xl:flex xl:h-full xl:flex-col xl:overflow-hidden">
-          <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--color-border)] px-5 py-4">
+          <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--color-border)] px-5 py-3.5">
             <div className="space-y-1">
-              <h2 className="text-[1.55rem] font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
+              <h2 className="text-[1.48rem] font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
                 Base de clientes
               </h2>
-              <p className="text-sm text-[color:var(--color-muted)]">
+              <p className="text-[0.92rem] text-[color:var(--color-muted)]">
                 {filteredTenants.length} cliente(s) no recorte atual
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
               <TextInput
-                className="w-[300px]"
+                className="min-h-9 w-[288px] text-[0.92rem]"
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Buscar cliente, slug ou contato"
                 value={query}
               />
               <SelectInput
-                className="w-[184px]"
+                className="min-h-9 w-[184px] text-[0.92rem]"
                 onChange={(event) => setSortOrder(event.target.value as TenantSort)}
                 value={sortOrder}
               >
@@ -923,7 +915,7 @@ export function TenantsPage() {
             </div>
           </header>
 
-          <div className="space-y-4 p-5 xl:flex xl:min-h-0 xl:flex-1 xl:flex-col">
+          <div className="space-y-3 p-4 xl:flex xl:min-h-0 xl:flex-1 xl:flex-col">
             {tenants.length === 0 ? (
               <EmptyState
                 description="Ainda não existe cliente operacional nesta área."
@@ -937,14 +929,14 @@ export function TenantsPage() {
               />
             ) : (
               <>
-                <div className="space-y-3 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1">
+                <div className="space-y-2.5 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1">
                   {filteredTenants.map((tenant) => {
                     const isSelected = tenant.id === selectedTenantId;
 
                     return (
                       <button
                         className={cx(
-                          'w-full rounded-[22px] border px-5 py-4 text-left transition',
+                          'w-full rounded-[22px] border px-4 py-3.5 text-left transition',
                           isSelected
                             ? 'border-[rgba(48,127,226,0.42)] bg-[rgba(48,127,226,0.08)] shadow-[0_14px_30px_rgba(19,33,79,0.08)]'
                             : 'border-[color:var(--color-border)] bg-white hover:border-[rgba(48,127,226,0.26)]',
@@ -954,7 +946,7 @@ export function TenantsPage() {
                         type="button"
                       >
                         <div className="flex items-start justify-between gap-4">
-                          <div className="space-y-3">
+                          <div className="space-y-2.5">
                             <div className="flex flex-wrap items-center gap-2">
                               <StatusPill tone={toneForTenantStatus(tenant.status)}>
                                 {labelForTenantStatus(tenant.status)}
@@ -970,15 +962,15 @@ export function TenantsPage() {
                             </div>
 
                             <div className="space-y-1">
-                              <p className="text-[1.02rem] font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+                              <p className="text-[0.98rem] font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
                                 {tenant.display_name}
                               </p>
-                              <p className="text-[0.88rem] text-[color:var(--color-muted)]">
+                              <p className="text-[0.84rem] text-[color:var(--color-muted)]">
                                 {tenant.slug} · {tenant.legal_name}
                               </p>
                             </div>
 
-                            <div className="flex flex-wrap gap-x-5 gap-y-1 text-[0.86rem] text-[color:var(--color-muted)]">
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-[0.8rem] leading-5 text-[color:var(--color-muted)]">
                               <span>
                                 Grupo: Indisponível
                               </span>
@@ -1000,7 +992,7 @@ export function TenantsPage() {
                   })}
                 </div>
 
-                <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--color-border)] pt-4 text-sm text-[color:var(--color-muted)]">
+                <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--color-border)] pt-3 text-[0.88rem] text-[color:var(--color-muted)]">
                   <span>
                     Exibindo 1-{filteredTenants.length} de {filteredTenants.length} cliente(s)
                   </span>
@@ -1010,13 +1002,13 @@ export function TenantsPage() {
           </div>
         </section>
 
-        <aside className="min-w-0 rounded-[28px] border border-[color:var(--color-border)] bg-white/96 p-4 shadow-[0_16px_34px_rgba(16,30,74,0.08)] xl:flex xl:h-full xl:min-h-0 xl:flex-col xl:overflow-hidden">
-          <div className="space-y-4 xl:flex xl:min-h-0 xl:flex-1 xl:flex-col">
+        <aside className="min-w-0 rounded-[28px] border border-[color:var(--color-border)] bg-white/96 p-3.5 shadow-[0_16px_34px_rgba(16,30,74,0.08)] xl:flex xl:h-full xl:min-h-0 xl:flex-col xl:overflow-hidden">
+          <div className="space-y-3 xl:flex xl:min-h-0 xl:flex-1 xl:flex-col">
             <div className="space-y-1">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--color-muted)]">
                 Cliente selecionado
               </p>
-              <h2 className="text-[1.05rem] font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+              <h2 className="text-[1rem] font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
                 Contexto operacional
               </h2>
             </div>
@@ -1038,13 +1030,13 @@ export function TenantsPage() {
                 description={detailMessage ?? 'O contexto do cliente não ficou disponível.'}
               />
             ) : (
-              <div className="space-y-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1">
-                <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white p-4">
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px] bg-[rgba(48,127,226,0.08)] text-xl font-semibold text-[color:var(--color-brand-blue)]">
+              <div className="space-y-3 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1">
+                <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white p-3.5">
+                  <div className="flex items-start gap-3.5">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[rgba(48,127,226,0.08)] text-[1.12rem] font-semibold text-[color:var(--color-brand-blue)]">
                       {initialsFromName(tenantDetail.display_name)}
                     </div>
-                    <div className="min-w-0 flex-1 space-y-2">
+                    <div className="min-w-0 flex-1 space-y-1.5">
                       <div className="flex flex-wrap items-center gap-2">
                         <StatusPill tone={toneForTenantStatus(tenantDetail.status)}>
                           {labelForTenantStatus(tenantDetail.status)}
@@ -1054,29 +1046,29 @@ export function TenantsPage() {
                         </StatusPill>
                       </div>
                       <div className="space-y-1">
-                        <h3 className="text-[1.02rem] font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+                        <h3 className="text-[0.98rem] font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
                           {tenantDetail.display_name}
                         </h3>
-                        <p className="text-[0.92rem] text-[color:var(--color-muted)]">
+                        <p className="text-[0.86rem] leading-5 text-[color:var(--color-muted)]">
                           {tenantDetail.slug} · {tenantDetail.legal_name}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-4 flex items-center justify-between gap-3 rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-3">
+                  <div className="mt-3.5 flex items-center justify-between gap-3 rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3.5 py-2.5">
                     <div className="space-y-1">
                       <p className="text-xs uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
                         Contato principal
                       </p>
-                      <p className="text-sm font-medium text-[color:var(--color-ink)]">
+                      <p className="text-[0.92rem] font-medium text-[color:var(--color-ink)]">
                         {primaryContact?.full_name ?? 'Indisponível'}
                       </p>
                     </div>
 
                     {primaryContact?.email ? (
                       <a
-                        className="inline-flex min-h-10 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-white px-4 text-[0.92rem] font-medium text-[color:var(--color-ink)] transition hover:border-[color:var(--color-brand-blue)]/40 hover:bg-[color:var(--color-surface)]"
+                        className="inline-flex min-h-9 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-white px-4 text-[0.88rem] font-medium text-[color:var(--color-ink)] transition hover:border-[color:var(--color-brand-blue)]/40 hover:bg-[color:var(--color-surface)]"
                         href={`mailto:${primaryContact.email}`}
                       >
                         Ver contato
@@ -1086,7 +1078,7 @@ export function TenantsPage() {
                     )}
                   </div>
 
-                  <div className="mt-4 flex flex-wrap gap-2 border-b border-[color:var(--color-border)] pb-3">
+                  <div className="mt-3.5 flex flex-wrap gap-2 border-b border-[color:var(--color-border)] pb-2.5">
                     {[
                       { id: 'summary', label: 'Resumo' },
                       { id: 'members', label: 'Membros' },
@@ -1095,7 +1087,7 @@ export function TenantsPage() {
                     ].map((tab) => (
                       <button
                         className={cx(
-                          'border-b-2 px-1 pb-2 text-sm font-semibold transition',
+                          'border-b-2 px-1 pb-2 text-[0.92rem] font-semibold transition',
                           activeTab === tab.id
                             ? 'border-[color:var(--color-brand-blue)] text-[color:var(--color-brand-blue)]'
                             : 'border-transparent text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]',
@@ -1109,10 +1101,10 @@ export function TenantsPage() {
                     ))}
                   </div>
 
-                  <div className="mt-4 space-y-4">
+                  <div className="mt-3.5 space-y-3">
                     {activeTab === 'summary' ? (
                       <>
-                        <div className="grid grid-cols-2 gap-2.5">
+                        <div className="grid grid-cols-2 gap-2">
                           <TenantMetricTile
                             helper="vínculos ativos"
                             label="Memberships"
@@ -1127,8 +1119,8 @@ export function TenantsPage() {
                           <TenantMetricTile helper="sem leitura dedicada" label="Incidentes" value="0" />
                         </div>
 
-                        <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
-                          <p className="mb-2 text-sm font-semibold text-[color:var(--color-ink)]">
+                        <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3.5">
+                          <p className="mb-1.5 text-[0.92rem] font-semibold text-[color:var(--color-ink)]">
                             Informações do cliente
                           </p>
                           <TenantRailInfoRow label="Grupo" value="Indisponível" />
@@ -1142,33 +1134,33 @@ export function TenantsPage() {
                           />
                         </div>
 
-                        <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
-                          <p className="mb-2 text-sm font-semibold text-[color:var(--color-ink)]">
+                        <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3.5">
+                          <p className="mb-1.5 text-[0.92rem] font-semibold text-[color:var(--color-ink)]">
                             Ações rápidas
                           </p>
-                          <div className="grid gap-2">
+                          <div className="grid gap-1.5">
                             <Link
-                              className="inline-flex min-h-10 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-brand-navy),var(--color-brand-blue))] px-4 text-[0.92rem] font-medium text-white shadow-[0_12px_30px_rgba(20,31,71,0.22)]"
+                              className="inline-flex min-h-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-brand-navy),var(--color-brand-blue))] px-4 text-[0.88rem] font-medium text-white shadow-[0_12px_30px_rgba(20,31,71,0.22)]"
                               to={`/support/customers/${tenantDetail.id}`}
                             >
                               Abrir contexto operacional
                             </Link>
                             <button
-                              className="inline-flex min-h-10 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-white px-4 text-[0.92rem] font-medium text-[color:var(--color-ink)] transition hover:border-[color:var(--color-brand-blue)]/40 hover:bg-[color:var(--color-surface)]"
+                              className="inline-flex min-h-9 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-white px-4 text-[0.88rem] font-medium text-[color:var(--color-ink)] transition hover:border-[color:var(--color-brand-blue)]/40 hover:bg-[color:var(--color-surface)]"
                               onClick={() => setActiveTab('members')}
                               type="button"
                             >
                               Gerenciar memberships
                             </button>
                             <button
-                              className="inline-flex min-h-10 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-white px-4 text-[0.92rem] font-medium text-[color:var(--color-ink)] transition hover:border-[color:var(--color-brand-blue)]/40 hover:bg-[color:var(--color-surface)]"
+                              className="inline-flex min-h-9 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-white px-4 text-[0.88rem] font-medium text-[color:var(--color-ink)] transition hover:border-[color:var(--color-brand-blue)]/40 hover:bg-[color:var(--color-surface)]"
                               onClick={() => setShowContactManager(true)}
                               type="button"
                             >
                               Gerenciar contatos
                             </button>
                             <button
-                              className="inline-flex min-h-10 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-white px-4 text-[0.92rem] font-medium text-[color:var(--color-ink)] transition hover:border-[color:var(--color-brand-blue)]/40 hover:bg-[color:var(--color-surface)]"
+                              className="inline-flex min-h-9 items-center justify-center rounded-full border border-[color:var(--color-border)] bg-white px-4 text-[0.88rem] font-medium text-[color:var(--color-ink)] transition hover:border-[color:var(--color-brand-blue)]/40 hover:bg-[color:var(--color-surface)]"
                               onClick={() => setActiveTab('activity')}
                               type="button"
                             >
@@ -1177,9 +1169,9 @@ export function TenantsPage() {
                           </div>
                         </div>
 
-                        <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
+                        <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3.5">
                           <div className="flex items-center justify-between gap-3">
-                            <p className="text-sm font-semibold text-[color:var(--color-ink)]">
+                            <p className="text-[0.92rem] font-semibold text-[color:var(--color-ink)]">
                               Contatos vinculados
                             </p>
                             <GhostButton

@@ -170,15 +170,33 @@ Referência de densidade:
 
 ### 6.1 Regra geral
 
-Em telas operacionais de atendimento, especialmente o Ticket Workspace, a viewport desktop deve ser tratada como cockpit.
+Em telas operacionais de atendimento e administração, a viewport desktop deve ser tratada como cockpit.
 
-A tela deve usar a largura total disponível do notebook wide.
+Viewport canônica de desenho:
+- Full HD: `1920x1080`
+
+Faixa aceitável de validação desktop:
+- `1440x900` até `1920x1080`
+
+Breakpoint mínimo para desktop operacional:
+- `1366px`
+
+Não otimizar a composição principal para `1024px` ou `1280px`.
+
+A tela deve usar a largura útil real do desktop wide.
 
 Evitar:
 - container central estreito demais;
 - margem lateral externa grande;
 - header que ocupa largura indevida;
 - scroll da página combinado com scroll interno.
+
+Em cockpits operacionais:
+- `body/page` não deve rolar verticalmente;
+- sidebar deve permanecer fixa;
+- header/topbar deve permanecer estável;
+- rail direito deve permanecer fixo quando existir;
+- a área central deve ocupar a altura útil da viewport.
 
 ### 6.2 Scroll
 
@@ -194,7 +212,19 @@ Se conteúdo real exceder a viewport:
 3. mover conteúdo secundário para tabs;
 4. manter um único scroll controlado apenas no container correto.
 
-A visão principal de atendimento deve caber inteira em desktop padrão sempre que possível.
+Ordem correta de rolagem em telas operacionais:
+- lista/tabela central: `overflow-y-auto`;
+- thread/conversa: `overflow-y-auto`;
+- rail direito: `overflow-y-auto`;
+- filtros: `overflow-y-auto` apenas quando necessário;
+- composer: fixo, nunca empurrando a página.
+
+Exceções:
+- páginas públicas;
+- artigos/documentação;
+- login e estados institucionais.
+
+Nessas superfícies, a página pode rolar normalmente se isso fizer parte da leitura.
 
 ---
 

@@ -353,18 +353,28 @@ function SupportTopbar({
 export function SupportWorkspaceShell() {
   const [sidebarCollapsed, setSidebarCollapsed] = usePersistedSidebarState();
   const location = useLocation();
-  const isTicketRoute = /^\/support\/tickets\/[^/]+/.test(location.pathname);
+  const isOperationalSupportRoute = /^\/support(\/|$)/.test(location.pathname);
 
   return (
-    <div className={cx('bg-[linear-gradient(180deg,#eef4ff_0%,#f7faff_42%,#f3f6fb_100%)] text-[color:var(--color-ink)]', isTicketRoute ? 'h-screen overflow-hidden' : 'min-h-screen')}>
+    <div
+      className={cx(
+        'bg-[linear-gradient(180deg,#eef4ff_0%,#f7faff_42%,#f3f6fb_100%)] text-[color:var(--color-ink)]',
+        isOperationalSupportRoute ? 'h-dvh overflow-hidden' : 'min-h-screen',
+      )}
+    >
       <div
         className={cx(
           'flex w-full gap-3 px-1.5 sm:px-2.5 lg:px-2',
-          isTicketRoute ? 'h-full py-2 pl-0 pr-2 sm:pl-0 lg:pl-0' : 'py-3',
+          isOperationalSupportRoute ? 'h-full py-2 pl-0 pr-2 sm:pl-0 lg:pl-0' : 'py-3',
         )}
       >
         <div className="hidden shrink-0 lg:block">
-          <div className={cx('sticky h-[calc(100vh-1.5rem)]', isTicketRoute ? 'top-2 h-[calc(100vh-1rem)]' : 'top-3')}>
+          <div
+            className={cx(
+              'sticky h-[calc(100dvh-1.5rem)]',
+              isOperationalSupportRoute ? 'top-2 h-[calc(100dvh-1rem)]' : 'top-3',
+            )}
+          >
             <SupportSidebar
               collapsed={sidebarCollapsed}
               onToggle={() => setSidebarCollapsed((current) => !current)}
@@ -372,10 +382,19 @@ export function SupportWorkspaceShell() {
           </div>
         </div>
 
-        <div className={cx('min-w-0 flex-1', isTicketRoute && 'min-h-0')}>
-          <div className={cx(isTicketRoute ? 'flex h-full min-h-0 flex-col gap-1' : 'space-y-3')}>
-            <SupportTopbar compact={isTicketRoute} />
-            <main className={cx('min-w-0', isTicketRoute && 'min-h-0 flex-1 overflow-hidden')}>
+        <div className={cx('min-w-0 flex-1', isOperationalSupportRoute && 'min-h-0')}>
+          <div
+            className={cx(
+              isOperationalSupportRoute ? 'flex h-full min-h-0 flex-col gap-1' : 'space-y-3',
+            )}
+          >
+            <SupportTopbar compact={isOperationalSupportRoute} />
+            <main
+              className={cx(
+                'min-w-0',
+                isOperationalSupportRoute && 'min-h-0 flex-1 overflow-hidden',
+              )}
+            >
               <Outlet />
             </main>
           </div>

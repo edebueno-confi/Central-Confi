@@ -1732,7 +1732,7 @@ export function KnowledgePage() {
           : 'Criar artigo';
 
     return (
-      <div className="space-y-3">
+      <div className="space-y-3 xl:flex xl:h-[calc(100dvh-2rem)] xl:flex-col xl:overflow-hidden">
         <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white/95 px-6 py-4 shadow-[var(--shadow-panel)]">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-1.5">
@@ -1774,12 +1774,12 @@ export function KnowledgePage() {
         ) : null}
 
         <form
-          className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_368px]"
+          className="grid gap-4 xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(0,1fr)_368px]"
           id="knowledge-article-editor-form"
           onSubmit={handleSaveArticle}
         >
-          <section className="rounded-[22px] border border-[color:var(--color-border)] bg-white/95 px-6 py-5 shadow-[var(--shadow-panel)]">
-            <div className="space-y-5">
+          <section className="rounded-[22px] border border-[color:var(--color-border)] bg-white/95 px-6 py-5 shadow-[var(--shadow-panel)] xl:flex xl:min-h-0 xl:flex-col xl:overflow-hidden">
+            <div className="space-y-5 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1">
               <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
                 <Field label="Título">
                   <TextInput
@@ -1855,8 +1855,8 @@ export function KnowledgePage() {
             </div>
           </section>
 
-          <aside className="space-y-4 xl:sticky xl:top-0 xl:self-start">
-            <section className="rounded-[22px] border border-[color:var(--color-border)] bg-white/95 px-5 py-5 shadow-[var(--shadow-panel)]">
+          <aside className="space-y-4 xl:flex xl:min-h-0 xl:flex-col xl:overflow-hidden">
+            <section className="rounded-[22px] border border-[color:var(--color-border)] bg-white/95 px-5 py-5 shadow-[var(--shadow-panel)] xl:min-h-0 xl:flex-1 xl:overflow-y-auto">
               <div className="space-y-4">
                 <div className="space-y-1">
                   <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-muted)]">
@@ -2021,7 +2021,7 @@ export function KnowledgePage() {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 xl:flex xl:h-[calc(100dvh-2rem)] xl:flex-col xl:overflow-hidden">
       <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white/95 px-6 py-4 shadow-[var(--shadow-panel)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-1.5">
@@ -2042,9 +2042,9 @@ export function KnowledgePage() {
         </div>
       </section>
 
-      <div className="grid gap-4 xl:grid-cols-[256px_minmax(0,1fr)_400px]">
-        <aside className="rounded-[20px] border border-[color:var(--color-border)] bg-white/94 px-4 py-4 shadow-[var(--shadow-panel)]">
-          <div className="space-y-4">
+      <div className="grid gap-4 xl:min-h-0 xl:flex-1 xl:grid-cols-[256px_minmax(0,1fr)_400px]">
+        <aside className="rounded-[20px] border border-[color:var(--color-border)] bg-white/94 px-4 py-4 shadow-[var(--shadow-panel)] xl:flex xl:min-h-0 xl:flex-col xl:overflow-hidden">
+          <div className="space-y-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1">
             <div className="space-y-2">
               <p className="text-[0.74rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--color-muted)]">
                 Filtros
@@ -2204,7 +2204,7 @@ export function KnowledgePage() {
           </div>
         </aside>
 
-        <section className="overflow-hidden rounded-[20px] border border-[color:var(--color-border)] bg-white/95 shadow-[var(--shadow-panel)]">
+        <section className="overflow-hidden rounded-[20px] border border-[color:var(--color-border)] bg-white/95 shadow-[var(--shadow-panel)] xl:flex xl:min-h-0 xl:flex-col">
           <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--color-border)] px-5 py-4">
             <div>
               <h2 className="text-[1.28rem] font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
@@ -2265,7 +2265,7 @@ export function KnowledgePage() {
             </div>
           ) : (
             <>
-              <div className="overflow-hidden">
+              <div className="overflow-hidden xl:min-h-0 xl:flex-1 xl:overflow-y-auto">
                 <table className="w-full table-fixed">
                   <thead>
                     <tr className="border-b border-[color:var(--color-border)] text-left text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
@@ -2361,8 +2361,8 @@ export function KnowledgePage() {
           )}
         </section>
 
-        <section className="self-start rounded-[20px] border border-[color:var(--color-border)] bg-white/95 px-4 py-4 shadow-[var(--shadow-panel)] xl:sticky xl:top-0">
-          <div className="space-y-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto xl:pr-1">
+        <section className="rounded-[20px] border border-[color:var(--color-border)] bg-white/95 px-4 py-4 shadow-[var(--shadow-panel)] xl:flex xl:min-h-0 xl:flex-col xl:overflow-hidden">
+          <div className="space-y-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1">
             <div className="space-y-1">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-muted)]">
                 Pré-visualização
