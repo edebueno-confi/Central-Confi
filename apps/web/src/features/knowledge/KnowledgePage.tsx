@@ -321,6 +321,44 @@ function toneForVisibility(visibility: KnowledgeVisibility) {
   return 'accent' as const;
 }
 
+function compactStatusBadgeClass(
+  tone: 'default' | 'positive' | 'warning' | 'critical' | 'accent',
+) {
+  if (tone === 'positive') {
+    return 'border-[color:var(--color-success-border)] bg-[color:var(--color-success-surface)] text-[color:var(--color-success-ink)]';
+  }
+
+  if (tone === 'warning') {
+    return 'border-[color:var(--color-warning-border)] bg-[color:var(--color-warning-surface)] text-[color:var(--color-warning-ink)]';
+  }
+
+  if (tone === 'critical') {
+    return 'border-[color:var(--color-danger-border)] bg-[color:var(--color-danger-surface)] text-[color:var(--color-danger-ink)]';
+  }
+
+  if (tone === 'accent') {
+    return 'border-[rgba(225,0,152,0.18)] bg-[rgba(225,0,152,0.1)] text-[color:var(--color-brand-magenta)]';
+  }
+
+  return 'border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[color:var(--color-ink)]';
+}
+
+function compactStatusBadgeLabel(status: KnowledgeArticleStatus) {
+  if (status === 'published') {
+    return 'Publicado';
+  }
+
+  if (status === 'review') {
+    return 'Em revisão';
+  }
+
+  if (status === 'archived') {
+    return 'Arquivado';
+  }
+
+  return 'Rascunho';
+}
+
 function displayArticleStatus(status: KnowledgeArticleStatus) {
   if (status === 'published') {
     return 'Publicado';
@@ -409,14 +447,24 @@ function compactCategoryLabel(name: string | null | undefined) {
   }
 
   if (normalized.includes('suporte tecnico')) {
-    return 'Suporte';
+    return 'Suporte técnico';
   }
 
   if (normalized.includes('primeiros')) {
-    return 'Primeiros';
+    return 'Primeiros passos';
   }
 
   if (normalized.includes('verificacao')) {
+    return 'Verificação';
+  }
+
+  return name ?? 'Indisponível';
+}
+
+function displayFilterCategoryLabel(name: string | null | undefined) {
+  const normalized = (name ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+
+  if (normalized.includes('space aware') || normalized.includes('verificacao')) {
     return 'Verificação';
   }
 
@@ -1510,6 +1558,14 @@ export function KnowledgePage() {
       return;
     }
 
+    const shouldArchive = window.confirm(
+      'Arquivar este artigo remove o item da operação editorial ativa. Confirma o arquivamento?',
+    );
+
+    if (!shouldArchive) {
+      return;
+    }
+
     setArticleActionSubmitting(true);
     setArticleActionFeedback(null);
 
@@ -1803,7 +1859,9 @@ export function KnowledgePage() {
                     onClick={() => setSelectedCategoryId(category.id)}
                     type="button"
                   >
-                    <span className="min-w-0 flex-1 truncate">{category.name}</span>
+                    <span className="min-w-0 flex-1 leading-5">
+                      {displayFilterCategoryLabel(category.name)}
+                    </span>
                     <span className="pl-3 text-[color:var(--color-muted)]">{category.article_count}</span>
                   </button>
                 ))}
@@ -1938,10 +1996,10 @@ export function KnowledgePage() {
                   <thead>
                     <tr className="border-b border-[color:var(--color-border)] text-left text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
                       <th className="px-5 py-3.5">Título</th>
-                      <th className="w-[132px] px-3 py-3.5">Categoria</th>
-                      <th className="w-[126px] px-3 py-3.5">Autor</th>
-                      <th className="w-[122px] px-3 py-3.5">Data</th>
-                      <th className="w-[116px] px-5 py-3.5">Status</th>
+                      <th className="w-[126px] px-3 py-3.5">Categoria</th>
+                      <th className="w-[114px] px-3 py-3.5">Autor</th>
+                      <th className="w-[116px] px-3 py-3.5">Data</th>
+                      <th className="w-[148px] px-5 py-3.5">Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1967,7 +2025,7 @@ export function KnowledgePage() {
                         >
                           <td className="px-5 py-3.5 align-top">
                             <div className="space-y-0.5">
-                              <p className="truncate text-[0.94rem] font-medium text-[color:var(--color-ink)]">
+                              <p className="line-clamp-2 text-[0.94rem] font-medium leading-6 text-[color:var(--color-ink)]">
                                 {article.title || 'Indisponível'}
                               </p>
                               <p className="line-clamp-1 text-[0.82rem] leading-5 text-[color:var(--color-muted)]">
@@ -1997,9 +2055,16 @@ export function KnowledgePage() {
                           </td>
                           <td className="px-5 py-3.5 align-top">
                             <div className="space-y-1">
-                              <StatusPill tone={toneForArticleStatus(article.status)}>
-                                {displayArticleStatus(article.status)}
-                              </StatusPill>
+                              <span
+                                className={cx(
+                                  'inline-flex items-center whitespace-nowrap rounded-full border px-2 py-[0.32rem] text-[0.64rem] font-semibold uppercase tracking-[0.08em]',
+                                  compactStatusBadgeClass(toneForArticleStatus(article.status)),
+                                )}
+                              >
+                                <span className="leading-4">
+                                  {compactStatusBadgeLabel(article.status)}
+                                </span>
+                              </span>
                               {article.has_editorial_draft ? (
                                 <p className="text-[0.74rem] leading-4 text-[color:var(--color-muted)]">
                                   Revisão ativa
@@ -2482,7 +2547,7 @@ export function KnowledgePage() {
                             disabled={articleActionSubmitting}
                             onClick={() => void openEditArticle()}
                           >
-                            Iniciar revisão
+                            Editar
                           </GhostButton>
                         ) : null}
                         {articleDetail.status === 'published' && publishedEditorialDraft ? (
@@ -2570,7 +2635,7 @@ export function KnowledgePage() {
                     </InlineNotice>
                   ) : null}
 
-                  <div className="rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                  <div className="hidden rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
                     <div className="grid grid-cols-3 gap-2 border-b border-[color:var(--color-border)] pb-3">
                       {[
                         ['preview', 'Prévia'],
