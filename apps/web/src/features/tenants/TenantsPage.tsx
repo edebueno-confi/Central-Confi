@@ -247,21 +247,23 @@ function TenantMetricTile({
   return (
     <div
       className={cx(
-        'rounded-[16px] border px-3.5 py-3',
+        'rounded-[16px] border px-2.5 py-1.5',
         tone === 'positive' && 'border-emerald-200 bg-emerald-50/80',
         tone === 'warning' && 'border-amber-200 bg-amber-50/80',
         tone === 'critical' && 'border-rose-200 bg-rose-50/80',
         tone === 'default' && 'border-[color:var(--color-border)] bg-white',
       )}
     >
-      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-muted)]">
+      <p className="text-[0.58rem] font-semibold uppercase tracking-[0.14em] text-[color:var(--color-muted)]">
         {label}
       </p>
-      <div className="mt-2 flex items-end justify-between gap-3">
-        <p className="text-[1.28rem] font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
+      <div className="mt-1 flex items-end justify-between gap-1.5">
+        <p className="text-[0.92rem] font-semibold tracking-[-0.04em] text-[color:var(--color-ink)]">
           {value}
         </p>
-        <p className="text-right text-[0.72rem] leading-5 text-[color:var(--color-muted)]">{helper}</p>
+        <p className="max-w-[6.25rem] text-right text-[0.56rem] leading-[0.88rem] text-[color:var(--color-muted)]">
+          {helper}
+        </p>
       </div>
     </div>
   );
@@ -760,25 +762,25 @@ export function TenantsPage() {
         </div>
       </section>
 
-      <div className="grid gap-4 xl:min-h-0 xl:flex-1 xl:grid-cols-[220px_minmax(0,1fr)_500px]">
-        <aside className="space-y-5">
-          <section className="rounded-[28px] border border-[color:var(--color-border)] bg-white/96 p-4 shadow-[0_16px_34px_rgba(16,30,74,0.08)] xl:h-full xl:overflow-y-auto">
-            <div className="space-y-4">
+      <div className="grid gap-4 xl:min-h-0 xl:flex-1 xl:grid-cols-[288px_minmax(0,1fr)_420px] 2xl:grid-cols-[296px_minmax(0,1fr)_432px]">
+        <aside className="space-y-4 xl:min-h-0">
+          <section className="rounded-[28px] border border-[color:var(--color-border)] bg-white/96 p-3.5 shadow-[0_16px_34px_rgba(16,30,74,0.08)] xl:flex xl:h-full xl:min-h-0 xl:flex-col xl:overflow-hidden">
+            <div className="space-y-2.5 xl:flex xl:h-full xl:flex-col">
               <div className="space-y-1">
                 <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--color-muted)]">
                   Ferramentas
                 </p>
-                <h2 className="text-[1.05rem] font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
+                <h2 className="text-[1rem] font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
                   Ferramentas de clientes
                 </h2>
-                <p className="text-[0.92rem] leading-6 text-[color:var(--color-muted)]">
+                <p className="text-[0.76rem] leading-[1.25rem] text-[color:var(--color-muted)]">
                   Indicadores, atalhos e filtros para manter a base organizada.
                 </p>
               </div>
 
-              <div className="space-y-3 rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
-                <p className="text-sm font-semibold text-[color:var(--color-ink)]">Resumo da base</p>
-                <div className="grid gap-3">
+              <div className="space-y-1.5 rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
+                <p className="text-[0.84rem] font-semibold text-[color:var(--color-ink)]">Resumo da base</p>
+                <div className="grid grid-cols-2 gap-1.5">
                   <TenantMetricTile helper="base atual" label="Clientes" value={String(totalTenants)} />
                   <TenantMetricTile
                     helper="em operação"
@@ -794,91 +796,97 @@ export function TenantsPage() {
                   />
                   <TenantMetricTile
                     helper="prontos para contato"
-                    label="Contatos ativos"
+                    label="Contatos"
                     value={String(totalContacts)}
                   />
                 </div>
               </div>
 
-              <div className="space-y-3 rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
-                <p className="text-sm font-semibold text-[color:var(--color-ink)]">Ações rápidas</p>
-                <div className="grid gap-2">
+              <div className="space-y-1.5 rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3">
+                <p className="text-[0.84rem] font-semibold text-[color:var(--color-ink)]">Ações rápidas</p>
+                <div className="grid gap-1.5">
                   <AppButton
-                    className="min-h-10 justify-start px-4 text-[0.92rem]"
+                    className="min-h-8 justify-start px-3.5 text-[0.78rem]"
                     onClick={() => setShowCreateTenant(true)}
                   >
                     Criar cliente
                   </AppButton>
-                  <GhostButton className="min-h-10 justify-start px-4 text-[0.92rem]" onClick={() => void loadSurface(selectedTenantId)}>
+                  <GhostButton className="min-h-8 justify-start px-3.5 text-[0.78rem]" onClick={() => void loadSurface(selectedTenantId)}>
                     Atualizar lista
                   </GhostButton>
                   {selectedTenantId ? (
                     <Link
-                      className="inline-flex min-h-10 items-center justify-start rounded-full border border-[color:var(--color-border)] bg-white px-4 text-[0.92rem] font-medium text-[color:var(--color-ink)] transition hover:border-[color:var(--color-brand-blue)]/40 hover:bg-[color:var(--color-surface)]"
+                      className="inline-flex min-h-8 items-center justify-start rounded-full border border-[color:var(--color-border)] bg-white px-3.5 text-[0.78rem] font-medium text-[color:var(--color-ink)] transition hover:border-[color:var(--color-brand-blue)]/40 hover:bg-[color:var(--color-surface)]"
                       to={`/support/customers/${selectedTenantId}`}
                     >
-                      Abrir contexto operacional
+                      Abrir contexto
                     </Link>
                   ) : null}
                 </div>
               </div>
 
-              <div className="space-y-4 rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
-                <p className="text-sm font-semibold text-[color:var(--color-ink)]">Filtros</p>
+              <div className="space-y-2 rounded-[20px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-3 xl:flex-1">
+                <p className="text-[0.84rem] font-semibold text-[color:var(--color-ink)]">Filtros</p>
 
-                <Field label="Buscar">
-                  <TextInput
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Buscar cliente, slug ou contato"
-                    value={query}
-                  />
-                </Field>
+                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+                  <div className="space-y-1">
+                    <label className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                      Status
+                    </label>
+                    <SelectInput
+                      className="min-h-8 text-[0.78rem]"
+                      onChange={(event) =>
+                        setStatusFilter(event.target.value as 'all' | TenantStatus)
+                      }
+                      value={statusFilter}
+                    >
+                      <option value="all">Todos</option>
+                      {TENANT_STATUSES.map((status) => (
+                        <option key={status} value={status}>
+                          {labelForTenantStatus(status)}
+                        </option>
+                      ))}
+                    </SelectInput>
+                  </div>
 
-                <Field label="Status">
-                  <SelectInput
-                    onChange={(event) =>
-                      setStatusFilter(event.target.value as 'all' | TenantStatus)
-                    }
-                    value={statusFilter}
-                  >
-                    <option value="all">Todos</option>
-                    {TENANT_STATUSES.map((status) => (
-                      <option key={status} value={status}>
-                        {labelForTenantStatus(status)}
-                      </option>
-                    ))}
-                  </SelectInput>
-                </Field>
+                  <div className="space-y-1">
+                    <label className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                      Memberships
+                    </label>
+                    <SelectInput
+                      className="min-h-8 text-[0.78rem]"
+                      onChange={(event) =>
+                        setMembershipFilter(event.target.value as TenantMembershipFilter)
+                      }
+                      value={membershipFilter}
+                    >
+                      <option value="all">Todas</option>
+                      <option value="active">Com memberships ativas</option>
+                      <option value="invited">Com convites pendentes</option>
+                      <option value="none">Sem memberships</option>
+                    </SelectInput>
+                  </div>
 
-                <Field label="Memberships">
-                  <SelectInput
-                    onChange={(event) =>
-                      setMembershipFilter(event.target.value as TenantMembershipFilter)
-                    }
-                    value={membershipFilter}
-                  >
-                    <option value="all">Todas</option>
-                    <option value="active">Com memberships ativas</option>
-                    <option value="invited">Com convites pendentes</option>
-                    <option value="none">Sem memberships</option>
-                  </SelectInput>
-                </Field>
+                  <div className="space-y-1 sm:col-span-2 xl:col-span-1">
+                    <label className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--color-muted)]">
+                      Última atualização
+                    </label>
+                    <SelectInput
+                      className="min-h-8 text-[0.78rem]"
+                      onChange={(event) =>
+                        setUpdatedFilter(event.target.value as TenantUpdatedFilter)
+                      }
+                      value={updatedFilter}
+                    >
+                      <option value="all">Todas</option>
+                      <option value="24h">Últimas 24 horas</option>
+                      <option value="7d">Últimos 7 dias</option>
+                      <option value="30d">Últimos 30 dias</option>
+                    </SelectInput>
+                  </div>
+                </div>
 
-                <Field label="Última atualização">
-                  <SelectInput
-                    onChange={(event) =>
-                      setUpdatedFilter(event.target.value as TenantUpdatedFilter)
-                    }
-                    value={updatedFilter}
-                  >
-                    <option value="all">Todas</option>
-                    <option value="24h">Últimas 24 horas</option>
-                    <option value="7d">Últimos 7 dias</option>
-                    <option value="30d">Últimos 30 dias</option>
-                  </SelectInput>
-                </Field>
-
-                <GhostButton className="min-h-10 w-full text-[0.92rem]" onClick={resetFilters}>
+                <GhostButton className="min-h-8 w-full text-[0.78rem]" onClick={resetFilters}>
                   Limpar filtros
                 </GhostButton>
               </div>
@@ -898,6 +906,12 @@ export function TenantsPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
+              <TextInput
+                className="w-[300px]"
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Buscar cliente, slug ou contato"
+                value={query}
+              />
               <SelectInput
                 className="w-[184px]"
                 onChange={(event) => setSortOrder(event.target.value as TenantSort)}
@@ -959,16 +973,20 @@ export function TenantsPage() {
                               <p className="text-[1.02rem] font-semibold tracking-[-0.03em] text-[color:var(--color-ink)]">
                                 {tenant.display_name}
                               </p>
-                              <p className="text-[0.92rem] text-[color:var(--color-muted)]">
+                              <p className="text-[0.88rem] text-[color:var(--color-muted)]">
                                 {tenant.slug} · {tenant.legal_name}
                               </p>
                             </div>
 
-                            <div className="flex flex-wrap gap-x-5 gap-y-1 text-[0.9rem] text-[color:var(--color-muted)]">
+                            <div className="flex flex-wrap gap-x-5 gap-y-1 text-[0.86rem] text-[color:var(--color-muted)]">
+                              <span>
+                                Grupo: Indisponível
+                              </span>
                               <span>
                                 Contato principal:{' '}
                                 {tenant.primary_contact_full_name ?? 'Indisponível'}
                               </span>
+                              <span>Plano: Indisponível</span>
                               <span>
                                 Atualizado em {formatDateTime(tenant.updated_at)}
                               </span>
@@ -992,8 +1010,8 @@ export function TenantsPage() {
           </div>
         </section>
 
-        <aside className="min-w-0 rounded-[28px] border border-[color:var(--color-border)] bg-white/96 p-4 shadow-[0_16px_34px_rgba(16,30,74,0.08)] xl:h-full xl:overflow-y-auto">
-          <div className="space-y-4">
+        <aside className="min-w-0 rounded-[28px] border border-[color:var(--color-border)] bg-white/96 p-4 shadow-[0_16px_34px_rgba(16,30,74,0.08)] xl:flex xl:h-full xl:min-h-0 xl:flex-col xl:overflow-hidden">
+          <div className="space-y-4 xl:flex xl:min-h-0 xl:flex-1 xl:flex-col">
             <div className="space-y-1">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--color-muted)]">
                 Cliente selecionado
@@ -1020,7 +1038,7 @@ export function TenantsPage() {
                 description={detailMessage ?? 'O contexto do cliente não ficou disponível.'}
               />
             ) : (
-              <>
+              <div className="space-y-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-1">
                 <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white p-4">
                   <div className="flex items-start gap-4">
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px] bg-[rgba(48,127,226,0.08)] text-xl font-semibold text-[color:var(--color-brand-blue)]">
@@ -1094,7 +1112,7 @@ export function TenantsPage() {
                   <div className="mt-4 space-y-4">
                     {activeTab === 'summary' ? (
                       <>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-2.5">
                           <TenantMetricTile
                             helper="vínculos ativos"
                             label="Memberships"
@@ -1113,6 +1131,7 @@ export function TenantsPage() {
                           <p className="mb-2 text-sm font-semibold text-[color:var(--color-ink)]">
                             Informações do cliente
                           </p>
+                          <TenantRailInfoRow label="Grupo" value="Indisponível" />
                           <TenantRailInfoRow label="Slug" value={tenantDetail.slug} />
                           <TenantRailInfoRow label="Empresa" value={tenantDetail.legal_name} />
                           <TenantRailInfoRow label="Plano" value="Indisponível" />
@@ -1332,7 +1351,7 @@ export function TenantsPage() {
                     ) : null}
                   </div>
                 </section>
-              </>
+              </div>
             )}
           </div>
         </aside>
