@@ -1137,6 +1137,12 @@ export function KnowledgePage() {
     setArticleActionFeedback(null);
   }
 
+  function closeArticleEditor() {
+    setPanelMode('detail');
+    setArticleForm(emptyArticleForm());
+    setArticleFormMessage(null);
+  }
+
   function openCreateCategory() {
     setPanelMode('create-category');
     setCategoryForm(emptyCategoryForm());
@@ -1698,6 +1704,270 @@ export function KnowledgePage() {
     }
   }
 
+  const isArticleEditorMode =
+    panelMode === 'create-article' || panelMode === 'edit-article';
+
+  function renderArticleEditorSurface() {
+    const isPublishedRevision =
+      panelMode === 'edit-article' && articleDetail?.status === 'published';
+    const editorTitle =
+      panelMode === 'create-article'
+        ? 'Novo artigo'
+        : isPublishedRevision
+          ? 'Revisão editorial'
+          : 'Editar artigo';
+    const editorDescription =
+      panelMode === 'create-article'
+        ? 'Crie um novo artigo com espaço suficiente para escrita, revisão e futura formatação editorial.'
+        : isPublishedRevision
+          ? 'A revisão acontece em uma superfície dedicada. A versão pública atual permanece estável até a nova publicação.'
+          : 'Edite o conteúdo com uma área ampla de trabalho, sem comprimir a escrita no rail lateral.';
+    const saveLabel =
+      articleFormSubmitting
+        ? 'Salvando...'
+        : panelMode === 'edit-article'
+          ? isPublishedRevision
+            ? 'Salvar revisão'
+            : 'Salvar artigo'
+          : 'Criar artigo';
+
+    return (
+      <div className="space-y-3">
+        <section className="rounded-[24px] border border-[color:var(--color-border)] bg-white/95 px-6 py-4 shadow-[var(--shadow-panel)]">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="space-y-1.5">
+              <h1 className="text-[1.9rem] font-semibold tracking-[-0.05em] text-[color:var(--color-ink)]">
+                {editorTitle}
+              </h1>
+              <p className="max-w-3xl text-sm leading-6 text-[color:var(--color-muted)]">
+                {editorDescription}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <GhostButton
+                className="min-h-11 px-5 text-[13px] font-semibold"
+                disabled={articleFormSubmitting}
+                onClick={closeArticleEditor}
+              >
+                Voltar para artigos
+              </GhostButton>
+              <AppButton
+                className="min-h-11 px-5 text-[13px] font-semibold"
+                disabled={articleFormSubmitting}
+                form="knowledge-article-editor-form"
+                type="submit"
+              >
+                {saveLabel}
+              </AppButton>
+            </div>
+          </div>
+        </section>
+
+        {articleFormMessage ? (
+          <InlineNotice tone="critical">{articleFormMessage}</InlineNotice>
+        ) : null}
+
+        {articleFormHasPublicCategoryMismatch ? (
+          <InlineNotice tone="warning">
+            Artigos públicos só aparecem na central quando a categoria selecionada também estiver pública. Ajuste a categoria ou a visibilidade antes de publicar.
+          </InlineNotice>
+        ) : null}
+
+        <form
+          className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_368px]"
+          id="knowledge-article-editor-form"
+          onSubmit={handleSaveArticle}
+        >
+          <section className="rounded-[22px] border border-[color:var(--color-border)] bg-white/95 px-6 py-5 shadow-[var(--shadow-panel)]">
+            <div className="space-y-5">
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+                <Field label="Título">
+                  <TextInput
+                    className="h-12 rounded-[18px] px-4 text-[1rem]"
+                    onChange={(event) =>
+                      setArticleForm((current) => ({
+                        ...current,
+                        title: event.target.value,
+                        slug:
+                          current.slug === '' ||
+                          current.slug === slugify(current.title)
+                            ? slugify(event.target.value)
+                            : current.slug,
+                      }))
+                    }
+                    placeholder="Como tratar devolução com reembolso parcial"
+                    required
+                    value={articleForm.title}
+                  />
+                </Field>
+
+                <Field label="Slug">
+                  <TextInput
+                    className="h-12 rounded-[18px] px-4 text-[0.98rem]"
+                    disabled={articleDetail?.status === 'published'}
+                    onChange={(event) =>
+                      setArticleForm((current) => ({
+                        ...current,
+                        slug: slugify(event.target.value),
+                      }))
+                    }
+                    placeholder="como-tratar-devolucao-com-reembolso-parcial"
+                    required
+                    value={articleForm.slug}
+                  />
+                </Field>
+              </div>
+
+              {articleDetail?.status === 'published' ? (
+                <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                  O slug do artigo publicado permanece travado para preservar o mesmo link público.
+                </p>
+              ) : null}
+
+              <Field label="Resumo">
+                <TextareaInput
+                  className="min-h-[136px] rounded-[22px] px-5 py-4 text-[0.98rem] leading-7"
+                  onChange={(event) =>
+                    setArticleForm((current) => ({
+                      ...current,
+                      summary: event.target.value,
+                    }))
+                  }
+                  placeholder="Resumo curto para orientar a leitura do artigo."
+                  value={articleForm.summary}
+                />
+              </Field>
+
+              <Field label="Conteúdo principal">
+                <TextareaInput
+                  className="min-h-[560px] rounded-[24px] px-5 py-4 text-[1rem] leading-8"
+                  onChange={(event) =>
+                    setArticleForm((current) => ({
+                      ...current,
+                      bodyMd: event.target.value,
+                    }))
+                  }
+                  placeholder="Escreva ou revise o corpo principal do artigo."
+                  required
+                  value={articleForm.bodyMd}
+                />
+              </Field>
+            </div>
+          </section>
+
+          <aside className="space-y-4 xl:sticky xl:top-0 xl:self-start">
+            <section className="rounded-[22px] border border-[color:var(--color-border)] bg-white/95 px-5 py-5 shadow-[var(--shadow-panel)]">
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-muted)]">
+                    Configuração editorial
+                  </p>
+                  <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                    Ajuste categoria, visibilidade e dados complementares sem disputar espaço com a escrita.
+                  </p>
+                </div>
+
+                <Field label="Categoria">
+                  <SelectInput
+                    className="h-12 rounded-[18px] px-4"
+                    onChange={(event) =>
+                      setArticleForm((current) => ({
+                        ...current,
+                        categoryId: event.target.value,
+                      }))
+                    }
+                    value={articleForm.categoryId}
+                  >
+                    <option value="">Sem categoria</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {categoryDisplayName(category)}
+                      </option>
+                    ))}
+                  </SelectInput>
+                </Field>
+
+                <Field label="Visibilidade">
+                  <SelectInput
+                    className="h-12 rounded-[18px] px-4"
+                    onChange={(event) =>
+                      setArticleForm((current) => ({
+                        ...current,
+                        visibility: event.target.value as KnowledgeVisibility,
+                      }))
+                    }
+                    value={articleForm.visibility}
+                  >
+                    {KNOWLEDGE_VISIBILITIES.map((visibility) => (
+                      <option key={visibility} value={visibility}>
+                        {visibility}
+                      </option>
+                    ))}
+                  </SelectInput>
+                </Field>
+
+                <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
+                  <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
+                    Informações avançadas
+                  </summary>
+                  <div className="mt-4 space-y-4">
+                    <Field label="Caminho de origem">
+                      <TextInput
+                        onChange={(event) =>
+                          setArticleForm((current) => ({
+                            ...current,
+                            sourcePath: event.target.value,
+                          }))
+                        }
+                        placeholder="raw_knowledge/.../articles"
+                        value={articleForm.sourcePath}
+                      />
+                    </Field>
+
+                    <Field label="Hash de origem">
+                      <TextInput
+                        onChange={(event) =>
+                          setArticleForm((current) => ({
+                            ...current,
+                            sourceHash: event.target.value,
+                          }))
+                        }
+                        placeholder="sha256..."
+                        value={articleForm.sourceHash}
+                      />
+                    </Field>
+                  </div>
+                </details>
+              </div>
+            </section>
+
+            <section className="rounded-[22px] border border-[color:var(--color-border)] bg-white/95 px-5 py-5 shadow-[var(--shadow-panel)]">
+              <div className="space-y-3">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-muted)]">
+                  Ações
+                </p>
+                <AppButton
+                  className="min-h-11 w-full justify-center"
+                  disabled={articleFormSubmitting}
+                  type="submit"
+                >
+                  {saveLabel}
+                </AppButton>
+                <GhostButton
+                  className="min-h-11 w-full justify-center"
+                  disabled={articleFormSubmitting}
+                  onClick={closeArticleEditor}
+                >
+                  Cancelar
+                </GhostButton>
+              </div>
+            </section>
+          </aside>
+        </form>
+      </div>
+    );
+  }
+
   if (backendDenied) {
     return <Navigate replace state={{ reason: 'backend-permission' }} to="/access-denied" />;
   }
@@ -1744,6 +2014,10 @@ export function KnowledgePage() {
         />
       </div>
     );
+  }
+
+  if (isArticleEditorMode) {
+    return renderArticleEditorSurface();
   }
 
   return (
@@ -2200,177 +2474,6 @@ export function KnowledgePage() {
                       }}
                     >
                       Fechar
-                    </GhostButton>
-                  </div>
-                </form>
-              ) : panelMode === 'create-article' || panelMode === 'edit-article' ? (
-                <form className="space-y-4" onSubmit={handleSaveArticle}>
-                <Field label="Título">
-                    <TextInput
-                      onChange={(event) =>
-                        setArticleForm((current) => ({
-                          ...current,
-                          title: event.target.value,
-                          slug:
-                            current.slug === '' ||
-                            current.slug === slugify(current.title)
-                              ? slugify(event.target.value)
-                              : current.slug,
-                        }))
-                      }
-                      placeholder="Como tratar devolucao com reembolso parcial"
-                      required
-                      value={articleForm.title}
-                    />
-                  </Field>
-
-                  <Field label="Slug">
-                    <TextInput
-                      onChange={(event) =>
-                        setArticleForm((current) => ({
-                          ...current,
-                          slug: slugify(event.target.value),
-                        }))
-                      }
-                      disabled={articleDetail?.status === 'published'}
-                      placeholder="como-tratar-devolucao-com-reembolso-parcial"
-                      required
-                      value={articleForm.slug}
-                    />
-                  </Field>
-
-                  {articleDetail?.status === 'published' ? (
-                    <p className="text-xs leading-5 text-[color:var(--color-muted)]">
-                      O slug do artigo publicado permanece travado para preservar o mesmo link público.
-                    </p>
-                  ) : null}
-
-                  <Field label="Resumo">
-                    <TextareaInput
-                      onChange={(event) =>
-                        setArticleForm((current) => ({
-                          ...current,
-                          summary: event.target.value,
-                        }))
-                      }
-                      placeholder="Resumo curto para orientar a leitura do artigo."
-                      value={articleForm.summary}
-                    />
-                  </Field>
-
-                  <Field label="Categoria">
-                    <SelectInput
-                      onChange={(event) =>
-                        setArticleForm((current) => ({
-                          ...current,
-                          categoryId: event.target.value,
-                        }))
-                      }
-                      value={articleForm.categoryId}
-                    >
-                      <option value="">Sem categoria</option>
-                      {categories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {categoryDisplayName(category)}
-                        </option>
-                      ))}
-                    </SelectInput>
-                  </Field>
-
-                  {articleFormHasPublicCategoryMismatch ? (
-                    <InlineNotice tone="warning">
-                      Artigos públicos só aparecem na central quando a categoria selecionada também estiver pública. Ajuste a categoria ou a visibilidade antes de publicar.
-                    </InlineNotice>
-                  ) : null}
-
-                  <Field label="Visibilidade">
-                    <SelectInput
-                      onChange={(event) =>
-                        setArticleForm((current) => ({
-                          ...current,
-                          visibility: event.target.value as KnowledgeVisibility,
-                        }))
-                      }
-                      value={articleForm.visibility}
-                    >
-                      {KNOWLEDGE_VISIBILITIES.map((visibility) => (
-                        <option key={visibility} value={visibility}>
-                          {visibility}
-                        </option>
-                      ))}
-                    </SelectInput>
-                  </Field>
-
-                  <Field label="Conteúdo principal">
-                    <TextareaInput
-                      onChange={(event) =>
-                        setArticleForm((current) => ({
-                          ...current,
-                          bodyMd: event.target.value,
-                        }))
-                      }
-                      placeholder="Escreva ou revise o corpo principal do artigo."
-                      required
-                      value={articleForm.bodyMd}
-                    />
-                  </Field>
-
-                  <details className="rounded-[18px] border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-4 py-4">
-                    <summary className="cursor-pointer text-sm font-semibold text-[color:var(--color-ink)]">
-                      Informações avançadas
-                    </summary>
-                    <div className="mt-4 space-y-4">
-                      <Field label="Caminho de origem">
-                        <TextInput
-                          onChange={(event) =>
-                            setArticleForm((current) => ({
-                              ...current,
-                              sourcePath: event.target.value,
-                            }))
-                          }
-                          placeholder="raw_knowledge/.../articles"
-                          value={articleForm.sourcePath}
-                        />
-                      </Field>
-
-                      <Field label="Hash de origem">
-                        <TextInput
-                          onChange={(event) =>
-                            setArticleForm((current) => ({
-                              ...current,
-                              sourceHash: event.target.value,
-                            }))
-                          }
-                          placeholder="sha256..."
-                          value={articleForm.sourceHash}
-                        />
-                      </Field>
-                    </div>
-                  </details>
-
-                  {articleFormMessage ? (
-                    <InlineNotice tone="critical">{articleFormMessage}</InlineNotice>
-                  ) : null}
-
-                  <div className="flex flex-wrap gap-3">
-                    <AppButton disabled={articleFormSubmitting} type="submit">
-                      {articleFormSubmitting
-                        ? 'Salvando...'
-                        : panelMode === 'edit-article'
-                          ? articleDetail?.status === 'published'
-                        ? 'Salvar revisão'
-                            : 'Salvar artigo'
-                          : 'Criar artigo'}
-                    </AppButton>
-                    <GhostButton
-                      disabled={articleFormSubmitting}
-                      onClick={() => {
-                        setPanelMode('detail');
-                        setArticleForm(emptyArticleForm());
-                        setArticleFormMessage(null);
-                      }}
-                    >
-                      Cancelar
                     </GhostButton>
                   </div>
                 </form>
