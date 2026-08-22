@@ -42,10 +42,14 @@ test('interface confirma mutações sensíveis e mantém rolagem no corpo da tel
   assert.match(page, /AccessEditorModal/);
   assert.match(page, /gso-access-list/);
   assert.match(page, /gso-ui-groups--compact/);
+  assert.match(page, /data-access-editor-modal/);
+  assert.match(page, /event\.key === 'Tab'/);
+  assert.match(page, /lastActiveElementRef/);
   assert.doesNotMatch(page, /Duplicar perfil/);
   assert.match(css, /\.gso-po-v2-access \.gso-ui-shell-body/);
   assert.match(css, /\.gso-po-v2-access \.gso-ui-split--wide-detail/);
   assert.match(css, /overflow-y: auto/);
   assert.match(css, /gso-access-modal/);
   assert.match(css, /gso-access-grants-grid/);
+  assert.match(css, /gso-access-modal-form \.gso-ui-actions[^\n]*position: sticky/);
 });

@@ -507,21 +507,43 @@ function AccessEditorModal({
   title: string;
 }) {
   const onCloseRef = useRef(onClose);
+  const lastActiveElementRef = useRef<HTMLElement | null>(null);
   onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return undefined;
+    lastActiveElementRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const frame = window.requestAnimationFrame(() => document.querySelector<HTMLElement>(initialFocus)?.focus());
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
         onCloseRef.current();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const dialog = document.querySelector<HTMLElement>('[data-access-editor-modal="true"]');
+      if (!dialog) return;
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+      if (focusable.length === 0) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
     document.addEventListener('keydown', onKeyDown);
     return () => {
       window.cancelAnimationFrame(frame);
       document.removeEventListener('keydown', onKeyDown);
+      lastActiveElementRef.current?.focus();
     };
   }, [initialFocus, open]);
 
@@ -530,7 +552,7 @@ function AccessEditorModal({
   return (
     <div className="gso-access-modal-layer">
       <button aria-label="Fechar edição" className="gso-access-modal-scrim" onClick={onClose} type="button" />
-      <section aria-describedby="access-editor-description" aria-labelledby="access-editor-title" aria-modal="true" className="gso-access-modal" role="dialog">
+      <section aria-describedby="access-editor-description" aria-labelledby="access-editor-title" aria-modal="true" className="gso-access-modal" data-access-editor-modal="true" role="dialog" tabIndex={-1}>
         <header className="gso-access-modal-header">
           <div>
             <p className="gso-access-modal-kicker">Controle de acesso</p>
@@ -539,7 +561,7 @@ function AccessEditorModal({
           </div>
           <button aria-label="Fechar edição" className="gso-access-modal-close" onClick={onClose} type="button">×</button>
         </header>
-        <div className="gso-access-modal-body">{children}</div>
+        <div className="gso-access-modal-body"><div className="gso-access-modal-content">{children}</div></div>
       </section>
     </div>
   );
@@ -1408,7 +1430,7 @@ function StructurePanel(props: {
         open={areaEditorOpen}
         title={editingAreaKey ? `Editar área: ${selectedArea?.display_name ?? areaForm.displayName}` : 'Criar área'}
       >
-        <form id="area-editor-form" onSubmit={(event) => { event.preventDefault(); submitAreaForm(); }}>
+        <form className="gso-access-modal-form" id="area-editor-form" onSubmit={(event) => { event.preventDefault(); submitAreaForm(); }}>
           <div className="gso-ui-grid">
             <UiField hint="Chave única em letras minúsculas." label="Chave">
               <input autoComplete="off" disabled={Boolean(editingAreaKey)} id="new-area-key" name="areaKey" className="gso-ui-control" onChange={(event) => setAreaForm((current) => ({ ...current, areaKey: event.target.value }))} pattern="[a-z0-9_]+" placeholder="ex: customer_success" required value={areaForm.areaKey} />
@@ -1786,7 +1808,7 @@ function PermissionsCapabilityPanel(props: {
         open={profileEditorOpen}
         title="Criar perfil personalizado"
       >
-        <form onSubmit={(event) => { event.preventDefault(); submitProfileCreate(); }}>
+        <form className="gso-access-modal-form" onSubmit={(event) => { event.preventDefault(); submitProfileCreate(); }}>
           <div className="gso-ui-grid">
             <UiField label="Nome do perfil">
               <input autoComplete="off" id="profile-editor-name" name="profileName" className="gso-ui-control" onChange={(event) => setProfileForm((current) => ({ ...current, name: event.target.value }))} placeholder="ex: Financeiro Restrito" required value={profileForm.name} />
@@ -1808,7 +1830,7 @@ function PermissionsCapabilityPanel(props: {
         open={profileEditOpen}
         title={`Editar perfil: ${selectedProfile?.name ?? ''}`}
       >
-        <form onSubmit={(event) => { event.preventDefault(); submitProfileEdit(); }}>
+        <form className="gso-access-modal-form" onSubmit={(event) => { event.preventDefault(); submitProfileEdit(); }}>
           <div className="gso-ui-grid">
             <UiField label="Nome do perfil">
               <input autoComplete="off" id="profile-edit-name" name="profileName" className="gso-ui-control" onChange={(event) => setProfileEditForm((current) => ({ ...current, name: event.target.value }))} required value={profileEditForm.name} />

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import type {
   AnalyticsDataStatus,
@@ -166,7 +166,16 @@ export function AnalyticsCeoPage({
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [configuredPipelines, setConfiguredPipelines] = useState<AnalyticsSourceConfig[]>([]);
   const [groupCompany, setGroupCompany] = useState<string>(sharedOperation ?? '');
-
+  const stableFilters = useMemo(
+    () => ({
+      from: filters.from,
+      to: filters.to,
+      ownerId: filters.ownerId,
+      stageId: filters.stageId,
+      priority: filters.priority,
+    }),
+    [filters.from, filters.to, filters.ownerId, filters.stageId, filters.priority],
+  );
   useEffect(() => {
     if (sharedOperation !== undefined && sharedOperation !== groupCompany) {
       setGroupCompany(sharedOperation);
@@ -197,35 +206,70 @@ export function AnalyticsCeoPage({
         ? { ...current, loading: false, error: undefined }
         : { loading: true },
     );
-    void getExecutiveKpisV2(filters)
-      .then((payload) => setExecutiveKpis(payload))
-      .catch(() => setExecutiveKpis(null));
 
-    if (groupCompany) {
-      void Promise.all([
-        getCommercialKpisV2ForOverview(filters, groupCompany),
-        getSupportKpisV2ForOverview(filters, groupCompany),
-        getCsSnapshotForOverview(filters, [], groupCompany),
-      ])
-        .then(([commercial, support, supportSnapshot]) => {
-          if (!cancelled) {
-            setOperationKpis({
-              period: { commercial: commercial.period, support: support.period, supportSnapshot: supportSnapshot.period },
-              current: { commercial: commercial.current, support: support.current, supportSnapshot: supportSnapshot.current },
-            });
+    // O histórico é derivado do mesmo snapshot executivo e não participa do
+    // caminho crítico da abertura. Carregá-lo em paralelo fazia o banco
+    // executar novamente duas leituras pesadas enquanto a visão principal
+    // ainda estava indisponível. Uma falha histórica não deve apagar uma
+    // visão executiva já carregada; o painel de tendência permanece vazio,
+    // com o restante do cockpit utilizável.
+    getCeoSnapshot(stableFilters)
+      .then(async (data) => {
+        // O status da fonte é complementar. Só é lido depois do snapshot para
+        // evitar concorrência entre duas leituras que acessam o mesmo estado
+        // de ingestão durante a abertura do painel.
+        const liveSourceStatus = sourceStatus ?? await getAnalyticsSourceStatusSafe();
+        if (cancelled) return;
+        setResult({ loading: false, data, sourceStatus: liveSourceStatus ?? sourceStatus });
+        setRefreshing(false);
+        // Consultas secundárias entram em fila depois do snapshot principal.
+        // O painel já está utilizável quando elas começam, e o Supabase não
+        // recebe sete leituras pesadas concorrentes na abertura.
+        void (async () => {
+          let executiveLoaded = false;
+          if (!groupCompany) {
+            try {
+              // Em um recorte operacional, Comercial, Suporte e Customer
+              // Success já são carregados por seus read models específicos.
+              // Repetir o resumo executivo global aqui acrescenta duas RPCs
+              // pesadas por janela e não altera os valores que serão exibidos.
+              const payload = await getExecutiveKpisV2(stableFilters);
+              executiveLoaded = true;
+              if (!cancelled) setExecutiveKpis(payload);
+            } catch {
+              if (!cancelled) setExecutiveKpis(null);
+            }
           }
-        })
-        .catch(() => {
-          if (!cancelled) setOperationKpis(null);
-        });
-    }
-
-    Promise.all([getCeoSnapshot(filters), getCeoHistory(filters), sourceStatus ? Promise.resolve(sourceStatus) : getAnalyticsSourceStatusSafe()])
-      .then(([data, history, liveSourceStatus]) => {
-        if (!cancelled) {
-          setResult({ loading: false, data, history, sourceStatus: liveSourceStatus ?? sourceStatus });
-          setRefreshing(false);
-        }
+          if (cancelled) return;
+          if (groupCompany) {
+            try {
+              // Cada função já serializa período/posição. Mantemos também as
+              // áreas em fila porque os três read models disputam as mesmas
+              // tabelas HubSpot e o mesmo orçamento de banco.
+              const commercial = await getCommercialKpisV2ForOverview(stableFilters, groupCompany);
+              if (cancelled) return;
+              const support = await getSupportKpisV2ForOverview(stableFilters, groupCompany);
+              if (cancelled) return;
+              const supportSnapshot = await getCsSnapshotForOverview(stableFilters, [], groupCompany);
+              if (!cancelled) {
+                setOperationKpis({
+                  period: { commercial: commercial.period, support: support.period, supportSnapshot: supportSnapshot.period },
+                  current: { commercial: commercial.current, support: support.current, supportSnapshot: supportSnapshot.current },
+                });
+              }
+            } catch {
+              if (!cancelled) setOperationKpis(null);
+            }
+            return;
+          }
+          if (!executiveLoaded) return;
+          try {
+            const history = await getCeoHistory(stableFilters);
+            if (!cancelled) setResult((current) => ({ ...current, history }));
+          } catch {
+            // Histórico é complementar. Sua falha não derruba o dashboard.
+          }
+        })();
       })
       .catch(() => {
         if (!cancelled) {
@@ -236,7 +280,7 @@ export function AnalyticsCeoPage({
     return () => {
       cancelled = true;
     };
-  }, [filters, groupCompany]);
+  }, [stableFilters, groupCompany, sourceStatus]);
 
   if (result.loading && !result.data)
     return (

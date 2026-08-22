@@ -1,0 +1,67 @@
+name: Supabase Release Gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: Apply migrations to the linked production project
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  release:
+    if: ${{ inputs.apply == true }}
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      SUPABASE_SMOKE_JWT: ${{ secrets.SUPABASE_SMOKE_JWT }}
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Validate release target identity
+        run: |
+          node --input-type=module <<'NODE'
+          const required = ['SUPABASE_PROJECT_REF', 'SUPABASE_ACCESS_TOKEN', 'SUPABASE_DB_PASSWORD', 'SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SUPABASE_SMOKE_JWT'];
+          const missing = required.filter((name) => !String(process.env[name] || '').trim());
+          if (missing.length) throw new Error(`Secrets ausentes: ${missing.join(', ')}`);
+          const ref = process.env.SUPABASE_PROJECT_REF.trim();
+          const url = new URL(process.env.SUPABASE_URL);
+          if (url.protocol !== 'https:' || url.hostname !== `${ref}.supabase.co`) {
+            throw new Error('SUPABASE_URL não corresponde ao SUPABASE_PROJECT_REF do Environment.');
+          }
+          console.log(`Target Supabase validado: ${ref}`);
+          NODE
+      - name: Validate application and local database
+        run: |
+          npm run contracts:typecheck
+          npm run web:typecheck
+          npm run web:build
+          npm run supabase:start
+          npm run supabase:wait:ready
+          npm run supabase:db:reset:raw
+          npm run supabase:test:db
+          npm run supabase:lint:db
+      - name: Link and apply remote migrations
+        run: |
+          npx supabase login --token "$SUPABASE_ACCESS_TOKEN"
+          npx supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+          npx supabase migration list --linked
+          npx supabase db push --linked --dry-run --password "$SUPABASE_DB_PASSWORD"
+          npx supabase db push --linked --password "$SUPABASE_DB_PASSWORD"
+          npx supabase migration list --linked
+      - name: Verify remote release contracts
+        run: npm run release:remote:contracts
+      - name: Stop local Supabase
+        if: always()
+        run: npm run supabase:stop

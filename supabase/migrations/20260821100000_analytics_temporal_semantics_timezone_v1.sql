@@ -56,22 +56,22 @@ begin
 
     if v_function = 'public.rpc_analytics_timeseries(text,date,date,text)' then
       v_old_patterns := array[
-        'p_from::timestamptz',
-        'p_to::timestamptz',
+        'date_trunc(v_bucket, p_from::timestamptz)',
+        'date_trunc(v_bucket, p_to::timestamptz)',
         'e.hs_created_at)',
         'e.resolved_at)',
         'e.hs_closed_at)',
-        'e.last_received_date::timestamptz',
-        'e.due_date::timestamptz'
+        'e.last_received_date::timestamptz)',
+        'e.due_date::timestamptz)'
       ];
       v_new_patterns := array[
-        'p_from::timestamp',
-        'p_to::timestamp',
+        'date_trunc(v_bucket, app_private.analytics_period_start(p_from))',
+        'date_trunc(v_bucket, app_private.analytics_period_start(p_to))',
         'e.hs_created_at at time zone ''America/Sao_Paulo'')',
         'e.resolved_at at time zone ''America/Sao_Paulo'')',
         'e.hs_closed_at at time zone ''America/Sao_Paulo'')',
-        'e.last_received_date::timestamp',
-        'e.due_date::timestamp'
+        'e.last_received_date::timestamp)',
+        'e.due_date::timestamp)'
       ];
     elsif v_function = 'public.rpc_analytics_commercial_kpis_v2(date,date,text,text)' then
       v_old_patterns := array[

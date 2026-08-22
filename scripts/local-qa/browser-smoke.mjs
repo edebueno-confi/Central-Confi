@@ -26,10 +26,13 @@ function isExternalFontAsset(url) {
   }
 }
 
-async function waitForWebServer() {
+async function waitForWebServer(child) {
   const deadline = Date.now() + Number(process.env.LOCAL_QA_WEB_START_TIMEOUT_MS ?? 45_000);
   let lastError = 'healthcheck ainda sem resposta';
   while (Date.now() < deadline) {
+    if (child.exitCode !== null) {
+      throw new Error(`LOCAL_QA_WEB_PROCESS_EXITED: ${child.exitCode}; ${lastError}`);
+    }
     try {
       const response = await fetch(`${baseUrl}/login`);
       if (response.ok) return;
@@ -46,7 +49,12 @@ function startWebServer() {
   const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
   const child = spawn(npm, ['run', 'dev', '--', '--host', '127.0.0.1', '--port', String(port)], {
     cwd: root,
-    env: process.env,
+    env: {
+      ...process.env,
+      VITE_APP_ENV: 'local',
+      VITE_SUPABASE_URL: status.API_URL,
+      VITE_SUPABASE_ANON_KEY: status.ANON_KEY,
+    },
     stdio: ['ignore', 'pipe', 'pipe'],
     windowsHide: true,
     shell: process.platform === 'win32',
@@ -99,6 +107,7 @@ const accounts = [
     // e não falta de grant na fixture.
     extraRoutes: ['/admin/knowledge', '/admin/access', '/admin/settings', '/admin/tenants'],
     knowledgeEditorScenario: true,
+    accessModalScenario: true,
     themeSurfaceScenario: true,
     settingsIntegrationsScenario: true,
     settingsAccessScenario: 'admin',
@@ -135,7 +144,7 @@ const settingsRequestMatrix = [];
 let defaultReceptionResult = null;
 let browser;
 try {
-  await waitForWebServer();
+  await waitForWebServer(server);
   browser = await chromium.launch({ headless: true });
   for (const account of accounts) {
     for (const viewport of [{ name: 'desktop', width: 1440, height: 900 }, { name: 'mobile', width: 390, height: 844 }]) {
@@ -335,6 +344,51 @@ try {
           persisted: true,
           restored: true,
         });
+      }
+      // Cenário visual do editor de acessos: abre o modal real de perfil sem
+      // submeter alterações, verifica foco inicial, contenção de Tab, Escape,
+      // rodapé sticky e ausência de overflow horizontal em desktop/mobile.
+      if (account.accessModalScenario) {
+        await page.goto(`${baseUrl}/admin/access`, { waitUntil: 'domcontentloaded' });
+        await page.waitForLoadState('networkidle', { timeout: 8_000 }).catch(() => {});
+        await page.getByRole('button', { name: 'Perfis', exact: true }).click();
+        const createProfileButton = page.getByRole('button', { name: 'Criar perfil', exact: true });
+        await createProfileButton.click();
+        const dialog = page.locator('[data-access-editor-modal="true"]');
+        await dialog.waitFor({ state: 'visible', timeout: 10_000 });
+        const modalLayout = await dialog.evaluate((node) => {
+          const body = node.querySelector('.gso-access-modal-body');
+          const actions = node.querySelector('.gso-ui-actions');
+          return {
+            activeInside: node.contains(document.activeElement),
+            activeId: document.activeElement?.id ?? null,
+            bodyOverflowY: body ? getComputedStyle(body).overflowY : null,
+            actionsPosition: actions ? getComputedStyle(actions).position : null,
+            dialogWidth: node.getBoundingClientRect().width,
+          };
+        });
+        if (!modalLayout.activeInside || modalLayout.activeId !== 'profile-editor-name') {
+          throw new Error(`LOCAL_QA_ACCESS_MODAL_INITIAL_FOCUS_FAILED: ${JSON.stringify(modalLayout)}`);
+        }
+        if (modalLayout.bodyOverflowY !== 'auto' || modalLayout.actionsPosition !== 'sticky') {
+          throw new Error(`LOCAL_QA_ACCESS_MODAL_LAYOUT_FAILED: ${JSON.stringify(modalLayout)}`);
+        }
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
+        if (overflow) throw new Error(`LOCAL_QA_HORIZONTAL_OVERFLOW: platform_admin access-modal ${viewport.name}`);
+        for (let index = 0; index < 4; index += 1) {
+          await page.keyboard.press('Tab');
+          const focusInside = await dialog.evaluate((node) => node.contains(document.activeElement));
+          if (!focusInside) throw new Error(`LOCAL_QA_ACCESS_MODAL_FOCUS_TRAP_FAILED: ${viewport.name} tab=${index}`);
+        }
+        await page.screenshot({ path: join(logDir, `browser-platform_admin-access-modal-${viewport.name}.png`), fullPage: true });
+        screenshots.push(`browser-platform_admin-access-modal-${viewport.name}.png`);
+        await page.keyboard.press('Escape');
+        await dialog.waitFor({ state: 'hidden', timeout: 5_000 });
+        const restoredFocus = await page.evaluate(() => ({ id: document.activeElement?.id ?? null, text: document.activeElement?.textContent?.trim() ?? '' }));
+        if (!/Criar perfil/.test(restoredFocus.text)) {
+          throw new Error(`LOCAL_QA_ACCESS_MODAL_FOCUS_RESTORE_FAILED: ${JSON.stringify(restoredFocus)}`);
+        }
+        deepScenarios.push({ role: account.role, scenario: 'access-profile-modal', viewport: viewport.name, initialFocus: true, focusTrap: true, escape: true, stickyActions: true, horizontalOverflow: false });
       }
       // Regra de superfície do tema: com preferência escura salva, o ambiente
       // autenticado precisa ficar escuro e a Central Pública precisa continuar
