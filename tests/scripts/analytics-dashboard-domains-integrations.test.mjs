@@ -72,13 +72,15 @@ test('escopo de operação é espelhado nos read models HubSpot e limita domíni
 });
 
 test('leituras executivas de período e posição não concorrem no banco', () => {
-  for (const functionName of ['getExecutiveKpisV2', 'getCeoSnapshot']) {
+  for (const functionName of ['getExecutiveKpisV2', 'getCeoSnapshot', 'getCommercialKpisV2ForOverview', 'getSupportKpisV2ForOverview', 'getCsSnapshotForOverview']) {
     const functionBlock = analyticsApi.match(new RegExp(`export async function ${functionName}[\\s\\S]*?\\n}\\n`))?.[0] ?? '';
     assert.notEqual(functionBlock, '', `${functionName} precisa existir`);
     assert.match(functionBlock, /const periodResponse = await client\.rpc/);
     assert.match(functionBlock, /const currentResponse = await client\.rpc/);
     assert.doesNotMatch(functionBlock, /Promise\.all/);
   }
+  assert.doesNotMatch(executive, /Promise\.all\(\[getCeoSnapshot/);
+  assert.doesNotMatch(executive, /Promise\.all\(\[\s*getCommercialKpisV2ForOverview/);
 });
 
 test('Customer Success usa inventário confirmado, RPC server-side e cobertura explícita', () => {

@@ -213,8 +213,12 @@ export function AnalyticsCeoPage({
     // ainda estava indisponível. Uma falha histórica não deve apagar uma
     // visão executiva já carregada; o painel de tendência permanece vazio,
     // com o restante do cockpit utilizável.
-    Promise.all([getCeoSnapshot(stableFilters), sourceStatus ? Promise.resolve(sourceStatus) : getAnalyticsSourceStatusSafe()])
-      .then(([data, liveSourceStatus]) => {
+    getCeoSnapshot(stableFilters)
+      .then(async (data) => {
+        // O status da fonte é complementar. Só é lido depois do snapshot para
+        // evitar concorrência entre duas leituras que acessam o mesmo estado
+        // de ingestão durante a abertura do painel.
+        const liveSourceStatus = sourceStatus ?? await getAnalyticsSourceStatusSafe();
         if (cancelled) return;
         setResult({ loading: false, data, sourceStatus: liveSourceStatus ?? sourceStatus });
         setRefreshing(false);
@@ -231,11 +235,14 @@ export function AnalyticsCeoPage({
           if (cancelled) return;
           if (groupCompany) {
             try {
-              const [commercial, support, supportSnapshot] = await Promise.all([
-                getCommercialKpisV2ForOverview(stableFilters, groupCompany),
-                getSupportKpisV2ForOverview(stableFilters, groupCompany),
-                getCsSnapshotForOverview(stableFilters, [], groupCompany),
-              ]);
+              // Cada função já serializa período/posição. Mantemos também as
+              // áreas em fila porque os três read models disputam as mesmas
+              // tabelas HubSpot e o mesmo orçamento de banco.
+              const commercial = await getCommercialKpisV2ForOverview(stableFilters, groupCompany);
+              if (cancelled) return;
+              const support = await getSupportKpisV2ForOverview(stableFilters, groupCompany);
+              if (cancelled) return;
+              const supportSnapshot = await getCsSnapshotForOverview(stableFilters, [], groupCompany);
               if (!cancelled) {
                 setOperationKpis({
                   period: { commercial: commercial.period, support: support.period, supportSnapshot: supportSnapshot.period },
