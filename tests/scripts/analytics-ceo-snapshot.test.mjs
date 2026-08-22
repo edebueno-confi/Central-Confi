@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   buildOverviewSnapshotQueryPlan,
   buildOperationPeriodMetrics,
+  buildUnavailableCeoSnapshot,
   getOverviewQueueMetricDefinitions,
   buildUnavailableOperationKpiPayload,
   composeCeoSnapshot,
@@ -123,6 +124,16 @@ test('representa ausência operacional sem reaproveitar o consolidado', () => {
 
   assert.deepEqual(merged.kpis.open_pipeline_amount, { state: 'unavailable', value: null, reason: 'operation_load_unavailable' });
   assert.deepEqual(merged.kpis.open_backlog, { state: 'unavailable', value: null, reason: 'operation_load_unavailable' });
+});
+
+test('cria base honesta quando a Visão Geral abre diretamente em uma operação', () => {
+  const snapshot = buildUnavailableCeoSnapshot();
+
+  assert.equal(snapshot.state.status, 'unavailable');
+  assert.equal(snapshot.state.reason, 'operation_dimension_unavailable');
+  assert.equal(snapshot.finance.balance, 0);
+  assert.deepEqual(snapshot.support.byOwner, []);
+  assert.equal(snapshot.product.status, 'unavailable');
 });
 
 test('não usa o consolidado quando o movimento operacional está ausente', () => {

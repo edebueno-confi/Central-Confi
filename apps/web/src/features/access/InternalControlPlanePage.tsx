@@ -407,8 +407,10 @@ export function InternalControlPlanePage() {
                 overrideForm={overrideForm}
                 overrides={overrides.filter((item) => item.user_id === selectedUser?.user_id)}
                 profiles={profiles}
+                profileScreenGrants={profileScreenGrants}
                 query={query}
                 selectedUser={selectedUser}
+                screenGrants={screenGrants}
                 setAssignment={setAssignment}
                 setFilters={{ setArea: setUserAreaFilter, setFunctionId: setUserFunctionFilter, setProfile: setUserProfileFilter, setStatus: setUserStatusFilter }}
                 setOverrideForm={setOverrideForm}
@@ -695,14 +697,14 @@ function CreateUserCard(props: {
               {areaFunctions.map((item) => <option key={item.function_id} value={item.function_id}>{item.name}</option>)}
             </select>
           </UiField>
-          <UiField hint="As permissões efetivas são calculadas pelo backend a partir do perfil e da área." label="Perfil de acesso" wide>
+          <UiField hint="Sem perfil, o backend aplica as telas padrão da área. Um perfil nomeado precisa ter telas configuradas." label="Perfil de acesso" wide>
             <select
               className="gso-ui-control gso-ui-select"
               disabled={busy}
               onChange={(event) => setForm((current) => ({ ...current, profileId: event.target.value }))}
               value={form.profileId}
             >
-              <option value="">Personalizado (sem perfil)</option>
+              <option value="">Telas padrão da área (sem perfil)</option>
               {profiles.filter((profile) => profile.is_active).map((profile) => (
                 <option key={profile.access_profile_id} value={profile.access_profile_id}>{profile.name}</option>
               ))}
@@ -724,6 +726,43 @@ function CreateUserCard(props: {
   );
 }
 
+function resolvedScreensForUser(
+  user: AdminInternalAccessUserRow,
+  screenGrants: AdminInternalMembershipScreenGrantRow[],
+  profileScreenGrants: Array<{ access_profile_id: string; screen_key: string }>,
+) {
+  // Papéis globais continuam sendo uma fonte independente. O painel não
+  // tenta reconstruir o catálogo global; apenas evita classificar um
+  // platform_admin como usuário sem telas por não possuir membership de área.
+  if (user.platform_roles.includes('platform_admin')) {
+    return ['global'];
+  }
+
+  const resolved = new Set<string>();
+  for (const area of user.areas) {
+    const membershipId = String(area.membership_id ?? '');
+    const accessProfileId = String(area.access_profile_id ?? '');
+    const permissionMode = String(area.permission_mode ?? 'custom');
+
+    if (permissionMode === 'profile' && accessProfileId) {
+      for (const grant of profileScreenGrants) {
+        if (grant.access_profile_id === accessProfileId) {
+          resolved.add(grant.screen_key);
+        }
+      }
+      continue;
+    }
+
+    for (const grant of screenGrants) {
+      if (grant.membership_id === membershipId) {
+        resolved.add(grant.screen_key);
+      }
+    }
+  }
+
+  return Array.from(resolved);
+}
+
 function UsersPanel(props: {
   areas: AdminInternalAccessAreaRow[];
   assignment: { areaKey: string; functionId: string; profileId: string };
@@ -739,18 +778,29 @@ function UsersPanel(props: {
   overrideForm: { capabilityKey: string; effect: 'allow' | 'deny'; justification: string };
   overrides: AdminInternalOverrideRow[];
   profiles: AdminInternalProfileRow[];
+  profileScreenGrants: Array<{ access_profile_id: string; screen_key: string }>;
   query: string;
   selectedUser: AdminInternalAccessUserRow | null;
+  screenGrants: AdminInternalMembershipScreenGrantRow[];
   setAssignment: React.Dispatch<React.SetStateAction<{ areaKey: string; functionId: string; profileId: string }>>;
   setFilters: { setArea: (value: string) => void; setFunctionId: (value: string) => void; setProfile: (value: string) => void; setStatus: (value: string) => void };
   setOverrideForm: React.Dispatch<React.SetStateAction<{ capabilityKey: string; effect: 'allow' | 'deny'; justification: string }>>;
   setQuery: (value: string) => void;
   users: AdminInternalAccessUserRow[];
 }) {
-  const { areas, assignment, busy, capabilities, detail, filters, functions, onAction, onCreate, onResetPassword, onSelect, overrideForm, overrides, profiles, query, selectedUser, setAssignment, setFilters, setOverrideForm, setQuery, users } = props;
+  const { areas, assignment, busy, capabilities, detail, filters, functions, onAction, onCreate, onResetPassword, onSelect, overrideForm, overrides, profileScreenGrants, profiles, query, screenGrants, selectedUser, setAssignment, setFilters, setOverrideForm, setQuery, users } = props;
   const visibleFunctions = functions.filter((item) => !assignment.areaKey || item.area_key === assignment.areaKey);
   const effectivePermissions = detail?.effective_permissions ?? [];
   const effectiveCapabilities = detail ? effectivePermissions.length : null;
+  const resolvedScreenKeys = selectedUser
+    ? resolvedScreensForUser(selectedUser, screenGrants, profileScreenGrants)
+    : [];
+  const needsScreenProvisioning = Boolean(
+    selectedUser &&
+      selectedUser.access_status === 'active' &&
+      !selectedUser.platform_roles.includes('platform_admin') &&
+      resolvedScreenKeys.length === 0,
+  );
   const [detailOpen, setDetailOpen] = useState(false);
   const drawerRef = useRef<HTMLElement | null>(null);
   const drawerTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -850,6 +900,7 @@ function UsersPanel(props: {
                 <th scope="col">Área</th>
                 <th scope="col">Função</th>
                 <th scope="col">Perfil</th>
+                <th scope="col">Telas</th>
                 <th scope="col">Status</th>
                 {/* O backend entrega o carimbo de atualização do contexto, não o
                     último login. O rótulo diz exatamente isso. */}
@@ -860,6 +911,7 @@ function UsersPanel(props: {
             <tbody>
               {users.map((user) => {
                 const area = user.areas[0] ?? {};
+                const userScreenCount = resolvedScreensForUser(user, screenGrants, profileScreenGrants).length;
                 const selected = selectedUser?.user_id === user.user_id;
                 return (
                   <tr className={selected ? 'is-selected' : undefined} key={user.user_id}>
@@ -872,6 +924,7 @@ function UsersPanel(props: {
                     <td>{String(area.area_label ?? 'Sem área')}</td>
                     <td>{String(area.function_name ?? 'Sem função')}</td>
                     <td>{String(area.access_profile_name ?? 'Personalizado')}</td>
+                    <td>{user.platform_roles.includes('platform_admin') ? 'Global' : userScreenCount}</td>
                     <td><UiBadge dot tone={statusTone(user.access_status)}>{statusLabel(user.access_status)}</UiBadge></td>
                     <td className="gso-ui-table-numeric">{user.last_access_at ? formatDateTime(user.last_access_at) : 'Indisponível'}</td>
                     <td>
@@ -931,11 +984,18 @@ function UsersPanel(props: {
                   <UiDetailList
                     items={[
                       { icon: 'shield', label: 'Capacidades efetivas', value: effectiveCapabilities === null ? 'Indisponível' : `${effectiveCapabilities} liberadas pelo backend` },
+                      { icon: 'layers', label: 'Telas resolvidas', value: selectedUser.platform_roles.includes('platform_admin') ? 'Global' : `${resolvedScreenKeys.length} liberadas` },
                       { icon: 'key', label: 'Overrides auditáveis', value: `${selectedUser.override_count}` },
                       { icon: 'clock', label: 'Contexto atualizado', value: selectedUser.last_access_at ? formatDateTime(selectedUser.last_access_at) : 'Indisponível' },
                     ]}
                   />
                 </div>
+                {needsScreenProvisioning ? (
+                  <UiHintBand
+                    description="Este usuário está ativo e possui capabilities, mas nenhuma tela foi resolvida para a sessão. Escolha uma área e aplique as telas padrão para concluir a liberação."
+                    title="Acesso ativo, mas incompleto"
+                  />
+                ) : null}
                 <div className="gso-ui-card-body border-t border-[color:var(--gso-border)]">
                   <UiCardHeader
                     description="Calculadas pelo backend a partir de papel global, perfil de área e exceções auditáveis. Editar a tela não concede permissão por si só."
@@ -997,6 +1057,16 @@ function UsersPanel(props: {
                     >
                       Salvar atribuição
                     </UiButton>
+                    {needsScreenProvisioning ? (
+                      <UiButton
+                        disabled={busy || !assignment.areaKey}
+                        icon="layers"
+                        onClick={() => void onAction(() => updateAdminInternalAccessAssignment({ userId: selectedUser.user_id, areaKey: assignment.areaKey, functionId: assignment.functionId || null, accessProfileId: null }), 'Telas padrão aplicadas e acesso atualizado.', { title: 'Aplicar telas padrão?', impact: 'O perfil nomeado será removido deste vínculo e as telas padrão da área serão aplicadas de forma auditada.' })}
+                        variant="secondary"
+                      >
+                        Aplicar telas padrão
+                      </UiButton>
+                    ) : null}
                   </div>
                 </div>
                 <div className="gso-ui-card-body">

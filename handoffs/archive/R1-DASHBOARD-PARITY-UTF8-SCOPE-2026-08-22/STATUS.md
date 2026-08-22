@@ -9,4 +9,6 @@
 - Agent coordination: HOLD
 - Approval: APPROVED
 - Review verdict: APPROVED
-- Próximo passo: finalizar localmente com stage seletivo; depois validar e aplicar migrations remotas autorizadas antes do deploy.
+- Task: R1-DASHBOARD-PARITY-UTF8-SCOPE-2026-08-22
+- Base SHA: ec37f5673f8ee957a806f235cbf7e5cdf141834e
+- Implementation: UNCOMMITTED_WORKTREE

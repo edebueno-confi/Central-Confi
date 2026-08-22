@@ -35,7 +35,7 @@ import { AnalyticsBoardLimitations, AnalyticsKpiBoard, type BoardBand } from "./
 import { AnalyticsDataCoveragePanel, analyticsCoverageStatus, type AnalyticsCoverageItem } from './AnalyticsDataCoveragePanel';
 import { AnalyticsTrendPanel } from './AnalyticsTrendPanel';
 import { readKpi } from './analytics-kpi-contract.mjs';
-import { buildOperationPeriodMetrics, buildUnavailableOperationKpiPayload, getOverviewQueueMetricDefinitions, mergeOperationKpiPayload } from './analytics-ceo-snapshot.mjs';
+import { buildOperationPeriodMetrics, buildUnavailableCeoSnapshot, buildUnavailableOperationKpiPayload, getOverviewQueueMetricDefinitions, mergeOperationKpiPayload } from './analytics-ceo-snapshot.mjs';
 
 const STATUS_LABELS: Record<AnalyticsDataStatus, string> = {
   fresh: "Dados atualizados",
@@ -200,12 +200,48 @@ export function AnalyticsCeoPage({
   useEffect(() => {
     let cancelled = false;
     setOperationKpis(null);
+    if (groupCompany) setExecutiveKpis(null);
     setRefreshing(true);
     setResult((current) =>
       current.data
         ? { ...current, loading: false, error: undefined }
         : { loading: true },
     );
+
+    // Um recorte operacional não deve chamar o snapshot executivo consolidado.
+    // Além de não possuir a dimensão de operação para todos os indicadores,
+    // essa RPC percorre duas janelas pesadas e era a origem dos timeouts/500
+    // quando o usuário apenas queria After Sale, Confi ou Neotrust.
+    if (groupCompany) {
+      void (async () => {
+        const liveSourceStatus = sourceStatus ?? await getAnalyticsSourceStatusSafe();
+        if (cancelled) return;
+        setResult((current) => ({
+          loading: false,
+          data: current.data ?? buildUnavailableCeoSnapshot(),
+          sourceStatus: liveSourceStatus ?? sourceStatus,
+        }));
+        setRefreshing(false);
+        try {
+          const commercial = await getCommercialKpisV2ForOverview(stableFilters, groupCompany);
+          if (cancelled) return;
+          const support = await getSupportKpisV2ForOverview(stableFilters, groupCompany);
+          if (cancelled) return;
+          const supportSnapshot = await getCsSnapshotForOverview(stableFilters, [], groupCompany);
+          if (!cancelled) {
+            setOperationKpis({
+              period: { commercial: commercial.period, support: support.period, supportSnapshot: supportSnapshot.period },
+              current: { commercial: commercial.current, support: support.current, supportSnapshot: supportSnapshot.current },
+            });
+          }
+        } catch {
+          if (!cancelled) setOperationKpis(null);
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }
 
     // O histórico é derivado do mesmo snapshot executivo e não participa do
     // caminho crítico da abertura. Carregá-lo em paralelo fazia o banco
@@ -241,27 +277,6 @@ export function AnalyticsCeoPage({
             }
           }
           if (cancelled) return;
-          if (groupCompany) {
-            try {
-              // Cada função já serializa período/posição. Mantemos também as
-              // áreas em fila porque os três read models disputam as mesmas
-              // tabelas HubSpot e o mesmo orçamento de banco.
-              const commercial = await getCommercialKpisV2ForOverview(stableFilters, groupCompany);
-              if (cancelled) return;
-              const support = await getSupportKpisV2ForOverview(stableFilters, groupCompany);
-              if (cancelled) return;
-              const supportSnapshot = await getCsSnapshotForOverview(stableFilters, [], groupCompany);
-              if (!cancelled) {
-                setOperationKpis({
-                  period: { commercial: commercial.period, support: support.period, supportSnapshot: supportSnapshot.period },
-                  current: { commercial: commercial.current, support: support.current, supportSnapshot: supportSnapshot.current },
-                });
-              }
-            } catch {
-              if (!cancelled) setOperationKpis(null);
-            }
-            return;
-          }
           if (!executiveLoaded) return;
           try {
             const history = await getCeoHistory(stableFilters);

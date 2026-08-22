@@ -1,5 +1,6 @@
 import type { AnalyticsBlockState, AnalyticsDataStatus, AnalyticsExecutionStatus, AnalyticsSourceStatus, AnalyticsSourceState, AnalyticsSourceStatusPayload } from '@genius-support-os/contracts';
 import { createAnalyticsBlockState, parseAnalyticsNumber } from './analytics-state.ts';
+import { repairOperationalMojibake } from '../../lib/operational-copy';
 
 // Tipos e mapeadores do modulo Analytics/Dashboard Gerencial.
 // As views retornam numeric como string (PostgREST), entao normalizamos aqui.
@@ -19,7 +20,7 @@ function normalizePercentage(value: unknown): number {
 }
 
 function toText(value: unknown): string {
-  return value === null || value === undefined ? '' : String(value);
+  return value === null || value === undefined ? '' : repairOperationalMojibake(String(value));
 }
 
 export interface CommercialKpis {
