@@ -1,10 +1,14 @@
 begin;
-select plan(20);
+select plan(23);
 
 select ok(to_regclass('public.analytics_finance_receivables_staging') is not null, 'staging financeiro existe');
 select ok((select count(*) from information_schema.columns where table_schema = 'public' and table_name = 'analytics_finance_sync_runs' and column_name = 'coverage') = 1, 'run OMIE possui cobertura separada');
 select ok((select relrowsecurity from pg_class where oid = 'public.analytics_finance_receivables_staging'::regclass), 'staging financeiro possui RLS');
 select ok(to_regprocedure('public.rpc_service_promote_omie_snapshot(uuid)') is not null, 'RPC de promocao atomica existe');
+select ok(
+  position('target.sync_run_id is distinct from excluded.sync_run_id' in pg_get_functiondef('public.rpc_service_promote_omie_snapshot(uuid)'::regprocedure)) = 0,
+  'promocao nao reaudita titulo quando somente o sync_run_id muda'
+);
 select is(
   has_function_privilege('anon', 'public.rpc_service_promote_omie_snapshot(uuid)', 'EXECUTE'),
   false,
@@ -50,6 +54,13 @@ select is((select count(*) from public.analytics_finance_receivables where sourc
 select ok(public.rpc_service_promote_omie_snapshot(:'valid_id'::uuid) ? 'promoted', 'segunda promoção retorna resultado idempotente');
 select is((select count(*) from public.analytics_finance_receivables where source_record_id = 'valid-record'), 1::bigint, 'segunda promoção nao duplica');
 select is((select count(*) from public.analytics_finance_receivables_staging where sync_run_id = :'valid_id'::uuid), 0::bigint, 'staging limpo após promoção');
+
+-- Repeticao com novo run e dados identicos nao deve regravar a linha financeira.
+insert into public.analytics_finance_sync_runs (status, accepted_rows, total_rows) values ('processing', 1, 1) returning id \gset replay_
+insert into public.analytics_finance_receivables_staging (sync_run_id, source_key, source_record_id, identity_version, status_original, aging_bucket, net_amount)
+values (:'replay_id'::uuid, 'omie_receivables_api', 'valid-record', 'omie-v3', 'A vencer', 'a_vencer', 100);
+select ok(public.rpc_service_promote_omie_snapshot(:'replay_id'::uuid) ? 'promoted', 'replay identico promovido');
+select is((select sync_run_id from public.analytics_finance_receivables where source_record_id = 'valid-record'), :'valid_id'::uuid, 'replay identico preserva proveniencia da linha sem mudanca');
 
 select * from finish();
 rollback;
