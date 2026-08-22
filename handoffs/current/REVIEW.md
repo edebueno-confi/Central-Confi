@@ -43,8 +43,10 @@ Nenhum finding bloqueante dentro da allowlist.
 
 - Esta é uma auto-revisão autorizada do Codex e não substitui a revisão
   independente do Sentinel para fins de governança externa.
-- Ainda não foi feita alteração remota, commit, deploy ou QA autenticado de
-  navegador neste lote.
+- O commit local `b478ef6a` foi criado seletivamente. As migrations remotas
+  `access_02_provisioning_e2e_v1` e `analytics_utf8_and_scope_guard_v1` foram
+  aplicadas e verificadas por leitura. O PR 45 possui preview Vercel concluído;
+  QA autenticado de navegador em produção ainda não foi executado.
 
 ## Decisão operacional
 

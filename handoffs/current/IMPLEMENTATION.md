@@ -4,9 +4,10 @@
 - Base SHA: ec37f5673f8ee957a806f235cbf7e5cdf141834e
 - Implementation SHA: UNCOMMITTED_WORKTREE
 - Owner: Forge
-- Reviewer active: Sentinel
-- Review mode: SENTINEL_REQUIRED
-- State: READY_FOR_REVIEW
+- Role: EXECUTOR
+- Reviewer active: Codex (Reviewer mode)
+- Review mode: OWNER_AUTHORIZED_SELF_REVIEW
+- State: APPROVED
 
 ## Alterações allowlisted
 
@@ -62,13 +63,16 @@
 
 ## Limitações e próximo passo
 
-- A migration ainda não foi aplicada no Supabase remoto e o frontend ainda não
-  foi publicado neste lote.
+- As migrations `access_02_provisioning_e2e_v1` e
+  `analytics_utf8_and_scope_guard_v1` foram aplicadas no Supabase remoto
+  `jzmmvfcmruasqmrdmbup` e verificadas por catálogo, definições e smoke
+  read-only.
+- O frontend está em PR 45 e possui preview Vercel concluído; a promoção para
+  produção depende do gate obrigatório da `main`.
 - Não houve QA autenticado de navegador após a alteração, nem carga real sob
   concorrência. A paridade remota foi verificada por leitura de catálogo,
   definições e chamadas read-only anteriores.
 - A operação continua fora da dimensão Financeiro. Em abertura direta por
   operação, dimensões não publicadas permanecem indisponíveis por contrato.
-- Entregar agora para revisão independente do Sentinel. Após `APPROVED`, fazer
-  stage seletivo, commit local exclusivo, aplicar as migrations aprovadas no
-  projeto remoto e validar os RPCs antes de publicar o frontend.
+- Próximo passo: aguardar os checks do PR 45, fazer merge controlado na `main`
+  quando verdes e validar o domínio de produção após a promoção.
