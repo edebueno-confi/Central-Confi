@@ -98,6 +98,10 @@ Regras:
 - Vercel hospeda apenas o app web e seus previews.
 - Supabase hospeda auth, banco, RLS, storage e funções internas.
 - Deploy do app não substitui deploy de banco.
+- Deploy de migrations também não substitui deploy das Edge Functions. As
+  funções críticas do Dashboard e das integrações devem ser implantadas no
+  mesmo release, a partir do mesmo commit da `main`, preservando a política de
+  `verify_jwt` de cada função.
 - O deploy de banco e a promoção do frontend são etapas do mesmo release, com o banco primeiro e smoke test entre elas.
 
 ## Rollback
