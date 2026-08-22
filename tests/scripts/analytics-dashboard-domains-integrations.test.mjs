@@ -80,6 +80,8 @@ test('leituras executivas de período e posição não concorrem no banco', () =
     assert.doesNotMatch(functionBlock, /Promise\.all/);
   }
   assert.doesNotMatch(executive, /Promise\.all\(\[getCeoSnapshot/);
+  assert.match(executive, /if \(!groupCompany\)/);
+  assert.match(executive, /if \(!executiveLoaded\) return;/);
   assert.doesNotMatch(executive, /Promise\.all\(\[\s*getCommercialKpisV2ForOverview/);
 });
 

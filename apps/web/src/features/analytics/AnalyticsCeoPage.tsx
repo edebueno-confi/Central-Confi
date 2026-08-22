@@ -226,11 +226,19 @@ export function AnalyticsCeoPage({
         // O painel já está utilizável quando elas começam, e o Supabase não
         // recebe sete leituras pesadas concorrentes na abertura.
         void (async () => {
-          try {
-            const payload = await getExecutiveKpisV2(stableFilters);
-            if (!cancelled) setExecutiveKpis(payload);
-          } catch {
-            if (!cancelled) setExecutiveKpis(null);
+          let executiveLoaded = false;
+          if (!groupCompany) {
+            try {
+              // Em um recorte operacional, Comercial, Suporte e Customer
+              // Success já são carregados por seus read models específicos.
+              // Repetir o resumo executivo global aqui acrescenta duas RPCs
+              // pesadas por janela e não altera os valores que serão exibidos.
+              const payload = await getExecutiveKpisV2(stableFilters);
+              executiveLoaded = true;
+              if (!cancelled) setExecutiveKpis(payload);
+            } catch {
+              if (!cancelled) setExecutiveKpis(null);
+            }
           }
           if (cancelled) return;
           if (groupCompany) {
@@ -254,6 +262,7 @@ export function AnalyticsCeoPage({
             }
             return;
           }
+          if (!executiveLoaded) return;
           try {
             const history = await getCeoHistory(stableFilters);
             if (!cancelled) setResult((current) => ({ ...current, history }));
