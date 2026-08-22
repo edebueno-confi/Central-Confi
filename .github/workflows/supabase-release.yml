@@ -60,6 +60,20 @@ jobs:
           npx supabase db push --linked --dry-run --password "$SUPABASE_DB_PASSWORD"
           npx supabase db push --linked --password "$SUPABASE_DB_PASSWORD"
           npx supabase migration list --linked
+      - name: Deploy release Edge Functions
+        run: |
+          npx supabase functions deploy \
+            omie-sync \
+            analytics-sequential-sync \
+            analytics-scheduled-run \
+            hubspot-orchestrator-start \
+            hubspot-orchestrator-dispatcher \
+            hubspot-orchestrator-worker \
+            --project-ref "$SUPABASE_PROJECT_REF" \
+            --no-verify-jwt \
+            --use-api \
+            --jobs 1 \
+            --yes
       - name: Verify remote release contracts
         run: npm run release:remote:contracts
       - name: Stop local Supabase
