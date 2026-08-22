@@ -92,6 +92,16 @@ test('leituras executivas de período e posição não concorrem no banco', () =
   assert.doesNotMatch(executive, /Promise\.all\(\[\s*getCommercialKpisV2ForOverview/);
 });
 
+test('operação selecionada não dispara o snapshot executivo consolidado', () => {
+  const operationBranch = executive.indexOf('if (groupCompany) {');
+  const consolidatedSnapshot = executive.indexOf('getCeoSnapshot(stableFilters)');
+
+  assert.ok(operationBranch >= 0, 'a branch operacional precisa existir');
+  assert.ok(consolidatedSnapshot > operationBranch, 'o snapshot consolidado deve ficar depois do guard operacional');
+  assert.match(executive, /buildUnavailableCeoSnapshot/);
+  assert.match(executive, /data: current\.data \?\? buildUnavailableCeoSnapshot/);
+});
+
 test('Customer Success usa inventário confirmado, RPC server-side e cobertura explícita', () => {
   assert.match(customerSuccessPage, /sharedOperation/);
   assert.match(customerSuccessPage, /getAnalyticsPipelineInventory/);

@@ -26,6 +26,89 @@ export function buildUnavailableOperationKpiPayload() {
   return { kpis };
 }
 
+export function buildUnavailableCeoSnapshot() {
+  const state = {
+    status: 'unavailable',
+    source: 'Recorte operacional',
+    asOf: null,
+    lastSuccessfulSyncAt: null,
+    syncRunId: null,
+    coverage: { expected: null, received: null },
+    reason: 'operation_dimension_unavailable',
+  };
+
+  return {
+    commercial: {
+      totalDeals: 0,
+      openDeals: 0,
+      wonDeals: 0,
+      lostDeals: 0,
+      openPipelineValue: 0,
+      wonRevenue: 0,
+      conversionRate: null,
+      avgTicket: 0,
+      avgSalesCycleDays: 0,
+      unassignedDeals: 0,
+    },
+    customerSuccess: {
+      activeCustomers: 0,
+      assignedCustomers: 0,
+      customersWithoutOwner: 0,
+      healthAvailable: 0,
+      riskCustomers: 0,
+      source: 'Recorte operacional',
+      state: { ...state },
+    },
+    support: {
+      totalTickets: 0,
+      createdTickets: 0,
+      openTickets: 0,
+      closedTickets: 0,
+      closedRate: 0,
+      highPriorityOpen: 0,
+      firstResponseSlaTracked: 0,
+      closeSlaTracked: 0,
+      sourceFilled: 0,
+      bySource: [],
+      byPipeline: [],
+      byOwner: [],
+      latestTicketCreatedAt: null,
+    },
+    finance: {
+      titles: 0,
+      netAmount: 0,
+      balance: 0,
+      overdueTitles: 0,
+      overdueBalance: 0,
+      matchedTitles: 0,
+      unmatchedTitles: 0,
+    },
+    product: {
+      status: 'unavailable',
+      source: 'Recorte operacional',
+      reason: 'Produto não possui dimensão operacional publicada.',
+    },
+    development: {
+      status: 'unavailable',
+      source: 'Recorte operacional',
+      reason: 'Desenvolvimento não possui dimensão operacional publicada.',
+    },
+    financialAlerts: [],
+    dataQuality: {
+      financeTitles: 0,
+      matchedFinanceTitles: 0,
+      unmatchedFinanceTitles: 0,
+      ambiguousFinanceTitles: 0,
+      resolvedGroupTitles: 0,
+      supportUnassigned: 0,
+      supportWithoutSource: 0,
+      financeSourceAt: null,
+      hubspotSourceAt: null,
+    },
+    state: { ...state },
+  };
+}
+
 function readPublishedOperationKpi(payload, key) {
   const source = payload && typeof payload === 'object' ? payload : {};
   const kpis = source.kpis && typeof source.kpis === 'object' ? source.kpis : {};
