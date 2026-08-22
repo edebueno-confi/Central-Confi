@@ -35,8 +35,11 @@ e Supabase.
 
 ### Supabase remoto
 
-- Já recebeu as 4 migrations oficiais aprovadas.
-- Já recebeu o bootstrap do primeiro `platform_admin`.
+- O estado remoto não é considerado alinhado por inferência documental. Cada
+  release precisa consultar o histórico e executar o smoke autenticado dos
+  contratos antes da promoção do frontend.
+- O bootstrap do primeiro `platform_admin` só pode ser considerado concluído
+  quando houver evidência do ambiente remoto correto na janela de release.
 - Continua sendo tratado como infraestrutura crítica, separada do deploy web.
 
 ## Estratégia de deploy por camada
@@ -58,15 +61,16 @@ Regras:
 
 ### App web
 
-Fluxo automático do app web:
+Fluxo controlado do app web:
 1. Branch abre Preview no Vercel.
 2. PR recebe validação de CI e revisão.
-3. Depois do merge em `main` com os checks obrigatórios verdes, a integração GitHub/Vercel dispara Production automaticamente.
-4. Smoke test pós-deploy valida rotas, auth e consumo de contratos.
+3. O workflow manual `Supabase Release Gate` valida o commit, reconcilia e aplica as migrations remotas e executa o smoke test dos contratos.
+4. Somente depois do gate verde o mesmo commit pode ser promovido para Production.
+5. Smoke test pós-deploy valida rotas, auth e consumo de contratos.
 
 Regras:
 - Preview por branch/PR.
-- Production somente via merge na `main` com checks obrigatórios verdes.
+- Production somente via commit aprovado, com o banco remoto reconciliado pelo gate e checks obrigatórios verdes.
 - Nenhum deploy direto de branch local para Production.
 - Não promover manualmente um Preview de branch para Production; o deploy de produção deve sempre nascer da `main`.
 
@@ -75,6 +79,8 @@ Regras:
 - O projeto Vercel `genius-support-os` está vinculado ao GitHub com `main` como `productionBranch`.
 - A `main` exige pull request e o check obrigatório e atualizado `verify-database` antes do merge, inclusive para administradores.
 - O check executa typecheck de contratos e frontend, build web, reset/testes pgTAP e lint do schema local.
+- O workflow `Supabase Release Gate` é manual, protegido pelo Environment `production` e é o único caminho autorizado para aplicar migrations remotas antes da promoção do frontend.
+- A integração automática de Production do Vercel deve permanecer desativada ou configurada para promoção posterior ao gate. Caso contrário, um push pode publicar o frontend antes do banco, recriando o drift que este procedimento elimina.
 - Branches `codex/*` e demais branches continuam em Preview; elas não entram no fluxo de produção até serem integradas à `main`.
 
 ### Documentação
@@ -88,7 +94,7 @@ Regras:
 - Vercel hospeda apenas o app web e seus previews.
 - Supabase hospeda auth, banco, RLS, storage e funções internas.
 - Deploy do app não substitui deploy de banco.
-- Deploy de banco não deve ser acoplado a push de frontend.
+- O deploy de banco e a promoção do frontend são etapas do mesmo release, com o banco primeiro e smoke test entre elas.
 
 ## Rollback
 
@@ -143,4 +149,4 @@ Regras:
 - Deploy remoto do Supabase: concluído
 - Bootstrap do primeiro `platform_admin`: concluído
 - Preview Vercel: ativo por branch/PR
-- Production Vercel: ativo e automatizado pela `main`, após o check obrigatório do GitHub
+- Production Vercel: promoção controlada após o `Supabase Release Gate`; deploy automático por push não é considerado seguro para releases com migrations

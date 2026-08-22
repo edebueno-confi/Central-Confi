@@ -75,6 +75,7 @@
     "supabase:test:file": "node scripts/run-pgtap-file.mjs",
     "supabase:qa:seed-cs-ops": "node supabase/qa/create-local-cs-ops-fixture.mjs",
     "supabase:qa:local-support-fixture": "node supabase/qa/create-local-support-fixture.mjs",
+    "release:remote:contracts": "node scripts/ci/verify-remote-release-contracts.mjs",
     "local:qa:assert-supabase": "node scripts/local-qa/assert-local-supabase.mjs",
     "local:qa:settings-control-plane-v2-preview": "node scripts/local-qa/settings-control-plane-v2-preview.mjs",
     "local:qa:hubspot-discovery": "node scripts/analytics/hubspot-coverage-discovery.mjs",

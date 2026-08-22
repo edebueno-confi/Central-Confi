@@ -371,11 +371,12 @@ export async function getAnalyticsPipelineInventory(objectType: 'deal' | 'ticket
 export async function getExecutiveKpisV2(filters: AnalyticsFilters): Promise<unknown> {
   const client = requireSupabaseBrowserClient();
   const plan = buildOverviewSnapshotQueryPlan(filters);
-  const [periodResponse, currentResponse] = await Promise.all([
-    client.rpc('rpc_analytics_executive_kpis_v2', rpcFilters(plan.period)),
-    client.rpc('rpc_analytics_executive_kpis_v2', rpcFilters(plan.current)),
-  ]);
+  // As duas janelas percorrem os mesmos read models. Serializar as leituras
+  // reduz a pressão no banco na abertura do painel e evita timeouts por
+  // concorrência em bases maiores.
+  const periodResponse = await client.rpc('rpc_analytics_executive_kpis_v2', rpcFilters(plan.period));
   if (periodResponse.error) throw toAppError(periodResponse.error, 'Falha ao carregar o resumo executivo do período.');
+  const currentResponse = await client.rpc('rpc_analytics_executive_kpis_v2', rpcFilters(plan.current));
   if (currentResponse.error) throw toAppError(currentResponse.error, 'Falha ao carregar a posição atual do resumo executivo.');
   return mergeExecutiveKpiPayload(periodResponse.data, currentResponse.data);
 }
@@ -524,11 +525,12 @@ export async function triggerSequentialAnalyticsSync(): Promise<{ status: 'succe
 export async function getCeoSnapshot(filters: AnalyticsFilters): Promise<CeoSnapshot> {
   const client = requireSupabaseBrowserClient();
   const plan = buildOverviewSnapshotQueryPlan(filters);
-  const [periodResponse, currentResponse] = await Promise.all([
-    client.rpc('rpc_analytics_ceo_snapshot', rpcFilters(plan.period)),
-    client.rpc('rpc_analytics_ceo_snapshot', rpcFilters(plan.current)),
-  ]);
+  // O snapshot é pesado e compartilha as mesmas tabelas nas duas janelas.
+  // Executar em sequência reduz a pressão no banco e evita transformar duas
+  // leituras válidas em dois statement timeouts.
+  const periodResponse = await client.rpc('rpc_analytics_ceo_snapshot', rpcFilters(plan.period));
   if (periodResponse.error) throw toAppError(periodResponse.error, 'Falha ao carregar a visão executiva do período.');
+  const currentResponse = await client.rpc('rpc_analytics_ceo_snapshot', rpcFilters(plan.current));
   if (currentResponse.error) throw toAppError(currentResponse.error, 'Falha ao carregar a posição atual da visão executiva.');
   return composeCeoSnapshot(mapCeoSnapshot(periodResponse.data), mapCeoSnapshot(currentResponse.data)) as CeoSnapshot;
 }

@@ -53,9 +53,10 @@ test('domínios exibem performance por pessoa sem fabricar atividades', () => {
 });
 
 test('escopo de operação é espelhado nos read models HubSpot e limita domínios sem dimensão publicada', () => {
-  assert.match(executive, /getCommercialKpisV2ForOverview\(filters, groupCompany\)/);
-  assert.match(executive, /getSupportKpisV2ForOverview\(filters, groupCompany\)/);
-  assert.match(executive, /getCsSnapshotForOverview\(filters, \[\], groupCompany\)/);
+  assert.match(executive, /const stableFilters = useMemo\(/);
+  assert.match(executive, /getCommercialKpisV2ForOverview\(stableFilters, groupCompany\)/);
+  assert.match(executive, /getSupportKpisV2ForOverview\(stableFilters, groupCompany\)/);
+  assert.match(executive, /getCsSnapshotForOverview\(stableFilters, \[\], groupCompany\)/);
   assert.match(executive, /applyOperationScope/);
   assert.match(executive, /Financeiro permanece consolidado e fora desta dimensão/);
   assert.match(executive, /maskUnscopedOperationKpis/);
@@ -68,6 +69,16 @@ test('escopo de operação é espelhado nos read models HubSpot e limita domíni
   assert.match(trendPanel, /getAnalyticsTimeseries\(domain, grain, undefined, groupCompany\)/);
   assert.match(analyticsApi, /rpc_analytics_timeseries_by_operation/);
   assert.match(timeseriesScopeMigration, /operation_dimension_unavailable/);
+});
+
+test('leituras executivas de período e posição não concorrem no banco', () => {
+  for (const functionName of ['getExecutiveKpisV2', 'getCeoSnapshot']) {
+    const functionBlock = analyticsApi.match(new RegExp(`export async function ${functionName}[\\s\\S]*?\\n}\\n`))?.[0] ?? '';
+    assert.notEqual(functionBlock, '', `${functionName} precisa existir`);
+    assert.match(functionBlock, /const periodResponse = await client\.rpc/);
+    assert.match(functionBlock, /const currentResponse = await client\.rpc/);
+    assert.doesNotMatch(functionBlock, /Promise\.all/);
+  }
 });
 
 test('Customer Success usa inventário confirmado, RPC server-side e cobertura explícita', () => {

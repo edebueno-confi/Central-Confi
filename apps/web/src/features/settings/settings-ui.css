@@ -253,22 +253,30 @@
 .gso-access-modal-scrim { position: absolute; inset: 0; border: 0; background: rgba(3, 10, 24, 0.72); cursor: default; }
 .gso-access-modal {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   width: min(42rem, 100%);
-  max-height: min(42rem, calc(100vh - 2.5rem));
-  overflow: auto;
+  max-height: min(42rem, calc(100dvh - 2.5rem));
+  overflow: hidden;
   overscroll-behavior: contain;
   border: 1px solid var(--ui-border-strong);
   border-radius: var(--one-radius-panel);
   background: var(--one-panel-bg);
   box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.35);
 }
-.gso-access-modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--ui-border); }
+.gso-access-modal-header { display: flex; flex: 0 0 auto; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--ui-border); background: var(--one-panel-bg); }
 .gso-access-modal-header h2 { margin: 0.15rem 0 0; color: var(--ui-text); font-size: 1rem; font-weight: 650; }
 .gso-access-modal-header p { max-width: 34rem; margin: 0.35rem 0 0; color: var(--ui-text-secondary); font-size: 0.78rem; line-height: 1.45; }
 .gso-access-modal-header .gso-access-modal-kicker { margin: 0; color: var(--ui-primary); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
 .gso-access-modal-close { display: inline-grid; width: 2rem; height: 2rem; flex: 0 0 auto; place-items: center; border: 1px solid var(--ui-border); border-radius: 0.45rem; background: transparent; color: var(--ui-text-secondary); font-size: 1.15rem; line-height: 1; cursor: pointer; }
 .gso-access-modal-close:hover { border-color: var(--ui-border-strong); color: var(--ui-text); }
-.gso-access-modal-body { padding: 1.25rem; }
+.gso-access-modal:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 3px; }
+.gso-access-modal-body { min-height: 0; flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; padding: 1.25rem; scrollbar-gutter: stable; }
+.gso-access-modal-content { min-width: 0; }
+.gso-access-modal-form { display: grid; gap: 1.15rem; min-width: 0; }
+.gso-access-modal-form .gso-ui-grid { align-items: start; gap: 1rem; }
+.gso-access-modal-form .gso-ui-actions { position: sticky; bottom: -1.25rem; z-index: 1; margin: 0 -1.25rem -1.25rem; padding: 0.85rem 1.25rem; border-top: 1px solid var(--ui-border); background: color-mix(in srgb, var(--one-panel-bg) 94%, transparent); backdrop-filter: blur(8px); }
 @media (max-width: 1180px) {
   .gso-po-v2-access .gso-ui-split--wide-detail {
     grid-template-columns: minmax(0, 1fr);
@@ -283,7 +291,10 @@
 @media (max-width: 640px) {
   .gso-po-v2-access .gso-ui-groups--compact { grid-template-columns: minmax(0, 1fr); max-height: 16rem; }
   .gso-access-modal-layer { padding: 0.5rem; }
-  .gso-access-modal { max-height: calc(100vh - 1rem); }
+  .gso-access-modal { max-height: calc(100dvh - 1rem); border-radius: 0.8rem; }
+  .gso-access-modal-header { padding: 1rem; }
+  .gso-access-modal-body { padding: 1rem; }
+  .gso-access-modal-form .gso-ui-actions { bottom: -1rem; margin-inline: -1rem; margin-bottom: -1rem; padding-inline: 1rem; }
 }
 @media (min-width: 1181px) and (max-width: 1366px) {
   .gso-po-v2-access .gso-ui-access-drawer {

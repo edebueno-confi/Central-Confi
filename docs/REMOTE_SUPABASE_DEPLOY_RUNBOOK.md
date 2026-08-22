@@ -4,7 +4,11 @@
 Executar a aplicacao remota controlada das migrations oficiais do Genius Support
 OS sem abrir frontend, sem usar mocks e sem salvar segredos no repositório.
 
-## Fechamento validado em 2026-04-29
+## Histórico de fechamento validado em 2026-04-29
+
+O bloco abaixo é evidência histórica de uma janela específica. Ele não prova o
+estado atual do projeto remoto e não substitui a conferência do ambiente alvo
+na release corrente.
 
 - `db push` remoto aplicado com sucesso para as 4 migrations oficiais:
   - `20260429210127_phase1_identity_tenancy.sql`
@@ -22,7 +26,7 @@ OS sem abrir frontend, sem usar mocks e sem salvar segredos no repositório.
 - Working tree local permaneceu limpa antes e depois da janela remota validada.
 
 ## Escopo deste runbook
-- aplicar remotamente as migrations oficiais ja versionadas em `supabase/migrations/`;
+- aplicar remotamente as migrations versionadas em `supabase/migrations/`;
 - validar o estado remoto antes e depois do deploy;
 - preparar o bootstrap remoto seguro do primeiro `platform_admin`, se ainda nao existir;
 - documentar rollback e checks pos-deploy.
@@ -59,7 +63,8 @@ Resultado esperado:
 - Node.js e npm funcionais;
 - Supabase CLI disponivel via `npx supabase`;
 - acesso ao projeto remoto do Supabase;
-- acesso ao GitHub do repositório para consultar CI e, se necessario futuramente, configurar secrets de automacao.
+- acesso ao GitHub do repositório para consultar CI e configurar os secrets do
+  Environment protegido, quando a automação estiver autorizada.
 
 ## Variáveis necessárias
 
@@ -108,9 +113,9 @@ $env:GENIUS_SUPPORT_OS_PLATFORM_ADMIN_USER_ID = '<uuid-do-primeiro-platform-admi
 - cofre pessoal aprovado, como 1Password ou equivalente.
 
 ### GitHub
-Se futuramente a equipe automatizar o deploy remoto, configurar os mesmos nomes
-em GitHub Actions `Repository secrets` ou `Environment secrets`. Nao alterar a
-workflow atual nesta fase.
+Configurar os nomes abaixo como secrets do Environment protegido usado pela
+workflow de release. Não copiar valores para arquivos versionados nem para
+logs. A workflow continua manual e exige aprovação do Environment.
 
 ## Regra explicita de segredo
 
@@ -181,6 +186,29 @@ Validacoes obrigatorias apos o bootstrap:
 - `audit.audit_logs` registra o `insert` correspondente em `public.user_global_roles`;
 - segunda tentativa de bootstrap falha explicitamente;
 - nenhuma seed e nenhum `service_role` foram usados.
+
+## Gate obrigatório antes da publicação do frontend
+
+O frontend não deve ser promovido antes que o banco remoto esteja no mesmo
+commit de migrations que foi validado localmente. O workflow manual
+`Supabase Release Gate` executa, na mesma revisão do repositório:
+
+1. typecheck e build do frontend;
+2. validação do Supabase local, incluindo migrations, pgTAP e lint;
+3. `migration list` antes e depois do `db push` no projeto vinculado;
+4. smoke test autenticado dos contratos críticos: view de contexto de grupos,
+   RPC de Customer Success e RPCs executivas do Dashboard.
+
+O workflow só deve ser executado com `apply=true` por um operador autorizado,
+em um Environment protegido, com os secrets `SUPABASE_PROJECT_REF`,
+`SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_URL`,
+`SUPABASE_ANON_KEY` e `SUPABASE_SMOKE_JWT` configurados fora do repositório.
+O smoke test não imprime tokens nem corpos de resposta.
+
+Enquanto o Vercel estiver configurado para publicar automaticamente a cada
+push, ele pode promover o frontend antes desse gate. Para eliminar essa janela,
+o projeto deve usar promoção manual ou uma integração que faça o deploy do
+frontend somente após o workflow concluir com sucesso.
 
 ## Plano de rollback
 
