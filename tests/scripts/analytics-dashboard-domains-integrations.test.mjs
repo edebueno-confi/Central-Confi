@@ -52,6 +52,13 @@ test('domínios exibem performance por pessoa sem fabricar atividades', () => {
   assert.match(supportPage, /Atividades indisponíveis/);
 });
 
+test('performance de suporte usa identidade estável e não nome duplicável como chave React', () => {
+  assert.match(supportPage, /key=\{owner\.key\}/);
+  assert.match(supportPage, /key: typeof row\.owner_id === 'string'/);
+  assert.match(supportPage, /`unassigned:\$\{index\}`/);
+  assert.doesNotMatch(supportPage, /<tr key=\{owner\.name\}/);
+});
+
 test('escopo de operação é espelhado nos read models HubSpot e limita domínios sem dimensão publicada', () => {
   assert.match(executive, /const stableFilters = useMemo\(/);
   assert.match(executive, /getCommercialKpisV2ForOverview\(stableFilters, groupCompany\)/);

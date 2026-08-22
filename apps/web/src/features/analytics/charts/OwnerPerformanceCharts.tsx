@@ -97,6 +97,7 @@ export function CustomerSuccessOwnerPerformanceChart({ owners }: { owners: Custo
 }
 
 export interface SupportOwnerPerformanceRow {
+  key: string;
   name: string;
   openTickets: number;
   createdTickets: number;

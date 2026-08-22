@@ -35,9 +35,10 @@ e Supabase.
 
 ### Supabase remoto
 
-- O estado remoto não é considerado alinhado por inferência documental. Cada
-  release precisa consultar o histórico e executar o smoke autenticado dos
-  contratos antes da promoção do frontend.
+- O estado remoto não deve ser considerado alinhado por inferência documental.
+  Na reconciliação de 2026-08-22, o projeto correto foi identificado,
+  25 migrations pendentes foram aplicadas e o smoke autenticado dos contratos
+  passou. Cada release posterior ainda precisa repetir esses dois gates.
 - O bootstrap do primeiro `platform_admin` só pode ser considerado concluído
   quando houver evidência do ambiente remoto correto na janela de release.
 - Continua sendo tratado como infraestrutura crítica, separada do deploy web.
@@ -149,8 +150,9 @@ Regras:
 
 ## Estado atual
 
-- Deploy remoto do Supabase: não comprovado no estado corrente; exige o
-  `Supabase Release Gate` e smoke autenticado no projeto correto
+- Deploy remoto do Supabase: reconciliado em 2026-08-22 no projeto
+  `jzmmvfcmruasqmrdmbup`; exige repetição do `Supabase Release Gate` e smoke
+  autenticado no projeto correto para cada release posterior
 - Bootstrap do primeiro `platform_admin`: histórico/documental, não usar como
   prova do estado atual sem validação do ambiente alvo
 - Preview Vercel: ativo por branch/PR

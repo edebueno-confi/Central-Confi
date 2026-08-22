@@ -247,7 +247,7 @@ export function AnalyticsCsPage({ sharedPeriod, onSharedPeriodChange, sharedOper
               <div className="mt-4 overflow-x-auto">
                 <table className="gso-analytics-responsive-table w-full min-w-[660px] text-xs text-left">
                   <thead className="border-b border-[color:var(--minimal-border)] text-[color:var(--minimal-text-tertiary)]"><tr><th className="px-2 py-2 font-medium">Responsável</th><th className="px-2 py-2 text-right font-medium">Em aberto</th><th className="px-2 py-2 text-right font-medium">Entraram</th><th className="px-2 py-2 text-right font-medium">Resolvidos</th><th className="px-2 py-2 text-right font-medium">Mediana até resolução</th></tr></thead>
-                  <tbody>{supportOwnerPerformance.map((owner) => <tr key={owner.name} className="border-b border-[color:var(--minimal-border)] last:border-0"><td data-label="Responsável" className="px-2 py-2 font-medium text-[color:var(--minimal-text)]">{owner.name}</td><td data-label="Em aberto" className="px-2 py-2 text-right tabular-nums">{owner.openTickets.toLocaleString('pt-BR')}</td><td data-label="Entraram" className="px-2 py-2 text-right tabular-nums">{owner.createdTickets.toLocaleString('pt-BR')}</td><td data-label="Resolvidos" className="px-2 py-2 text-right tabular-nums">{owner.resolvedTickets.toLocaleString('pt-BR')}</td><td data-label="Mediana até resolução" className="px-2 py-2 text-right tabular-nums">{owner.medianResolutionDays === null ? 'Indisponível' : `${owner.medianResolutionDays.toLocaleString('pt-BR')} dias`}</td></tr>)}</tbody>
+                  <tbody>{supportOwnerPerformance.map((owner) => <tr key={owner.key} className="border-b border-[color:var(--minimal-border)] last:border-0"><td data-label="Responsável" className="px-2 py-2 font-medium text-[color:var(--minimal-text)]">{owner.name}</td><td data-label="Em aberto" className="px-2 py-2 text-right tabular-nums">{owner.openTickets.toLocaleString('pt-BR')}</td><td data-label="Entraram" className="px-2 py-2 text-right tabular-nums">{owner.createdTickets.toLocaleString('pt-BR')}</td><td data-label="Resolvidos" className="px-2 py-2 text-right tabular-nums">{owner.resolvedTickets.toLocaleString('pt-BR')}</td><td data-label="Mediana até resolução" className="px-2 py-2 text-right tabular-nums">{owner.medianResolutionDays === null ? 'Indisponível' : `${owner.medianResolutionDays.toLocaleString('pt-BR')} dias`}</td></tr>)}</tbody>
                 </table>
               </div>
               <p className="mt-3 text-[11px] leading-4 text-[color:var(--minimal-text-tertiary)]">A mediana por pessoa segue a mesma cobertura do tempo de resolução publicado pelo read model. Tarefas, reuniões, ligações e e-mails não são inferidos de atendimentos.</p>
@@ -291,7 +291,8 @@ function readSupportOwnerPerformance(value: unknown): SupportOwnerPerformanceRow
   const rawRows = Array.isArray(payload.by_owner) ? payload.by_owner : [];
   return rawRows
     .filter((row): row is Record<string, unknown> => Boolean(row) && typeof row === 'object')
-    .map((row) => ({
+    .map((row, index) => ({
+      key: typeof row.owner_id === 'string' && row.owner_id.trim() ? `owner:${row.owner_id}` : `unassigned:${index}`,
       name: typeof row.owner_name === 'string' && row.owner_name.trim() ? row.owner_name : 'Sem responsável',
       openTickets: numericValue(row.open_tickets),
       createdTickets: numericValue(row.created_tickets),

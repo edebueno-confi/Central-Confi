@@ -8,25 +8,42 @@
 do $$
 declare
   v_definition text;
+  v_original text;
+  v_match_count integer;
   v_scope_predicate constant text :=
     '(nullif(current_setting(''app.analytics_group_company'', true), '''') is null'
     || ' or c.group_company = current_setting(''app.analytics_group_company'', true))';
-  v_marker constant text :=
-    'and c.is_active and not coalesce(c.is_archived, false)';
-  v_replacement constant text :=
-    'and c.is_active and not coalesce(c.is_archived, false)' || chr(10)
-    || '       and ' || v_scope_predicate;
 begin
   v_definition := pg_get_functiondef(
     'public.rpc_analytics_timeseries(text,date,date,text)'::regprocedure
   );
+  v_original := v_definition;
 
-  if length(v_definition) - length(replace(v_definition, v_marker, ''))
-      <> 2 * length(v_marker) then
+  select count(*)
+    into v_match_count
+  from regexp_matches(
+    v_definition,
+    'and c[.]is_active[[:space:]]+and not coalesce[(]c[.]is_archived, false[)]',
+    'g'
+  );
+
+  if v_match_count <> 2 then
     raise exception 'Contrato inesperado de rpc_analytics_timeseries';
   end if;
 
-  execute replace(v_definition, v_marker, v_replacement);
+  v_definition := regexp_replace(
+    v_definition,
+    'and c[.]is_active[[:space:]]+and not coalesce[(]c[.]is_archived, false[)]',
+    'and c.is_active and not coalesce(c.is_archived, false)' || chr(10)
+      || '       and ' || v_scope_predicate,
+    'g'
+  );
+
+  if v_definition = v_original then
+    raise exception 'Falha ao aplicar o escopo operacional em rpc_analytics_timeseries';
+  end if;
+
+  execute v_definition;
 end;
 $$;
 
