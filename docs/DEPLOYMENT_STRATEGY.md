@@ -80,6 +80,9 @@ Regras:
 - A `main` exige pull request e o check obrigatório e atualizado `verify-database` antes do merge, inclusive para administradores.
 - O check executa typecheck de contratos e frontend, build web, reset/testes pgTAP e lint do schema local.
 - O workflow `Supabase Release Gate` é manual, protegido pelo Environment `production` e é o único caminho autorizado para aplicar migrations remotas antes da promoção do frontend.
+- Antes de qualquer `link` ou `db push`, o workflow exige todos os secrets do
+  Environment e valida que `SUPABASE_URL` corresponde exatamente ao
+  `SUPABASE_PROJECT_REF`; divergência interrompe a execução.
 - A integração automática de Production do Vercel deve permanecer desativada ou configurada para promoção posterior ao gate. Caso contrário, um push pode publicar o frontend antes do banco, recriando o drift que este procedimento elimina.
 - Branches `codex/*` e demais branches continuam em Preview; elas não entram no fluxo de produção até serem integradas à `main`.
 
@@ -146,7 +149,9 @@ Regras:
 
 ## Estado atual
 
-- Deploy remoto do Supabase: concluído
-- Bootstrap do primeiro `platform_admin`: concluído
+- Deploy remoto do Supabase: não comprovado no estado corrente; exige o
+  `Supabase Release Gate` e smoke autenticado no projeto correto
+- Bootstrap do primeiro `platform_admin`: histórico/documental, não usar como
+  prova do estado atual sem validação do ambiente alvo
 - Preview Vercel: ativo por branch/PR
 - Production Vercel: promoção controlada após o `Supabase Release Gate`; deploy automático por push não é considerado seguro para releases com migrations

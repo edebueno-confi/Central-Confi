@@ -29,6 +29,19 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - name: Validate release target identity
+        run: |
+          node --input-type=module <<'NODE'
+          const required = ['SUPABASE_PROJECT_REF', 'SUPABASE_ACCESS_TOKEN', 'SUPABASE_DB_PASSWORD', 'SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SUPABASE_SMOKE_JWT'];
+          const missing = required.filter((name) => !String(process.env[name] || '').trim());
+          if (missing.length) throw new Error(`Secrets ausentes: ${missing.join(', ')}`);
+          const ref = process.env.SUPABASE_PROJECT_REF.trim();
+          const url = new URL(process.env.SUPABASE_URL);
+          if (url.protocol !== 'https:' || url.hostname !== `${ref}.supabase.co`) {
+            throw new Error('SUPABASE_URL não corresponde ao SUPABASE_PROJECT_REF do Environment.');
+          }
+          console.log(`Target Supabase validado: ${ref}`);
+          NODE
       - name: Validate application and local database
         run: |
           npm run contracts:typecheck
