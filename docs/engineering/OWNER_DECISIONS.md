@@ -610,3 +610,46 @@ promoção posterior da task futura segue a OD-013.
 - O caminho de produção continua sujeito à estratégia versionada: `main`,
   revisão/CI e integração de deploy. Não autoriza secrets, migrations remotas,
   escrita de dados externos ou alteração de banco.
+
+---
+
+## OD-015 — Ratificação das migrations remotas aplicadas em 2026-08-22
+
+- **Data:** 2026-08-22
+- **Origem:** decisão explícita do proprietário, Ede, em resposta à divergência
+  levantada pelo coordenador durante o takeover.
+- **Registrado por:** Claude, Coordenador operacional.
+- **Status:** ATIVA
+
+### Contexto
+
+O handoff de takeover informou que duas migrations já haviam sido aplicadas no
+projeto Supabase `jzmmvfcmruasqmrdmbup`:
+
+- `access_02_provisioning_e2e_v1`, registrada remotamente como `20260822234654`;
+- `analytics_utf8_and_scope_guard_v1`, registrada remotamente como `20260822234701`.
+
+O coordenador verificou que nenhuma decisão registrada autorizava migration
+remota. Todas as menções no registro eram proibições, incluindo a `OD-014`, do
+mesmo dia, que declara textualmente: "Não autoriza secrets, migrations remotas,
+escrita de dados externos ou alteração de banco".
+
+### Decisão
+
+O proprietário ratifica as duas migrations já aplicadas. Elas permanecem em
+produção e não devem ser revertidas por falta de autorização registrada.
+
+### O que esta decisão não faz
+
+- Não autoriza novas migrations remotas. Cada aplicação futura exige decisão
+  própria e registrada **antes** da execução.
+- Não altera a `OD-014` quanto a secrets, escrita de dados externos e alteração
+  de banco.
+
+### Lacuna de processo registrada
+
+A autorização existiu em conversa e não foi persistida antes da execução. Isso
+contraria a `OD-001`, que define o repositório como fonte oficial das decisões
+enquanto o painel não estiver disponível. O registro fica aqui para que a
+lacuna seja auditável, não para normalizá-la: a ordem correta é decidir,
+registrar e só então executar em ambiente remoto.
