@@ -464,3 +464,98 @@ se a declaração sumir do lugar onde o leitor a procura; é mais exigente, não
 
 APPROVED para finalização local. Merge da PR 45, deploy e migration remota
 continuam fora de autorização (OD-001, OD-014, OD-015, OD-016).
+
+---
+
+## Ciclo 4 — validação autenticada de navegador, enfim executada
+
+O proprietário fez o login e abriu também o build local em
+`http://127.0.0.1:4173`. Com isso a limitação declarada nos ciclos anteriores
+deixou de existir e foi possível medir, e não inferir.
+
+### Produção, com operação Aftersale selecionada
+
+Ao contrário do que a captura anterior sugeria, **a Visão Geral não está
+permanentemente quebrada**. Hoje ela exibe:
+
+| Indicador | Produção | Banco |
+| --- | --- | --- |
+| Valor em negociação | R$ 744.078 | 744077.50 |
+| Receita fechada | R$ 499 | 499.00 |
+| Taxa de ganho | 2,6% | 2.56 |
+
+Ou seja, a tela vazia que originou esta investigação era **falha intermitente**,
+não estado permanente. Isso não diminui o defeito: quando falhava, a tela
+afirmava uma limitação de origem inexistente e não oferecia ação. Continua
+valendo, e continua corrigido.
+
+Confirmado também que a frase falsa **está viva em produção agora**, nos cards
+sem dimensão operacional — o build publicado é anterior ao mapeamento de
+`operation_dimension_unavailable`.
+
+### Build local com as correções — comportamento medido
+
+Rede, com Aftersale selecionado: `rpc_analytics_ceo_snapshot` **não é chamado**,
+e `rpc_analytics_commercial_kpis_by_operation`,
+`rpc_analytics_support_kpis_by_operation` e
+`rpc_analytics_cs_snapshot_by_operation` respondem 200. O guard de escopo do
+ciclo 2 funciona no navegador autenticado, não apenas no teste.
+
+Console da aplicação sem erros. O único erro registrado vem de uma extensão do
+navegador (`csspeeper-inspector-tools`), fora do produto.
+
+Tela conferida: números operacionais presentes (R$ 743.080, 2.794, R$ 499, 3%,
+281), linha de escopo em linguagem de negócio, ressalva única no cabeçalho da
+faixa e **nenhuma ocorrência** de "limitação de origem registrada pela equipe
+responsável".
+
+### V-06 — MÉDIA — encontrado na própria validação
+
+Com a tela corrigida no ar, ficou visível um defeito vizinho que os testes não
+pegariam: "Receita recorrente", "Clientes ativos", "Recebido no período",
+"A receber em atraso", "Recorrência com atraso" e "Retenção líquida" exibiam
+"Não foi possível confirmar este indicador nesta leitura. Atualize para tentar
+de novo."
+
+Esses indicadores **não têm dimensão operacional publicada**. Nenhuma
+atualização faria o número aparecer. A mensagem convidava o usuário a insistir
+por um valor que nunca viria — a mentira inversa da que eu tinha acabado de
+remover.
+
+Causa: `maskUnscopedOperationKpis` só reescrevia chaves que já existissem no
+payload base. Sob recorte, o payload executivo é zerado, as chaves somem, e o
+contrato cai no motivo ausente. Corrigido: a máscara passa a **garantir** a
+entrada com `operation_dimension_unavailable`, exista ou não na origem.
+
+Verificado na tela após a correção: os seis cards passaram a dizer "Este recorte
+de operação ainda não possui dimensão publicada para este domínio; o painel não
+atribui o consolidado a uma operação."
+
+### Observação de desempenho, não corrigida neste lote
+
+Sem operação selecionada, `rpc_analytics_ceo_snapshot` foi chamado **quatro
+vezes** em uma única abertura, quando o contrato prevê duas janelas. Não toquei
+nisso porque está fora da allowlist desta task e merece medição própria. Fica
+registrado para um lote de desempenho.
+
+### Gates do ciclo 4
+
+web:typecheck PASS; lint PASS; test:focused PASS; kpi-contract PASS; utf8 PASS;
+dev-control-mvp PASS; web:build PASS; docs:validate PASS; git diff --check PASS.
+
+### Limitações que caíram e as que permanecem
+
+- **Caiu:** QA autenticado de navegador. Console, rede e leitura servida foram
+  verificados no build corrigido e em produção.
+- **Permanece:** isolamento entre clientes e autorização por perfil não foram
+  exercitados — a sessão usada é de administrador. Um teste de tenant exige
+  outra conta e continua pendente.
+- **Permanece:** nenhuma alteração remota foi feita; a migration segue apenas
+  lida.
+
+### Decisão do ciclo 4
+
+APPROVED. Do meu lado a recomendação técnica sobre o merge deixa de estar
+bloqueada por falta de evidência: o comportamento corrigido foi observado
+funcionando no navegador autenticado. A decisão de publicar continua sendo do
+proprietário, e a `OD-016` mantém merge e deploy fora da minha autonomia.

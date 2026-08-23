@@ -475,14 +475,26 @@ function mergeOperationKpis(base: unknown, scoped: {
   );
 }
 
+const UNSCOPED_OPERATION_KPI_KEYS = ['mrr_total', 'active_customers', 'received_amount', 'overdue_receivables', 'mrr_overdue', 'nrr'] as const;
+
+// V-06: estas chaves não têm dimensão operacional publicada — é característica
+// do dado, não falha de leitura. A versão anterior só reescrevia chaves que já
+// existissem no payload base; quando o recorte operacional zera o payload
+// executivo, elas sumiam e o contrato caía no motivo ausente, que hoje diz
+// "não foi possível confirmar… atualize". Isso convida o usuário a insistir num
+// número que nunca vai aparecer sob recorte. A máscara passa a garantir a
+// entrada, exista ou não no payload de origem.
 function maskUnscopedOperationKpis(payload: unknown): unknown {
   const base = payload && typeof payload === 'object' ? payload as Record<string, unknown> : {};
   const rawKpis = base.kpis && typeof base.kpis === 'object' ? base.kpis as Record<string, unknown> : {};
-  const maskedKeys = new Set(['mrr_total', 'active_customers', 'received_amount', 'overdue_receivables', 'mrr_overdue', 'nrr']);
-  const kpis = Object.fromEntries(Object.entries(rawKpis).map(([key, entry]) => {
+  const maskedKeys = new Set<string>(UNSCOPED_OPERATION_KPI_KEYS);
+  const kpis: Record<string, unknown> = Object.fromEntries(Object.entries(rawKpis).map(([key, entry]) => {
     if (!maskedKeys.has(key) || !entry || typeof entry !== 'object') return [key, entry];
     return [key, { ...(entry as Record<string, unknown>), state: 'unavailable', value: null, reason: 'operation_dimension_unavailable' }];
   }));
+  for (const key of UNSCOPED_OPERATION_KPI_KEYS) {
+    if (!kpis[key]) kpis[key] = { state: 'unavailable', value: null, reason: 'operation_dimension_unavailable' };
+  }
   return { ...base, kpis };
 }
 

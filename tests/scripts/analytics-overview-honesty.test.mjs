@@ -45,3 +45,30 @@ test('a ressalva comum da faixa não é repetida em cada indicador', () => {
   // quando a face do card a omite.
   assert.match(board, /Ressalva:<\/strong> \{limitacaoCompleta\}/);
 });
+
+// V-06: encontrado na validação autenticada do build local em 2026-08-23. Com
+// operação selecionada, "Receita recorrente", "Clientes ativos", "Recebido no
+// período", "A receber em atraso", "Recorrência com atraso" e "Retenção
+// líquida" exibiam "Não foi possível confirmar este indicador nesta leitura.
+// Atualize para tentar de novo." Esses indicadores não têm dimensão operacional
+// publicada: nenhuma atualização faria o número aparecer. A mensagem convidava
+// o usuário a insistir por um valor que nunca viria.
+test('indicadores sem dimensão operacional são mascarados mesmo sem payload base', () => {
+  const mascara = executive.slice(executive.indexOf('function maskUnscopedOperationKpis'));
+  const corpo = mascara.slice(0, mascara.indexOf('\n}\n') + 3);
+
+  // A máscara precisa garantir a entrada, e não apenas reescrever a existente.
+  assert.match(corpo, /for \(const key of UNSCOPED_OPERATION_KPI_KEYS\)/);
+  assert.match(corpo, /if \(!kpis\[key\]\) kpis\[key\] = \{ state: 'unavailable', value: null, reason: 'operation_dimension_unavailable' \}/);
+});
+
+test('a lista de indicadores sem dimensão operacional continua completa', () => {
+  const lista = executive.slice(
+    executive.indexOf('const UNSCOPED_OPERATION_KPI_KEYS'),
+    executive.indexOf('const UNSCOPED_OPERATION_KPI_KEYS') + 260,
+  );
+
+  for (const key of ['mrr_total', 'active_customers', 'received_amount', 'overdue_receivables', 'mrr_overdue', 'nrr']) {
+    assert.match(lista, new RegExp(`'${key}'`), `${key} precisa continuar mascarado sob recorte`);
+  }
+});
