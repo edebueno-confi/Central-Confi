@@ -19,6 +19,8 @@
 - Findings reconhecidos sem reversão: SEN-F06
 - Gates: web:typecheck PASS; lint PASS; test:focused 295/295; utf8 10/10;
   dev-control-mvp 10/10; web:build PASS; docs:validate PASS; diff check PASS
-- Próximo passo: decisão do proprietário sobre merge da PR 45 e deploy, que
-  continuam fora de autorização, e sobre as três asserções de teste
-  substituídas e declaradas no REVIEW.
+- Decisões pendentes: nenhuma. As duas questões devolvidas ao proprietário
+  foram delegadas ao Sentinel e decididas na OD-016.
+- Próximo passo: lote local encerrado e verde. Merge da PR 45 e deploy seguem
+  bloqueados por decisão técnica registrada na OD-016, até verificação de banco
+  e QA autenticado de navegador.

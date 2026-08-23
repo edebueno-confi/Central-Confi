@@ -653,3 +653,78 @@ contraria a `OD-001`, que define o repositório como fonte oficial das decisões
 enquanto o painel não estiver disponível. O registro fica aqui para que a
 lacuna seja auditável, não para normalizá-la: a ordem correta é decidir,
 registrar e só então executar em ambiente remoto.
+
+## OD-016 — Delegação de julgamento técnico ao Sentinel
+
+- **Data:** 2026-08-23
+- **Origem:** decisão explícita do proprietário, Ede: "sou leigo nesse assunto e
+  quero que você decida, só não me deixe na mão".
+- **Registrado por:** Sentinel, Independent Code Reviewer / Principal Engineer.
+- **Status:** ATIVA
+
+### Contexto
+
+O Sentinel devolveu ao proprietário duas questões que, pela `OD-008`, exigiriam
+decisão do dono: a substituição de asserções de teste e o tratamento de uma
+irregularidade de empacotamento de commit (`SEN-F06`). O proprietário respondeu
+que não tem base técnica para arbitrá-las e delegou o julgamento, pedindo que a
+decisão seja tomada e comunicada de forma inteligível, não devolvida a ele.
+
+### Decisão do proprietário
+
+O Sentinel passa a decidir questões de **julgamento técnico** sem devolvê-las ao
+proprietário, desde que cada decisão seja registrada aqui em linguagem que ele
+consiga auditar depois.
+
+### Limite explícito da delegação
+
+Esta delegação **não** cobre e continua exigindo decisão do proprietário,
+manifestada por ato próprio dele e registrada antes da execução:
+
+- `push`, `merge`, `deploy` e qualquer alteração em produção;
+- migration remota, alteração de secrets ou de credenciais;
+- escrita em sistemas externos (HubSpot, OMIE, Supabase remoto);
+- ampliação de release surface;
+- gasto financeiro.
+
+Uma delegação genérica de julgamento técnico não é autorização para nenhum
+desses atos. O Sentinel deve continuar bloqueando-os até decisão específica.
+
+### Decisões tomadas sob esta delegação em 2026-08-23
+
+**1. As três asserções substituídas em `tests/scripts/dev-control-mvp.test.mjs`
+ficam como estão.**
+
+Eram censos datados — mediam o calendário, não o comportamento do código:
+`BACKLOG >= 10`, `Codex.observed === true` e a ausência de arquivo em
+`ANALYTICS-METRIC-METHODOLOGY-2026-08-21`. Duas delas já estavam falhando antes
+de qualquer alteração deste ciclo, mascaradas porque a suíte não roda em nenhum
+gate em uso. Foram trocadas por invariantes estruturais, que são estritamente
+mais exigentes e continuam válidos com a fila cheia ou vazia. Não houve
+afrouxamento: a suíte saiu de 8/10 para 10/10 com asserções mais fortes, e as
+novas regressões do lote matam 6/6 mutantes em sonda independente.
+
+**2. `SEN-F06` não será revertido.**
+
+O commit `b478ef6a` misturou uma mudança de regime de revisão com a entrega de
+código. Reverter exigiria reescrever histórico já publicado, o que causa mais
+risco do que o defeito corrige. Fica como precedente registrado a não repetir:
+alteração de governança exige commit próprio, conforme a interpretação já
+ratificada na `OD-008`.
+
+**3. Merge da PR 45 e deploy continuam bloqueados — decisão técnica, não
+formalidade.**
+
+Duas verificações materiais nunca foram feitas por ninguém: o comportamento do
+banco em produção e o QA autenticado de navegador. Sem elas não é possível
+afirmar que a aplicação está saudável, e a própria `OD-014` condiciona o deploy
+a revisão independente concluída. O Sentinel manterá o bloqueio até que:
+
+- alguém com rota até o Supabase confirme, por leitura, que as três funções
+  alteradas pela migration existem e publicam `Sem responsável` corretamente;
+- exista QA autenticado cobrindo console, rede, RPC/view servida, autorização e
+  isolamento entre clientes;
+- o `expected_head_sha` do checklist de deploy seja reemitido — o valor
+  `6c18ebae` do documento de takeover está desatualizado.
+
+Enquanto isso, o trabalho segue no ciclo local, que está verde.
