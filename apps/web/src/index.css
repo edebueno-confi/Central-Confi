@@ -865,6 +865,8 @@
 .gso-hd-mobile-filter-button { display: none; }
 .gso-hd-inline-status { margin: 0; color: var(--hd-secondary); font-size: 0.72rem; }
 .gso-hd-inline-status.is-warning { border-left: 2px solid var(--hd-warning); padding-left: 0.65rem; }
+.gso-hd-inline-retry { border: 0; background: none; padding: 0; color: inherit; font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
+.gso-hd-inline-retry:hover, .gso-hd-inline-retry:focus-visible { text-decoration: none; }
 
 .gso-hd-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 0.45rem; }
 .gso-hd-section-heading h2 { margin: 0; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; }

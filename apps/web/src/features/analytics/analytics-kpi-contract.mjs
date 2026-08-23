@@ -86,11 +86,31 @@ const REASON_MESSAGES = {
     'Vínculo confirmado por decisão humana e preservado no histórico de auditoria.',
   operation_dimension_unavailable:
     'Este recorte de operação ainda não possui dimensão publicada para este domínio; o painel não atribui o consolidado a uma operação.',
+  // V-02: este código existia sem tradução e caía no aviso genérico, que
+  // afirmava uma limitação de origem inexistente. Falha de carregamento é
+  // transitória e tem ação — não é característica do dado.
+  operation_load_unavailable:
+    'Não foi possível carregar este indicador para a operação selecionada. Atualize para tentar de novo.',
 };
 
-/** Aviso genérico para um código não mapeado: nunca vaza o código cru. */
+/**
+ * Aviso para um código de motivo que este painel ainda não sabe traduzir.
+ * Nunca vaza o código cru e nunca inventa a causa.
+ *
+ * V-01: a versão anterior dizia "limitação de origem registrada pela equipe
+ * responsável", afirmando um fato que o painel não tem como conhecer. Quando a
+ * origem publicava o dado normalmente e a falha era do carregamento, a tela
+ * atribuía o problema à equipe de dados e não oferecia nenhuma ação.
+ */
 const UNKNOWN_REASON_MESSAGE =
-  'Este indicador tem uma limitação de origem registrada pela equipe responsável.';
+  'A origem informou uma ressalva que este painel ainda não sabe traduzir.';
+
+/**
+ * Usado quando o indicador nem sequer veio no payload. O painel não sabe se a
+ * origem não publica ou se a leitura falhou, então não afirma nenhuma das duas.
+ */
+const MISSING_ENTRY_MESSAGE =
+  'Não foi possível confirmar este indicador nesta leitura. Atualize para tentar de novo.';
 
 /**
  * Lê uma entrada de KPI do payload, normalizando qualquer formato inesperado
@@ -157,9 +177,11 @@ export function describeKpiLimitation(entry) {
   if (!entry) return '';
   if (entry.state === 'available') return '';
   if (!entry.reason) {
+    // Sem motivo declarado o painel não sabe a causa. Diz isso, e oferece a
+    // única ação que existe, em vez de atribuir o problema a alguém.
     return entry.state === 'awaiting_history'
       ? REASON_MESSAGES.history_insufficient
-      : UNKNOWN_REASON_MESSAGE;
+      : MISSING_ENTRY_MESSAGE;
   }
   return REASON_MESSAGES[entry.reason] ?? UNKNOWN_REASON_MESSAGE;
 }

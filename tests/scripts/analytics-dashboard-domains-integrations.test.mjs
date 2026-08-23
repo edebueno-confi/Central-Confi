@@ -65,7 +65,19 @@ test('escopo de operação é espelhado nos read models HubSpot e limita domíni
   assert.match(executive, /getSupportKpisV2ForOverview\(stableFilters, groupCompany\)/);
   assert.match(executive, /getCsSnapshotForOverview\(stableFilters, \[\], groupCompany\)/);
   assert.match(executive, /applyOperationScope/);
-  assert.match(executive, /Financeiro permanece consolidado e fora desta dimensão/);
+  // V-04: esta asserção fixava a redação antiga, que falava "server-side" e
+  // "read models publicados" para um público executivo. O que precisa continuar
+  // verdadeiro é a declaração — Financeiro não é recortado por operação — e não
+  // o texto exato. A âncora é o parágrafo do recorte, então a asserção falha se
+  // a declaração sumir do lugar onde o leitor a procura.
+  const escopoOperacional = executive.slice(
+    executive.indexOf('Operação <strong>{groupCompany}</strong>'),
+    executive.indexOf('Operação <strong>{groupCompany}</strong>') + 600,
+  );
+  assert.match(escopoOperacional, /Financeiro/);
+  assert.match(escopoOperacional, /não é separado por operação/);
+  assert.doesNotMatch(escopoOperacional, /server-side/i);
+  assert.doesNotMatch(escopoOperacional, /read models/i);
   assert.match(executive, /maskUnscopedOperationKpis/);
   assert.match(financePage, /Financeiro consolidado fora do recorte/);
   assert.match(financePage, /Abrir Governança/);

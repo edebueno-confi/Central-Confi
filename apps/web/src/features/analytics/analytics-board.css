@@ -57,6 +57,16 @@
   color: var(--minimal-text-tertiary);
 }
 
+/* Ressalva única da faixa: usada quando todos os indicadores caem pelo mesmo
+   motivo. Ocupa a linha inteira do cabeçalho para não competir com o medidor. */
+.gso-board-band__limit {
+  flex-basis: 100%;
+  margin: 0.2rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--minimal-text-secondary, var(--minimal-text-tertiary));
+}
+
 /* Medidor de confiança da faixa: comprimento proporcional à cobertura real.
    Fica à direita, discreto, e some quando a cobertura é total — informação que
    não muda nada não merece pixel. */

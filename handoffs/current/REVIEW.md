@@ -336,3 +336,131 @@ falhavam antes dela, mascaradas porque esta suíte não está em nenhum gate em 
 
 APPROVED para finalização local. Merge da PR 45, deploy e qualquer nova
 aplicação remota continuam **fora de autorização** (OD-001, OD-014, OD-015).
+
+---
+
+## Ciclo 3 — auditoria da aba Visão Geral a partir de evidência de produção
+
+O proprietário enviou capturas da aplicação em produção e pediu revisão completa
+da Visão Geral, com remoção de informação errada ou desnecessária. As capturas
+mostravam, com a operação Aftersale selecionada, onze indicadores em
+"Indisponível" e a frase "Este indicador tem uma limitação de origem registrada
+pela equipe responsável", enquanto a aba Comercial exibia R$ 744.078 para o
+mesmo recorte.
+
+### Verificação independente contra o banco
+
+Consulta somente-leitura ao projeto `jzmmvfcmruasqmrdmbup`, identidade
+confirmada antes da execução, com `p_group_company => 'Aftersale'` e o mesmo
+período das capturas:
+
+| Chave | Estado | Valor |
+| --- | --- | --- |
+| `open_pipeline_amount` | available | 744077.50 |
+| `won_amount` | available | 499.00 |
+| `win_rate` | available | 2.56 |
+| `open_deals` | available | 1095 |
+
+Conclusão: **a origem publica o dado**. A frase exibida era falsa. O defeito é
+de frontend, não de fonte nem de dimensão ausente.
+
+`rpc_analytics_ceo_snapshot` respondeu em 346 ms pelo papel do MCP, então o
+timeout não se reproduz por esse caminho; qual das chamadas falha no navegador
+autenticado continua não medido (ver Limitações).
+
+### Findings
+
+#### V-01 — ALTA — o painel afirmava uma limitação de origem que não existe
+
+`analytics-kpi-contract.mjs` usava `UNKNOWN_REASON_MESSAGE` — "Este indicador
+tem uma limitação de origem registrada pela equipe responsável" — sempre que o
+indicador não trazia motivo declarado, inclusive quando simplesmente não havia
+sido carregado. O painel afirmava um fato que não tem como conhecer, atribuía o
+problema à equipe de dados e não oferecia ação nenhuma ao leitor.
+
+Corrigido: motivo ausente passa a dizer que não foi possível confirmar o
+indicador nesta leitura, com ação; código não traduzido passa a dizer que a
+origem enviou uma ressalva que o painel ainda não sabe traduzir, sem culpar
+ninguém e sem vazar o código.
+
+#### V-02 — ALTA — `operation_load_unavailable` não tinha tradução
+
+O código era emitido pelo próprio frontend em `buildUnavailableOperationKpiPayload`
+e não existia no dicionário de motivos, então caía no aviso genérico do V-01.
+Falha de carregamento aparecia como característica do dado. Corrigido com
+tradução própria, que nomeia a falha e oferece atualizar.
+
+#### V-03 — ALTA — falha de leitura era indistinguível de ausência de dado
+
+Não havia estado que separasse "não carregou" de "a origem não publica esta
+dimensão". As duas viravam a mesma parede de cards. Corrigido com
+`operationLoadFailed`, aviso único no topo e ação "Tentar de novo" — esta
+apoiada em `operationRetryToken` nas dependências do efeito, sem o qual o botão
+existiria sem refazer leitura alguma, porque o memo de filtros é estável por valor.
+
+#### V-04 — MÉDIA — jargão técnico na tela executiva
+
+A linha do recorte dizia "o recorte é aplicado server-side aos read models
+publicados" e "associação ticket-empresa". Reescrita em linguagem de negócio,
+preservando as três declarações que ela precisa fazer.
+
+#### V-05 — MÉDIA — ressalva repetida onze vezes
+
+Quando a faixa inteira cai pelo mesmo motivo, a frase subia em cada indicador.
+Agora aparece uma vez no cabeçalho da faixa; o detalhe "Como interpretar"
+continua trazendo a ressalva completa por indicador.
+
+### Regra registrada pelo proprietário
+
+"Os gráficos devem sempre respeitar os filtros aplicados pelo usuário", de
+operação e de área. Defeito confirmado por leitura de código, não por suposição:
+`AnalyticsTrendPanel` recebe apenas `domain`, `grain` e `groupCompany`, e chama
+`getAnalyticsTimeseries(domain, grain, undefined, groupCompany)`. A exclusão de
+pipelines que Comercial e Customer Success já aplicam aos KPIs nunca alcança os
+gráficos das mesmas telas, e `rpc_analytics_timeseries_by_operation` não tem
+parâmetro para recebê-la. Registrado na fila como item 56, `BACKLOG`. **Exige
+migration remota, portanto decisão do proprietário registrada antes da execução.**
+
+Observação para quem pegar o item 56: o teste
+`analytics-dashboard-domains-integrations.test.mjs` hoje **fixa** a chamada
+defeituosa (`getAnalyticsTimeseries(domain, grain, undefined, groupCompany)`).
+Essa asserção terá de ser invertida junto com a correção, como foi feito no
+ciclo 2 com o guard de escopo.
+
+### Gates do ciclo 3
+
+- `npm run web:typecheck` — PASS
+- `npm run lint` — PASS
+- `npm run test:focused` — PASS, **302/302** (eram 295)
+- `analytics-kpi-contract` — PASS, 19/19
+- `utf8-encoding-integrity` — PASS, 10/10
+- `dev-control-mvp` — PASS, 10/10
+- `npm run web:build` — PASS
+- `npm run docs:validate` — PASS
+- `git diff --check` — PASS
+- Sonda de mutação independente das regressões novas: **6/6 mutantes mortos**
+
+### Asserção de teste substituída — declarada ao proprietário
+
+`analytics-dashboard-domains-integrations.test.mjs` fixava a redação antiga da
+linha do recorte (`/Financeiro permanece consolidado e fora desta dimensão/`).
+Substituída por uma asserção ancorada no próprio parágrafo do recorte, que exige
+a declaração — Financeiro não é separado por operação — e proíbe o jargão. Falha
+se a declaração sumir do lugar onde o leitor a procura; é mais exigente, não menos.
+
+### Limitações do ciclo 3
+
+- **Não foi possível determinar, no navegador autenticado, qual chamada falha.**
+  Abri a aplicação no Chrome do proprietário e ela parou no login com as
+  credenciais preenchidas pelo gerenciador. Não submeto formulário de senha,
+  então o rastreamento de console e rede continua pendente. Enquanto isso, não
+  está provado se a correção do ciclo 2 elimina a tela vazia que ele fotografou
+  ou se a falha está nas próprias leituras operacionais servidas ao usuário.
+- As correções deste ciclo tornam a tela honesta e recuperável em qualquer um
+  dos dois casos, mas honestidade não é o mesmo que exibir o número.
+- Banco verificado apenas por leitura pontual; nenhuma alteração remota foi feita.
+
+### Decisão do ciclo 3
+
+APPROVED para finalização local. Merge da PR 45, deploy e migration remota
+continuam fora de autorização (OD-001, OD-014, OD-015, OD-016).

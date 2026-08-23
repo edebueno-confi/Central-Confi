@@ -92,7 +92,48 @@ test('código de motivo desconhecido não vaza para a interface', () => {
   const unknown = { kpis: { x: { state: 'unavailable', value: null, basis: null, reason: 'hs_internal_prop_missing' } } };
   const message = describeKpiLimitation(readKpi(unknown, 'x'));
   assert.doesNotMatch(message, /hs_internal_prop_missing/);
-  assert.match(message, /limitação de origem/);
+  assert.match(message, /ressalva/i);
+});
+
+// V-01: a frase anterior — "limitação de origem registrada pela equipe
+// responsável" — era exibida quando o indicador simplesmente não tinha sido
+// carregado. Afirmava um fato que o painel não conhece, culpava uma equipe e
+// não dava ação nenhuma ao leitor.
+test('o painel não inventa limitação de origem quando o indicador não veio', () => {
+  const message = describeKpiLimitation(readKpi({ kpis: {} }, 'open_pipeline_amount'));
+
+  assert.doesNotMatch(message, /limitação de origem/i);
+  assert.doesNotMatch(message, /equipe responsável/i);
+  assert.match(message, /não foi possível confirmar/i);
+  assert.match(message, /atualize/i);
+});
+
+// V-02: este código era emitido pelo próprio frontend e não tinha tradução,
+// então caía no aviso genérico e virava "limitação de origem".
+test('falha de carregamento da operação é declarada como falha, não como limitação', () => {
+  const payload = { kpis: { open_pipeline_amount: { state: 'unavailable', value: null, reason: 'operation_load_unavailable' } } };
+  const message = describeKpiLimitation(readKpi(payload, 'open_pipeline_amount'));
+
+  assert.doesNotMatch(message, /limitação de origem/i);
+  assert.doesNotMatch(message, /operation_load_unavailable/);
+  assert.match(message, /não foi possível carregar/i);
+  assert.match(message, /operação selecionada/i);
+});
+
+// As duas causas não podem colapsar numa frase só: ausência real de dimensão
+// é característica do dado; falha de leitura é transitória e tem ação.
+test('ausência de dimensão operacional continua distinguível de falha de leitura', () => {
+  const semDimensao = describeKpiLimitation(readKpi(
+    { kpis: { mrr_total: { state: 'unavailable', value: null, reason: 'operation_dimension_unavailable' } } },
+    'mrr_total',
+  ));
+  const falhaDeLeitura = describeKpiLimitation(readKpi(
+    { kpis: { mrr_total: { state: 'unavailable', value: null, reason: 'operation_load_unavailable' } } },
+    'mrr_total',
+  ));
+
+  assert.match(semDimensao, /dimensão publicada/i);
+  assert.notEqual(semDimensao, falhaDeLeitura);
 });
 
 test('cada indicador declara a coorte de data usada', () => {

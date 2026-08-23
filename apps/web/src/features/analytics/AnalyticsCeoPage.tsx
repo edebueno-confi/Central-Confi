@@ -163,6 +163,12 @@ export function AnalyticsCeoPage({
     period: { commercial: unknown; support: unknown; supportSnapshot: CsSnapshot };
     current: { commercial: unknown; support: unknown; supportSnapshot: CsSnapshot };
   } | null>(null);
+  // V-03: sem isto, uma falha de carregamento e uma ausência real de dimensão
+  // ficam indistinguíveis na tela — as duas viravam onze cards "Indisponível".
+  const [operationLoadFailed, setOperationLoadFailed] = useState(false);
+  // Refazer a leitura com os mesmos filtros: o memo de filtros é estável por
+  // valor, então sem este contador o efeito nunca voltaria a rodar.
+  const [operationRetryToken, setOperationRetryToken] = useState(0);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [configuredPipelines, setConfiguredPipelines] = useState<AnalyticsSourceConfig[]>([]);
   const [groupCompany, setGroupCompany] = useState<string>(sharedOperation ?? '');
@@ -200,6 +206,7 @@ export function AnalyticsCeoPage({
   useEffect(() => {
     let cancelled = false;
     setOperationKpis(null);
+    setOperationLoadFailed(false);
     if (groupCompany) setExecutiveKpis(null);
     setRefreshing(true);
     setResult((current) =>
@@ -239,9 +246,13 @@ export function AnalyticsCeoPage({
               period: { commercial: commercial.period, support: support.period, supportSnapshot: supportSnapshot.period },
               current: { commercial: commercial.current, support: support.current, supportSnapshot: supportSnapshot.current },
             });
+            setOperationLoadFailed(false);
           }
         } catch {
-          if (!cancelled) setOperationKpis(null);
+          if (!cancelled) {
+            setOperationKpis(null);
+            setOperationLoadFailed(true);
+          }
         }
       })();
       return () => {
@@ -301,7 +312,7 @@ export function AnalyticsCeoPage({
     return () => {
       cancelled = true;
     };
-  }, [stableFilters, groupCompany, sourceStatus]);
+  }, [stableFilters, groupCompany, sourceStatus, operationRetryToken]);
 
   if (result.loading && !result.data)
     return (
@@ -422,6 +433,8 @@ export function AnalyticsCeoPage({
       unavailable={hubspotUnavailable}
       financeUnavailable={omieUnavailable || Boolean(groupCompany)}
       operationScoped={operationScoped}
+      operationLoadFailed={operationLoadFailed}
+      onRetryOperation={() => setOperationRetryToken((token) => token + 1)}
       operationCurrentAvailability={operationCurrentAvailability}
       operationPeriodAvailability={operationPeriodAvailability}
       refreshing={refreshing}
@@ -604,6 +617,8 @@ function ExecutiveHdCanvas({
   unavailable,
   financeUnavailable,
   operationScoped,
+  operationLoadFailed,
+  onRetryOperation,
   operationCurrentAvailability,
   operationPeriodAvailability,
   refreshing,
@@ -636,6 +651,8 @@ function ExecutiveHdCanvas({
   unavailable: boolean;
   financeUnavailable: boolean;
   operationScoped: boolean;
+  operationLoadFailed: boolean;
+  onRetryOperation?: () => void;
   operationCurrentAvailability: OperationCurrentAvailability;
   operationPeriodAvailability: OperationPeriodAvailability;
   refreshing: boolean;
@@ -730,7 +747,34 @@ function ExecutiveHdCanvas({
         </div>
       </div>
 
-      {groupCompany ? <p className="gso-hd-inline-status" role="status">Operação <strong>{groupCompany}</strong>: o recorte é aplicado server-side aos read models publicados de Comercial e Suporte. Customer Success só publica o recorte quando há pipeline de ticket confirmado e associação ticket-empresa; Financeiro permanece consolidado e fora desta dimensão.</p> : null}
+      {/* V-04: a versão anterior desta linha falava "server-side", "read models
+          publicados" e "associação ticket-empresa" para um público executivo.
+          O conteúdo é o mesmo; a linguagem é a de quem lê o painel. */}
+      {groupCompany ? (
+        <p className="gso-hd-inline-status" role="status">
+          Operação <strong>{groupCompany}</strong>. Comercial e Suporte estão filtrados por
+          ela. Customer Success só aparece quando o atendimento está ligado a uma empresa.
+          Financeiro não é separado por operação: o valor consolidado fica na aba Financeiro.
+        </p>
+      ) : null}
+
+      {/* V-01/V-03: falha de carregamento tem causa e ação próprias. Antes ela
+          se disfarçava de onze indicadores "indisponíveis por limitação da
+          origem", o que é uma afirmação que o painel não pode fazer. */}
+      {operationScoped && operationLoadFailed ? (
+        <p className="gso-hd-inline-status is-warning" role="alert">
+          Não foi possível carregar os indicadores da operação <strong>{groupCompany}</strong>.
+          Isto é falha de leitura desta tela, não uma conclusão sobre os dados da origem.
+          {onRetryOperation ? (
+            <>
+              {' '}
+              <button type="button" className="gso-hd-inline-retry" onClick={onRetryOperation}>
+                Tentar de novo
+              </button>
+            </>
+          ) : null}
+        </p>
+      ) : null}
 
       {executiveKpis ? (
         <>

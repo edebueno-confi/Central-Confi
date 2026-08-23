@@ -85,6 +85,15 @@ function Band({
   const temParcial = entries.some(({ entry }) => entry.state === 'partial');
   const mostrarMedidor = temParcial && coverage !== null && coverage < 100;
 
+  // V-05: quando a faixa inteira cai pelo mesmo motivo — o caso típico de uma
+  // leitura que não carregou — repetir a mesma frase em cada indicador não
+  // informa, esconde. A ressalva sobe uma vez para o cabeçalho da faixa.
+  const limitacoes = entries.map(({ entry }) => describeKpiLimitation(entry));
+  const limitacaoDaFaixa = entries.length > 1
+    && limitacoes.every((frase) => frase !== '' && frase === limitacoes[0])
+    ? limitacoes[0]
+    : null;
+
   return (
     <section className="gso-board-band" aria-label={band.title}>
       <header className="gso-board-band__head">
@@ -104,11 +113,21 @@ function Band({
             {Math.round(coverage)}% de cobertura
           </span>
         ) : null}
+        {limitacaoDaFaixa ? (
+          <p className="gso-board-band__limit" role="status">{limitacaoDaFaixa}</p>
+        ) : null}
       </header>
 
       <div className="gso-board-band__items" data-density={band.dense ? 'support' : undefined}>
         {entries.map(({ item, entry }, index) => (
-          <Item key={item.key} item={item} entry={entry} priority={index === 0 ? 'lead' : 'support'} meta={meta} />
+          <Item
+            key={item.key}
+            item={item}
+            entry={entry}
+            priority={index === 0 ? 'lead' : 'support'}
+            meta={meta}
+            limitacaoNoCabecalho={Boolean(limitacaoDaFaixa)}
+          />
         ))}
       </div>
     </section>
@@ -120,15 +139,19 @@ function Item({
   entry,
   priority,
   meta,
+  limitacaoNoCabecalho = false,
 }: {
   item: BoardItem;
   entry: KpiEntry;
   priority: 'lead' | 'support';
   meta: ReturnType<typeof readKpiMeta>;
+  /** A faixa já publicou esta ressalva; repetir por indicador seria ruído. */
+  limitacaoNoCabecalho?: boolean;
 }) {
   const ausente = entry.value === null || entry.value === undefined;
   const alerta = item.alertWhenPositive === true && (entry.value ?? 0) > 0;
-  const limitacao = describeKpiLimitation(entry);
+  const limitacaoCompleta = describeKpiLimitation(entry);
+  const limitacao = limitacaoNoCabecalho ? '' : limitacaoCompleta;
   const coorte = describeKpiBasis(entry);
 
   return (
@@ -152,7 +175,7 @@ function Item({
           ) : null}
           {meta.coveragePercent !== null ? <p><strong>Cobertura:</strong> {Math.round(meta.coveragePercent)}%.</p> : <p><strong>Cobertura:</strong> não informada.</p>}
           {meta.freshnessAt ? <p><strong>Atualização:</strong> {formatContextDate(meta.freshnessAt)}.</p> : <p><strong>Atualização:</strong> não informada.</p>}
-          {limitacao ? <p><strong>Ressalva:</strong> {limitacao}</p> : null}
+          {limitacaoCompleta ? <p><strong>Ressalva:</strong> {limitacaoCompleta}</p> : null}
         </div>
       </details>
     </div>
