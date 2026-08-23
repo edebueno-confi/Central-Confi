@@ -2,7 +2,7 @@
 
 - Task: R1-DASHBOARD-PARITY-UTF8-SCOPE-2026-08-22
 - Base SHA: ec37f5673f8ee957a806f235cbf7e5cdf141834e
-- Implementation SHA: UNCOMMITTED_WORKTREE
+- Implementation SHA: b478ef6a7605942e3058557578f27e2e0342f5c6 (ciclo 1)
 - Owner: Forge
 - Role: EXECUTOR
 - Reviewer active: Codex (Reviewer mode)
@@ -76,3 +76,45 @@
   operação, dimensões não publicadas permanecem indisponíveis por contrato.
 - Próximo passo: aguardar os checks do PR 45, fazer merge controlado na `main`
   quando verdes e validar o domínio de produção após a promoção.
+
+---
+
+## Ciclo 2 — correções dos findings da revisão independente
+
+Executado pelo Sentinel sob autorização explícita do proprietário em 2026-08-23.
+
+- `analytics-ceo-snapshot.mjs`: novo `buildExecutiveIntegrityLine(dataQuality,
+  operationScoped)` — helper puro que recusa publicar número de `dataQuality`
+  sob recorte operacional e nunca converte ausência em zero. Tipo declarado em
+  `analytics-ceo-snapshot.d.mts`.
+- `analytics-ceo-snapshot.mjs`: `state.reason` da base indisponível virou frase
+  publicável; o identificador de máquina passou para `state.reasonCode`.
+- `AnalyticsCeoPage.tsx`: a branch operacional deixou de reaproveitar
+  `current.data`; a base sob recorte é sempre `buildUnavailableCeoSnapshot()`.
+  A linha "Governança e cobertura" passou a consumir o helper puro.
+- `handoffs/README.md`: task registrada na fila canônica como item 55, `ACTIVE`.
+- `handoffs/archive/R1-DASHBOARD-PARITY-UTF8-SCOPE-2026-08-22/`: removido por ser
+  arquivo prematuro; conteúdo permanece recuperável em `b478ef6a`.
+
+### Testes
+
+- `utf8-encoding-integrity.test.mjs`: passou a importar e exercitar
+  `repairOperationalMojibake` e `sanitizeOperationalVisibleText`; o teste da
+  migration afirma propriedades de segurança do patch em vez de literais.
+- `analytics-dashboard-domains-integrations.test.mjs`: o guard operacional agora
+  precisa retornar antes da chamada consolidada; asserção que congelava o
+  defeito foi invertida.
+- `analytics-ceo-snapshot.test.mjs`: quatro regressões comportamentais novas.
+- `dev-control-mvp.test.mjs`: três asserções datadas trocadas por invariantes
+  estruturais (declaradas ao proprietário no REVIEW).
+
+### Gates do ciclo 2, reexecutados no host
+
+web:typecheck PASS; lint PASS; test:focused 295/295; utf8 10/10;
+dev-control-mvp 10/10; web:build PASS; docs:validate PASS; git diff --check PASS.
+Sonda de mutação independente: 6/6 mutantes mortos.
+
+### Não executado
+
+Migration remota, merge, deploy e QA autenticado de navegador permanecem fora de
+autorização e fora deste ciclo.

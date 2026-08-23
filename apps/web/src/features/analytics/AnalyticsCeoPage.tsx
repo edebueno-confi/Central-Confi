@@ -35,7 +35,7 @@ import { AnalyticsBoardLimitations, AnalyticsKpiBoard, type BoardBand } from "./
 import { AnalyticsDataCoveragePanel, analyticsCoverageStatus, type AnalyticsCoverageItem } from './AnalyticsDataCoveragePanel';
 import { AnalyticsTrendPanel } from './AnalyticsTrendPanel';
 import { readKpi } from './analytics-kpi-contract.mjs';
-import { buildOperationPeriodMetrics, buildUnavailableCeoSnapshot, buildUnavailableOperationKpiPayload, getOverviewQueueMetricDefinitions, mergeOperationKpiPayload } from './analytics-ceo-snapshot.mjs';
+import { buildExecutiveIntegrityLine, buildOperationPeriodMetrics, buildUnavailableCeoSnapshot, buildUnavailableOperationKpiPayload, getOverviewQueueMetricDefinitions, mergeOperationKpiPayload } from './analytics-ceo-snapshot.mjs';
 
 const STATUS_LABELS: Record<AnalyticsDataStatus, string> = {
   fresh: "Dados atualizados",
@@ -216,9 +216,15 @@ export function AnalyticsCeoPage({
       void (async () => {
         const liveSourceStatus = sourceStatus ?? await getAnalyticsSourceStatusSafe();
         if (cancelled) return;
-        setResult((current) => ({
+        // SEN-F01: nunca reaproveitar `current.data` aqui. Se o usuário abriu o
+        // consolidado antes de escolher a operação, aquele snapshot continuaria
+        // vivo e todo campo sem dimensão operacional (dataQuality, product,
+        // development) seria publicado como se fosse do recorte. A base sob
+        // recorte é sempre a indisponível; só o que tem read model operacional
+        // é preenchido depois, por `applyOperationScope`.
+        setResult(() => ({
           loading: false,
-          data: current.data ?? buildUnavailableCeoSnapshot(),
+          data: buildUnavailableCeoSnapshot(),
           sourceStatus: liveSourceStatus ?? sourceStatus,
         }));
         setRefreshing(false);
@@ -647,6 +653,7 @@ function ExecutiveHdCanvas({
   canOpenGovernance: boolean;
 }) {
   const periodLabel = formatPeriod(filters);
+  const integrityLine = buildExecutiveIntegrityLine(data.dataQuality, operationScoped);
   const qualityExpected = state?.coverage.expected;
   const qualityReceived = state?.coverage.received;
   const qualityLabel =
@@ -888,18 +895,12 @@ function ExecutiveHdCanvas({
               <small>Cobertura geral do contrato</small>
             </div>
             <div>
-              <span className="gso-hd-integrity-value">
-                {data.dataQuality.unmatchedFinanceTitles.toLocaleString(
-                  "pt-BR",
-                )}
-              </span>
-              <small>Títulos sem correspondência</small>
+              <span className="gso-hd-integrity-value">{integrityLine.unmatchedFinanceTitles.value}</span>
+              <small>{integrityLine.unmatchedFinanceTitles.label}</small>
             </div>
             <div>
-              <span className="gso-hd-integrity-value">
-                {data.dataQuality.supportUnassigned.toLocaleString("pt-BR")}
-              </span>
-              <small>Tickets sem responsável</small>
+              <span className="gso-hd-integrity-value">{integrityLine.supportUnassigned.value}</span>
+              <small>{integrityLine.supportUnassigned.label}</small>
             </div>
           </div>
         </section>

@@ -4,6 +4,7 @@ import {
   buildOverviewSnapshotQueryPlan,
   buildOperationPeriodMetrics,
   buildUnavailableCeoSnapshot,
+  buildExecutiveIntegrityLine,
   getOverviewQueueMetricDefinitions,
   buildUnavailableOperationKpiPayload,
   composeCeoSnapshot,
@@ -130,10 +131,55 @@ test('cria base honesta quando a Visão Geral abre diretamente em uma operação
   const snapshot = buildUnavailableCeoSnapshot();
 
   assert.equal(snapshot.state.status, 'unavailable');
-  assert.equal(snapshot.state.reason, 'operation_dimension_unavailable');
-  assert.equal(snapshot.finance.balance, 0);
+  assert.equal(snapshot.state.reasonCode, 'operation_dimension_unavailable');
   assert.deepEqual(snapshot.support.byOwner, []);
   assert.equal(snapshot.product.status, 'unavailable');
+  assert.equal(snapshot.development.status, 'unavailable');
+});
+
+// SEN-F01: a linha de "Governança e cobertura" não tem dimensão operacional e
+// não é reescrita por `applyOperationScope`. Sob recorte ela precisa recusar-se
+// a publicar número, seja o consolidado herdado, seja o zero da base indisponível.
+test('a linha de governança não publica número consolidado sob recorte operacional', () => {
+  const consolidado = { unmatchedFinanceTitles: 1234, supportUnassigned: 57 };
+
+  const semRecorte = buildExecutiveIntegrityLine(consolidado, false);
+  assert.equal(semRecorte.unmatchedFinanceTitles.value, (1234).toLocaleString('pt-BR'));
+  assert.equal(semRecorte.supportUnassigned.value, '57');
+  assert.equal(semRecorte.unmatchedFinanceTitles.label, 'Títulos sem correspondência');
+
+  const comRecorte = buildExecutiveIntegrityLine(consolidado, true);
+  assert.equal(comRecorte.unmatchedFinanceTitles.value, 'Indisponível');
+  assert.equal(comRecorte.supportUnassigned.value, 'Indisponível');
+  assert.match(comRecorte.unmatchedFinanceTitles.label, /recorte/i);
+  assert.match(comRecorte.supportUnassigned.label, /recorte/i);
+});
+
+test('o zero da base indisponível nunca é publicado como fato sob recorte', () => {
+  const { dataQuality } = buildUnavailableCeoSnapshot();
+  const linha = buildExecutiveIntegrityLine(dataQuality, true);
+
+  assert.equal(linha.unmatchedFinanceTitles.value, 'Indisponível');
+  assert.equal(linha.supportUnassigned.value, 'Indisponível');
+  assert.notEqual(linha.unmatchedFinanceTitles.value, '0');
+  assert.notEqual(linha.supportUnassigned.value, '0');
+});
+
+test('a linha de governança tolera dataQuality ausente sem inventar zero', () => {
+  const linha = buildExecutiveIntegrityLine(null, false);
+
+  assert.equal(linha.unmatchedFinanceTitles.value, 'Indisponível');
+  assert.equal(linha.supportUnassigned.value, 'Indisponível');
+});
+
+// SEN-F02: `state.reason` é publicado direto no card de exceção do executivo,
+// então não pode ser um identificador de máquina.
+test('o motivo publicado da base indisponível é frase, não token', () => {
+  const { reason } = buildUnavailableCeoSnapshot().state;
+
+  assert.equal(typeof reason, 'string');
+  assert.doesNotMatch(reason, /^[a-z0-9]+(_[a-z0-9]+)+$/, 'reason não pode ser snake_case de máquina');
+  assert.ok(reason.includes(' '), 'reason precisa ser legível para o usuário final');
 });
 
 test('não usa o consolidado quando o movimento operacional está ausente', () => {

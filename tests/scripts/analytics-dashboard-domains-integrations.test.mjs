@@ -92,14 +92,30 @@ test('leituras executivas de período e posição não concorrem no banco', () =
   assert.doesNotMatch(executive, /Promise\.all\(\[\s*getCommercialKpisV2ForOverview/);
 });
 
+// SEN-F03: a versão anterior comparava posições de `indexOf` e fixava o literal
+// `data: current.data ?? buildUnavailableCeoSnapshot`, ou seja, congelava o
+// defeito em vez de detectá-lo, e continuava passando se o `return` do guard
+// fosse apagado. Agora exigimos que a branch operacional realmente interrompa o
+// efeito antes da chamada consolidada.
 test('operação selecionada não dispara o snapshot executivo consolidado', () => {
   const operationBranch = executive.indexOf('if (groupCompany) {');
   const consolidatedSnapshot = executive.indexOf('getCeoSnapshot(stableFilters)');
 
   assert.ok(operationBranch >= 0, 'a branch operacional precisa existir');
   assert.ok(consolidatedSnapshot > operationBranch, 'o snapshot consolidado deve ficar depois do guard operacional');
-  assert.match(executive, /buildUnavailableCeoSnapshot/);
-  assert.match(executive, /data: current\.data \?\? buildUnavailableCeoSnapshot/);
+
+  const guardBody = executive.slice(operationBranch, consolidatedSnapshot);
+  assert.match(guardBody, /\n\s{6}return \(\) => \{/, 'a branch operacional precisa retornar antes do snapshot consolidado');
+  assert.doesNotMatch(guardBody, /getCeoSnapshot\(/, 'a branch operacional não pode chamar o snapshot consolidado');
+});
+
+// SEN-F01: sob recorte, a base do snapshot precisa ser sempre a indisponível.
+// Reaproveitar `current.data` mantinha vivo o consolidado carregado antes da
+// seleção da operação, e todo campo sem dimensão operacional era publicado como
+// se fosse do recorte.
+test('recorte operacional não reaproveita o snapshot consolidado já carregado', () => {
+  assert.match(executive, /data: buildUnavailableCeoSnapshot\(\)/);
+  assert.doesNotMatch(executive, /current\.data \?\? buildUnavailableCeoSnapshot/);
 });
 
 test('Customer Success usa inventário confirmado, RPC server-side e cobertura explícita', () => {

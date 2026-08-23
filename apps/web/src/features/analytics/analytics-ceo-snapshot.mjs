@@ -34,7 +34,11 @@ export function buildUnavailableCeoSnapshot() {
     lastSuccessfulSyncAt: null,
     syncRunId: null,
     coverage: { expected: null, received: null },
-    reason: 'operation_dimension_unavailable',
+    // `reason` é publicado direto na UI (analytics-executive.ts monta o card de
+    // exceção com ele), então precisa ser frase. O identificador de máquina fica
+    // em `reasonCode` para quem precisa comparar programaticamente.
+    reason: 'A operação selecionada não possui dimensão publicada para esta leitura.',
+    reasonCode: 'operation_dimension_unavailable',
   };
 
   return {
@@ -222,5 +226,34 @@ export function composeCeoSnapshot(periodSnapshot, currentSnapshot) {
     dataQuality: current.dataQuality ?? period.dataQuality,
     product: current.product ?? period.product,
     development: current.development ?? period.development,
+  };
+}
+
+// SEN-F01: `dataQuality` não possui dimensão operacional publicada e não é
+// reescrito por `applyOperationScope`. Publicá-lo sob recorte exibiria o número
+// consolidado — ou um zero inventado, quando a Visão Geral abre direto na
+// operação — como se fosse do recorte. A decisão vive aqui, em módulo puro,
+// para que a regressão consiga falhar sem renderizar React.
+export function buildExecutiveIntegrityLine(dataQuality, operationScoped) {
+  if (operationScoped) {
+    return {
+      unmatchedFinanceTitles: { value: 'Indisponível', label: 'Reconciliação do recorte indisponível' },
+      supportUnassigned: { value: 'Indisponível', label: 'Responsáveis do recorte indisponíveis' },
+    };
+  }
+
+  const source = dataQuality && typeof dataQuality === 'object' ? dataQuality : {};
+  const unmatched = Number.isFinite(source.unmatchedFinanceTitles) ? source.unmatchedFinanceTitles : null;
+  const unassigned = Number.isFinite(source.supportUnassigned) ? source.supportUnassigned : null;
+
+  return {
+    unmatchedFinanceTitles: {
+      value: unmatched === null ? 'Indisponível' : unmatched.toLocaleString('pt-BR'),
+      label: 'Títulos sem correspondência',
+    },
+    supportUnassigned: {
+      value: unassigned === null ? 'Indisponível' : unassigned.toLocaleString('pt-BR'),
+      label: 'Tickets sem responsável',
+    },
   };
 }

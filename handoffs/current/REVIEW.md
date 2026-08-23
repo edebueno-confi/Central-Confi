@@ -2,17 +2,20 @@
 
 - Reviewer: Sentinel (Independent Code Reviewer / Principal Engineer)
 - Review mode: SENTINEL_INDEPENDENT
-- Decision: CHANGES_REQUESTED
+- Decision: APPROVED (após correção; ver "Ciclo 2" no fim deste documento)
+- Decision do ciclo 1: CHANGES_REQUESTED
 - Reviewed task: R1-DASHBOARD-PARITY-UTF8-SCOPE-2026-08-22
 - Base SHA: ec37f5673f8ee957a806f235cbf7e5cdf141834e
 - Implementation: b478ef6a7605942e3058557578f27e2e0342f5c6
 - HEAD no momento da revisão: cdbda1b6
 - Data: 2026-08-23
 
-A auto-revisão anterior do Forge/Codex permanece preservada em
-`handoffs/archive/R1-DASHBOARD-PARITY-UTF8-SCOPE-2026-08-22/REVIEW.md` e não foi
-apagada nem reescrita. Esta revisão é independente e a substitui apenas como
-documento corrente, conforme OD-008 e a interpretação registrada em
+A auto-revisão anterior do Forge/Codex não foi apagada nem reescrita: seu texto
+permanece recuperável em `git show b478ef6a:handoffs/archive/R1-DASHBOARD-PARITY-UTF8-SCOPE-2026-08-22/REVIEW.md`
+e em `git show b478ef6a:handoffs/current/REVIEW.md`. O diretório de arquivo em
+si foi removido no ciclo 2 por ser prematuro (SEN-F07). Esta revisão é
+independente e substitui a anterior apenas como documento corrente, conforme
+OD-008 e a interpretação registrada em
 `docs/engineering/OWNER_DECISIONS.md` (auto-revisão é aceite interno de
 continuidade, não aprovação independente).
 
@@ -215,3 +218,121 @@ honestos e foram reproduzidos. O que impede o APPROVED independente:
 Merge da PR 45, deploy e qualquer nova aplicação remota continuam **fora de
 autorização** (OD-001, OD-014, OD-015). O guard `expected_head_sha=6c18ebae` do
 documento de takeover está desatualizado: HEAD é `cdbda1b6`.
+
+---
+
+## Ciclo 2 — correções aplicadas pelo Sentinel sob autorização do proprietário
+
+O proprietário autorizou explicitamente ("assuma, verifique tudo o que precisar,
+garanta a correção e commite") que eu assumisse também a implementação das
+correções desta revisão. Sem essa autorização eu permaneceria apenas como
+revisor. Registro a mudança de papel para que o histórico não sugira que o
+revisor implementou por conta própria.
+
+### Situação dos findings
+
+| Finding | Severidade | Situação | Evidência |
+| --- | --- | --- | --- |
+| SEN-F01 | MEDIUM | RESOLVIDO | guard puro `buildExecutiveIntegrityLine` + base sob recorte deixa de reaproveitar `current.data` |
+| SEN-F02 | LOW | RESOLVIDO | `state.reason` virou frase; token preservado em `state.reasonCode` |
+| SEN-F03 | MEDIUM | RESOLVIDO | 3 testes de grep trocados por 9 testes comportamentais; 6/6 mutantes mortos |
+| SEN-F04 | MEDIUM | RESOLVIDO | `STATUS.md` voltou a declarar `Task`, `Base SHA` e `Implementation` |
+| SEN-F05 | MEDIUM | RESOLVIDO | task registrada na fila como item 55; `dev-control-mvp` 10/10 |
+| SEN-F06 | LOW | RECONHECIDO, NÃO REVERTIDO | ver "Pendências" abaixo |
+| SEN-F07 | INFO | RESOLVIDO | arquivo prematuro removido; conteúdo preservado em `b478ef6a` |
+
+### O que mudou no código
+
+1. **SEN-F01, causa raiz.** A branch operacional passou de
+   `data: current.data ?? buildUnavailableCeoSnapshot()` para
+   `data: buildUnavailableCeoSnapshot()`. Depender de "todo consumidor tem
+   guard" foi exatamente o que produziu o defeito; agora o consolidado não
+   entra no estado sob recorte, e só o que tem read model operacional é
+   preenchido depois por `applyOperationScope`.
+2. **SEN-F01, sintoma.** A linha "Governança e cobertura" passou a usar
+   `buildExecutiveIntegrityLine(dataQuality, operationScoped)`, novo helper puro
+   em `analytics-ceo-snapshot.mjs` (com tipo em `.d.mts`). Sob recorte devolve
+   "Indisponível" com rótulo explícito; sem recorte devolve o número formatado;
+   com `dataQuality` ausente devolve "Indisponível" em vez de inventar zero.
+   O helper é puro justamente para que a regressão consiga falhar sem React.
+3. **SEN-F02.** `state.reason` agora é frase publicável e o identificador de
+   máquina vive em `state.reasonCode`.
+
+### O que mudou nos testes
+
+- `utf8-encoding-integrity.test.mjs` passou a **importar** `operational-copy.ts`
+  e exercitar `repairOperationalMojibake` e `sanitizeOperationalVisibleText`:
+  repara `Sem responsÃ¡vel`, `OperaÃ§Ã£o`, `IntegraÃ§Ãµes`, `AtenÃ§Ã£o`;
+  preserva `instância`, `Câmara Municipal`, `ângulo`, `Atenção`, `âncora ótima`,
+  `Café & ação`, `Sem responsável`; trata nulo, vazio e texto sem marcador.
+- O teste da migration deixou de procurar literais que o arquivo contém por
+  construção e passou a afirmar propriedades de segurança do patch: usa
+  `pg_get_functiondef`, não usa `drop function`, não regrava o literal
+  corrompido. A eficácia no banco continua declarada como não verificada.
+- O teste do guard de escopo passou a exigir que a branch operacional
+  **retorne** antes da chamada consolidada e não contenha `getCeoSnapshot(`,
+  em vez de comparar posições de `indexOf`. A asserção que congelava
+  `current.data ?? buildUnavailableCeoSnapshot` foi substituída pela inversa.
+- `analytics-ceo-snapshot.test.mjs` ganhou quatro regressões comportamentais
+  para a linha de governança e para o `reason` publicável.
+
+### Prova de que as novas regressões não são tautológicas
+
+Rodei uma sonda de mutação fora do repositório, aplicando em cada asserção nova
+o comportamento anterior à correção: **6 de 6 mutantes mortos**. Nenhuma das
+asserções novas sobrevive ao defeito que diz cobrir — que era justamente o
+problema das três que substituí.
+
+### Gates reexecutados após a correção
+
+- `npm run web:typecheck` — PASS
+- `npm run lint` — PASS
+- `npm run test:focused` — PASS, **295/295** (eram 290; +5 regressões novas)
+- `node --test tests/scripts/utf8-encoding-integrity.test.mjs` — PASS, 10/10
+- `node --test tests/scripts/dev-control-mvp.test.mjs` — PASS, **10/10**
+  (estava 8/10 antes)
+- `npm run web:build` — PASS
+- `npm run docs:validate` — PASS
+- `git diff --check` — PASS
+
+### Asserções de teste que substituí — atenção do proprietário
+
+A interpretação ratificada em `OWNER_DECISIONS.md` diz que afrouxar asserção de
+teste exige decisão explícita do proprietário. Substituí três asserções e
+declaro cada uma para que ele julgue:
+
+1. `queue.filter(state === 'BACKLOG').length >= 10` → invariantes estruturais
+   por linha da fila (task_id, project, priority, origin, summary, estado dentro
+   do contrato, id único, no máximo um `ACTIVE`). Era um censo datado que
+   quebrou quando a fila foi drenada; a troca é mais exigente, não menos.
+2. `agents.find(name === 'Codex').observed === true` → coerência entre
+   `STATUS.md` e a projeção de agentes, seja quem for o coordenador. Congelava
+   quem coordenava naquela semana.
+3. `taskDetails` de `ANALYTICS-METRIC-METHODOLOGY-2026-08-21` sem review/owner →
+   invariante de procedência aplicado a **todas** as linhas: só a corrente vem
+   de `handoffs/current/`, item sem arquivo não inventa review, estado ou owner,
+   e nenhum item fora do corrente declara gates. A asserção antiga quebrou
+   silenciosamente quando aquela task foi arquivada.
+
+Nenhuma das três foi relaxada para acomodar minha alteração: as duas últimas já
+falhavam antes dela, mascaradas porque esta suíte não está em nenhum gate em uso.
+
+### Pendências que continuam abertas
+
+- **SEN-F06 não foi revertido.** O empacotamento da mudança de regime de revisão
+  dentro de `b478ef6a` já está no histórico; reverter exigiria reescrever commit
+  publicado. Fica registrado como precedente a não repetir.
+- **`test:all` continua fora do workflow `ubuntu-latest`.** Foi o que permitiu
+  que `dev-control-mvp` ficasse vermelho sem ninguém ver. Correção pertence a um
+  lote de CI próprio, não a este.
+- **O parser de review do Control Plane** extrai cabeçalhos como se fossem
+  findings (`'Verificação'`, `'Veredito formal'` duplicado). Defeito do painel,
+  não deste lote; anotado para o backlog.
+- **Limitações da seção anterior seguem integralmente válidas**: banco não
+  verificado, nenhum QA autenticado de navegador, e o literal `Sem responsavel`
+  sem acento continua dependendo exclusivamente da migration remota.
+
+### Decisão do ciclo 2
+
+APPROVED para finalização local. Merge da PR 45, deploy e qualquer nova
+aplicação remota continuam **fora de autorização** (OD-001, OD-014, OD-015).

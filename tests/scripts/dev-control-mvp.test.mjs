@@ -42,7 +42,22 @@ test('fila canônica expõe autorização, dependências e resumo estruturado', 
   assert.equal(backlogTask?.approval, 'APPROVED');
   assert.equal(operationScope?.dependencies, 'CONTROL-PLANE-BACKLOG-2026-08-21');
   assert.ok(queue.some((item) => ['ACTIVE', 'READY', 'DONE'].includes(item.state)));
-  assert.ok(queue.filter((item) => item.state === 'BACKLOG').length >= 10);
+
+  // SEN-F05: a asserção anterior era um censo datado (`BACKLOG >= 10`) que
+  // passou a falhar assim que a fila foi drenada — media o calendário, não o
+  // parser. Trocada por invariantes estruturais, que continuam valendo com a
+  // fila cheia ou vazia e são estritamente mais exigentes.
+  const CANONICAL_QUEUE_STATES = new Set(['PROPOSED', 'BACKLOG', 'READY', 'ACTIVE', 'BLOCKED', 'DONE']);
+  for (const item of queue) {
+    assert.ok(item.task_id, 'toda linha da fila precisa de task_id');
+    assert.ok(item.project, `linha ${item.task_id} sem project`);
+    assert.ok(item.priority, `linha ${item.task_id} sem priority`);
+    assert.ok(item.origin, `linha ${item.task_id} sem origin`);
+    assert.ok(item.summary, `linha ${item.task_id} sem summary`);
+    assert.ok(CANONICAL_QUEUE_STATES.has(item.state), `estado fora do contrato em ${item.task_id}: ${item.state}`);
+  }
+  assert.equal(new Set(queue.map((item) => item.task_id)).size, queue.length, 'task_id duplicado na fila');
+  assert.ok(queue.filter((item) => item.state === 'ACTIVE').length <= 1, 'somente um item pode estar ACTIVE');
 });
 
 test('snapshot do control plane lê o checkout real e os handoffs correntes', async () => {
@@ -62,16 +77,40 @@ test('snapshot do control plane lê o checkout real e os handoffs correntes', as
   assert.ok(['Forge', 'Sentinel', 'Codex', 'Claude', 'Ede'].includes(snapshot.current.status.owner));
   assert.equal(snapshot.agents.length, 3);
   assert.equal(snapshot.agents.find((agent) => agent.name === 'Sentinel')?.role, 'REVIEWER');
-  assert.equal(snapshot.agents.find((agent) => agent.name === 'Codex')?.observed, true);
+  assert.equal(snapshot.agents.find((agent) => agent.name === 'Forge')?.role, 'EXECUTOR');
+  // SEN-F05: a asserção anterior fixava `Codex.observed === true`, ou seja,
+  // congelava quem coordenava naquela semana. O invariante real é a coerência
+  // entre o STATUS.md e a projeção de agentes, seja quem for o coordenador.
+  const coordinator = snapshot.agents.find((agent) => agent.role === 'COORDENADOR');
+  assert.ok(coordinator, 'o snapshot precisa projetar um coordenador');
+  assert.equal(coordinator.observed, coordinator.name === snapshot.current.status.coordinator);
   assert.equal('documents' in snapshot.current, false);
   const serialized = JSON.stringify(snapshot);
   assert.doesNotMatch(serialized, /#\s+(TASK|IMPLEMENTATION|REVIEW|STATUS)\b/);
   assert.doesNotMatch(serialized, /(?:secret|token|credential)\s*[:=]/i);
-  const backlogDetail = snapshot.taskDetails.find((item) => item.task_id === 'ANALYTICS-METRIC-METHODOLOGY-2026-08-21');
-  assert.equal(backlogDetail?.isCurrent, false);
-  assert.equal(backlogDetail?.review, null);
-  assert.equal(backlogDetail?.observedState, null);
-  assert.equal(backlogDetail?.owner, null);
+  // SEN-F05: a asserção anterior fixava que
+  // `ANALYTICS-METRIC-METHODOLOGY-2026-08-21` não tinha arquivo. Ela quebrou
+  // silenciosamente quando a task foi arquivada, porque esta suíte não está em
+  // nenhum gate em uso. O invariante durável é a procedência: só a task
+  // corrente pode ser servida a partir de `handoffs/current/`, e um item sem
+  // arquivo não pode inventar review, estado observado ou owner.
+  const currentDetails = snapshot.taskDetails.filter((item) => item.isCurrent);
+  assert.ok(currentDetails.length <= 1, 'no máximo uma task pode ser a corrente');
+  for (const detail of snapshot.taskDetails) {
+    if (detail.isCurrent) {
+      assert.equal(detail.source, 'handoffs/current/');
+      continue;
+    }
+    assert.notEqual(detail.source, 'handoffs/current/');
+    assert.equal(detail.gates, null, `${detail.task_id} não pode declarar gates fora do handoff corrente`);
+    if (detail.source === 'handoffs/README.md') {
+      assert.equal(detail.review, null, `${detail.task_id} sem arquivo não pode ter review`);
+      assert.equal(detail.observedState, null, `${detail.task_id} sem arquivo não pode ter estado observado`);
+      assert.equal(detail.owner, null, `${detail.task_id} sem arquivo não pode ter owner`);
+    } else {
+      assert.match(detail.source, /^handoffs\/archive\//, `procedência inesperada em ${detail.task_id}`);
+    }
+  }
   assert.ok(snapshot.queue.some((item) => item.task_id === 'R-03' && item.state === 'DONE'));
   const r03 = snapshot.archives.find((item) => item.archive === 'R03-SUPPORT-ERROR-FEEDBACK-2026-08-20');
   assert.ok(r03);
