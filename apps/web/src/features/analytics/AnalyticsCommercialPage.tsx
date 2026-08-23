@@ -310,7 +310,7 @@ export function AnalyticsCommercialPage({ sharedPeriod, onSharedPeriodChange, sh
       id: 'evolucao',
       label: 'Evolução',
       question: 'Como ganhos, perdas e taxa de conversão se comportaram ao longo do tempo.',
-      content: <AnalyticsTrendPanel domain="commercial" groupCompany={groupCompany} />,
+      content: <AnalyticsTrendPanel domain="commercial" groupCompany={groupCompany} excludedPipelineIds={excludedPipelineIds} />,
     },
   ];
 

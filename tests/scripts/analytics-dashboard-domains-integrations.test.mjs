@@ -16,6 +16,7 @@ const analyticsApi = fs.readFileSync('apps/web/src/features/analytics/analytics-
 const operationScope = fs.readFileSync('apps/web/src/features/analytics/AnalyticsOperationScope.tsx', 'utf8');
 const operationGovernanceMigration = fs.readFileSync('supabase/migrations/20260822073000_analytics_pipeline_operation_governance_findings_v1.sql', 'utf8');
 const timeseriesScopeMigration = fs.readFileSync('supabase/migrations/20260821090000_analytics_timeseries_operation_scope_v1.sql', 'utf8');
+const timeseriesPipelineExclusionMigration = fs.readFileSync('supabase/migrations/20260823100000_analytics_timeseries_pipeline_exclusion_v1.sql', 'utf8');
 
 test('visão executiva expõe evolução real por domínio sem misturar unidades', () => {
   assert.match(executive, /<AnalyticsTrendPanel domain="commercial" groupCompany=\{groupCompany\} \/>/);
@@ -83,10 +84,17 @@ test('escopo de operação é espelhado nos read models HubSpot e limita domíni
   assert.match(financePage, /Abrir Governança/);
   assert.match(executive, /<AnalyticsTrendPanel domain="commercial" groupCompany=\{groupCompany\} \/>/);
   assert.match(executive, /<AnalyticsTrendPanel domain="support" groupCompany=\{groupCompany\} \/>/);
-  assert.match(commercialPage, /<AnalyticsTrendPanel domain="commercial" groupCompany=\{groupCompany\} \/>/);
-  assert.match(supportPage, /<AnalyticsTrendPanel domain="support" groupCompany=\{groupCompany\} \/>/);
-  assert.match(trendPanel, /getAnalyticsTimeseries\(domain, grain, undefined, groupCompany\)/);
+  assert.match(commercialPage, /<AnalyticsTrendPanel domain="commercial" groupCompany=\{groupCompany\} excludedPipelineIds=\{excludedPipelineIds\} \/>/);
+  assert.match(supportPage, /<AnalyticsTrendPanel domain="support" groupCompany=\{groupCompany\} excludedPipelineIds=\{excludedPipelineIds\} \/>/);
+  assert.match(trendPanel, /getAnalyticsTimeseries\(domain, grain, undefined, groupCompany, excludedPipelineIds\)/);
   assert.match(analyticsApi, /rpc_analytics_timeseries_by_operation/);
+  assert.match(analyticsApi, /p_excluded_pipeline_ids: excludedPipelineIds/);
+  assert.match(commercialPage, /<AnalyticsTrendPanel domain="commercial" groupCompany=\{groupCompany\} excludedPipelineIds=\{excludedPipelineIds\} \/>/);
+  assert.match(supportPage, /<AnalyticsTrendPanel domain="support" groupCompany=\{groupCompany\} excludedPipelineIds=\{excludedPipelineIds\} \/>/);
+  assert.match(trendPanel, /excludedPipelineIds = \[\]/);
+  assert.match(timeseriesPipelineExclusionMigration, /set_analytics_pipeline_exclusion_scope/);
+  assert.match(timeseriesPipelineExclusionMigration, /p_excluded_pipeline_ids text\[\]/);
+  assert.match(timeseriesPipelineExclusionMigration, /pipeline_id <> all\(string_to_array/);
   assert.match(timeseriesScopeMigration, /operation_dimension_unavailable/);
 });
 

@@ -270,7 +270,7 @@ export function AnalyticsCsPage({ sharedPeriod, onSharedPeriodChange, sharedOper
       id: 'evolucao',
       label: 'Evolução',
       question: 'Como a fila se comportou ao longo do tempo: se o time está ganhando ou perdendo terreno.',
-      content: <AnalyticsTrendPanel domain="support" groupCompany={groupCompany} />,
+      content: <AnalyticsTrendPanel domain="support" groupCompany={groupCompany} excludedPipelineIds={excludedPipelineIds} />,
     },
   ];
 

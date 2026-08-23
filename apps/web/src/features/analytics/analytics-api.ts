@@ -879,6 +879,7 @@ export async function getAnalyticsTimeseries(
   grain: TimeseriesGrain = 'month',
   window?: { from?: string | null; to?: string | null },
   groupCompany: string | null = null,
+  excludedPipelineIds: string[] = [],
 ): Promise<unknown> {
   const client = requireSupabaseBrowserClient();
   const fallback = defaultTimeseriesWindow(grain);
@@ -888,6 +889,7 @@ export async function getAnalyticsTimeseries(
     p_to: window?.to || fallback.to,
     p_grain: grain,
     p_group_company: groupCompany,
+    p_excluded_pipeline_ids: excludedPipelineIds,
   });
   if (error) throw toAppError(error, 'Falha ao carregar a evolução do período.');
   return data;
