@@ -35,7 +35,7 @@ import { AnalyticsBoardLimitations, AnalyticsKpiBoard, type BoardBand } from "./
 import { AnalyticsDataCoveragePanel, analyticsCoverageStatus, type AnalyticsCoverageItem } from './AnalyticsDataCoveragePanel';
 import { AnalyticsTrendPanel } from './AnalyticsTrendPanel';
 import { readKpi } from './analytics-kpi-contract.mjs';
-import { buildExecutiveIntegrityLine, buildOperationPeriodMetrics, buildUnavailableCeoSnapshot, buildUnavailableOperationKpiPayload, getOverviewQueueMetricDefinitions, mergeOperationKpiPayload } from './analytics-ceo-snapshot.mjs';
+import { buildExecutiveIntegrityLine, buildOperationKpisFromSettledLoads, buildOperationPeriodMetrics, buildUnavailableCeoSnapshot, buildUnavailableOperationKpiPayload, getOverviewQueueMetricDefinitions, mergeOperationKpiPayload } from './analytics-ceo-snapshot.mjs';
 
 const STATUS_LABELS: Record<AnalyticsDataStatus, string> = {
   fresh: "Dados atualizados",
@@ -160,12 +160,13 @@ export function AnalyticsCeoPage({
   const [refreshing, setRefreshing] = useState(false);
   const [executiveKpis, setExecutiveKpis] = useState<unknown>(null);
   const [operationKpis, setOperationKpis] = useState<{
-    period: { commercial: unknown; support: unknown; supportSnapshot: CsSnapshot };
-    current: { commercial: unknown; support: unknown; supportSnapshot: CsSnapshot };
+    period: { commercial: unknown; support: unknown; supportSnapshot: CsSnapshot | null };
+    current: { commercial: unknown; support: unknown; supportSnapshot: CsSnapshot | null };
   } | null>(null);
   // V-03: sem isto, uma falha de carregamento e uma ausência real de dimensão
   // ficam indistinguíveis na tela — as duas viravam onze cards "Indisponível".
   const [operationLoadFailed, setOperationLoadFailed] = useState(false);
+  const [operationLoadPartial, setOperationLoadPartial] = useState(false);
   // Refazer a leitura com os mesmos filtros: o memo de filtros é estável por
   // valor, então sem este contador o efeito nunca voltaria a rodar.
   const [operationRetryToken, setOperationRetryToken] = useState(0);
@@ -207,6 +208,7 @@ export function AnalyticsCeoPage({
     let cancelled = false;
     setOperationKpis(null);
     setOperationLoadFailed(false);
+    setOperationLoadPartial(false);
     if (groupCompany) setExecutiveKpis(null);
     setRefreshing(true);
     setResult((current) =>
@@ -235,24 +237,16 @@ export function AnalyticsCeoPage({
           sourceStatus: liveSourceStatus ?? sourceStatus,
         }));
         setRefreshing(false);
-        try {
-          const commercial = await getCommercialKpisV2ForOverview(stableFilters, groupCompany);
-          if (cancelled) return;
-          const support = await getSupportKpisV2ForOverview(stableFilters, groupCompany);
-          if (cancelled) return;
-          const supportSnapshot = await getCsSnapshotForOverview(stableFilters, [], groupCompany);
-          if (!cancelled) {
-            setOperationKpis({
-              period: { commercial: commercial.period, support: support.period, supportSnapshot: supportSnapshot.period },
-              current: { commercial: commercial.current, support: support.current, supportSnapshot: supportSnapshot.current },
-            });
-            setOperationLoadFailed(false);
-          }
-        } catch {
-          if (!cancelled) {
-            setOperationKpis(null);
-            setOperationLoadFailed(true);
-          }
+        const settledLoads = await Promise.allSettled([
+          getCommercialKpisV2ForOverview(stableFilters, groupCompany),
+          getSupportKpisV2ForOverview(stableFilters, groupCompany),
+          getCsSnapshotForOverview(stableFilters, [], groupCompany),
+        ]);
+        if (!cancelled) {
+          const operationLoad = buildOperationKpisFromSettledLoads(settledLoads);
+          setOperationKpis(operationLoad.value);
+          setOperationLoadFailed(operationLoad.failed);
+          setOperationLoadPartial(operationLoad.failed && operationLoad.loaded);
         }
       })();
       return () => {
@@ -434,6 +428,7 @@ export function AnalyticsCeoPage({
       financeUnavailable={omieUnavailable || Boolean(groupCompany)}
       operationScoped={operationScoped}
       operationLoadFailed={operationLoadFailed}
+      operationLoadPartial={operationLoadPartial}
       onRetryOperation={() => setOperationRetryToken((token) => token + 1)}
       operationCurrentAvailability={operationCurrentAvailability}
       operationPeriodAvailability={operationPeriodAvailability}
@@ -499,13 +494,14 @@ function maskUnscopedOperationKpis(payload: unknown): unknown {
 }
 
 function applyOperationScope(data: CeoSnapshot, scoped: {
-  period: { commercial: unknown; support: unknown; supportSnapshot: CsSnapshot };
-  current: { commercial: unknown; support: unknown; supportSnapshot: CsSnapshot };
+  period: { commercial: unknown; support: unknown; supportSnapshot: CsSnapshot | null };
+  current: { commercial: unknown; support: unknown; supportSnapshot: CsSnapshot | null };
 }): CeoSnapshot {
   const periodCommercial = scoped.period.commercial;
   const currentCommercial = scoped.current.commercial;
   const periodSupport = scoped.period.support;
   const currentSupport = scoped.current.support;
+  const periodSupportSnapshot = scoped.period.supportSnapshot ?? EMPTY_OPERATION_SNAPSHOT;
   const periodMetrics = buildOperationPeriodMetrics(periodCommercial, periodSupport);
   const commercial = {
     ...data.commercial,
@@ -520,10 +516,10 @@ function applyOperationScope(data: CeoSnapshot, scoped: {
     ...data.support,
     openTickets: publishedKpiValue(currentSupport, 'open_backlog') ?? 0,
     createdTickets: periodMetrics.support.createdTickets ?? 0,
-    bySource: scoped.period.supportSnapshot.bySource,
-    byPipeline: scoped.period.supportSnapshot.byPipeline,
-    byOwner: scoped.period.supportSnapshot.byOwner,
-    latestTicketCreatedAt: scoped.period.supportSnapshot.latestTicketCreatedAt,
+    bySource: periodSupportSnapshot.bySource,
+    byPipeline: periodSupportSnapshot.byPipeline,
+    byOwner: periodSupportSnapshot.byOwner,
+    latestTicketCreatedAt: periodSupportSnapshot.latestTicketCreatedAt,
   };
   return { ...data, commercial, support };
 }
@@ -630,6 +626,7 @@ function ExecutiveHdCanvas({
   financeUnavailable,
   operationScoped,
   operationLoadFailed,
+  operationLoadPartial,
   onRetryOperation,
   operationCurrentAvailability,
   operationPeriodAvailability,
@@ -664,6 +661,7 @@ function ExecutiveHdCanvas({
   financeUnavailable: boolean;
   operationScoped: boolean;
   operationLoadFailed: boolean;
+  operationLoadPartial: boolean;
   onRetryOperation?: () => void;
   operationCurrentAvailability: OperationCurrentAvailability;
   operationPeriodAvailability: OperationPeriodAvailability;
@@ -775,8 +773,10 @@ function ExecutiveHdCanvas({
           origem", o que é uma afirmação que o painel não pode fazer. */}
       {operationScoped && operationLoadFailed ? (
         <p className="gso-hd-inline-status is-warning" role="alert">
-          Não foi possível carregar os indicadores da operação <strong>{groupCompany}</strong>.
-          Isto é falha de leitura desta tela, não uma conclusão sobre os dados da origem.
+          {operationLoadPartial
+            ? <>Alguns indicadores da operação <strong>{groupCompany}</strong> não puderam ser carregados; os dados disponíveis continuam exibidos.</>
+            : <>Não foi possível carregar os indicadores da operação <strong>{groupCompany}</strong>.</>}
+          {' '}Isto é falha de leitura desta tela, não uma conclusão sobre os dados da origem.
           {onRetryOperation ? (
             <>
               {' '}

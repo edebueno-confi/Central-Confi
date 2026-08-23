@@ -1,7 +1,15 @@
-import type { CeoSnapshot } from './analytics-model';
+import type { CeoSnapshot, CsSnapshot } from './analytics-model';
 
 export function buildOverviewSnapshotQueryPlan<T extends object>(filters: T): { period: T; current: T };
 export function buildUnavailableOperationKpiPayload(): { kpis: Record<string, { state: 'unavailable'; value: null; reason: string }> };
+export function buildOperationKpisFromSettledLoads(settledLoads: readonly unknown[]): {
+  failed: boolean;
+  loaded: boolean;
+  value: {
+    period: { commercial: unknown; support: unknown; supportSnapshot: CsSnapshot | null };
+    current: { commercial: unknown; support: unknown; supportSnapshot: CsSnapshot | null };
+  };
+};
 export function buildUnavailableCeoSnapshot(): CeoSnapshot;
 export function buildExecutiveIntegrityLine(
   dataQuality: CeoSnapshot['dataQuality'] | null | undefined,

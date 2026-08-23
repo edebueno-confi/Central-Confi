@@ -26,6 +26,36 @@ export function buildUnavailableOperationKpiPayload() {
   return { kpis };
 }
 
+// Cada domínio da Visão Geral tem um contrato próprio. Um erro em Customer
+// Success, por exemplo, não pode apagar Comercial e Suporte quando as leituras
+// desses domínios foram concluídas. Este normalizador mantém a falha explícita
+// e preserva os resultados que chegaram.
+export function buildOperationKpisFromSettledLoads(settledLoads = []) {
+  const loads = Array.isArray(settledLoads) ? settledLoads : [];
+  const read = (result, key) => result?.status === 'fulfilled' && result.value && typeof result.value === 'object'
+    ? result.value[key] ?? null
+    : null;
+  const failed = loads.some((result) => result?.status === 'rejected');
+  const loaded = loads.some((result) => result?.status === 'fulfilled');
+
+  return {
+    failed,
+    loaded,
+    value: {
+      period: {
+        commercial: read(loads[0], 'period'),
+        support: read(loads[1], 'period'),
+        supportSnapshot: read(loads[2], 'period'),
+      },
+      current: {
+        commercial: read(loads[0], 'current'),
+        support: read(loads[1], 'current'),
+        supportSnapshot: read(loads[2], 'current'),
+      },
+    },
+  };
+}
+
 export function buildUnavailableCeoSnapshot() {
   const state = {
     status: 'unavailable',

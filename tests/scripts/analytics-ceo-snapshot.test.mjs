@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   buildOverviewSnapshotQueryPlan,
+  buildOperationKpisFromSettledLoads,
   buildOperationPeriodMetrics,
   buildUnavailableCeoSnapshot,
   buildExecutiveIntegrityLine,
@@ -19,6 +20,33 @@ test('separa consulta histórica e posição atual sem perder dimensões', () =>
   assert.deepEqual(plan.period, filters);
   assert.deepEqual(plan.current, { ...filters, from: '', to: '' });
   assert.deepEqual(filters, { from: '2026-01-01', to: '2026-01-31', ownerId: 'owner-a', stageId: '', priority: 'high', groupCompany: 'operation-a' });
+});
+
+test('preserva domínios operacionais bem-sucedidos quando uma leitura secundária falha', () => {
+  const result = buildOperationKpisFromSettledLoads([
+    { status: 'fulfilled', value: { period: { kpis: { won_amount: { value: 499 } } }, current: { kpis: { open_pipeline_amount: { value: 743080 } } } } },
+    { status: 'fulfilled', value: { period: { kpis: { created_tickets: { value: 281 } } }, current: { kpis: { open_backlog: { value: 2794 } } } } },
+    { status: 'rejected', reason: new Error('snapshot ausente') },
+  ]);
+
+  assert.equal(result.failed, true);
+  assert.equal(result.loaded, true);
+  assert.equal(result.value.period.commercial.kpis.won_amount.value, 499);
+  assert.equal(result.value.current.support.kpis.open_backlog.value, 2794);
+  assert.equal(result.value.period.supportSnapshot, null);
+});
+
+test('mantém todos os domínios indisponíveis quando nenhuma leitura operacional conclui', () => {
+  const result = buildOperationKpisFromSettledLoads([
+    { status: 'rejected', reason: new Error('comercial') },
+    { status: 'rejected', reason: new Error('suporte') },
+    { status: 'rejected', reason: new Error('customer success') },
+  ]);
+
+  assert.equal(result.failed, true);
+  assert.equal(result.loaded, false);
+  assert.equal(result.value.period.commercial, null);
+  assert.equal(result.value.current.support, null);
 });
 
 test('mescla KPIs atuais no bloco Agora e preserva fluxo no bloco No período', () => {

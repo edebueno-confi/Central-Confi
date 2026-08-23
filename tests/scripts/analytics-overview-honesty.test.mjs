@@ -14,7 +14,9 @@ const board = await readFile(new URL('../../apps/web/src/features/analytics/Anal
 
 test('a Visão Geral distingue falha de carregamento de ausência de dado', () => {
   assert.match(executive, /operationLoadFailed/);
-  assert.match(executive, /setOperationLoadFailed\(true\)/);
+  assert.match(executive, /Promise\.allSettled\(\[/);
+  assert.match(executive, /setOperationLoadFailed\(operationLoad\.failed\)/);
+  assert.match(executive, /setOperationLoadPartial\(operationLoad\.failed && operationLoad\.loaded\)/);
   assert.match(executive, /setOperationLoadFailed\(false\)/);
   assert.match(executive, /Não foi possível carregar os indicadores da operação/);
 });
