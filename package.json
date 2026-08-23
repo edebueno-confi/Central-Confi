@@ -77,6 +77,7 @@
     "supabase:qa:local-support-fixture": "node supabase/qa/create-local-support-fixture.mjs",
     "release:remote:contracts": "node scripts/ci/verify-remote-release-contracts.mjs",
     "local:qa:assert-supabase": "node scripts/local-qa/assert-local-supabase.mjs",
+    "local:qa:schema-parity": "node scripts/local-qa/assert-local-schema-parity.mjs",
     "local:qa:settings-control-plane-v2-preview": "node scripts/local-qa/settings-control-plane-v2-preview.mjs",
     "local:qa:hubspot-discovery": "node scripts/analytics/hubspot-coverage-discovery.mjs",
     "local:qa:dashboard-runtime-v3-preview": "node scripts/local-qa/dashboard-runtime-v3-preview.mjs",
