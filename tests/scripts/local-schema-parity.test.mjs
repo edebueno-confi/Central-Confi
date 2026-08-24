@@ -6,6 +6,7 @@ import {
   historyOnlyMigrations,
   missingMigrations,
   parseMigrationVersion,
+  validateLocalRebuildProof,
   verifyMigrationOrigin,
 } from '../../scripts/local-qa/assert-local-schema-parity.mjs';
 
@@ -218,6 +219,41 @@ test('não infere origem para função apenas consultada por SQL dinâmico', () 
     }),
     false,
   );
+});
+
+test('comprova origem dinâmica somente com manifesto semântico aprovado', () => {
+  assert.equal(
+    verifyMigrationOrigin({
+      migrationText: `do $$
+        declare v_definition text;
+        begin
+          v_definition := pg_get_functiondef('public.rpc_analytics_ceo_snapshot_legacy(date,date)'::regprocedure);
+          execute v_definition;
+        end;
+      $$;`,
+      expected: {
+        key: 'rpc_analytics_ceo_snapshot_legacy',
+        signature: 'p_from date, p_to date',
+        migration: '20260822220000',
+      },
+      semanticManifest: {
+        targets: [{
+          qualifiedName: 'public.rpc_analytics_ceo_snapshot_legacy',
+          signature: 'p_from date, p_to date',
+        }],
+      },
+    }),
+    true,
+  );
+});
+
+test('rebuild proof ausente permanece inválido', () => {
+  assert.equal(validateLocalRebuildProof({
+    proof: null,
+    migrationDirectory: 'supabase/migrations',
+    filesystemVersions: [],
+    appliedVersions: [],
+  }), false);
 });
 
 test('não comprova origem dentro de comentário PostgreSQL aninhado', () => {

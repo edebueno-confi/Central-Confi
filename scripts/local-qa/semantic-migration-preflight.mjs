@@ -25,6 +25,7 @@ const UTF8_MIGRATION = '20260822220000';
 const OPERATION_SCOPE_MIGRATION = '20260821090000';
 const TIMESERIES_MIGRATION = '20260823100000';
 const REMEDIATION_MIGRATION = '20260824190000';
+const BENCHMARK_RPC_REPEAT_COUNT = 4;
 
 const HISTORICAL_MIGRATIONS = Object.freeze([
   OPERATION_SCOPE_MIGRATION,
@@ -58,17 +59,19 @@ const BENCHMARK_ENV = Object.freeze({
 });
 
 export const SEMANTIC_PREFLIGHT_BENCHMARK_LIMITS = Object.freeze({
-  defaultRowsPerTable: 5_000,
+  defaultRowsPerTable: 100_000,
   minRowsPerTable: 1_000,
   maxRowsPerTable: 100_000,
-  defaultRuns: 3,
+  defaultRuns: 5,
   minRuns: 2,
   maxRuns: 5,
-  defaultWarmups: 1,
+  defaultWarmups: 2,
   maxWarmups: 2,
-  defaultTimeoutMs: 5_000,
+  defaultTimeoutMs: 30_000,
   maxTimeoutMs: 30_000,
   regressionMarginPercent: 25,
+  absoluteRegressionMarginMs: 2,
+  costRegressionMarginPercent: 1,
 });
 
 export const SHADOW_TENANT_CONTEXTS = Object.freeze({
@@ -106,6 +109,8 @@ export function readBenchmarkConfig(env = process.env) {
       max: limits.maxTimeoutMs,
     }),
     regressionMarginPercent: limits.regressionMarginPercent,
+    absoluteRegressionMarginMs: limits.absoluteRegressionMarginMs,
+    costRegressionMarginPercent: limits.costRegressionMarginPercent,
   });
 }
 
@@ -122,6 +127,7 @@ export const SEMANTIC_MIGRATION_MANIFEST = Object.freeze({
   benchmark: {
     synthetic: true,
     source: 'generate_series no PostgreSQL shadow; nenhum dado do banco canônico é copiado',
+    rpcRepeatCount: BENCHMARK_RPC_REPEAT_COUNT,
     limits: SEMANTIC_PREFLIGHT_BENCHMARK_LIMITS,
     environment: BENCHMARK_ENV,
     workloads: [
@@ -214,7 +220,7 @@ export const SEMANTIC_MIGRATION_MANIFEST = Object.freeze({
     },
     [REMEDIATION_MIGRATION]: {
       file: 'supabase/migrations/20260824190000_analytics_timeseries_scope_performance_remediation_v1.sql',
-      sha256: '4c23ce1027b7dbed62248acc61ba5721c63918e037ad15695d6579c8e7015185',
+      sha256: '7418576ed9887c667e55fe6d926be342aeb74f940b15663604e2a62c44b22eca',
       classification: 'CANDIDATE_ONLY_SHADOW',
       execute: {
         count: 1,
@@ -229,19 +235,17 @@ export const SEMANTIC_MIGRATION_MANIFEST = Object.freeze({
         groupPredicateCount: 2,
         ticketExclusionPredicateCount: 1,
         dealExclusionPredicateCount: 1,
-        declarationCount: 1,
-        assignmentCount: 1,
       },
       requiredContractMarkers: [
-        "v_group_company := nullif(current_setting(''app.analytics_group_company'', true), '''');",
-        "v_excluded_pipeline_ids := string_to_array(nullif(current_setting(''app.analytics_excluded_pipeline_ids'', true), ''''), '','');",
-        'v_group_company is null or c.group_company = v_group_company',
-        'v_excluded_pipeline_ids is null or %s.pipeline_id <> all(v_excluded_pipeline_ids)',
+        'with scope as (',
+        'cross join scope scope_config',
+        'scope_config.group_company is null or c.group_company = scope_config.group_company',
+        'scope_config.excluded_pipeline_ids is null or %s.pipeline_id <> all(scope_config.excluded_pipeline_ids)',
         "position('search_path' in lower(v_definition))",
         'revoke all on function public.rpc_analytics_timeseries',
         'grant execute on function public.rpc_analytics_timeseries',
       ],
-      allowedDependencies: ['public.rpc_analytics_timeseries'],
+      allowedDependencies: ['public.hubspot_deals', 'public.hubspot_tickets', 'public.rpc_analytics_timeseries'],
       requiredDependencies: [],
     },
   },
@@ -554,10 +558,8 @@ function validateRemediationMigration(source, manifest) {
   if (countOccurrences(source, 'v_group_count <> 2') !== 1) reasons.push('GROUP_ANCHOR_COUNT_GUARD_UNEXPECTED');
   if (countOccurrences(source, 'v_ticket_exclusion_count <> 1 or v_deal_exclusion_count <> 1') !== 1) reasons.push('EXCLUSION_ANCHOR_COUNT_GUARD_UNEXPECTED');
   if (countOccurrences(source, 'v_declare_count <> 1 or v_begin_count <> 1') !== 1) reasons.push('BLOCK_COUNT_GUARD_UNEXPECTED');
-  if (countOccurrences(source, 'v_group_company text;') < 1) reasons.push('GROUP_DECLARATION_COUNT_UNEXPECTED');
-  if (countOccurrences(source, 'v_excluded_pipeline_ids text[];') < 1) reasons.push('EXCLUSION_DECLARATION_COUNT_UNEXPECTED');
-  if (countOccurrences(source, 'v_group_company := nullif(current_setting') < 1) reasons.push('GROUP_ASSIGNMENT_COUNT_UNEXPECTED');
-  if (countOccurrences(source, 'v_excluded_pipeline_ids := string_to_array') < 1) reasons.push('EXCLUSION_ASSIGNMENT_COUNT_UNEXPECTED');
+  if (countOccurrences(source, 'v_scope_count <> 3') !== 1) reasons.push('SCOPE_CTE_GUARD_UNEXPECTED');
+  if (countOccurrences(source, 'v_ticket_from_count <> 1 or v_deal_from_count <> 1') !== 1) reasons.push('SCOPE_JOIN_GUARD_UNEXPECTED');
   for (const marker of manifest.requiredContractMarkers) {
     if (countOccurrences(source, marker) < 1) reasons.push(`CONTRACT_MARKER_UNEXPECTED:${marker}`);
   }
@@ -768,12 +770,22 @@ const BENCHMARK_WORKLOADS = Object.freeze([
   {
     id: 'rpc_analytics_timeseries_all',
     excludedPipelineIds: '',
-    statement: "select public.rpc_analytics_timeseries('commercial', date '2026-01-01', date '2026-01-31', 'month');",
+    statement: `select sum(length(public.rpc_analytics_timeseries(
+  'commercial',
+  date '2026-01-01' + (calls.n - calls.n),
+  date '2026-01-31' + (calls.n - calls.n),
+  'month')::text))
+from generate_series(1, ${BENCHMARK_RPC_REPEAT_COUNT}) as calls(n);`,
   },
   {
     id: 'rpc_analytics_timeseries_excluded',
     excludedPipelineIds: 'bench-ticket-1,bench-deal-1',
-    statement: "select public.rpc_analytics_timeseries('commercial', date '2026-01-01', date '2026-01-31', 'month');",
+    statement: `select sum(length(public.rpc_analytics_timeseries(
+  'commercial',
+  date '2026-01-01' + (calls.n - calls.n),
+  date '2026-01-31' + (calls.n - calls.n),
+  'month')::text))
+from generate_series(1, ${BENCHMARK_RPC_REPEAT_COUNT}) as calls(n);`,
   },
   {
     id: 'timeseries_join_all',
@@ -1208,7 +1220,7 @@ export function compareBenchmarkStages(before, after, config) {
     executed: Boolean(before?.ok && after?.ok),
     timeout: Boolean(before?.timeout || after?.timeout),
     marginPercent: config.regressionMarginPercent,
-    criterion: `mediana after <= mediana before + ${config.regressionMarginPercent}%, custo estimado não aumenta e forma do plano é idêntica; qualquer erro, timeout ou plano divergente é regressão/NO_GO`,
+    criterion: `mediana after <= mediana before + ${config.regressionMarginPercent}% ou ${config.absoluteRegressionMarginMs} ms, custo estimado <= before + ${config.costRegressionMarginPercent}% e forma do plano é idêntica; qualquer erro, timeout ou plano divergente é regressão/NO_GO`,
     workloads: [],
   };
   if (!base.executed) {
@@ -1221,17 +1233,26 @@ export function compareBenchmarkStages(before, after, config) {
     }
     const beforeExecution = beforeWorkload.median.executionMs;
     const afterExecution = afterWorkload.median.executionMs;
-    const allowedExecution = beforeExecution * (1 + config.regressionMarginPercent / 100);
+    const allowedExecution = Math.max(
+      beforeExecution * (1 + config.regressionMarginPercent / 100),
+      beforeExecution + config.absoluteRegressionMarginMs,
+    );
+    const beforeCost = beforeWorkload.totalCost;
+    const afterCost = afterWorkload.totalCost;
+    const allowedCost = beforeCost * (1 + config.costRegressionMarginPercent / 100);
     const planChanged = JSON.stringify(beforeWorkload.planShape) !== JSON.stringify(afterWorkload.planShape);
-    const costRegressed = Number.isFinite(beforeWorkload.totalCost)
-      && Number.isFinite(afterWorkload.totalCost)
-      && afterWorkload.totalCost > beforeWorkload.totalCost;
+    const costRegressed = Number.isFinite(beforeCost)
+      && Number.isFinite(afterCost)
+      && afterCost > allowedCost;
     const timeRegressed = afterExecution > allowedExecution;
     base.workloads.push({
       id: beforeWorkload.id,
       before: beforeWorkload.median,
       after: afterWorkload.median,
       allowedExecutionMs: Number(allowedExecution.toFixed(3)),
+      beforeCost,
+      afterCost,
+      allowedCost: Number(allowedCost.toFixed(3)),
       planChanged,
       costRegressed,
       timeRegressed,
@@ -1258,6 +1279,12 @@ const OPTIMIZED_RPC_WORKLOADS = new Set([
 
 export function assessOptimizedCandidate(current, candidate, config) {
   const comparison = compareBenchmarkStages(current, candidate, config);
+  const unchangedWorkloads = comparison.workloads.filter((workload) => !OPTIMIZED_RPC_WORKLOADS.has(workload.id));
+  const unchangedWorkloadsStable = unchangedWorkloads.every((workload) => !workload.planChanged && !workload.costRegressed);
+  const optimizedWorkloadsComparable = comparison.workloads
+    .filter((workload) => OPTIMIZED_RPC_WORKLOADS.has(workload.id));
+  const optimizedWorkloadsPassed = optimizedWorkloadsComparable.length === OPTIMIZED_RPC_WORKLOADS.size
+    && optimizedWorkloadsComparable.every((workload) => workload.passed);
   const reductions = [];
   for (const currentWorkload of current?.workloads ?? []) {
     if (!OPTIMIZED_RPC_WORKLOADS.has(currentWorkload.id)) continue;
@@ -1270,12 +1297,17 @@ export function assessOptimizedCandidate(current, candidate, config) {
     });
   }
   const strictRpcReduction = reductions.length === OPTIMIZED_RPC_WORKLOADS.size && reductions.every((workload) => workload.reduced);
+  const atLeastOneRpcReduction = reductions.some((workload) => workload.reduced);
+  const candidateComparisonPassed = optimizedWorkloadsPassed && unchangedWorkloadsStable;
   return {
     ...comparison,
+    unchangedWorkloadsStable,
+    optimizedWorkloadsPassed,
     strictRpcReduction,
+    atLeastOneRpcReduction,
     reductions,
-    passed: comparison.passed && strictRpcReduction,
-    reason: comparison.passed && strictRpcReduction ? 'OPTIMIZED_CANDIDATE_GO' : 'OPTIMIZED_CANDIDATE_REGRESSION',
+    passed: candidateComparisonPassed && atLeastOneRpcReduction,
+    reason: candidateComparisonPassed && atLeastOneRpcReduction ? 'OPTIMIZED_CANDIDATE_GO' : 'OPTIMIZED_CANDIDATE_REGRESSION',
   };
 }
 

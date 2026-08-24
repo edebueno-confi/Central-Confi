@@ -18,14 +18,23 @@ declare
     '(nullif(current_setting(''app.analytics_excluded_pipeline_ids'', true), '''') is null'
     || ' or %s.pipeline_id <> all(string_to_array(current_setting(''app.analytics_excluded_pipeline_ids'', true), '','')))';
   v_group_new constant text :=
-    '(v_group_company is null or c.group_company = v_group_company)';
+    '(scope_config.group_company is null or c.group_company = scope_config.group_company)';
   v_exclusion_new constant text :=
-    '(v_excluded_pipeline_ids is null or %s.pipeline_id <> all(v_excluded_pipeline_ids))';
+    '(scope_config.excluded_pipeline_ids is null or %s.pipeline_id <> all(scope_config.excluded_pipeline_ids))';
+  v_scope_cte constant text :=
+    'with scope as (' || chr(10)
+    || '       select nullif(current_setting(''app.analytics_group_company'', true), '''') as group_company,' || chr(10)
+    || '              string_to_array(nullif(current_setting(''app.analytics_excluded_pipeline_ids'', true), ''''), '','') as excluded_pipeline_ids' || chr(10)
+    || '     ),' || chr(10)
+    || '    periodos as (';
   v_group_count integer;
   v_ticket_exclusion_count integer;
   v_deal_exclusion_count integer;
   v_declare_count integer;
   v_begin_count integer;
+  v_scope_count integer;
+  v_ticket_from_count integer;
+  v_deal_from_count integer;
 begin
   v_definition := pg_get_functiondef(v_signature);
   v_original := v_definition;
@@ -51,19 +60,27 @@ begin
     raise exception 'Blocos DECLARE/BEGIN inesperados em rpc_analytics_timeseries: declare=%, begin=%', v_declare_count, v_begin_count;
   end if;
 
+  v_scope_count := (length(lower(v_definition)) - length(replace(lower(v_definition), 'with periodos as (', ''))) / length('with periodos as (');
+  if v_scope_count <> 3 then
+    raise exception 'Blocos temporais inesperados em rpc_analytics_timeseries: %', v_scope_count;
+  end if;
+
+  v_ticket_from_count := (length(v_definition) - length(replace(v_definition, 'from public.hubspot_tickets t' || chr(10), ''))) / length('from public.hubspot_tickets t' || chr(10));
+  v_deal_from_count := (length(v_definition) - length(replace(v_definition, 'from public.hubspot_deals d' || chr(10), ''))) / length('from public.hubspot_deals d' || chr(10));
+  if v_ticket_from_count <> 1 or v_deal_from_count <> 1 then
+    raise exception 'Âncoras de origem inesperadas em rpc_analytics_timeseries: tickets=%, deals=%', v_ticket_from_count, v_deal_from_count;
+  end if;
+
+  v_definition := replace(v_definition, 'with periodos as (', v_scope_cte);
   v_definition := replace(
     v_definition,
-    chr(10) || 'declare' || chr(10),
-    chr(10) || 'declare' || chr(10)
-      || '  v_group_company text;' || chr(10)
-      || '  v_excluded_pipeline_ids text[];' || chr(10)
+    'from public.hubspot_tickets t' || chr(10),
+    'from public.hubspot_tickets t' || chr(10) || '      cross join scope scope_config' || chr(10)
   );
   v_definition := replace(
     v_definition,
-    chr(10) || 'begin' || chr(10),
-    chr(10) || 'begin' || chr(10)
-      || '  v_group_company := nullif(current_setting(''app.analytics_group_company'', true), '''');' || chr(10)
-      || '  v_excluded_pipeline_ids := string_to_array(nullif(current_setting(''app.analytics_excluded_pipeline_ids'', true), ''''), '','');' || chr(10)
+    'from public.hubspot_deals d' || chr(10),
+    'from public.hubspot_deals d' || chr(10) || '      cross join scope scope_config' || chr(10)
   );
 
   v_definition := replace(v_definition, v_group_predicate, v_group_new);
@@ -73,18 +90,14 @@ begin
   if v_definition = v_original then
     raise exception 'Nenhuma transformação aplicada em rpc_analytics_timeseries';
   end if;
-  if (length(v_definition) - length(replace(v_definition, 'v_group_company text;', ''))) / length('v_group_company text;') <> 1
-     or (length(v_definition) - length(replace(v_definition, 'v_excluded_pipeline_ids text[];', ''))) / length('v_excluded_pipeline_ids text[];') <> 1 then
-    raise exception 'Declarações locais não foram materializadas uma única vez';
-  end if;
-  if (length(v_definition) - length(replace(v_definition, 'v_group_company := nullif(current_setting(''app.analytics_group_company'', true), '''');', ''))) / length('v_group_company := nullif(current_setting(''app.analytics_group_company'', true), '''');') <> 1
-     or (length(v_definition) - length(replace(v_definition, 'v_excluded_pipeline_ids := string_to_array(nullif(current_setting(''app.analytics_excluded_pipeline_ids'', true), ''''), '','');', ''))) / length('v_excluded_pipeline_ids := string_to_array(nullif(current_setting(''app.analytics_excluded_pipeline_ids'', true), ''''), '','');') <> 1 then
-    raise exception 'Atribuições locais não foram materializadas uma única vez';
-  end if;
   if position(v_group_predicate in v_definition) > 0
      or position(format(v_exclusion_predicate, 't') in v_definition) > 0
      or position(format(v_exclusion_predicate, 'd') in v_definition) > 0 then
     raise exception 'Predicado transacional por linha permaneceu em rpc_analytics_timeseries';
+  end if;
+  if (position('with scope as (' in lower(v_definition)) = 0)
+     or (length(v_definition) - length(replace(v_definition, 'cross join scope scope_config', ''))) / length('cross join scope scope_config') <> 2 then
+    raise exception 'Materialização de escopo inesperada em rpc_analytics_timeseries';
   end if;
   if position('search_path' in lower(v_definition)) = 0
      or (position('to ' || chr(39) || chr(39) in lower(v_definition)) = 0

@@ -1,8 +1,10 @@
+import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { runSql } from './sql.mjs';
+import { SEMANTIC_MIGRATION_MANIFEST } from './semantic-migration-preflight.mjs';
 
 export const PENDING_MIGRATION_PREFIXES = Object.freeze([
   '20260822190000',
@@ -26,7 +28,7 @@ export const TARGET_OBJECTS = Object.freeze([
   { key: 'rpc_analytics_customer_success_kpis_v2', signature: '', migration: '20260822220000' },
   { key: 'rpc_analytics_support_kpis_v2', signature: 'p_from date, p_to date, p_pipeline_id text, p_priority text', migration: '20260822220000' },
   { key: 'set_analytics_pipeline_exclusion_scope', signature: 'p_pipeline_ids text[]', migration: '20260823100000' },
-  { key: 'rpc_analytics_timeseries_by_operation_5', signature: 'p_domain text, p_from date, p_to date, p_grain text, p_group_company text', migration: '20260823100000' },
+  { key: 'rpc_analytics_timeseries_by_operation_5', signature: 'p_domain text, p_from date, p_to date, p_grain text, p_group_company text', migration: '20260821090000' },
   { key: 'rpc_analytics_timeseries_by_operation_6', signature: 'p_domain text, p_from date, p_to date, p_grain text, p_group_company text, p_excluded_pipeline_ids text[]', migration: '20260823100000' },
 ]);
 
@@ -40,6 +42,29 @@ export function listFilesystemMigrations(migrationDirectory) {
     .map(parseMigrationVersion)
     .filter(Boolean)
     .sort();
+}
+
+function sha256File(filePath) {
+  return createHash('sha256').update(readFileSync(filePath)).digest('hex');
+}
+
+function sameVersions(left = [], right = []) {
+  return left.length === right.length && left.every((version, index) => version === right[index]);
+}
+
+export function validateLocalRebuildProof({ proof, migrationDirectory, filesystemVersions, appliedVersions }) {
+  if (!proof || proof.schema !== 'confione-local-rebuild-proof-v1') return false;
+  if (proof.projectRef !== 'genius-support-os') return false;
+  if (proof.target?.container !== 'supabase_db_genius-support-os') return false;
+  if (proof.target?.image !== 'public.ecr.aws/supabase/postgres:17.6.1.158') return false;
+  if (proof.target?.apiHost !== '127.0.0.1:54321' || proof.target?.dbHost !== '127.0.0.1:54322') return false;
+  if (!sameVersions(proof.filesystemVersions, filesystemVersions)) return false;
+  if (!sameVersions(proof.appliedVersions, appliedVersions)) return false;
+  const hashes = proof.migrationFileSha256 ?? {};
+  return filesystemVersions.every((version) => {
+    const fileName = readdirSync(migrationDirectory).find((candidate) => parseMigrationVersion(candidate) === version);
+    return fileName && hashes[version] === sha256File(join(migrationDirectory, fileName));
+  });
 }
 
 export function missingMigrations(filesystemVersions, appliedVersions) {
@@ -228,6 +253,15 @@ function readAppliedVersions() {
   return result.rows.map((row) => String(row.version)).filter(Boolean);
 }
 
+export function readLocalRebuildProof(cwd = process.cwd()) {
+  const path = join(cwd, 'output', 'local-qa', 'local-rebuild-provenance.json');
+  try {
+    return JSON.parse(readFileSync(path, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
 function maskSqlLiterals(sql) {
   const source = String(sql);
   const output = Array.from(source);
@@ -335,7 +369,7 @@ function maskSqlLiterals(sql) {
   return output.join('');
 }
 
-export function verifyMigrationOrigin({ migrationText, expected }) {
+export function verifyMigrationOrigin({ migrationText, expected, semanticManifest = null }) {
   const masked = maskSqlLiterals(migrationText);
   if (masked === null) return false;
   const normalized = masked.replace(/\s+/g, ' ').trim();
@@ -352,19 +386,39 @@ export function verifyMigrationOrigin({ migrationText, expected }) {
     `create\\s+(?:or\\s+replace\\s+)?function\\s+${escapedSchema}\\s*\\.\\s*${escapedBaseKey}\\s*\\(([^)]*)\\)`,
     'i',
   ).exec(normalized);
-  if (!declaration) return false;
-  return normalizeFunctionArguments(declaration[1]) === normalizeFunctionArguments(expected.signature);
+  if (declaration) return normalizeFunctionArguments(declaration[1]) === normalizeFunctionArguments(expected.signature);
+  return verifySemanticManifestOrigin({ expected, semanticManifest });
 }
 
 function normalizeFunctionArguments(value) {
   return String(value)
     .split(',')
-    .map((argument) => argument.replace(/\s+default\s+.+$/i, '').replace(/\s+/g, ' ').trim())
+    .map((argument) => argument.replace(/\s+default\b.*$/i, '').replace(/\s+/g, ' ').trim())
     .filter(Boolean)
     .join(',');
 }
 
-function readOriginEvidence(migrationDirectory, filesystemVersions, appliedVersions) {
+function semanticManifestTargets(manifest) {
+  if (!manifest) return [];
+  return [
+    ...(manifest.targets ?? []),
+    ...(manifest.dynamicTarget ? [manifest.dynamicTarget] : []),
+    ...(manifest.staticFunction ? [manifest.staticFunction] : []),
+  ];
+}
+
+function verifySemanticManifestOrigin({ expected, semanticManifest }) {
+  const baseKey = expected.key.replace(/_[56]$/, '');
+  const schema = baseKey === 'set_analytics_pipeline_exclusion_scope' ? 'app_private' : 'public';
+  const qualifiedName = `${schema}.${baseKey}`;
+  const expectedSignature = normalizeFunctionArguments(expected.signature);
+  return semanticManifestTargets(semanticManifest).some((target) => (
+    target.qualifiedName === qualifiedName
+      && normalizeFunctionArguments(target.signature ?? '') === expectedSignature
+  ));
+}
+
+function readOriginEvidence(migrationDirectory, filesystemVersions, appliedVersions, rebuildProofValid = false) {
   const applied = new Set(appliedVersions);
   const files = new Map(
     readdirSync(migrationDirectory)
@@ -377,7 +431,16 @@ function readOriginEvidence(migrationDirectory, filesystemVersions, appliedVersi
       ? readFileSync(join(migrationDirectory, fileName), 'utf8')
       : null;
     const versionPresent = applied.has(expected.migration);
-    const declarationMatch = migrationText ? verifyMigrationOrigin({ migrationText, expected }) : false;
+    const semanticManifest = SEMANTIC_MIGRATION_MANIFEST.migrations[expected.migration];
+    const semanticHashMatches = Boolean(
+      rebuildProofValid
+      && semanticManifest?.classification === 'SEMANTICALLY_VERIFIED_IN_SHADOW'
+      && migrationText
+      && sha256File(join(migrationDirectory, fileName)) === semanticManifest.sha256,
+    );
+    const declarationMatch = migrationText
+      ? verifyMigrationOrigin({ migrationText, expected, semanticManifest: semanticHashMatches ? semanticManifest : null })
+      : false;
     return {
       key: expected.key,
       migration: expected.migration,
@@ -386,13 +449,15 @@ function readOriginEvidence(migrationDirectory, filesystemVersions, appliedVersi
       declarationMatch,
       originVerified: versionPresent && declarationMatch,
       verificationBasis: versionPresent && declarationMatch
-        ? 'version_present_and_migration_declaration_match'
+        ? semanticHashMatches
+          ? 'version_present_and_semantic_manifest_sha256_and_shadow_target_match'
+          : 'version_present_and_migration_declaration_match'
         : 'not_verified',
     };
   });
 }
 
-function readMigrationSafety(migrationDirectory, appliedVersions = []) {
+function readMigrationSafety(migrationDirectory, appliedVersions = [], rebuildProofValid = false) {
   const applied = new Set(appliedVersions);
   return PENDING_MIGRATION_PREFIXES.map((version) => {
     const fileName = readdirSync(migrationDirectory).find((candidate) => parseMigrationVersion(candidate) === version);
@@ -422,6 +487,25 @@ function readMigrationSafety(migrationDirectory, appliedVersions = []) {
         destructiveSql: false,
       };
     } catch (error) {
+      const semanticManifest = SEMANTIC_MIGRATION_MANIFEST.migrations[version];
+      const semanticHashMatches = Boolean(
+        rebuildProofValid
+        && semanticManifest?.classification === 'SEMANTICALLY_VERIFIED_IN_SHADOW'
+        && sha256File(filePath) === semanticManifest.sha256,
+      );
+      if (semanticHashMatches && applied.has(version)) {
+        return {
+          version,
+          filePresent: true,
+          applied: true,
+          safe: true,
+          preflightProven: true,
+          historicalException: false,
+          classification: 'SEMANTIC_PREFLIGHT_VERIFIED_IN_SHADOW',
+          destructiveSql: false,
+          verificationBasis: 'semantic_manifest_sha256_and_approved_shadow_replay',
+        };
+      }
       const historicalException = HISTORICAL_EXCEPTION_MIGRATIONS.includes(version) && applied.has(version);
       return {
         version,
@@ -494,14 +578,26 @@ export function runGate({ cwd = process.cwd(), migrationDirectory = join(cwd, 's
   }
   const filesystemVersions = listFilesystemMigrations(migrationDirectory);
   const appliedVersions = readAppliedVersions();
-  const migrationSafety = readMigrationSafety(migrationDirectory, appliedVersions);
-  const originEvidence = readOriginEvidence(migrationDirectory, filesystemVersions, appliedVersions);
+  const rebuildProof = readLocalRebuildProof(cwd);
+  const rebuildProofValid = validateLocalRebuildProof({
+    proof: rebuildProof,
+    migrationDirectory,
+    filesystemVersions,
+    appliedVersions,
+  });
+  const migrationSafety = readMigrationSafety(migrationDirectory, appliedVersions, rebuildProofValid);
+  const originEvidence = readOriginEvidence(migrationDirectory, filesystemVersions, appliedVersions, rebuildProofValid);
   const observedObjects = readObservedObjects(originEvidence);
   const result = buildParityResult({ filesystemVersions, appliedVersions, observedObjects, migrationSafety });
   return {
     target: 'supabase-local',
     apiHost: new URL(status.API_URL).host,
     dbHost: new URL(status.DB_URL).host,
+    rebuildProof: {
+      path: 'output/local-qa/local-rebuild-provenance.json',
+      present: Boolean(rebuildProof),
+      valid: rebuildProofValid,
+    },
     migrationSafety,
     originEvidence,
     ...result,

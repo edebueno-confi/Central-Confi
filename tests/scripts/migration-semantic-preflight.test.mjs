@@ -76,13 +76,13 @@ test('migration candidata real declara guardas de escopo e preserva o contrato d
   const result = preflightMigration({ version: '20260824190000', source: migration });
   assert.equal(result.state, 'PREFLIGHT_READY_FOR_SHADOW');
   assert.match(migration, /pg_get_functiondef\(/);
-  assert.match(migration, /v_group_company text;/);
-  assert.match(migration, /v_excluded_pipeline_ids text\[\];/);
   assert.match(migration, /v_group_count <> 2/);
   assert.match(migration, /v_ticket_exclusion_count <> 1 or v_deal_exclusion_count <> 1/);
   assert.match(migration, /v_declare_count <> 1 or v_begin_count <> 1/);
-  assert.match(migration, /v_group_company is null or c\.group_company = v_group_company/);
-  assert.match(migration, /v_excluded_pipeline_ids is null or %s\.pipeline_id <> all\(v_excluded_pipeline_ids\)/);
+  assert.match(migration, /with scope as \(/);
+  assert.match(migration, /cross join scope scope_config/);
+  assert.match(migration, /scope_config\.group_company is null or c\.group_company = scope_config\.group_company/);
+  assert.match(migration, /scope_config\.excluded_pipeline_ids is null or %s\.pipeline_id <> all\(scope_config\.excluded_pipeline_ids\)/);
   assert.match(migration, /position\('search_path' in lower\(v_definition\)/);
   assert.match(migration, /revoke all on function public\.rpc_analytics_timeseries/);
   assert.match(migration, /grant execute on function public\.rpc_analytics_timeseries/);
@@ -259,8 +259,8 @@ test('remediação fail-closed quando assinatura, âncoras ou contagens divergem
   const cases = [
     ['assinatura', "'public.rpc_analytics_timeseries(text,date,date,text)'::regprocedure", 'public.fake(text,date,date,text)'],
     ['âncora de operação', 'v_group_count <> 2', 'v_group_count <> 3'],
-    ['declaração', 'v_group_company text;', 'v_group_company jsonb;'],
-    ['atribuição', 'v_excluded_pipeline_ids := string_to_array', 'v_excluded_pipeline_ids := null'],
+    ['escopo materializado', 'with scope as (', 'with scoped_config as ('],
+    ['junção de escopo', 'cross join scope scope_config', 'cross join scope broken_scope'],
   ];
   for (const [label, oldValue, newValue] of cases) {
     const result = preflightMigration({
@@ -284,12 +284,18 @@ test('mask lexical não promove EXECUTE em string, comentário aninhado ou E str
 test('fixture de benchmark é sintética, escalável e tem limites explícitos', () => {
   const config = readBenchmarkConfig({});
   assert.equal(config.rowsPerTable, SEMANTIC_MIGRATION_MANIFEST.benchmark.limits.defaultRowsPerTable);
+  assert.equal(config.runs, 5);
+  assert.equal(config.warmups, 2);
+  assert.equal(config.timeoutMs, 30_000);
+  assert.equal(config.absoluteRegressionMarginMs, 2);
+  assert.equal(config.costRegressionMarginPercent, 1);
   assert.equal(config.regressionMarginPercent, 25);
   const sql = buildSyntheticFixtureSql(1_000);
   assert.match(sql, /generate_series\(1, 1000\)/);
   assert.match(sql, /generate_series\(1, 100\)/);
   assert.match(sql, /bench-ticket-row/);
   assert.match(sql, /bench-deal-row/);
+  assert.equal(SEMANTIC_MIGRATION_MANIFEST.benchmark.rpcRepeatCount, 4);
   assert.doesNotMatch(sql, /supabase_db_genius-support-os|service_role|postgresql:\/\//);
   assert.throws(() => buildSyntheticFixtureSql(999), /BENCHMARK_FIXTURE_VOLUME_INVALID/);
   assert.throws(() => readBenchmarkConfig({ CONFIONE_SEMANTIC_PREFLIGHT_ROWS_PER_TABLE: '100001' }), /BENCHMARK_CONFIG_OUT_OF_RANGE/);
@@ -316,6 +322,18 @@ function benchmarkStage(stage, executionMs, planShape = [{ nodeType: 'Function S
   };
 }
 
+function benchmarkStageWithUnchangedJoins(stage, rpcExecutionMs, joinExecutionMs) {
+  const stageResult = benchmarkStage(stage, rpcExecutionMs);
+  const joinWorkload = (id) => ({
+    id,
+    ok: true,
+    median: { planningMs: 0.1, executionMs: joinExecutionMs, wallClockMs: joinExecutionMs + 1 },
+    planShape: [{ nodeType: 'Hash Join', relation: null, index: null, joinType: 'Inner' }],
+    totalCost: 10,
+  });
+  return { ...stageResult, workloads: [...stageResult.workloads, joinWorkload('timeseries_join_all'), joinWorkload('timeseries_join_excluded')] };
+}
+
 test('comparação before/after exige execução, plano estável e margem explícita', () => {
   const config = readBenchmarkConfig({});
   const before = benchmarkStage('before_migrations', 10);
@@ -324,6 +342,8 @@ test('comparação before/after exige execução, plano estável e margem explí
   assert.equal(passed.comparable, true);
   assert.equal(passed.passed, true);
   assert.equal(passed.marginPercent, 25);
+  assert.equal(passed.criterion.includes('2 ms'), true);
+  assert.equal(passed.criterion.includes('custo estimado <= before + 1%'), true);
 
   const planRegression = compareBenchmarkStages(
     before,
@@ -339,18 +359,42 @@ test('comparação before/after exige execução, plano estável e margem explí
   assert.equal(notExecuted.reason, 'BENCHMARK_NOT_COMPLETED');
 });
 
-test('candidato otimizado exige redução estrita nas duas RPCs e estabilidade nos joins', () => {
+test('candidato otimizado exige não regressão nas RPCs, uma redução observada e estabilidade nos joins', () => {
   const config = readBenchmarkConfig({});
-  const current = benchmarkStage('after_migrations', 20);
-  const candidate = benchmarkStage('optimized_candidate', 15);
+  const current = benchmarkStageWithUnchangedJoins('after_migrations', 20, 20);
+  const candidate = benchmarkStageWithUnchangedJoins('optimized_candidate', 15, 100);
   const passed = assessOptimizedCandidate(current, candidate, config);
   assert.equal(passed.comparable, true);
+  assert.equal(passed.unchangedWorkloadsStable, true);
+  assert.equal(passed.optimizedWorkloadsPassed, true);
+  assert.equal(passed.atLeastOneRpcReduction, true);
   assert.equal(passed.strictRpcReduction, true);
   assert.equal(passed.passed, true);
   assert.equal(passed.reason, 'OPTIMIZED_CANDIDATE_GO');
 
-  const notOptimized = assessOptimizedCandidate(current, benchmarkStage('optimized_candidate', 20), config);
+  const notOptimized = assessOptimizedCandidate(current, benchmarkStageWithUnchangedJoins('optimized_candidate', 20, 20), config);
   assert.equal(notOptimized.strictRpcReduction, false);
+  assert.equal(notOptimized.atLeastOneRpcReduction, false);
   assert.equal(notOptimized.passed, false);
   assert.equal(notOptimized.reason, 'OPTIMIZED_CANDIDATE_REGRESSION');
+
+  const oneRpcCandidate = benchmarkStageWithUnchangedJoins('optimized_candidate', 15, 20);
+  oneRpcCandidate.workloads[1].median.executionMs = 20;
+  const oneRpcReduced = assessOptimizedCandidate(current, oneRpcCandidate, config);
+  assert.equal(oneRpcReduced.strictRpcReduction, false);
+  assert.equal(oneRpcReduced.atLeastOneRpcReduction, true);
+  assert.equal(oneRpcReduced.optimizedWorkloadsPassed, true);
+  assert.equal(oneRpcReduced.passed, true);
+
+  const smallCostNoise = benchmarkStageWithUnchangedJoins('optimized_candidate', 15, 20);
+  smallCostNoise.workloads[2].totalCost = 10.05;
+  const costNoise = assessOptimizedCandidate(current, smallCostNoise, config);
+  assert.equal(costNoise.unchangedWorkloadsStable, true);
+  assert.equal(costNoise.passed, true);
+
+  const materialCostRegression = benchmarkStageWithUnchangedJoins('optimized_candidate', 15, 20);
+  materialCostRegression.workloads[2].totalCost = 10.2;
+  const costRegression = assessOptimizedCandidate(current, materialCostRegression, config);
+  assert.equal(costRegression.unchangedWorkloadsStable, false);
+  assert.equal(costRegression.passed, false);
 });
