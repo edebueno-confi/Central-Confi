@@ -228,18 +228,140 @@ function readAppliedVersions() {
   return result.rows.map((row) => String(row.version)).filter(Boolean);
 }
 
+function maskSqlLiterals(sql) {
+  const source = String(sql);
+  const output = Array.from(source);
+  const blank = (start, end) => {
+    for (let index = start; index < end; index += 1) {
+      if (output[index] !== '\n' && output[index] !== '\r') output[index] = ' ';
+    }
+  };
+
+  let index = 0;
+  while (index < source.length) {
+    if (source.startsWith('--', index)) {
+      const end = source.indexOf('\n', index + 2);
+      const commentEnd = end === -1 ? source.length : end;
+      blank(index, commentEnd);
+      index = commentEnd;
+      continue;
+    }
+    if (source.startsWith('/*', index)) {
+      // PostgreSQL aceita comentários de bloco aninhados. Uma busca pelo
+      // primeiro `*/` deixaria o restante do comentário exposto à regex.
+      let depth = 1;
+      let cursor = index + 2;
+      while (cursor < source.length && depth > 0) {
+        if (source.startsWith('/*', cursor)) {
+          depth += 1;
+          cursor += 2;
+          continue;
+        }
+        if (source.startsWith('*/', cursor)) {
+          depth -= 1;
+          cursor += 2;
+          continue;
+        }
+        cursor += 1;
+      }
+      if (depth !== 0) return null;
+      blank(index, cursor);
+      index = cursor;
+      continue;
+    }
+    if (source[index] === "'") {
+      const prefixIndex = index - 1;
+      const isEscapeString = (source[prefixIndex] === 'e' || source[prefixIndex] === 'E')
+        && (prefixIndex === 0 || !/[a-z0-9_$]/i.test(source[prefixIndex - 1]));
+      let end = index + 1;
+      while (end < source.length) {
+        if (isEscapeString && source[end] === '\\') {
+          let slashEnd = end;
+          while (source[slashEnd] === '\\') slashEnd += 1;
+          if (slashEnd >= source.length) return null;
+          // Em E'...' tratamos a sequência inteira como conteúdo escapado.
+          // Isso é deliberadamente conservador para não expor uma declaração
+          // após uma combinação ambígua de barras e aspas à regex estrutural.
+          end = slashEnd + 1;
+          continue;
+        }
+        if (source[end] === "'" && source[end + 1] === "'") {
+          end += 2;
+          continue;
+        }
+        if (source[end] === "'") {
+          end += 1;
+          break;
+        }
+        end += 1;
+      }
+      if (end > source.length || source[end - 1] !== "'") return null;
+      blank(index, end);
+      index = end;
+      continue;
+    }
+    if (source[index] === '"') {
+      let end = index + 1;
+      while (end < source.length) {
+        if (source[end] === '"' && source[end + 1] === '"') {
+          end += 2;
+          continue;
+        }
+        if (source[end] === '"') {
+          end += 1;
+          break;
+        }
+        end += 1;
+      }
+      if (end > source.length || source[end - 1] !== '"') return null;
+      blank(index, end);
+      index = end;
+      continue;
+    }
+    if (source[index] === '$') {
+      const tagMatch = source.slice(index).match(/^\$([a-z_]\w*)?\$/i);
+      if (tagMatch) {
+        const tag = tagMatch[0];
+        const bodyStart = index + tag.length;
+        const closingIndex = source.indexOf(tag, bodyStart);
+        if (closingIndex === -1) return null;
+        blank(index, closingIndex + tag.length);
+        index = closingIndex + tag.length;
+        continue;
+      }
+    }
+    index += 1;
+  }
+  return output.join('');
+}
+
 export function verifyMigrationOrigin({ migrationText, expected }) {
-  const normalized = stripSqlComments(migrationText).replace(/\s+/g, ' ');
+  const masked = maskSqlLiterals(migrationText);
+  if (masked === null) return false;
+  const normalized = masked.replace(/\s+/g, ' ').trim();
   const baseKey = expected.key.replace(/_[56]$/, '');
   const schema = baseKey === 'default_internal_screen_keys' || baseKey === 'set_analytics_pipeline_exclusion_scope'
     ? 'app_private'
     : 'public';
   if (expected.signature === 'table') {
-    return new RegExp(`create\\s+table(?:\\s+if\\s+not\\s+exists)?\\s+${schema}\\.${baseKey}\\b`, 'i').test(normalized);
+    return new RegExp(`create\\s+table(?:\\s+if\\s+not\\s+exists)?\\s+${schema}\\s*\\.\\s*${baseKey}\\b`, 'i').test(normalized);
   }
-  const signature = expected.signature;
-  const declaration = `${schema}.${baseKey}(${signature})`;
-  return normalized.includes(declaration);
+  const escapedSchema = schema.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const escapedBaseKey = baseKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const declaration = new RegExp(
+    `create\\s+(?:or\\s+replace\\s+)?function\\s+${escapedSchema}\\s*\\.\\s*${escapedBaseKey}\\s*\\(([^)]*)\\)`,
+    'i',
+  ).exec(normalized);
+  if (!declaration) return false;
+  return normalizeFunctionArguments(declaration[1]) === normalizeFunctionArguments(expected.signature);
+}
+
+function normalizeFunctionArguments(value) {
+  return String(value)
+    .split(',')
+    .map((argument) => argument.replace(/\s+default\s+.+$/i, '').replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+    .join(',');
 }
 
 function readOriginEvidence(migrationDirectory, filesystemVersions, appliedVersions) {

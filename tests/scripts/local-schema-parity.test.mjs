@@ -115,6 +115,183 @@ test('não comprova origem apenas por presença da versão no histórico', () =>
   assert.equal(result.findings[0].code, 'EXECUTABLE_OBJECT_WITHOUT_ORIGIN');
 });
 
+test('comprova origem por declaração de função apesar de formatação e default', () => {
+  assert.equal(
+    verifyMigrationOrigin({
+      migrationText: `create or replace function app_private.set_analytics_pipeline_exclusion_scope(
+        p_pipeline_ids text[] default '{}'::text[]
+      ) returns void language plpgsql as $$ begin return; end; $$;`,
+      expected: {
+        key: 'set_analytics_pipeline_exclusion_scope',
+        signature: 'p_pipeline_ids text[]',
+        migration: '20260823100000',
+      },
+    }),
+    true,
+  );
+  assert.equal(
+    verifyMigrationOrigin({
+      migrationText: `create or replace function public.rpc_admin_assign_internal_access_profile(
+        p_membership_id uuid,
+        p_access_profile_id uuid
+      ) returns void language sql as $$ select 1; $$;`,
+      expected: {
+        key: 'rpc_admin_assign_internal_access_profile',
+        signature: 'p_membership_id uuid, p_access_profile_id uuid',
+        migration: '20260822200000',
+      },
+    }),
+    true,
+  );
+  assert.equal(
+    verifyMigrationOrigin({
+      migrationText: `create table if not exists public.internal_organizational_screen_defaults (
+        area_key text not null
+      );`,
+      expected: {
+        key: 'internal_organizational_screen_defaults',
+        signature: 'table',
+        migration: '20260822200000',
+      },
+    }),
+    true,
+  );
+});
+
+test('não infere origem para função apenas consultada por SQL dinâmico', () => {
+  assert.equal(
+    verifyMigrationOrigin({
+      migrationText: `do $$
+        declare v_definition text;
+        begin
+          v_definition := pg_get_functiondef('public.rpc_analytics_ceo_snapshot_legacy(date,date)'::regprocedure);
+          execute v_definition;
+        end;
+      $$;`,
+      expected: {
+        key: 'rpc_analytics_ceo_snapshot_legacy',
+        signature: 'p_from date, p_to date',
+        migration: '20260822220000',
+      },
+    }),
+    false,
+  );
+  assert.equal(
+    verifyMigrationOrigin({
+      migrationText: `v_signatures regprocedure[] := array[
+        'public.rpc_analytics_customer_success_kpis_v2()'::regprocedure
+      ];`,
+      expected: {
+        key: 'rpc_analytics_customer_success_kpis_v2',
+        signature: '',
+        migration: '20260822220000',
+      },
+    }),
+    false,
+  );
+  assert.equal(
+    verifyMigrationOrigin({
+      migrationText: `do $do$ begin
+        execute 'create or replace function public.fake_dynamic(p_id uuid) returns void language sql as $$ select 1 $$';
+      end $do$;`,
+      expected: {
+        key: 'fake_dynamic',
+        signature: 'p_id uuid',
+        migration: '20260822220000',
+      },
+    }),
+    false,
+  );
+  assert.equal(
+    verifyMigrationOrigin({
+      migrationText: `declare
+        v_definition text := $sql$create function public.fake_dollar(p_id uuid)
+          returns void language sql as $body$ select 1 $body$;$sql$;
+      begin
+        execute v_definition;
+      end;`,
+      expected: {
+        key: 'fake_dollar',
+        signature: 'p_id uuid',
+        migration: '20260822220000',
+      },
+    }),
+    false,
+  );
+});
+
+test('não comprova origem dentro de comentário PostgreSQL aninhado', () => {
+  assert.equal(
+    verifyMigrationOrigin({
+      migrationText: `/* comentário externo
+        /* comentário interno */
+        create function public.fake_nested(p_id uuid)
+        returns void language sql as $$ select 1 $$;
+      */`,
+      expected: {
+        key: 'fake_nested',
+        signature: 'p_id uuid',
+        migration: '20260822220000',
+      },
+    }),
+    false,
+  );
+  assert.equal(
+    verifyMigrationOrigin({
+      migrationText: '/* comentário externo /* comentário interno */',
+      expected: { key: 'fake_unclosed', signature: '', migration: '20260822220000' },
+    }),
+    false,
+  );
+  const expected = {
+    key: 'fake_escape',
+    signature: 'p_id uuid',
+    migration: '20260822220000',
+  };
+  for (const slashCount of [2, 4]) {
+    const escapedQuote = '\\'.repeat(slashCount) + "'";
+    const migrationText = "select E'prefix "
+      + escapedQuote
+      + " create function public.fake_escape(p_id uuid) returns void language sql as $$ select 1 $$; "
+      + escapedQuote
+      + " suffix';";
+    assert.equal(verifyMigrationOrigin({ migrationText, expected }), false);
+  }
+});
+
+test('não atribui a assinatura de cinco parâmetros à função de seis parâmetros', () => {
+  const migrationText = `create or replace function public.rpc_analytics_timeseries_by_operation(
+    p_domain text,
+    p_from date,
+    p_to date,
+    p_grain text,
+    p_group_company text,
+    p_excluded_pipeline_ids text[]
+  ) returns jsonb language plpgsql as $$ begin return '{}'::jsonb; end; $$;`;
+  assert.equal(
+    verifyMigrationOrigin({
+      migrationText,
+      expected: {
+        key: 'rpc_analytics_timeseries_by_operation_6',
+        signature: 'p_domain text, p_from date, p_to date, p_grain text, p_group_company text, p_excluded_pipeline_ids text[]',
+        migration: '20260823100000',
+      },
+    }),
+    true,
+  );
+  assert.equal(
+    verifyMigrationOrigin({
+      migrationText,
+      expected: {
+        key: 'rpc_analytics_timeseries_by_operation_5',
+        signature: 'p_domain text, p_from date, p_to date, p_grain text, p_group_company text',
+        migration: '20260823100000',
+      },
+    }),
+    false,
+  );
+});
+
 test('separa exceção histórica aplicada de preflight comprovado sem liberar o gate', () => {
   const result = buildParityResult({
     filesystemVersions: ['20260822220000', '20260823100000'],

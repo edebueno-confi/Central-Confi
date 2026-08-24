@@ -7,9 +7,7 @@
 - Review mode: SENTINEL_REQUIRED
 - Coordinator: Codex Orchestrator
 - Agent coordination: IDLE
-- Último lote: ANALYTICS-AUTHENTICATED-QA-GATE-2026-08-24
-- Commit local: 1e795174d24df225e333889efefac8a8af292fea.
+- Último lote: LOCAL-MIGRATION-PROVENANCE-STATIC-AUDIT-2026-08-24
+- Commit local: registrado no checkpoint Git da finalização.
 - Resultado: aprovado pelo Sentinel; relatório e handoff arquivados localmente.
-- Limitações preservadas: sessão autenticada, dados, RPCs, filtros, estados
-  internos, Posição/Evolução, permissões, RLS/cross-tenant e performance real
-  permanecem não comprovados.
+- Limitações preservadas: gate de schema parity fail-closed, duas exceções históricas aplicadas sem prova de preflight e quatro objetos executáveis sem origem comprovada.
