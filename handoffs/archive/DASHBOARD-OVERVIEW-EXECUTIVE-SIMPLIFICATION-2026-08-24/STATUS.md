@@ -8,7 +8,7 @@
 - Review mode: SENTINEL_REQUIRED
 - Coordinator: Codex Orchestrator
 - Base SHA: 3dad2df4e9078762dc0fc6fe6d19664134c6a9c3
-- Implementation SHA: UNCOMMITTED_WORKTREE
+- Implementation SHA: de3b6e6824472fb96ab10acf04a6202e4ce2d360
 - Agent coordination: APPROVED
 - Resume condition: revisão independente do Sentinel
 - Approval: APPROVED por autorização persistente do proprietário

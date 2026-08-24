@@ -56,5 +56,5 @@ secrets, chamadas externas, produção, push, merge, deploy ou release surface.
 
 ## Entrega
 
-Implementation SHA: UNCOMMITTED_WORKTREE. REVIEW.md foi preservado para a
+Implementation SHA: de3b6e6824472fb96ab10acf04a6202e4ce2d360. REVIEW.md foi preservado para a
 revisão independente e não contém veredito do executor.
