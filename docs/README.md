@@ -72,6 +72,7 @@ Fonte oficial da documentação do ConfiOne.
 - [ANALYTICS_METRIC_CATALOG_V1.md](./ANALYTICS_METRIC_CATALOG_V1.md)
 - [ANALYTICS_KPI_REGISTRY_V1.md](./ANALYTICS_KPI_REGISTRY_V1.md) — registro de KPIs e escopos; a validação pipeline → área → operação está na task `DATA-PIPELINE-OPERATION-GOVERNANCE-2026-08-21` e a integridade de caracteres na `R1-UTF8-ENCODING-INTEGRITY-2026-08-21`.
 - [engineering/SUPABASE_MIGRATION_SAFETY_PROCESS_V1.md](./engineering/SUPABASE_MIGRATION_SAFETY_PROCESS_V1.md) — processo fail-closed para identidade, preflight, shadow, RLS, performance, locks, backup e pós-validação de migrations.
+- [reports/REMOTE_SUPABASE_SECURITY_RLS_PERFORMANCE_AUDIT_2026-08-24.md](./reports/REMOTE_SUPABASE_SECURITY_RLS_PERFORMANCE_AUDIT_2026-08-24.md) — auditoria remota somente leitura do projeto `jzmmvfcmruasqmrdmbup`, com findings de segurança, RLS e performance.
 - [reports/LOCAL_MIGRATION_SEMANTIC_PREFLIGHT_2026-08-24.md](./reports/LOCAL_MIGRATION_SEMANTIC_PREFLIGHT_2026-08-24.md) — preflight semântico, remediação candidata em shadow e trava histórica `NO_GO` da task 60.
 - [ANALYTICS_PIPELINE_OPERATION_GOVERNANCE_V1.md](./ANALYTICS_PIPELINE_OPERATION_GOVERNANCE_V1.md) — mapa canônico pipeline → área → operação, estados de ausência/ambiguidade, filtros server-side e reconciliação por operação.
 - [ANALYTICS_MRR_GOALS_FOUNDATION_V1.md](./ANALYTICS_MRR_GOALS_FOUNDATION_V1.md)

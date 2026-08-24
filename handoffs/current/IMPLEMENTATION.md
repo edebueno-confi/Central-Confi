@@ -5,5 +5,5 @@
 - Reviewer active: Sentinel
 - Agent coordination: IDLE
 
-Último lote arquivado: `LOCAL-MIGRATION-PREFLIGHT-RECONCILIATION-2026-08-24`.
+Último lote arquivado: `REMOTE-SUPABASE-SECURITY-RLS-PERFORMANCE-AUDIT-2026-08-24`.
 Não há implementação ativa neste handoff.

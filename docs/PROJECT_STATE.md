@@ -1,4 +1,19 @@
 # Estado corrente do checkout canônico — Interface High-Density V1 — 2026-08-03
+
+## Auditoria remota Supabase — 2026-08-24
+
+- A auditoria somente leitura do projeto `jzmmvfcmruasqmrdmbup`
+  (`ACTIVE_HEALTHY`) está registrada em
+  `docs/reports/REMOTE_SUPABASE_SECURITY_RLS_PERFORMANCE_AUDIT_2026-08-24.md`.
+- O inventário encontrou `TRUNCATE` concedido a `authenticated` em
+  `public.profiles` e `public.tenants`. RLS habilitado não substitui ACL nem
+  controla esse privilégio de relação; o finding HIGH exige task versionada de
+  revogação ou justificativa. Nenhuma correção remota foi aplicada.
+- Esta auditoria é distinta da task 60: o estado remoto da task 60 permanece
+  desconhecido, sem repair, migration ou autorização implícita.
+- Início da coleta registrado: `2026-08-24T22:22:55.140Z` UTC. O timestamp
+  individual de cada consulta não foi persistido e permanece limitação.
+
 ## Estado atual da task 60 e das migrations — 2026-08-24
 
 - A task `LOCAL-MIGRATION-HISTORY-REPAIR-2026-08-23` permanece `BLOCKED` por
@@ -7,8 +22,11 @@
 - O preflight semântico, a remediação candidata em shadow e o rebuild local
   autorizado foram concluídos com revisão independente. `candidate_go` não
   altera `historical_no_go`.
-- O banco remoto nunca foi auditado nem alterado nesta frente. Seu estado é
-  desconhecido e não deve ser inferido a partir do banco local.
+- Na task 60 o banco remoto não foi auditado nem alterado; posteriormente, a
+  task `REMOTE-SUPABASE-SECURITY-RLS-PERFORMANCE-AUDIT-2026-08-24` realizou
+  auditoria somente leitura do projeto remoto identificado abaixo. Os
+  findings dessa auditoria não equivalem a prova de equivalência funcional
+  com o banco local.
 - O processo obrigatório para futuras migrations está em
   `docs/engineering/SUPABASE_MIGRATION_SAFETY_PROCESS_V1.md`.
 

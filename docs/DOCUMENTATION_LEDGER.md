@@ -15,6 +15,18 @@
 - **Riscos restantes:** diagnóstico remoto ainda não realizado; qualquer janela
   remota exige autorização e evidência próprias.
 
+## REMOTE-SUPABASE-SECURITY-RLS-PERFORMANCE-AUDIT — 2026-08-24
+
+- **Tipo:** auditoria remota somente leitura; sem alteração de banco, migration,
+  grant, policy, secret ou serviço externo.
+- **Projeto:** `jzmmvfcmruasqmrdmbup`, ConfiOne, `ACTIVE_HEALTHY`.
+- **Resultado:** histórico remoto diferente do local da task 60; findings
+  independentes em views/functions `SECURITY DEFINER`, grants, RLS e advisors
+  de performance.
+- **Artefato:** `docs/reports/REMOTE_SUPABASE_SECURITY_RLS_PERFORMANCE_AUDIT_2026-08-24.md`.
+- **Próximo passo:** correções versionadas separadas, somente após revisão e
+  aprovação; nenhuma correção automática foi aplicada.
+
 ## Governança executável de pipeline, área e operação — 2026-08-22
 
 - **Tipo:** implementação backend/frontend e documentação de governança do Analytics; sem chamadas externas ou escrita em integrações.
