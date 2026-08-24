@@ -1,6 +1,5 @@
 # STATUS
 
-- Task: IDLE
 - State: IDLE
 - Owner: Forge
 - Role: EXECUTOR
@@ -8,6 +7,5 @@
 - Review mode: SENTINEL_REQUIRED
 - Coordinator: Codex Orchestrator
 - Agent coordination: IDLE
-- Último lote: ANALYTICS-REACTIVE-FILTERS-KPI-LOOP-2026-08-24
-- Veredito: APPROVED por Sentinel; handoff arquivado
-- Próximo passo: aguardar promoção canônica da próxima task elegível
+- Resume condition: selecionar e promover somente a próxima task elegível da fila
+- Próximo passo: heartbeat verificar a fila canônica e dependências antes de qualquer promoção.
