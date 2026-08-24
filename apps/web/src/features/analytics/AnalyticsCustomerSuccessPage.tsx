@@ -8,6 +8,7 @@ import { AnalyticsBoardLimitations, AnalyticsKpiBoard, type BoardBand } from './
 import { CustomerSuccessOwnerPerformanceChart } from './charts/OwnerPerformanceCharts';
 import { toAnalyticsBlockState } from './analytics-kpi-contract.mjs';
 import { AnalyticsOperationScope } from './AnalyticsOperationScope';
+import { AnalyticsDomainTabs, type DomainTab } from './AnalyticsDomainTabs';
 
 const CS_BANDS: BoardBand[] = [
   {
@@ -95,6 +96,7 @@ export function AnalyticsCustomerSuccessPage({ sharedOperation, onSharedOperatio
   const [result, setResult] = useState<{ loading: boolean; data?: unknown; error?: boolean }>({ loading: true });
   const [configuredPipelines, setConfiguredPipelines] = useState<AnalyticsPipelineInventory[]>([]);
   const [groupCompany, setGroupCompany] = useState(sharedOperation ?? '');
+  const [subTab, setSubTab] = useState('posicao');
 
   useEffect(() => {
     if (sharedOperation !== undefined && sharedOperation !== groupCompany) setGroupCompany(sharedOperation);
@@ -164,7 +166,17 @@ export function AnalyticsCustomerSuccessPage({ sharedOperation, onSharedOperatio
       headerAside={configuredPipelines.length > 0 ? <AnalyticsOperationScope storageKey="analytics-operation-scope" value={groupCompany} onChange={handleGroupCompanyChange} options={configuredPipelines.flatMap((pipeline) => pipeline.groupCompanies.map((value) => ({ value, source: pipeline.groupCompanySource })))} /> : null}
     >
       {groupCompany && operationScope.state && operationScope.state !== 'available' ? <p role="status" className="mb-4 text-xs text-[color:var(--minimal-text-tertiary)]">Operação <strong>{groupCompany}</strong>: {operationScope.state === 'partial' ? 'a cobertura ticket-empresa é parcial' : 'a cobertura ticket-empresa está indisponível'} ({operationScope.reason ?? 'motivo não informado'}). {operationScope.ticket_count ?? 0} tickets, {operationScope.associated_ticket_count ?? 0} com associação válida. O backend não infere carteira por nome.</p> : null}
-      <AnalyticsKpiBoard payload={payload} bands={CS_BANDS} />
+      <AnalyticsDomainTabs
+        activeId={subTab}
+        onChange={setSubTab}
+        tabs={[
+          {
+            id: 'posicao',
+            label: 'Posição',
+            question: 'Qual é o estado atual da carteira e quais sinais exigem atenção neste recorte.',
+            content: (
+              <div className="space-y-4">
+                <AnalyticsKpiBoard payload={payload} bands={CS_BANDS} />
 
       <div className="grid gap-4 xl:grid-cols-2">
         <ChartCard
@@ -274,6 +286,21 @@ export function AnalyticsCustomerSuccessPage({ sharedOperation, onSharedOperatio
       </ChartCard>
 
       <AnalyticsBoardLimitations payload={payload} />
+              </div>
+            ),
+          },
+          {
+            id: 'evolucao',
+            label: 'Evolução',
+            question: 'Como a carteira mudou ao longo do tempo. O contrato temporal de Customer Success ainda não publica uma série para responder esta pergunta.',
+            content: (
+              <ChartCard title="Evolução da carteira" description="A evolução temporal depende de snapshots históricos e de um contrato de série publicado pelo backend.">
+                <MinimalState title="Evolução indisponível" description="Customer Success publica a posição atual da carteira, mas ainda não publica série histórica de clientes, MRR, retenção ou risco. Nenhuma tendência é inferida a partir do snapshot atual." />
+              </ChartCard>
+            ),
+          },
+        ] as DomainTab[]}
+      />
     </AnalyticsHdDomainFrame>
   );
 }

@@ -197,13 +197,6 @@ export function AnalyticsCommercialPage({ sharedPeriod, onSharedPeriodChange, sh
             <>
               <AnalyticsKpiBoard payload={kpiPayload} bands={COMMERCIAL_BANDS} />
               <AnalyticsBoardLimitations payload={kpiPayload} />
-              <AnalyticsCommercialComparison
-                currentPayload={kpiPayload}
-                previousPayload={previousKpiPayload}
-                currentPeriod={filters}
-                previousPeriod={resolvePreviousComparablePeriod(filters)}
-                phase={comparisonPhase}
-              />
             </>
           ) : null}
           {dataState?.status !== 'empty' ? (
@@ -310,7 +303,20 @@ export function AnalyticsCommercialPage({ sharedPeriod, onSharedPeriodChange, sh
       id: 'evolucao',
       label: 'Evolução',
       question: 'Como ganhos, perdas e taxa de conversão se comportaram ao longo do tempo.',
-      content: <AnalyticsTrendPanel domain="commercial" groupCompany={groupCompany} excludedPipelineIds={excludedPipelineIds} />,
+      content: (
+        <div className="space-y-4">
+          {kpiPayload ? (
+            <AnalyticsCommercialComparison
+              currentPayload={kpiPayload}
+              previousPayload={previousKpiPayload}
+              currentPeriod={filters}
+              previousPeriod={resolvePreviousComparablePeriod(filters)}
+              phase={comparisonPhase}
+            />
+          ) : null}
+          <AnalyticsTrendPanel domain="commercial" groupCompany={groupCompany} excludedPipelineIds={excludedPipelineIds} />
+        </div>
+      ),
     },
   ];
 
