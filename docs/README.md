@@ -71,6 +71,8 @@ Fonte oficial da documentação do ConfiOne.
 - [reports/CODEX_CONTINUATION_HANDOFF_2026-07-17.md](./reports/CODEX_CONTINUATION_HANDOFF_2026-07-17.md)
 - [ANALYTICS_METRIC_CATALOG_V1.md](./ANALYTICS_METRIC_CATALOG_V1.md)
 - [ANALYTICS_KPI_REGISTRY_V1.md](./ANALYTICS_KPI_REGISTRY_V1.md) — registro de KPIs e escopos; a validação pipeline → área → operação está na task `DATA-PIPELINE-OPERATION-GOVERNANCE-2026-08-21` e a integridade de caracteres na `R1-UTF8-ENCODING-INTEGRITY-2026-08-21`.
+- [engineering/SUPABASE_MIGRATION_SAFETY_PROCESS_V1.md](./engineering/SUPABASE_MIGRATION_SAFETY_PROCESS_V1.md) — processo fail-closed para identidade, preflight, shadow, RLS, performance, locks, backup e pós-validação de migrations.
+- [reports/LOCAL_MIGRATION_SEMANTIC_PREFLIGHT_2026-08-24.md](./reports/LOCAL_MIGRATION_SEMANTIC_PREFLIGHT_2026-08-24.md) — preflight semântico, remediação candidata em shadow e trava histórica `NO_GO` da task 60.
 - [ANALYTICS_PIPELINE_OPERATION_GOVERNANCE_V1.md](./ANALYTICS_PIPELINE_OPERATION_GOVERNANCE_V1.md) — mapa canônico pipeline → área → operação, estados de ausência/ambiguidade, filtros server-side e reconciliação por operação.
 - [ANALYTICS_MRR_GOALS_FOUNDATION_V1.md](./ANALYTICS_MRR_GOALS_FOUNDATION_V1.md)
 - [ANALYTICS_FINANCE_DOMAIN_AUDIT_V1.md](./ANALYTICS_FINANCE_DOMAIN_AUDIT_V1.md) — fonte OMIE, datas, posição atual, recebido, vencido, aging, cobertura e limitações do Financeiro; vinculado à task `R1-INTEGRATION-CALL-QUALITY-2026-08-21` para qualidade das chamadas e refresh dos painéis.

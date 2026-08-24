@@ -1,5 +1,20 @@
 # Estado corrente — Interface High-Density V1 — 2026-08-03
 
+## SUPABASE-MIGRATION-SAFETY-PROCESS-V1 — 2026-08-24
+
+- **Tipo:** governança documental e procedimento fail-closed; sem alteração de
+  runtime, banco, migration aplicada, secret ou serviço externo.
+- **Escopo:** transformar a ocorrência da task 60 em guardrails permanentes para
+  identidade do alvo, backup/PITR, proveniência, preflight semântico, shadow,
+  ACL, RLS, cross-tenant, performance, locks e pós-validação.
+- **Documento:** `docs/engineering/SUPABASE_MIGRATION_SAFETY_PROCESS_V1.md`.
+- **Estado real registrado:** `historical_no_go` permanece preservado; o
+  candidato local/shadow foi validado; o remoto continua desconhecido e sem
+  alteração.
+- **Validação:** `npm run docs:validate` e `git diff --check`.
+- **Riscos restantes:** diagnóstico remoto ainda não realizado; qualquer janela
+  remota exige autorização e evidência próprias.
+
 ## Governança executável de pipeline, área e operação — 2026-08-22
 
 - **Tipo:** implementação backend/frontend e documentação de governança do Analytics; sem chamadas externas ou escrita em integrações.

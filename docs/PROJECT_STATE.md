@@ -1,4 +1,16 @@
 # Estado corrente do checkout canônico — Interface High-Density V1 — 2026-08-03
+## Estado atual da task 60 e das migrations — 2026-08-24
+
+- A task `LOCAL-MIGRATION-HISTORY-REPAIR-2026-08-23` permanece `BLOCKED` por
+  exceção histórica. O gate global é `NO_GO`; o finding não é apagado nem
+  reinterpretado como aprovação retroativa.
+- O preflight semântico, a remediação candidata em shadow e o rebuild local
+  autorizado foram concluídos com revisão independente. `candidate_go` não
+  altera `historical_no_go`.
+- O banco remoto nunca foi auditado nem alterado nesta frente. Seu estado é
+  desconhecido e não deve ser inferido a partir do banco local.
+- O processo obrigatório para futuras migrations está em
+  `docs/engineering/SUPABASE_MIGRATION_SAFETY_PROCESS_V1.md`.
 
 ## Metodologia e proveniência dos KPIs — 2026-08-22
 
