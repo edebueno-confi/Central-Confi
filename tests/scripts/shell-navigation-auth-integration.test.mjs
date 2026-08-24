@@ -34,6 +34,25 @@ test('menu publicado e guard compartilham a fonte de release para administrador'
   assert.equal(destinations.includes('/support/queue'), false);
 });
 
+test('dashboard_viewer recebe somente recepção e Dashboard publicado', () => {
+  const context = { roles: ['dashboard_viewer'], screenKeys: [], hasReceptionAccess: true };
+  const navigation = buildMinimalNavigation({
+    pathname: '/inicio',
+    permissions: {
+      isPlatformAdmin: false,
+      roles: context.roles,
+      screenKeys: [],
+      hasDashboardViewerAccess: true,
+    },
+  });
+  const destinations = navigation.flatMap((section) => section.items.map((item) => item.to));
+
+  assert.deepEqual(destinations, ['/inicio', '/admin/analytics']);
+  assert.equal(canOpenInternalRoute('/admin/analytics', context), true);
+  assert.equal(canOpenInternalRoute('/admin/settings', context), false);
+  assert.equal(canOpenInternalRoute('/admin/knowledge', context), false);
+});
+
 test('perfil sem grants recebe somente a recepção e não ganha rota por texto ou role implícito', () => {
   const context = { roles: [], screenKeys: [], hasReceptionAccess: true };
   const navigation = buildMinimalNavigation({ pathname: '/inicio', permissions: { isPlatformAdmin: false, roles: [], screenKeys: [] } });

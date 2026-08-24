@@ -32,6 +32,29 @@ test('rota solicitada sem autorização retorna fallback seguro sem encerrar ses
   assert.equal(getDefaultInternalLandingRoute(viewer), '/inicio');
 });
 
+test('dashboard_viewer tem o Dashboard no menu quando o grant de tela ainda não foi materializado', () => {
+  const viewer = {
+    ...admin,
+    roles: ['dashboard_viewer'],
+    hasReceptionAccess: true,
+  };
+  const navigation = buildMinimalNavigation({
+    pathname: '/inicio',
+    permissions: {
+      isPlatformAdmin: false,
+      roles: viewer.roles,
+      screenKeys: [],
+      hasDashboardViewerAccess: true,
+    },
+  });
+  const destinations = navigation.flatMap((section) => section.items.map((item) => item.to));
+
+  assert.equal(canOpenInternalRoute('/admin/analytics', viewer), true);
+  assert.equal(destinations.includes('/admin/analytics'), true);
+  assert.deepEqual(destinations, ['/inicio', '/admin/analytics']);
+  assert.equal(destinations.includes('/admin/settings'), false);
+});
+
 test('rota não publicada permanece negada mesmo para administrador', () => {
   assert.equal(canOpenInternalRoute('/support/queue', admin), false);
 });

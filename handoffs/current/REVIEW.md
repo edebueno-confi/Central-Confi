@@ -3,6 +3,6 @@
 - State: IDLE
 - Reviewer active: Sentinel
 - Veredito do último lote: APPROVED, arquivado em
-  `handoffs/archive/REMOTE-SUPABASE-SECURITY-RLS-PERFORMANCE-AUDIT-2026-08-24/`.
+  `handoffs/archive/ANALYTICS-DASHBOARD-ACCESS-GATE-2026-08-24/`.
 
 Nenhuma revisão ativa.

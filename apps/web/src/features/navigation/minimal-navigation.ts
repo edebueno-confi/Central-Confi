@@ -76,13 +76,17 @@ const RELEASE_SETTINGS_SUBMENU: ReadonlyArray<{
  */
 function buildReleaseNavigation({
   isPlatformAdmin,
+  isDashboardViewer,
   screenKeys,
 }: {
   isPlatformAdmin: boolean;
+  isDashboardViewer: boolean;
   screenKeys: InternalScreenKey[];
 }): MinimalNavigationSection[] {
   const allows = (screenKey: InternalScreenKey) =>
-    isScreenPublishedInRelease(screenKey) && (isPlatformAdmin || screenKeys.includes(screenKey));
+    isScreenPublishedInRelease(screenKey) &&
+    (isPlatformAdmin || screenKeys.includes(screenKey) ||
+      (screenKey === 'analytics' && isDashboardViewer));
 
   const sections: MinimalNavigationSection[] = [];
 
@@ -214,7 +218,7 @@ export function buildMinimalNavigation({
   // release manifest intersected with the profile's permissions. The full
   // navigation below is preserved untouched for the complete system.
   if (getReleaseSurfaceMode() === 'first-release') {
-    return buildReleaseNavigation({ isPlatformAdmin, screenKeys });
+    return buildReleaseNavigation({ isDashboardViewer, isPlatformAdmin, screenKeys });
   }
 
   if (isDashboardViewer) {
