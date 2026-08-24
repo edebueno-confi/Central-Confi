@@ -9,7 +9,7 @@
 - Coordinator: Codex Orchestrator
 - Agent coordination: REVIEW_ACTIVE
 - Base SHA: 27ca9d8636c9a93ba50b9714291eb1910d3207f6
-- Implementation SHA: UNCOMMITTED_WORKTREE
+- Implementation SHA: 1099ff25
 - Allowlist inicial: `scripts/local-qa/assert-local-schema-parity.mjs`,
   `tests/scripts/local-schema-parity.test.mjs`,
   `docs/reports/LOCAL_MIGRATION_PROVENANCE_STATIC_AUDIT_2026-08-24.md` e os
