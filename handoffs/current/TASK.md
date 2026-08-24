@@ -2,11 +2,10 @@
 
 - State: IDLE
 - Owner: Forge
-- Role: EXECUTOR
 - Reviewer active: Sentinel
-- Review mode: SENTINEL_REQUIRED
 - Coordinator: Codex Orchestrator
 - Agent coordination: IDLE
-- Último lote finalizado: LOCAL-MIGRATION-PROVENANCE-STATIC-AUDIT-2026-08-24
-- Resultado: APPROVED pelo Sentinel e finalizado localmente.
-- Próxima promoção: somente após dependências e autorização canônica da fila.
+- Resume condition: promover somente a próxima task elegível após verificar dependências
+
+Nenhuma task ativa em `handoffs/current/`. O último lote foi arquivado após
+aprovação independente do Sentinel.
