@@ -5,5 +5,5 @@
 - Reviewer active: Sentinel
 - Agent coordination: IDLE
 
-Último lote arquivado: `ANALYTICS-AUTHENTICATED-RUNTIME-QA-2026-08-24`.
+Último lote arquivado: `LOCAL-AUTH-CLOCK-SKEW-DIAGNOSIS-2026-08-24`.
 Não há implementação ativa neste handoff.
