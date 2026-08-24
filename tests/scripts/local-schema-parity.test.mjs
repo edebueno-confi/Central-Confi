@@ -111,5 +111,51 @@ test('não comprova origem apenas por presença da versão no histórico', () =>
   assert.equal(result.ok, false);
   assert.equal(result.objectEvidence[0].versionPresent, true);
   assert.equal(result.objectEvidence[0].originVerified, false);
+  assert.equal(result.objectEvidence[0].classification, 'EXECUTABLE_OBJECT_WITHOUT_ORIGIN');
   assert.equal(result.findings[0].code, 'EXECUTABLE_OBJECT_WITHOUT_ORIGIN');
+});
+
+test('separa exceção histórica aplicada de preflight comprovado sem liberar o gate', () => {
+  const result = buildParityResult({
+    filesystemVersions: ['20260822220000', '20260823100000'],
+    appliedVersions: ['20260822220000', '20260823100000'],
+    expectedObjects: [],
+    migrationSafety: ['20260822220000', '20260823100000'].map((version) => ({
+      version,
+      safe: false,
+      applied: true,
+      preflightProven: false,
+      historicalException: true,
+      classification: 'HISTORICAL_EXCEPTION_APPLIED_WITHOUT_PREFLIGHT_PROOF',
+    })),
+  });
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.findings.map((finding) => finding.classification), [
+    'HISTORICAL_EXCEPTION_APPLIED_WITHOUT_PREFLIGHT_PROOF',
+    'HISTORICAL_EXCEPTION_APPLIED_WITHOUT_PREFLIGHT_PROOF',
+  ]);
+  assert.deepEqual(result.findings.map((finding) => finding.code), [
+    'MIGRATION_PREFLIGHT_BLOCKED',
+    'MIGRATION_PREFLIGHT_BLOCKED',
+  ]);
+  assert.match(result.findings[0].detail, /20260822220000/);
+  assert.match(result.findings[1].detail, /20260823100000/);
+});
+
+test('não classifica preflight parser aprovado como exceção histórica', () => {
+  const result = buildParityResult({
+    filesystemVersions: ['20260822190000'],
+    appliedVersions: ['20260822190000'],
+    expectedObjects: [],
+    migrationSafety: [{
+      version: '20260822190000',
+      safe: true,
+      applied: true,
+      preflightProven: true,
+      historicalException: false,
+      classification: 'PREFLIGHT_PARSER_PASS',
+    }],
+  });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.findings, []);
 });

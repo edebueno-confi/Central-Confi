@@ -11,6 +11,11 @@ export const PENDING_MIGRATION_PREFIXES = Object.freeze([
   '20260823100000',
 ]);
 
+export const HISTORICAL_EXCEPTION_MIGRATIONS = Object.freeze([
+  '20260822220000',
+  '20260823100000',
+]);
+
 export const TARGET_OBJECTS = Object.freeze([
   { key: 'rpc_service_promote_omie_snapshot', signature: 'p_sync_run_id uuid', migration: '20260822190000' },
   { key: 'internal_organizational_screen_defaults', signature: 'table', migration: '20260822200000' },
@@ -74,11 +79,19 @@ export function buildParityResult({
     });
   }
   for (const safety of migrationSafety.filter((row) => row.safe === false)) {
+    const historicalException = safety.historicalException === true;
     findings.push({
       code: 'MIGRATION_PREFLIGHT_BLOCKED',
       severity: 'HIGH',
-      detail: safety.version,
-      action: 'revisar o SQL da migration; não aplicar enquanto houver DO com SQL dinâmico não analisável',
+      detail: historicalException
+        ? `${safety.version}: HISTORICAL_EXCEPTION_APPLIED_WITHOUT_PREFLIGHT_PROOF`
+        : `${safety.version}: MIGRATION_PREFLIGHT_BLOCKED`,
+      classification: historicalException
+        ? 'HISTORICAL_EXCEPTION_APPLIED_WITHOUT_PREFLIGHT_PROOF'
+        : 'MIGRATION_PREFLIGHT_BLOCKED',
+      action: historicalException
+        ? 'manter a exceção local documentada; não tratar como aprovação técnica nem reaplicar sem preflight comprovado'
+        : 'revisar o SQL da migration; não aplicar enquanto houver DO com SQL dinâmico não analisável',
     });
   }
 
@@ -120,8 +133,10 @@ export function buildParityResult({
     historyOnlyMigrations: historyOnly,
     objectEvidence: observedObjects.map((row) => ({
       key: row.key,
+      migration: row.migration ?? null,
       versionPresent: row.versionPresent === true,
       originVerified: row.originVerified === true,
+      classification: classifyObjectEvidence(row),
     })),
     findings,
   };
@@ -144,6 +159,12 @@ function stripSqlComments(sql) {
 
 function isDestructiveSql(sql) {
   return DESTRUCTIVE_SQL_PATTERNS.some((pattern) => pattern.test(sql));
+}
+
+function classifyObjectEvidence(row) {
+  if (row.versionPresent === true && row.originVerified === true) return 'VERIFIED_ORIGIN';
+  if (row.versionPresent === true) return 'EXECUTABLE_OBJECT_WITHOUT_ORIGIN';
+  return 'VERSION_NOT_PRESENT';
 }
 
 function stripPersistentFunctionBodies(sql, fileName) {
@@ -242,25 +263,54 @@ function readOriginEvidence(migrationDirectory, filesystemVersions, appliedVersi
       versionPresent,
       declarationMatch,
       originVerified: versionPresent && declarationMatch,
+      verificationBasis: versionPresent && declarationMatch
+        ? 'version_present_and_migration_declaration_match'
+        : 'not_verified',
     };
   });
 }
 
-function readMigrationSafety(migrationDirectory) {
+function readMigrationSafety(migrationDirectory, appliedVersions = []) {
+  const applied = new Set(appliedVersions);
   return PENDING_MIGRATION_PREFIXES.map((version) => {
     const fileName = readdirSync(migrationDirectory).find((candidate) => parseMigrationVersion(candidate) === version);
     if (!fileName) {
-      return { version, filePresent: false, destructiveSql: null };
+      return {
+        version,
+        filePresent: false,
+        applied: applied.has(version),
+        safe: false,
+        preflightProven: false,
+        historicalException: false,
+        classification: 'MIGRATION_FILE_MISSING',
+        destructiveSql: null,
+      };
     }
     const filePath = join(migrationDirectory, fileName);
     try {
       assertNoDestructiveMigration(readFileSync(filePath, 'utf8'), fileName);
-      return { version, filePresent: true, safe: true, destructiveSql: false };
-    } catch (error) {
       return {
         version,
         filePresent: true,
+        applied: applied.has(version),
+        safe: true,
+        preflightProven: true,
+        historicalException: false,
+        classification: 'PREFLIGHT_PARSER_PASS',
+        destructiveSql: false,
+      };
+    } catch (error) {
+      const historicalException = HISTORICAL_EXCEPTION_MIGRATIONS.includes(version) && applied.has(version);
+      return {
+        version,
+        filePresent: true,
+        applied: applied.has(version),
         safe: false,
+        preflightProven: false,
+        historicalException,
+        classification: historicalException
+          ? 'HISTORICAL_EXCEPTION_APPLIED_WITHOUT_PREFLIGHT_PROOF'
+          : 'MIGRATION_PREFLIGHT_BLOCKED',
         destructiveSql: true,
         reason: error.message,
       };
@@ -307,9 +357,11 @@ where to_regprocedure('public.rpc_analytics_timeseries_by_operation(text,date,da
   const evidence = new Map(originEvidence.map((row) => [row.key, row]));
   return result.rows.map((row) => ({
     key: String(row.key),
+    migration: evidence.get(String(row.key))?.migration ?? null,
     signature: String(row.signature ?? ''),
     versionPresent: evidence.get(String(row.key))?.versionPresent === true,
     originVerified: evidence.get(String(row.key))?.originVerified === true,
+    verificationBasis: evidence.get(String(row.key))?.verificationBasis ?? 'not_verified',
   }));
 }
 
@@ -320,7 +372,7 @@ export function runGate({ cwd = process.cwd(), migrationDirectory = join(cwd, 's
   }
   const filesystemVersions = listFilesystemMigrations(migrationDirectory);
   const appliedVersions = readAppliedVersions();
-  const migrationSafety = readMigrationSafety(migrationDirectory);
+  const migrationSafety = readMigrationSafety(migrationDirectory, appliedVersions);
   const originEvidence = readOriginEvidence(migrationDirectory, filesystemVersions, appliedVersions);
   const observedObjects = readObservedObjects(originEvidence);
   const result = buildParityResult({ filesystemVersions, appliedVersions, observedObjects, migrationSafety });

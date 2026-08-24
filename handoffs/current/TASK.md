@@ -7,5 +7,6 @@
 - Review mode: SENTINEL_REQUIRED
 - Coordinator: Codex Orchestrator
 - Agent coordination: IDLE
-- Último lote finalizado: ANALYTICS-OVERVIEW-OPERATION-FILTER-REGRESSION-2026-08-23
+- Último lote finalizado: LOCAL-MIGRATION-PREFLIGHT-RECONCILIATION-2026-08-24
+- Resultado: APPROVED pelo Sentinel e arquivado localmente.
 - Próxima promoção: somente após dependências e autorização canônica da fila.
