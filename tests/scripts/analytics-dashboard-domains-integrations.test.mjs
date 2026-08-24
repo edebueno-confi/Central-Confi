@@ -29,9 +29,9 @@ test('cobertura distingue contrato publicado de lacuna de integração', () => {
   assert.match(coverage, /Publicado/);
   assert.match(coverage, /Cobertura parcial/);
   assert.match(coverage, /Indisponível/);
-  assert.match(executive, /Atividades · reuniões, tarefas, ligações e e-mails/);
-  assert.match(executive, /Conversas e chat/);
-  assert.match(executive, /Pagar, centros de custo, projetos e contratos/);
+  assert.doesNotMatch(executive, /Atividades · reuniões, tarefas, ligações e e-mails/);
+  assert.doesNotMatch(executive, /Conversas e chat/);
+  assert.doesNotMatch(executive, /Pagar, centros de custo, projetos e contratos/);
   assert.doesNotMatch(executive, /meetingss*=s*0|taskss*=s*0|conversationss*=s*0/);
 });
 

@@ -28,14 +28,12 @@ import {
 import { resolveAnalyticsPeriod } from "./analytics-periods";
 import {
   buildExecutiveExceptions,
-  rankExecutivePipelines,
 } from "./analytics-executive";
 import { analyticsHref } from "./analytics-navigation";
 import { AnalyticsBoardLimitations, AnalyticsKpiBoard, type BoardBand } from "./AnalyticsKpiBoard";
-import { AnalyticsDataCoveragePanel, analyticsCoverageStatus, type AnalyticsCoverageItem } from './AnalyticsDataCoveragePanel';
 import { AnalyticsTrendPanel } from './AnalyticsTrendPanel';
 import { readKpi } from './analytics-kpi-contract.mjs';
-import { buildExecutiveIntegrityLine, buildOperationKpisFromSettledLoads, buildOperationPeriodMetrics, buildUnavailableCeoSnapshot, buildUnavailableOperationKpiPayload, getOverviewQueueMetricDefinitions, mergeOperationKpiPayload } from './analytics-ceo-snapshot.mjs';
+import { buildOperationKpisFromSettledLoads, buildOperationPeriodMetrics, buildUnavailableCeoSnapshot, buildUnavailableOperationKpiPayload, mergeOperationKpiPayload } from './analytics-ceo-snapshot.mjs';
 
 const STATUS_LABELS: Record<AnalyticsDataStatus, string> = {
   fresh: "Dados atualizados",
@@ -108,8 +106,6 @@ const EXECUTIVE_BANDS: BoardBand[] = [
   },
 ];
 
-const OVERVIEW_QUEUE_METRICS = getOverviewQueueMetricDefinitions();
-
 const EMPTY_OPERATION_SNAPSHOT: CsSnapshot = {
   kpis: { totalTickets: 0, openTickets: 0, closedTickets: 0, closedRate: 0 },
   byStatus: [],
@@ -141,9 +137,6 @@ export function AnalyticsCeoPage({
   onRetry,
   isDashboardViewer = false,
   sourceStatus,
-  canSyncSources = false,
-  syncSources,
-  syncBusy = false,
 }: AnalyticsPageProps) {
   const period = sharedPeriod ?? resolveAnalyticsPeriod("month");
   const [filters, setFilters] = useState<AnalyticsFilters>({
@@ -355,7 +348,6 @@ export function AnalyticsCeoPage({
   const currentSourceStatus = result.sourceStatus ?? sourceStatus;
   const state = currentSourceStatus ? analyticsGlobalToBlockState(currentSourceStatus) : data.state;
   const exceptions = buildExecutiveExceptions(data, { operationScoped });
-  const pipelines = rankExecutivePipelines(data.support.byPipeline);
   const snapshotUnavailable = [
     "empty",
     "never_synced",
@@ -422,7 +414,6 @@ export function AnalyticsCeoPage({
       filters={filters}
       domainCards={domainCards}
       exceptions={exceptions}
-      pipelines={pipelines}
       comparison={comparison}
       unavailable={hubspotUnavailable}
       financeUnavailable={omieUnavailable || Boolean(groupCompany)}
@@ -437,14 +428,9 @@ export function AnalyticsCeoPage({
       setMobileFiltersOpen={setMobileFiltersOpen}
       applyFilters={applyFilters}
       isDashboardViewer={isDashboardViewer}
-      canSyncSources={canSyncSources}
-      syncSources={syncSources}
-      syncBusy={syncBusy}
       configuredPipelines={configuredPipelines}
       groupCompany={groupCompany}
       onGroupCompanyChange={handleGroupCompanyChange}
-      coverageItems={buildCoverageItems(data, hubspotUnavailable, omieUnavailable, currentSourceStatus)}
-      canOpenGovernance={canSyncSources}
     />
   );
 }
@@ -581,7 +567,7 @@ function buildDomainCards(
     {
       key: "support",
       title: "Suporte",
-      description: OVERVIEW_QUEUE_METRICS.received.label,
+      description: "Atendimentos recebidos",
       value: hubspotUnavailable
         || (operationScoped && !operationPeriodAvailability.supportCreated)
         ? "Indisponível"
@@ -589,7 +575,7 @@ function buildDomainCards(
       details: hubspotUnavailable
         || (operationScoped && !operationPeriodAvailability.supportCreated)
         ? "Dados de suporte indisponíveis"
-        : `${OVERVIEW_QUEUE_METRICS.received.source} · ${operationScoped ? "recorte selecionado" : "período selecionado"}`,
+        : `${operationScoped ? "recorte selecionado" : "período selecionado"}`,
       href: analyticsHref("support"),
       state: hubspotState,
       tone: "cyan",
@@ -620,7 +606,6 @@ function ExecutiveHdCanvas({
   filters,
   domainCards,
   exceptions,
-  pipelines,
   comparison,
   unavailable,
   financeUnavailable,
@@ -635,14 +620,9 @@ function ExecutiveHdCanvas({
   setMobileFiltersOpen,
   applyFilters,
   isDashboardViewer,
-  canSyncSources,
-  syncSources,
-  syncBusy,
   configuredPipelines,
   groupCompany,
   onGroupCompanyChange,
-  coverageItems,
-  canOpenGovernance,
 }: {
   data: CeoSnapshot;
   executiveKpis: unknown;
@@ -650,7 +630,6 @@ function ExecutiveHdCanvas({
   filters: AnalyticsFilters;
   domainCards: DomainCard[];
   exceptions: ReturnType<typeof buildExecutiveExceptions>;
-  pipelines: ReturnType<typeof rankExecutivePipelines>;
   comparison: {
     revenue: MetricDelta;
     deals: MetricDelta;
@@ -670,34 +649,19 @@ function ExecutiveHdCanvas({
   setMobileFiltersOpen: (value: boolean) => void;
   applyFilters: (next: AnalyticsFilters) => void;
   isDashboardViewer: boolean;
-  canSyncSources: boolean;
-  syncSources?: () => void;
-  syncBusy: boolean;
   configuredPipelines: AnalyticsSourceConfig[];
   groupCompany: string;
   onGroupCompanyChange: (value: string) => void;
-  coverageItems: AnalyticsCoverageItem[];
-  canOpenGovernance: boolean;
 }) {
   const periodLabel = formatPeriod(filters);
-  const integrityLine = buildExecutiveIntegrityLine(data.dataQuality, operationScoped);
-  const qualityExpected = state?.coverage.expected;
-  const qualityReceived = state?.coverage.received;
-  const qualityLabel =
-    qualityExpected !== null &&
-    qualityExpected !== undefined &&
-    qualityReceived !== null &&
-    qualityReceived !== undefined
-      ? `${qualityReceived.toLocaleString("pt-BR")}/${qualityExpected.toLocaleString("pt-BR")} recebidos`
-      : "Cobertura não informada";
 
   return (
     <div className="gso-hd-canvas gso-pilot-summary gso-executive-canvas gso-visual-v1-overview" data-testid="executive-dashboard">
       <section className="gso-hd-context gso-overview-context" aria-labelledby="executive-heading">
         <div className="gso-overview-context__source">
-          <strong>Estado das fontes</strong>
+          <strong>Estado da leitura</strong>
           {state ? <AnalyticsStateBadge state={state} /> : null}
-          <span>HubSpot para operação; OMIE para Financeiro.</span>
+          <span>Os estados e as limitações aparecem junto aos indicadores.</span>
         </div>
         <div className="gso-overview-context__heading">
           <div className="gso-hd-title-row">
@@ -706,19 +670,6 @@ function ExecutiveHdCanvas({
           <p>
             Desempenho no período, posição atual e sinais que merecem contexto.
           </p>
-        </div>
-        <div className="gso-overview-context__action">
-          {canSyncSources && syncSources ? (
-            <button
-              type="button"
-              className="gso-hd-sync-action"
-              disabled={syncBusy}
-              onClick={syncSources}
-              data-testid="overview-sync-sources"
-            >
-              {syncBusy ? "Atualizando…" : "Sincronizar bases"}
-            </button>
-          ) : null}
         </div>
       </section>
 
@@ -856,7 +807,7 @@ function ExecutiveHdCanvas({
             comparison={comparison.conversion?.label}
           />
           <HdMetric
-            label={OVERVIEW_QUEUE_METRICS.received.label}
+            label="Atendimentos recebidos"
             value={
               unavailable || (operationScoped && !operationPeriodAvailability.supportCreated)
                 ? "Indisponível"
@@ -903,7 +854,7 @@ function ExecutiveHdCanvas({
             detail={financeUnavailable || unavailable ? "Reconciliação financeira indisponível" : "Inadimplência reconciliada"}
           />
           <HdMetric
-            label={OVERVIEW_QUEUE_METRICS.current.label}
+            label="Atendimentos em aberto"
             value={
               unavailable || (operationScoped && !operationCurrentAvailability.supportOpen)
                 ? "Indisponível"
@@ -935,31 +886,6 @@ function ExecutiveHdCanvas({
       </section>
 
       <div className="gso-hd-lower-grid">
-        <section
-          className="gso-hd-integrity"
-          aria-labelledby="integrity-heading"
-          data-testid="overview-governance-coverage"
-        >
-          <HdSectionHeading
-            id="integrity-heading"
-            title="Governança e cobertura"
-            description="Cobertura, reconciliação e responsáveis que afetam a confiança nos dados."
-          />
-          <div className="gso-hd-integrity-line">
-            <div>
-              <span className="gso-hd-integrity-value">{qualityLabel}</span>
-              <small>Cobertura geral do contrato</small>
-            </div>
-            <div>
-              <span className="gso-hd-integrity-value">{integrityLine.unmatchedFinanceTitles.value}</span>
-              <small>{integrityLine.unmatchedFinanceTitles.label}</small>
-            </div>
-            <div>
-              <span className="gso-hd-integrity-value">{integrityLine.supportUnassigned.value}</span>
-              <small>{integrityLine.supportUnassigned.label}</small>
-            </div>
-          </div>
-        </section>
         <section
           className="gso-hd-exceptions"
           aria-labelledby="exceptions-heading"
@@ -996,50 +922,11 @@ function ExecutiveHdCanvas({
         </section>
       </div>
 
-      <section className="gso-hd-pipelines" aria-labelledby="pipelines-heading" data-testid="overview-operational-queue">
-        <div className="gso-hd-section-heading-inline">
-          <HdSectionHeading
-            id="pipelines-heading"
-            title="Fila operacional"
-            description="Concentração de atendimentos por fila no período selecionado."
-          />
-          <span>
-            {pipelines.length
-              ? `${pipelines.length} encontrados`
-              : "Sem atividade"}
-          </span>
-        </div>
-        {pipelines.length ? (
-          <div className="gso-hd-pipeline-table">
-            <div className="gso-hd-pipeline-head">
-              <span>Pipeline</span>
-              <span>Domínio</span>
-              <span>Volume</span>
-            </div>
-            {pipelines.slice(0, 5).map((pipeline) => (
-              <Link
-                key={pipeline.id}
-                to={pipeline.href}
-                className="gso-hd-pipeline-row"
-              >
-                <strong>{pipeline.label}</strong>
-                <span>{pipeline.domain}</span>
-                <b>{formatCountLabel(pipeline.count, "ticket", "tickets")} →</b>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <p className="gso-hd-muted-row">
-            Nenhum pipeline de Suporte com atividade no período selecionado.
-          </p>
-        )}
-      </section>
-
       <section className="space-y-4" aria-labelledby="trends-heading">
         <HdSectionHeading
           id="trends-heading"
           title="Evolução por domínio"
-          description="Séries publicadas pelas fontes, com coorte, unidade e estado de cobertura explícitos."
+          description="Séries por domínio, com período, unidade e disponibilidade explicitados."
         />
         <div className="grid gap-4 lg:grid-cols-3">
           <AnalyticsTrendPanel domain="commercial" groupCompany={groupCompany} />
@@ -1048,28 +935,8 @@ function ExecutiveHdCanvas({
         </div>
       </section>
 
-      <AnalyticsDataCoveragePanel items={coverageItems} canOpenGovernance={canOpenGovernance} />
     </div>
   );
-}
-
-function buildCoverageItems(
-  data: CeoSnapshot,
-  hubspotUnavailable: boolean,
-  omieUnavailable: boolean,
-  sourceStatus?: AnalyticsSourceStatusPayload,
-): AnalyticsCoverageItem[] {
-  const hubspotStatus = analyticsCoverageStatus(hubspotUnavailable ? 'unavailable' : sourceStatus?.hubspot.status ?? 'fresh');
-  const omieStatus = analyticsCoverageStatus(omieUnavailable ? 'unavailable' : sourceStatus?.omie.status ?? 'fresh');
-  return [
-    { key: 'commercial', label: 'Comercial · funil, pipeline e responsáveis', source: 'HubSpot · Deals', status: hubspotStatus, detail: 'Negócios sincronizados e agregados por contratos comerciais publicados.' },
-    { key: 'customer-success', label: 'Customer Success · carteira, MRR e sinais', source: data.customerSuccess.source, status: analyticsCoverageStatus(data.customerSuccess.state.status), detail: data.customerSuccess.healthAvailable > 0 ? 'Há sinais de carteira retornados pela fonte; health score não é inferido.' : 'Carteira publicada sem health score operacional confirmado.' },
-    { key: 'support', label: 'Suporte · tickets, fila e tempos', source: 'HubSpot · Tickets', status: hubspotStatus, detail: 'Tickets permanecem separados de conversas e chat; os tempos só aparecem quando o campo foi observado.' },
-    { key: 'finance', label: 'Financeiro · recebíveis, aging e conciliação', source: 'OMIE · Contas a Receber', status: omieStatus, detail: 'Somente títulos OMIE atuais entram no snapshot; planilhas não são fallback.' },
-    { key: 'activities', label: 'Atividades · reuniões, tarefas, ligações e e-mails', source: 'HubSpot · Activities', status: 'unavailable', detail: 'Nenhum read model ou ingestão server-side validado para essas atividades; o painel não estima pendências.' },
-    { key: 'conversations', label: 'Conversas e chat', source: 'HubSpot · Conversations', status: 'unavailable', detail: 'Threads e mensagens ainda não estão conectadas ao Analytics. source_type de ticket não prova a existência de um chat.' },
-    { key: 'finance-scope', label: 'Pagar, centros de custo, projetos e contratos', source: 'OMIE · contratos ainda não publicados', status: 'unavailable', detail: 'A integração local publica recebíveis; não há contrato validado para ampliar este recorte.' },
-  ];
 }
 
 function HdStatus({ state }: { state: AnalyticsBlockState }) {

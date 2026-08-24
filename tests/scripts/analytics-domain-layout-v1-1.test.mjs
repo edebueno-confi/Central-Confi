@@ -34,9 +34,9 @@ test('KPIs e gráficos compactos possuem semântica de leitura', () => {
   assert.match(charts, /CompactSummary/);
 });
 
-test('contexto executivo e logs de integraÃ§Ã£o permanecem localizados por Ã¡rea', () => {
+test('contexto executivo mantém o estado da leitura sem CTA de infraestrutura', () => {
   assert.match(ceo, /gso-overview-context__source/);
-  assert.match(ceo, /overview-sync-sources/);
+  assert.doesNotMatch(ceo, /overview-sync-sources|Sincronizar bases/);
   assert.match(frame, /AnalyticsExecutionMeta/);
   assert.match(commercial, /listHubspotSyncRuns/);
   assert.match(commercial, /provider="HubSpot"/);
@@ -48,7 +48,7 @@ test('header executivo usa a folha de alta densidade e quebra sem depender do sh
   assert.match(density, /\.gso-high-density-ui \.gso-overview-context \{[\s\S]*display: grid;/);
   assert.match(density, /\.gso-high-density-ui \.gso-overview-context__source \{/);
   assert.match(density, /\.gso-high-density-ui \.gso-overview-context__heading \{/);
-  assert.match(density, /\.gso-high-density-ui \.gso-overview-context__action \{/);
+  assert.doesNotMatch(density, /\.gso-high-density-ui \.gso-overview-context__action \{/);
   assert.match(density, /@media \(max-width: 760px\)[\s\S]*\.gso-high-density-ui \.gso-overview-context \{/);
   assert.match(density, /\.gso-high-density-ui \.gso-visual-v1-domain-frame \.gso-hd-domain-frame-header/);
 });

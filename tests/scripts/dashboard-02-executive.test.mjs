@@ -17,9 +17,9 @@ test('ranking de pipelines é determinístico e limitado a cinco', () => {
   assert.match(executive, /sort\(\(left, right\) => right\.ticketCount - left\.ticketCount/);
   assert.match(executive, /slice\(0, limit\)/);
   assert.match(executive, /limit = 5/);
-  assert.match(page, /Fila operacional/);
+  assert.doesNotMatch(page, /Fila operacional/);
   assert.match(page, /Atenção executiva/);
-  assert.match(page, /Governança e cobertura/);
+  assert.doesNotMatch(page, /Governança e cobertura/);
 });
 
 test('exceções distinguem qualidade de dados e risco operacional', () => {

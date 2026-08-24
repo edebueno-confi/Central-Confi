@@ -7,5 +7,5 @@
 - Review mode: SENTINEL_REQUIRED
 - Coordinator: Codex Orchestrator
 - Agent coordination: IDLE
-- Última task: LOCAL-SYNC-REPLAY-FOUNDATION-2026-08-24 — APPROVED e finalizada localmente.
-- Próximo passo: aguardar promoção válida da próxima task; não executar replay adicional sem autorização própria.
+- Última task: DASHBOARD-OVERVIEW-EXECUTIVE-SIMPLIFICATION-2026-08-24 — APPROVED e finalizada localmente.
+- Próximo passo: aguardar promoção válida da próxima task; não publicar remotamente.

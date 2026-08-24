@@ -87,9 +87,9 @@ test('o painel organiza por coorte, não por importância solta', () => {
   assert.match(grid, /A confiabilidade vive dentro do número/);
 });
 
-test('a fila operacional respeita a largura disponível no desktop', () => {
+test('o cabeçalho executivo usa somente título e estado da leitura', () => {
   assert.match(density, /@media \(min-width: 761px\)/);
-  assert.match(density, /gso-hd-pipeline-head,\s*\n\s*\.gso-high-density-ui \.gso-pilot-summary \.gso-hd-pipeline-row/);
-  assert.match(density, /grid-template-columns: minmax\(0, 1\.5fr\) minmax\(0, 1fr\) minmax\(4\.5rem, 0\.55fr\)/);
-  assert.match(density, /gso-hd-pipeline-row > \* \{\s*min-width: 0;/);
+  assert.match(density, /\.gso-high-density-ui \.gso-overview-context \{[\s\S]*grid-template-areas: 'heading source';/);
+  assert.doesNotMatch(density, /grid-template-areas: 'heading source action'/);
+  assert.doesNotMatch(density, /gso-overview-context__action/);
 });

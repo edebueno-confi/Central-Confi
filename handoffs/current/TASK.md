@@ -7,6 +7,6 @@
 - Review mode: SENTINEL_REQUIRED
 - Coordinator: Codex Orchestrator
 - Agent coordination: IDLE
-- Último lote finalizado: LOCAL-SYNC-REPLAY-FOUNDATION-2026-08-24
+- Último lote finalizado: DASHBOARD-OVERVIEW-EXECUTIVE-SIMPLIFICATION-2026-08-24
 - Resultado: APPROVED pelo Sentinel e arquivado localmente.
 - Próxima promoção: somente após dependências e autorização canônica da fila.

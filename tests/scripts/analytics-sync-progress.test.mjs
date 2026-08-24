@@ -16,14 +16,12 @@ test('identifica execução ativa sem confundir falha publicada com sincronizaç
   assert.equal(isAnalyticsSourceActive(source({ status: 'fresh', currentRunStatus: 'queued' })), true);
 });
 
-test('Visão Geral oferece o ciclo protegido sem criar uma regra paralela', () => {
+test('a sincronização permanece centralizada nas configurações', () => {
   assert.match(analyticsShell, /triggerSequentialAnalyticsSync/);
   assert.match(analyticsShell, /waitForAnalyticsSyncCompletion\('full'\)/);
   assert.match(analyticsShell, /areAnalyticsSourcesActive\(currentStatus, 'full'\)/);
   assert.match(analyticsShell, /canManageAnalyticsIntegration/);
-  assert.match(analyticsOverview, /data-testid="overview-sync-sources"/);
-  assert.match(analyticsOverview, /Sincronizar bases/);
-  assert.match(analyticsOverview, /canSyncSources/);
+  assert.doesNotMatch(analyticsOverview, /overview-sync-sources|Sincronizar bases|canSyncSources/);
 });
 
 test('polling respeita a fonte solicitada e o ciclo completo', () => {

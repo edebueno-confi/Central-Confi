@@ -19,11 +19,10 @@ test("Canvas executivo mantém as camadas gerenciais e as áreas publicadas", ()
     "gso-hd-ribbon",
     "gso-hd-current-strip",
     "gso-hd-domain-matrix",
-    "gso-hd-integrity",
     "gso-hd-exceptions",
-    "gso-hd-pipelines",
   ])
     assert.match(page, new RegExp(layer));
+  assert.doesNotMatch(page, /gso-hd-integrity|gso-hd-pipelines|Fila operacional|Governança e cobertura/);
   for (const domain of ["Comercial", "Customer Success", "Suporte", "Financeiro"])
     assert.match(page, new RegExp(domain));
   assert.match(page, /AnalyticsLoadingState/);

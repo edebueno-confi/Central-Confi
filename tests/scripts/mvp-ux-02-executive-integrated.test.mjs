@@ -10,7 +10,7 @@ const contract = fs.readFileSync('packages/contracts/src/analytics.ts', 'utf8');
 test('MVP-UX-02 mantém áreas executivas e une Produto/Desenvolvimento', () => {
   for (const key of ['commercial', 'customer_success', 'support', 'finance', 'product-development']) assert.match(domains, new RegExp(`key: '${key}'`));
   assert.match(page, /Customer Success/);
-  assert.match(page, /Fila operacional/);
+  assert.doesNotMatch(page, /Fila operacional|Governança e cobertura/);
 });
 
 test('Produto e Desenvolvimento permanecem fora da superfície publicada', () => {

@@ -2,12 +2,12 @@
 
 - State: IDLE
 - Owner: Forge
+- Role: EXECUTOR
 - Reviewer active: Sentinel
 - Review mode: SENTINEL_REQUIRED
+- Coordinator: Codex Orchestrator
 - Agent coordination: IDLE
-- Último lote: LOCAL-SYNC-REPLAY-FOUNDATION-2026-08-24
+- Último lote: DASHBOARD-OVERVIEW-EXECUTIVE-SIMPLIFICATION-2026-08-24
 - Resultado: finalizado localmente após APPROVED do Sentinel.
-- Limitação vigente: integrações externas, produção, browser autenticado,
-  RLS/cross-tenant servido, performance e promoção de snapshot permanecem não
-  comprovados; não há autorização para replay adicional, migration, SQL,
-  banco, push, merge, deploy ou publicação.
+- Limitações preservadas: QA visual autenticado, produção, RLS servido,
+  integrações externas e performance real permanecem não comprovados.
