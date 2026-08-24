@@ -40,7 +40,7 @@ test('as séries existentes preservam fonte backend e recorte operacional', () =
   assert.match(support, /AnalyticsTrendPanel domain="support" groupCompany=\{groupCompany\} excludedPipelineIds=\{excludedPipelineIds\}/);
   assert.match(commercial, /AnalyticsTrendPanel domain="commercial" groupCompany=\{groupCompany\} excludedPipelineIds=\{excludedPipelineIds\}/);
   assert.match(finance, /AnalyticsTrendPanel domain="finance"/);
-  assert.match(trendPanel, /getAnalyticsTimeseries\(domain, grain, undefined, groupCompany, excludedPipelineIds\)/);
+  assert.match(trendPanel, /getAnalyticsTimeseries\(domain, grain, undefined, groupCompany, effectiveExcludedPipelineIds\)/);
   assert.match(analyticsApi, /rpc_analytics_timeseries_by_operation/);
   assert.match(analyticsApi, /p_excluded_pipeline_ids: excludedPipelineIds/);
 });

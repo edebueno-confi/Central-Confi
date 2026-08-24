@@ -86,12 +86,12 @@ test('escopo de operação é espelhado nos read models HubSpot e limita domíni
   assert.match(executive, /<AnalyticsTrendPanel domain="support" groupCompany=\{groupCompany\} \/>/);
   assert.match(commercialPage, /<AnalyticsTrendPanel domain="commercial" groupCompany=\{groupCompany\} excludedPipelineIds=\{excludedPipelineIds\} \/>/);
   assert.match(supportPage, /<AnalyticsTrendPanel domain="support" groupCompany=\{groupCompany\} excludedPipelineIds=\{excludedPipelineIds\} \/>/);
-  assert.match(trendPanel, /getAnalyticsTimeseries\(domain, grain, undefined, groupCompany, excludedPipelineIds\)/);
+  assert.match(trendPanel, /getAnalyticsTimeseries\(domain, grain, undefined, groupCompany, effectiveExcludedPipelineIds\)/);
   assert.match(analyticsApi, /rpc_analytics_timeseries_by_operation/);
   assert.match(analyticsApi, /p_excluded_pipeline_ids: excludedPipelineIds/);
   assert.match(commercialPage, /<AnalyticsTrendPanel domain="commercial" groupCompany=\{groupCompany\} excludedPipelineIds=\{excludedPipelineIds\} \/>/);
   assert.match(supportPage, /<AnalyticsTrendPanel domain="support" groupCompany=\{groupCompany\} excludedPipelineIds=\{excludedPipelineIds\} \/>/);
-  assert.match(trendPanel, /excludedPipelineIds = \[\]/);
+  assert.match(trendPanel, /excludedPipelineIds = EMPTY_EXCLUDED_PIPELINE_IDS/);
   assert.match(timeseriesPipelineExclusionMigration, /set_analytics_pipeline_exclusion_scope/);
   assert.match(timeseriesPipelineExclusionMigration, /p_excluded_pipeline_ids text\[\]/);
   assert.match(timeseriesPipelineExclusionMigration, /pipeline_id <> all\(string_to_array/);

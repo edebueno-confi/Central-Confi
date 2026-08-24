@@ -9,14 +9,39 @@ export function AnalyticsFilters({ value, onApply, stageOptions, ownerOptions = 
   const [validation, setValidation] = useState<string | null>(null);
   const [preset, setPreset] = useState<AnalyticsPeriodPreset | ''>(() => matchAnalyticsPeriodPreset(value));
   const [mobileOpen, setMobileOpen] = useState(false);
-  useEffect(() => { setDraft(value); setPreset(matchAnalyticsPeriodPreset(value)); }, [value]);
-  const update = (key: keyof AnalyticsFilters, next: string) => setDraft((current) => ({ ...current, [key]: next }));
-  const apply = () => {
-    if (draft.from && draft.to && draft.from > draft.to) { setValidation('A data inicial precisa ser anterior ou igual à data final.'); return; }
-    setValidation(null); onApply(draft); setMobileOpen(false);
+  useEffect(() => {
+    const sameValue = (Object.keys(value) as (keyof AnalyticsFilters)[]).every((key) => value[key] === draft[key]);
+    if (!sameValue) setDraft(value);
+    const nextPreset = matchAnalyticsPeriodPreset(value);
+    if (nextPreset !== preset) setPreset(nextPreset);
+  }, [draft, preset, value]);
+  const emit = (next: AnalyticsFilters) => {
+    if (next.from && next.to && next.from > next.to) {
+      setValidation('A data inicial precisa ser anterior ou igual à data final.');
+      return false;
+    }
+    setValidation(null);
+    onApply(next);
+    return true;
   };
-  const clear = () => { const next = { from: '', to: '', ownerId: '', stageId: '', priority: '' }; setDraft(next); setValidation(null); onApply(next); setMobileOpen(false); };
-  const applyPreset = (nextPreset: AnalyticsPeriodPreset) => { setPreset(nextPreset); const period = resolveAnalyticsPeriod(nextPreset); setDraft((current) => ({ ...current, ...period })); setValidation(null); onApply({ ...draft, ...period }); setMobileOpen(false); };
+  const update = (key: keyof AnalyticsFilters, next: string) => {
+    const nextDraft = { ...draft, [key]: next };
+    setDraft(nextDraft);
+    emit(nextDraft);
+  };
+  const clear = () => {
+    const next = { ...draft, from: '', to: '', ownerId: '', stageId: '', priority: '' };
+    setDraft(next);
+    setValidation(null);
+    onApply(next);
+    setMobileOpen(false);
+  };
+  const applyPreset = (nextPreset: AnalyticsPeriodPreset) => {
+    setPreset(nextPreset);
+    const next = { ...draft, ...resolveAnalyticsPeriod(nextPreset) };
+    setDraft(next);
+    if (emit(next)) setMobileOpen(false);
+  };
   const controlClass = 'h-9 rounded-md border border-[color:var(--minimal-border)] bg-[color:var(--minimal-surface)] px-2.5 text-sm font-normal text-[color:var(--minimal-text)] outline-none transition focus:border-[color:var(--minimal-text-secondary)] focus:ring-2 focus:ring-[color:var(--minimal-border-strong)]';
   const activeCount = [draft.from, draft.to, draft.ownerId, draft.stageId, draft.priority].filter(Boolean).length;
   return <section className="gso-analytics-filter-bar rounded-xl border border-[color:var(--minimal-border)] bg-[color:var(--minimal-surface-muted)] px-4 py-3.5" aria-label="Filtros da análise">
@@ -29,7 +54,7 @@ export function AnalyticsFilters({ value, onApply, stageOptions, ownerOptions = 
       {stageOptions.length > 0 ? <FilterField label={stageLabel}><select value={draft.stageId} onChange={(event) => update('stageId', event.target.value)} className={`${controlClass} max-w-52`}><option value="">Todos</option>{stageOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></FilterField> : null}
       {priorityOptions.length > 0 ? <FilterField label="Prioridade"><select value={draft.priority} onChange={(event) => update('priority', event.target.value)} className={controlClass}><option value="">Todas</option>{priorityOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></FilterField> : null}
       {extraFields}
-      <div className="flex items-center gap-2"><button type="button" onClick={apply} className="h-9 rounded-md bg-[color:var(--minimal-text)] px-3 text-sm font-medium text-[color:var(--minimal-surface)] transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--minimal-border-strong)]">Aplicar</button><button type="button" onClick={clear} className="h-9 rounded-md border border-[color:var(--minimal-border-strong)] px-3 text-sm text-[color:var(--minimal-text)] transition hover:bg-[color:var(--minimal-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--minimal-border-strong)]">Limpar</button></div>
+      <div className="flex items-center gap-2"><button type="button" onClick={clear} className="h-9 rounded-md border border-[color:var(--minimal-border-strong)] px-3 text-sm text-[color:var(--minimal-text)] transition hover:bg-[color:var(--minimal-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--minimal-border-strong)]">Limpar</button></div>
     </div>
     <p className="mt-2.5 text-xs text-[color:var(--minimal-text-tertiary)]">O histórico permanece armazenado; os filtros alteram apenas a leitura desta análise.</p>
     {validation ? <p role="alert" className="mt-1 text-xs text-[color:var(--minimal-danger-text)]">{validation}</p> : null}

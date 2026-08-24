@@ -2,7 +2,7 @@
 
 - State: IDLE
 - Reviewer active: Sentinel
-- Veredito do último lote: APPROVED, arquivado em
-  `handoffs/archive/ANALYTICS-DASHBOARD-ACCESS-GATE-2026-08-24/`.
-
-Nenhuma revisão ativa.
+- Review mode: SENTINEL_REQUIRED
+- Último veredito: APPROVED para ANALYTICS-REACTIVE-FILTERS-KPI-LOOP-2026-08-24
+- Evidência completa: `handoffs/archive/ANALYTICS-REACTIVE-FILTERS-KPI-LOOP-2026-08-24/REVIEW.md`
+- Próximo passo: aguardar nova task corrente

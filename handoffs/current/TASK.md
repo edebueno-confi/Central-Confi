@@ -1,5 +1,6 @@
 # TASK
 
+- Task: IDLE
 - State: IDLE
 - Owner: Forge
 - Role: EXECUTOR
@@ -7,7 +8,5 @@
 - Review mode: SENTINEL_REQUIRED
 - Coordinator: Codex Orchestrator
 - Agent coordination: IDLE
-- Resume condition: selecionar e promover somente a próxima task elegível da fila.
-
-Nenhuma task ativa em `handoffs/current/`. O último lote foi arquivado após
-aprovação independente do Sentinel.
+- Review verdict: último lote ANALYTICS-REACTIVE-FILTERS-KPI-LOOP-2026-08-24 APPROVED e arquivado
+- Próximo passo: aguardar promoção canônica da próxima task elegível

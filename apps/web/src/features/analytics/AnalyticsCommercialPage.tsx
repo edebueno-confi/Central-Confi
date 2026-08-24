@@ -32,6 +32,8 @@ import { AnalyticsTrendPanel } from './AnalyticsTrendPanel';
 import { AnalyticsCommercialComparison } from './AnalyticsCommercialComparison';
 import { resolvePreviousComparablePeriod } from './analytics-commercial-comparison.mjs';
 import { buildCommercialStageQueryPlan, composeCommercialStageView, hasCompatibleAnalyticsStage, selectedAnalyticsPipelineIds } from './analytics-stage-scope.mjs';
+import { buildAnalyticsQueryKey } from './analytics-query-key';
+import { createAnalyticsLoadingState } from './analytics-reactive-state.mjs';
 
 // Indicadores com coorte declarada, publicados pelo read model de KPI.
 // Pipeline e posicao na data de corte; criados usam data de criacao; ganhos,
@@ -87,6 +89,16 @@ export function AnalyticsCommercialPage({ sharedPeriod, onSharedPeriodChange, sh
   const [configuredPipelines, setConfiguredPipelines] = useState<AnalyticsSourceConfig[]>([]);
   const [excludedPipelineIds, setExcludedPipelineIds] = useState<string[]>([]);
   const [groupCompany, setGroupCompany] = useState(sharedOperation ?? '');
+  const queryKey = buildAnalyticsQueryKey({
+    domain: 'commercial',
+    period: filters,
+    operation: groupCompany,
+    excludedPipelineIds,
+    ownerId: filters.ownerId,
+    stageId: filters.stageId,
+    priority: filters.priority,
+    grain: 'position',
+  });
   const [latestHubspotRun, setLatestHubspotRun] = useState<import('./analytics-model').SyncRun | null>(null);
   const [kpiPayload, setKpiPayload] = useState<unknown>(null);
   const [previousKpiPayload, setPreviousKpiPayload] = useState<unknown>(null);
@@ -108,9 +120,10 @@ export function AnalyticsCommercialPage({ sharedPeriod, onSharedPeriodChange, sh
 
   useEffect(() => {
     let cancelled = false;
-    setState((current) => current.phase === 'ready' ? current : { phase: 'loading' });
+    setState(createAnalyticsLoadingState());
     setKpiPayload(null);
     setPreviousKpiPayload(null);
+    setComparisonPhase('loading');
 
     void getCommercialKpisV2(filters, groupCompany || null)
       .then((payload) => { if (!cancelled) setKpiPayload(payload); })
@@ -161,7 +174,10 @@ export function AnalyticsCommercialPage({ sharedPeriod, onSharedPeriodChange, sh
     return () => {
       cancelled = true;
     };
-  }, [filters, excludedPipelineIds, groupCompany]);
+    // queryKey contém todas as dimensões semânticas usadas por esta leitura;
+    // referências novas de filtros não devem disparar uma segunda consulta.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryKey]);
 
   if (state.phase === 'loading') {
     return <AnalyticsHdDomainFrame title="Comercial" description="Receita, pipeline e conversão para decisão comercial." source="HubSpot · Deals"><AnalyticsLoadingState title="Carregando comercial" description="O Gênio está consultando os negócios sincronizados do HubSpot." /></AnalyticsHdDomainFrame>;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { MinimalState } from '../../components/minimal-states';
 import { getFinanceSnapshot, getFinanceSourceStatus, listOmieSyncRuns } from './analytics-api';
@@ -8,6 +8,8 @@ import { ANALYTICS_PERIOD_OPTIONS, resolveAnalyticsPeriod, type AnalyticsPeriodP
 import { AnalyticsExecutionMeta, AnalyticsHdDomainFrame } from './AnalyticsHdDomainFrame';
 import { AnalyticsDomainTabs } from './AnalyticsDomainTabs';
 import { AnalyticsTrendPanel } from './AnalyticsTrendPanel';
+import { buildAnalyticsQueryKey } from './analytics-query-key';
+import { createAnalyticsLoadingState } from './analytics-reactive-state.mjs';
 
 type FinanceFilters = AnalyticsFilters & { clientQuery: string };
 
@@ -76,6 +78,22 @@ export function AnalyticsFinancePage({ sharedPeriod, onSharedPeriodChange, share
   const [preset, setPreset] = useState<AnalyticsPeriodPreset | ''>('month');
   const [showReconciliationDetails, setShowReconciliationDetails] = useState(false);
   const [subTab, setSubTab] = useState('posicao');
+  const [validation, setValidation] = useState<string | null>(null);
+  const clientSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const queryKey = buildAnalyticsQueryKey({
+    domain: 'finance',
+    period: filters,
+    operation: sharedOperation,
+    ownerId: filters.ownerId,
+    stageId: filters.stageId,
+    priority: filters.priority,
+    grain: 'position',
+    search: filters.clientQuery,
+  });
+
+  useEffect(() => () => {
+    if (clientSearchTimer.current) clearTimeout(clientSearchTimer.current);
+  }, []);
 
   useEffect(() => {
     setFilters((current) => current.from === period.from && current.to === period.to ? current : { ...current, ...period });
@@ -84,27 +102,47 @@ export function AnalyticsFinancePage({ sharedPeriod, onSharedPeriodChange, share
 
   useEffect(() => {
     let cancelled = false;
+    setState(createAnalyticsLoadingState());
     if (sharedOperation) {
       setState({ phase: 'error', message: 'O Financeiro ainda não publica dimensão de operação.' });
       return () => { cancelled = true; };
     }
-    setState((current) => current.phase === 'ready' ? current : { phase: 'loading' });
     getFinanceSnapshot(filters, filters.clientQuery)
       .then((snapshot) => { if (!cancelled) setState({ phase: 'ready', snapshot }); })
       .catch((error) => { if (!cancelled) setState({ phase: 'error', message: error instanceof Error ? error.message : 'Falha ao carregar o financeiro.' }); });
     return () => { cancelled = true; };
-  }, [filters, sharedOperation]);
+    // queryKey contém período, operação, situação, aging e busca do cliente.
+    // A dependência semântica evita consultas duplicadas por nova referência.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryKey]);
 
   useEffect(() => { getFinanceSourceStatus().then(setFinanceSourceStatus).catch(() => setFinanceSourceStatus(null)); }, []);
   useEffect(() => { listOmieSyncRuns().then((runs) => setLatestOmieRun(runs[0] ?? null)).catch(() => setLatestOmieRun(null)); }, []);
 
+  const updateDraft = (patch: Partial<FinanceFilters>) => {
+    const next = { ...draft, ...patch };
+    setDraft(next);
+    if (next.from && next.to && next.from > next.to) {
+      setValidation('A data inicial precisa ser anterior ou igual à data final.');
+      return;
+    }
+    setValidation(null);
+    if ('clientQuery' in patch) {
+      if (clientSearchTimer.current) clearTimeout(clientSearchTimer.current);
+      clientSearchTimer.current = setTimeout(() => {
+        setFilters((current) => ({ ...current, clientQuery: next.clientQuery }));
+      }, 300);
+      return;
+    }
+    setFilters(next);
+    if ('from' in patch || 'to' in patch) onSharedPeriodChange?.({ from: next.from, to: next.to });
+  };
   const applyPreset = (nextPreset: AnalyticsPeriodPreset) => {
     setPreset(nextPreset);
     const next = { ...draft, ...resolveAnalyticsPeriod(nextPreset) };
-    setDraft(next); setFilters(next);
+    setDraft(next); setFilters(next); setValidation(null);
     onSharedPeriodChange?.(resolveAnalyticsPeriod(nextPreset));
   };
-  const apply = () => { if (draft.from && draft.to && draft.from > draft.to) return; setFilters(draft); onSharedPeriodChange?.({ from: draft.from, to: draft.to }); };
 
   if (sharedOperation) return <AnalyticsHdDomainFrame title="Financeiro" description="Recebíveis, aging e posição financeira atual." source="OMIE · Contas a Receber"><MinimalState title={`Financeiro consolidado fora do recorte ${sharedOperation}`} description="A fonte OMIE ainda não publica a operação associada a cada título. Para evitar atribuição incorreta, o consolidado fica oculto enquanto uma operação estiver selecionada." actions={<button type="button" className="rounded-lg border border-[color:var(--minimal-border-strong)] px-3 py-2 text-sm font-medium text-[color:var(--minimal-text)]" onClick={() => onSharedOperationChange?.('')}>Ver Financeiro consolidado</button>} /></AnalyticsHdDomainFrame>;
   if (state.phase === 'loading') return <AnalyticsHdDomainFrame title="Financeiro" description="Recebíveis, aging e posição financeira atual." source="OMIE · Contas a Receber"><AnalyticsLoadingState title="Carregando financeiro" description="O Gênio está consultando as Contas a Receber do OMIE." /></AnalyticsHdDomainFrame>;
@@ -134,13 +172,14 @@ export function AnalyticsFinancePage({ sharedPeriod, onSharedPeriodChange, share
     <section className="rounded-xl border border-[color:var(--minimal-border)] bg-[color:var(--minimal-surface)] p-4">
       <div className="grid gap-3 md:grid-cols-8">
         <label className="text-xs text-[color:var(--minimal-text-secondary)]">Período<select value={preset} onChange={(e) => applyPreset(e.target.value as AnalyticsPeriodPreset)} className={controlClass}><option value="">Personalizado</option>{ANALYTICS_PERIOD_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
-        <label className="text-xs text-[color:var(--minimal-text-secondary)]">De<input type="date" value={draft.from} onChange={(e) => setDraft({ ...draft, from: e.target.value })} className={controlClass} /></label>
-        <label className="text-xs text-[color:var(--minimal-text-secondary)]">Até<input type="date" value={draft.to} onChange={(e) => setDraft({ ...draft, to: e.target.value })} className={controlClass} /></label>
-        <label className="text-xs text-[color:var(--minimal-text-secondary)]">Situação<select value={draft.stageId} onChange={(e) => setDraft({ ...draft, stageId: e.target.value })} className={controlClass}><option value="">Todas</option>{STATUS_OPTIONS.map((value) => <option key={value} value={value}>{titleCase(value)}</option>)}</select></label>
-        <label className="text-xs text-[color:var(--minimal-text-secondary)]">Aging<select value={draft.priority} onChange={(e) => setDraft({ ...draft, priority: e.target.value })} className={controlClass}><option value="">Todos</option>{AGING_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-        <label className="text-xs text-[color:var(--minimal-text-secondary)]">Cliente<input value={draft.clientQuery} onChange={(e) => setDraft({ ...draft, clientQuery: e.target.value })} placeholder="Nome ou CNPJ" className={controlClass} /></label>
-        <div className="flex items-end gap-2 md:col-span-2"><button type="button" onClick={apply} className="h-9 rounded-lg bg-[color:var(--minimal-text)] px-3 text-sm font-medium text-[color:var(--minimal-surface)]">Aplicar</button><button type="button" onClick={() => { const next = { ...DEFAULT_ANALYTICS_FILTERS, ...resolveAnalyticsPeriod('month'), clientQuery: '' }; setPreset('month'); setDraft(next); setFilters(next); onSharedPeriodChange?.({ from: next.from, to: next.to }); }} className="h-9 rounded-lg border border-[color:var(--minimal-border-strong)] px-3 text-sm text-[color:var(--minimal-text)]">Limpar</button></div>
+        <label className="text-xs text-[color:var(--minimal-text-secondary)]">De<input type="date" value={draft.from} onChange={(e) => updateDraft({ from: e.target.value })} className={controlClass} /></label>
+        <label className="text-xs text-[color:var(--minimal-text-secondary)]">Até<input type="date" value={draft.to} onChange={(e) => updateDraft({ to: e.target.value })} className={controlClass} /></label>
+        <label className="text-xs text-[color:var(--minimal-text-secondary)]">Situação<select value={draft.stageId} onChange={(e) => updateDraft({ stageId: e.target.value })} className={controlClass}><option value="">Todas</option>{STATUS_OPTIONS.map((value) => <option key={value} value={value}>{titleCase(value)}</option>)}</select></label>
+        <label className="text-xs text-[color:var(--minimal-text-secondary)]">Aging<select value={draft.priority} onChange={(e) => updateDraft({ priority: e.target.value })} className={controlClass}><option value="">Todos</option>{AGING_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+        <label className="text-xs text-[color:var(--minimal-text-secondary)]">Cliente<input value={draft.clientQuery} onChange={(e) => updateDraft({ clientQuery: e.target.value })} placeholder="Nome ou CNPJ" className={controlClass} /></label>
+        <div className="flex items-end gap-2 md:col-span-2"><button type="button" onClick={() => { const next = { ...DEFAULT_ANALYTICS_FILTERS, ...resolveAnalyticsPeriod('month'), clientQuery: '' }; if (clientSearchTimer.current) clearTimeout(clientSearchTimer.current); setPreset('month'); setDraft(next); setFilters(next); setValidation(null); onSharedPeriodChange?.({ from: next.from, to: next.to }); }} className="h-9 rounded-lg border border-[color:var(--minimal-border-strong)] px-3 text-sm text-[color:var(--minimal-text)]">Limpar</button></div>
       </div>
+      {validation ? <p role="alert" className="mt-2 text-xs text-[color:var(--minimal-danger-text)]">{validation}</p> : null}
     </section>
 
     {dataState?.status === 'empty' ? <MinimalState title="Nenhum dado financeiro" description="A consulta funcionou, mas não há registros neste recorte. Experimente ampliar o período." /> : <AnalyticsDomainTabs activeId={subTab} onChange={setSubTab} tabs={[

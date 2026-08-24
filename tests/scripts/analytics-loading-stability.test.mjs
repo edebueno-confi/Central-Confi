@@ -8,9 +8,10 @@ const pages = await Promise.all([
   readFile('apps/web/src/features/analytics/AnalyticsFinancePage.tsx', 'utf8'),
 ]);
 
-test('abas analíticas preservam dados prontos durante atualização parcial', () => {
+test('abas analíticas invalidam dados prontos durante nova atualização', () => {
   for (const source of pages) {
-    assert.match(source, /setState\(\(current\) => current\.phase === 'ready' \? current : \{ phase: 'loading' \}\)/);
+    assert.match(source, /setState\(createAnalyticsLoadingState\(\)\)/);
+    assert.doesNotMatch(source, /setState\(\(current\) => current\.phase === 'ready'/);
   }
 });
 

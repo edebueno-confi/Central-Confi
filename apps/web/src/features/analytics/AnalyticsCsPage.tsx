@@ -30,6 +30,8 @@ import { AnalyticsTrendPanel } from './AnalyticsTrendPanel';
 import { readStageBreakdown } from './analytics-stage-breakdown.mjs';
 import { AnalyticsQueueHealth } from './AnalyticsQueueHealth';
 import { hasCompatibleAnalyticsStage, readAnalyticsStageScope, selectedAnalyticsPipelineIds } from './analytics-stage-scope.mjs';
+import { buildAnalyticsQueryKey } from './analytics-query-key';
+import { createAnalyticsLoadingState } from './analytics-reactive-state.mjs';
 
 // Resolucao, tempo de resolucao e primeira resposta passaram a existir depois
 // que a ingestao foi corrigida para pedir os campos que a conta realmente
@@ -100,6 +102,16 @@ export function AnalyticsCsPage({ sharedPeriod, onSharedPeriodChange, sharedOper
   const [configuredPipelines, setConfiguredPipelines] = useState<AnalyticsSourceConfig[]>([]);
   const [excludedPipelineIds, setExcludedPipelineIds] = useState<string[]>([]);
   const [groupCompany, setGroupCompany] = useState(sharedOperation ?? '');
+  const queryKey = buildAnalyticsQueryKey({
+    domain: 'support',
+    period: filters,
+    operation: groupCompany,
+    excludedPipelineIds,
+    ownerId: filters.ownerId,
+    stageId: filters.stageId,
+    priority: filters.priority,
+    grain: 'position',
+  });
   const [kpiPayload, setKpiPayload] = useState<unknown>(null);
   const [stagePayload, setStagePayload] = useState<unknown>(null);
   const [queuePayload, setQueuePayload] = useState<unknown>(null);
@@ -120,7 +132,10 @@ export function AnalyticsCsPage({ sharedPeriod, onSharedPeriodChange, sharedOper
 
   useEffect(() => {
     let cancelled = false;
-    setState((current) => current.phase === 'ready' ? current : { phase: 'loading' });
+    setState(createAnalyticsLoadingState());
+    setKpiPayload(null);
+    setStagePayload(null);
+    setQueuePayload(null);
 
     void getSupportKpisV2(filters, groupCompany || null)
       .then((payload) => { if (!cancelled) setKpiPayload(payload); })
@@ -159,7 +174,10 @@ export function AnalyticsCsPage({ sharedPeriod, onSharedPeriodChange, sharedOper
     return () => {
       cancelled = true;
     };
-  }, [filters, excludedPipelineIds, groupCompany]);
+    // queryKey contém todas as dimensões semânticas usadas por esta leitura;
+    // referências novas de filtros não devem disparar uma segunda consulta.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryKey]);
 
   if (state.phase === 'loading') {
     return <AnalyticsHdDomainFrame title="Suporte" description="Fila, tempo de resposta e distribuição dos atendimentos." source="HubSpot"><AnalyticsLoadingState title="Carregando suporte" description="O Gênio está reunindo os atendimentos do período." /></AnalyticsHdDomainFrame>;

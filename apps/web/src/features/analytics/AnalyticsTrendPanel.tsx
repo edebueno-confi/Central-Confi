@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { MinimalState } from '../../components/minimal-states';
 import { getAnalyticsTimeseries, type TimeseriesDomain, type TimeseriesGrain } from './analytics-api';
 import { describeCohorts, grainLabel, readTimeseries } from './analytics-timeseries-contract.mjs';
 import { AnalyticsLoadingState, ChartCard } from './analytics-ui';
+import { buildAnalyticsQueryKey, normalizeAnalyticsPipelineIds } from './analytics-query-key';
 import {
   CommercialTrendChart,
   FinanceTrendChart,
@@ -26,6 +27,7 @@ import {
  */
 
 const GRAOS: TimeseriesGrain[] = ['month', 'week', 'day'];
+const EMPTY_EXCLUDED_PIPELINE_IDS: string[] = [];
 
 /** União dos formatos de ponto; cada domínio estreita para o seu. */
 type TrendPoint = SupportTrendPoint | CommercialTrendPoint | FinanceTrendPoint;
@@ -62,29 +64,50 @@ const TITULOS: Record<TimeseriesDomain, { title: string; description: string }> 
   },
 };
 
-export function AnalyticsTrendPanel({ domain, groupCompany = null, excludedPipelineIds = [] }: { domain: TimeseriesDomain; groupCompany?: string | null; excludedPipelineIds?: string[] }) {
+export function AnalyticsTrendPanel({ domain, groupCompany = null, excludedPipelineIds = EMPTY_EXCLUDED_PIPELINE_IDS }: { domain: TimeseriesDomain; groupCompany?: string | null; excludedPipelineIds?: string[] }) {
   const [grain, setGrain] = useState<TimeseriesGrain>('month');
   const [payload, setPayload] = useState<unknown>(null);
   const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading');
+  const latestRequest = useRef(0);
+  const excludedPipelineKey = useMemo(
+    () => normalizeAnalyticsPipelineIds(excludedPipelineIds).join('\u001f'),
+    [excludedPipelineIds],
+  );
+  const effectiveExcludedPipelineIds = useMemo(
+    () => (excludedPipelineKey ? excludedPipelineKey.split('\u001f') : EMPTY_EXCLUDED_PIPELINE_IDS),
+    [excludedPipelineKey],
+  );
+  const queryKey = buildAnalyticsQueryKey({
+    domain,
+    operation: groupCompany,
+    excludedPipelineIds: effectiveExcludedPipelineIds,
+    grain,
+  });
 
   useEffect(() => {
+    const requestId = latestRequest.current + 1;
+    latestRequest.current = requestId;
     let cancelled = false;
     setPhase('loading');
-    void getAnalyticsTimeseries(domain, grain, undefined, groupCompany, excludedPipelineIds)
+    setPayload(null);
+    void getAnalyticsTimeseries(domain, grain, undefined, groupCompany, effectiveExcludedPipelineIds)
       .then((data) => {
-        if (cancelled) return;
+        if (cancelled || requestId !== latestRequest.current) return;
         setPayload(data);
         setPhase('ready');
       })
       .catch(() => {
-        if (cancelled) return;
+        if (cancelled || requestId !== latestRequest.current) return;
         setPayload(null);
         setPhase('error');
       });
     return () => {
       cancelled = true;
     };
-  }, [domain, grain, groupCompany, excludedPipelineIds]);
+    // queryKey contém domínio, operação, pipelines e granularidade. A janela
+    // própria da série é resolvida pelo contrato da API e não pelo filtro da posição.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryKey]);
 
   const copy = TITULOS[domain];
 
