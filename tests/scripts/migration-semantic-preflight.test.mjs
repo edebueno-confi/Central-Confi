@@ -7,7 +7,6 @@ import {
   applyUtf8Transform,
   buildSyntheticFixtureSql,
   buildShadowInitSql,
-  buildOptimizedTimeseriesCandidateSql,
   compareBenchmarkStages,
   diffCatalog,
   evaluateCatalogAllowlist,
@@ -15,6 +14,7 @@ import {
   evaluateGlobalPreflightDecision,
   HISTORICAL_MIGRATION_GATE,
   loadCanonicalTimeseriesDefinition,
+  loadRemediationMigration,
   maskSqlLiterals,
   preflightMigration,
   readBenchmarkConfig,
@@ -24,7 +24,9 @@ import {
 } from '../../scripts/local-qa/semantic-migration-preflight.mjs';
 
 const UTF8 = SEMANTIC_MIGRATION_MANIFEST.migrations['20260822220000'];
+const OPERATION_SCOPE = SEMANTIC_MIGRATION_MANIFEST.migrations['20260821090000'];
 const TIMESERIES = SEMANTIC_MIGRATION_MANIFEST.migrations['20260823100000'];
+const REMEDIATION = SEMANTIC_MIGRATION_MANIFEST.migrations['20260824190000'];
 
 function utf8Definition(target, body = "select jsonb_build_object('owner','Sem responsÃ¡vel','fallback','Sem responsavel')") {
   return `create or replace function ${target.qualifiedName}(${target.signature})
@@ -69,31 +71,33 @@ test('timeseries insere predicados ticket/deal e preserva o restante', () => {
   assert.equal((result.transformed.match(/current_setting\('app\.analytics_excluded_pipeline_ids'/g) ?? []).length, 4);
 });
 
-test('candidato otimizado calcula escopo e array uma vez, sem alterar a migration histórica', () => {
-  const current = applyTimeseriesTransform(timeseriesDefinition()).transformed;
-  const candidate = buildOptimizedTimeseriesCandidateSql(current);
-  assert.match(candidate, /v_excluded_pipeline_ids := string_to_array\(nullif\(current_setting\('app\.analytics_excluded_pipeline_ids', true\), ''\), ','\)/);
-  assert.equal((candidate.match(/current_setting\('app\.analytics_excluded_pipeline_ids'/g) ?? []).length, 1);
-  assert.equal((candidate.match(/string_to_array\(/g) ?? []).length, 1);
-  assert.equal((candidate.match(/v_excluded_pipeline_ids is null/g) ?? []).length, 2);
-  assert.match(candidate, /security definer set search_path = ''/);
-  assert.match(candidate, /t\.pipeline_id <> all\(v_excluded_pipeline_ids\)/);
-  assert.match(candidate, /d\.pipeline_id <> all\(v_excluded_pipeline_ids\)/);
-  assert.match(candidate, /return jsonb_build_object\('series'/);
-  assert.match(candidate, /cohorts/);
-  assert.doesNotMatch(candidate, /ticket_count|deal_count/);
-  assert.throws(() => buildOptimizedTimeseriesCandidateSql('create function public.fake() returns void as $$ begin null; end; $$;'), /CANDIDATE_SOURCE_INVALID/);
+test('migration candidata real declara guardas de escopo e preserva o contrato de segurança', () => {
+  const migration = loadRemediationMigration();
+  const result = preflightMigration({ version: '20260824190000', source: migration });
+  assert.equal(result.state, 'PREFLIGHT_READY_FOR_SHADOW');
+  assert.match(migration, /pg_get_functiondef\(/);
+  assert.match(migration, /v_group_company text;/);
+  assert.match(migration, /v_excluded_pipeline_ids text\[\];/);
+  assert.match(migration, /v_group_count <> 2/);
+  assert.match(migration, /v_ticket_exclusion_count <> 1 or v_deal_exclusion_count <> 1/);
+  assert.match(migration, /v_declare_count <> 1 or v_begin_count <> 1/);
+  assert.match(migration, /v_group_company is null or c\.group_company = v_group_company/);
+  assert.match(migration, /v_excluded_pipeline_ids is null or %s\.pipeline_id <> all\(v_excluded_pipeline_ids\)/);
+  assert.match(migration, /position\('search_path' in lower\(v_definition\)/);
+  assert.match(migration, /revoke all on function public\.rpc_analytics_timeseries/);
+  assert.match(migration, /grant execute on function public\.rpc_analytics_timeseries/);
+  assert.doesNotMatch(migration, /create table|drop table|truncate|delete from/i);
 });
 
-test('candidato padrão deriva da RPC canônica completa e falha se o contrato for reduzido', () => {
+test('migration candidata usa a definição real e não inventa um contrato reduzido', () => {
   const canonical = loadCanonicalTimeseriesDefinition();
-  const candidate = buildOptimizedTimeseriesCandidateSql();
+  const candidateMigration = loadRemediationMigration();
   for (const marker of ['domain', 'support', 'commercial', 'finance', 'legend', 'cumulative_balance', 'history_insufficient', 'app_private.can_read_analytics']) {
     assert.ok(canonical.includes(marker), `marker ausente na definição canônica: ${marker}`);
-    assert.ok(candidate.includes(marker), `marker ausente no candidato: ${marker}`);
   }
-  assert.doesNotMatch(candidate, /ticket_count|deal_count/);
-  assert.notEqual(candidate, canonical);
+  assert.doesNotMatch(candidateMigration, /ticket_count|deal_count/);
+  assert.match(candidateMigration, /pg_get_functiondef\(v_signature\)/);
+  assert.notEqual(candidateMigration, canonical);
 });
 
 test('diff de catálogo conserva campos de função, RLS e policy', () => {
@@ -142,11 +146,11 @@ test('RLS/policies diretas sem prova RPC autenticada permanecem bloqueadas', () 
     },
     snapshotA: {
       direct: { commercial: { series: [{ created: 2 }] } },
-      operationCrossTenant: { series: [{ created: 2 }] },
+      operationCrossTenant: { domain: 'commercial', series: [{ created: 2 }] },
     },
     snapshotB: {
       direct: { commercial: { series: [{ created: 1 }] } },
-      operationCrossTenant: { series: [{ created: 0 }] },
+      operationCrossTenant: { domain: 'commercial', series: [{ created: 0 }] },
     },
   });
   assert.equal(directOnly.directPolicyProven, true);
@@ -169,11 +173,11 @@ test('RLS/policies diretas sem prova RPC autenticada permanecem bloqueadas', () 
     },
     snapshotA: {
       direct: { commercial: { series: [{ created: 2 }] } },
-      operationCrossTenant: { series: [{ created: 2 }] },
+      operationCrossTenant: { domain: 'commercial', series: [{ created: 0 }] },
     },
     snapshotB: {
       direct: { commercial: { series: [{ created: 1 }] } },
-      operationCrossTenant: { series: [{ created: 1 }] },
+      operationCrossTenant: { domain: 'commercial', series: [{ created: 0 }] },
     },
   });
   assert.equal(proven.proven, true);
@@ -239,7 +243,7 @@ test('candidate_go não libera migration histórica: o estado global permanece h
   assert.match(decision.decision, /historical_no_go/);
 });
 
-test('preflight real mantém as duas migrations prontas somente para shadow', async () => {
+test('preflight real mantém migrations históricas e candidata prontas somente para shadow', async () => {
   const { readFile } = await import('node:fs/promises');
   for (const [version, manifest] of Object.entries(SEMANTIC_MIGRATION_MANIFEST.migrations)) {
     const source = await readFile(new URL(`../../${manifest.file}`, import.meta.url), 'utf8');
@@ -248,6 +252,26 @@ test('preflight real mantém as duas migrations prontas somente para shadow', as
     assert.equal(result.classification, null);
     assert.deepEqual(result.reasons, []);
   }
+});
+
+test('remediação fail-closed quando assinatura, âncoras ou contagens divergem', () => {
+  const source = loadRemediationMigration();
+  const cases = [
+    ['assinatura', "'public.rpc_analytics_timeseries(text,date,date,text)'::regprocedure", 'public.fake(text,date,date,text)'],
+    ['âncora de operação', 'v_group_count <> 2', 'v_group_count <> 3'],
+    ['declaração', 'v_group_company text;', 'v_group_company jsonb;'],
+    ['atribuição', 'v_excluded_pipeline_ids := string_to_array', 'v_excluded_pipeline_ids := null'],
+  ];
+  for (const [label, oldValue, newValue] of cases) {
+    const result = preflightMigration({
+      version: '20260824190000',
+      source: source.replace(oldValue, newValue),
+    });
+    assert.equal(result.state, 'NO_GO', label);
+    assert.ok(result.reasons.length > 0, label);
+  }
+  assert.equal(OPERATION_SCOPE.dynamicTarget.qualifiedName, 'public.rpc_analytics_timeseries');
+  assert.equal(REMEDIATION.dynamicTarget.signature, 'p_domain text, p_from date, p_to date, p_grain text');
 });
 
 test('mask lexical não promove EXECUTE em string, comentário aninhado ou E string escapada', () => {

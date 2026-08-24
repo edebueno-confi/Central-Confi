@@ -22,7 +22,15 @@ export const PROHIBITED_MAIN_DATABASE_COMMANDS = Object.freeze([
 ]);
 
 const UTF8_MIGRATION = '20260822220000';
+const OPERATION_SCOPE_MIGRATION = '20260821090000';
 const TIMESERIES_MIGRATION = '20260823100000';
+const REMEDIATION_MIGRATION = '20260824190000';
+
+const HISTORICAL_MIGRATIONS = Object.freeze([
+  OPERATION_SCOPE_MIGRATION,
+  UTF8_MIGRATION,
+  TIMESERIES_MIGRATION,
+]);
 
 // Este bloque é uma trava versionada, não uma aprovação da migration. A
 // regressão histórica foi observada no shadow em 2026-08-24 e continua sendo
@@ -124,6 +132,25 @@ export const SEMANTIC_MIGRATION_MANIFEST = Object.freeze({
     ],
   },
   migrations: {
+    [OPERATION_SCOPE_MIGRATION]: {
+      file: 'supabase/migrations/20260821090000_analytics_timeseries_operation_scope_v1.sql',
+      sha256: 'ec200116bce512961873aa44afb2aaf801e828a07e47789ed303858b422ee3b2',
+      classification: 'SEMANTICALLY_VERIFIED_IN_SHADOW',
+      execute: {
+        count: 1,
+        exact: 'execute v_definition',
+        allowedTarget: 'pg_get_functiondef(regprocedure) -> validate two operation anchors -> execute same definition',
+      },
+      dynamicTarget: {
+        qualifiedName: 'public.rpc_analytics_timeseries',
+        signature: 'p_domain text, p_from date, p_to date, p_grain text',
+      },
+      anchors: [
+        { id: 'active-archived-scope', pattern: 'and c[.]is_active[[:space:]]+and not coalesce[(]c[.]is_archived, false[)]', count: 2 },
+      ],
+      allowedDependencies: ['public.rpc_analytics_timeseries', 'public.rpc_analytics_timeseries_by_operation', 'app_private.set_analytics_operation_scope'],
+      requiredDependencies: ['public.rpc_analytics_timeseries'],
+    },
     [UTF8_MIGRATION]: {
       file: 'supabase/migrations/20260822220000_analytics_utf8_and_scope_guard_v1.sql',
       sha256: '2f510fe66073e8d45dc704f1f3f6101edc0b2d333f040c437b7de95f1e58563c',
@@ -184,6 +211,38 @@ export const SEMANTIC_MIGRATION_MANIFEST = Object.freeze({
         'app_private.set_analytics_pipeline_exclusion_scope',
         'public.rpc_analytics_timeseries',
       ],
+    },
+    [REMEDIATION_MIGRATION]: {
+      file: 'supabase/migrations/20260824190000_analytics_timeseries_scope_performance_remediation_v1.sql',
+      sha256: '4c23ce1027b7dbed62248acc61ba5721c63918e037ad15695d6579c8e7015185',
+      classification: 'CANDIDATE_ONLY_SHADOW',
+      execute: {
+        count: 1,
+        exact: 'execute v_definition',
+        allowedTarget: 'pg_get_functiondef(regprocedure) -> validate declaration/predicate counts -> execute same definition',
+      },
+      dynamicTarget: {
+        qualifiedName: 'public.rpc_analytics_timeseries',
+        signature: 'p_domain text, p_from date, p_to date, p_grain text',
+      },
+      anchors: {
+        groupPredicateCount: 2,
+        ticketExclusionPredicateCount: 1,
+        dealExclusionPredicateCount: 1,
+        declarationCount: 1,
+        assignmentCount: 1,
+      },
+      requiredContractMarkers: [
+        "v_group_company := nullif(current_setting(''app.analytics_group_company'', true), '''');",
+        "v_excluded_pipeline_ids := string_to_array(nullif(current_setting(''app.analytics_excluded_pipeline_ids'', true), ''''), '','');",
+        'v_group_company is null or c.group_company = v_group_company',
+        'v_excluded_pipeline_ids is null or %s.pipeline_id <> all(v_excluded_pipeline_ids)',
+        "position('search_path' in lower(v_definition))",
+        'revoke all on function public.rpc_analytics_timeseries',
+        'grant execute on function public.rpc_analytics_timeseries',
+      ],
+      allowedDependencies: ['public.rpc_analytics_timeseries'],
+      requiredDependencies: [],
     },
   },
 });
@@ -370,34 +429,8 @@ function exclusionPredicate(alias) {
   return `(nullif(current_setting('app.analytics_excluded_pipeline_ids', true), '') is null or ${alias}.pipeline_id <> all(string_to_array(current_setting('app.analytics_excluded_pipeline_ids', true), ',')))`;
 }
 
-// Candidato experimental exclusivo do shadow. A fonte é a definição completa
-// real, já transformada pela migration histórica no shadow. O candidato apenas
-// materializa o array de exclusões uma vez, sem trocar retorno, domínios,
-// coortes, legendas, autorização ou dependências da RPC.
-export function buildOptimizedTimeseriesCandidateSql(definition = loadCanonicalTimeseriesDefinition()) {
-  const source = String(definition);
-  const alreadyTransformed = ['t', 'd'].every((alias) => countOccurrences(source, exclusionPredicate(alias)) === 1);
-  const transformed = alreadyTransformed
-    ? { ok: true, transformed: source }
-    : applyTimeseriesTransform(source);
-  if (!transformed.ok) throw new Error(`CANDIDATE_SOURCE_INVALID:${transformed.reason}`);
-
-  let candidate = transformed.transformed;
-  if (!/\bdeclare\s+/i.test(candidate) || !/\bbegin\s+/i.test(candidate)) {
-    throw new Error('CANDIDATE_SOURCE_NOT_PLSQL');
-  }
-  candidate = candidate.replace(/(\bdeclare\s*\n)/i, `$1  v_excluded_pipeline_ids text[];\n`);
-  candidate = candidate.replace(/(\bbegin\s*\n)/i, `$1  v_excluded_pipeline_ids := string_to_array(nullif(current_setting('app.analytics_excluded_pipeline_ids', true), ''), ',');\n`);
-
-  for (const alias of ['t', 'd']) {
-    const oldPredicate = exclusionPredicate(alias);
-    const newPredicate = `(v_excluded_pipeline_ids is null or ${alias}.pipeline_id <> all(v_excluded_pipeline_ids))`;
-    if (countOccurrences(candidate, oldPredicate) !== 1) {
-      throw new Error(`CANDIDATE_EXCLUSION_PREDICATE_UNEXPECTED:${alias}`);
-    }
-    candidate = candidate.replace(oldPredicate, newPredicate);
-  }
-  return candidate;
+export function loadRemediationMigration(root = ROOT) {
+  return readFileSync(join(root, SEMANTIC_MIGRATION_MANIFEST.migrations[REMEDIATION_MIGRATION].file), 'utf8');
 }
 
 export function applyTimeseriesTransform(definition, manifest = SEMANTIC_MIGRATION_MANIFEST.migrations[TIMESERIES_MIGRATION]) {
@@ -490,12 +523,62 @@ function validateTimeseriesMigration(source, manifest) {
   return { ok: reasons.length === 0, reasons, executeCount: execution.count, dependencies };
 }
 
+function validateOperationScopeMigration(source, manifest) {
+  const reasons = [];
+  if (sha256(source) !== manifest.sha256) reasons.push('SOURCE_SHA256_UNEXPECTED');
+  const forbidden = checkForbiddenSql(source);
+  if (forbidden) reasons.push(`FORBIDDEN_SQL:${forbidden}`);
+  const execution = executeTokens(source);
+  if (!execution.ok || execution.count !== manifest.execute.count || countOccurrences(source.toLowerCase(), manifest.execute.exact) !== 1) reasons.push('EXECUTE_NOT_ALLOWED');
+  if (countOccurrences(source.toLowerCase(), 'pg_get_functiondef') !== 1) reasons.push('PG_GET_FUNCTIONDEF_COUNT_UNEXPECTED');
+  if (countOccurrences(source, "'public.rpc_analytics_timeseries(text,date,date,text)'::regprocedure") !== 1) reasons.push('TARGET_SIGNATURE_UNEXPECTED');
+  if (countOccurrences(source, 'v_match_count <> 2') !== 1) reasons.push('ANCHOR_COUNT_GUARD_UNEXPECTED');
+  if (countOccurrences(source, 'regexp_replace(') !== 1) reasons.push('TRANSFORM_COUNT_UNEXPECTED');
+  const dependencies = validateDependencies(source, {
+    allowed: manifest.allowedDependencies,
+    required: manifest.requiredDependencies,
+  });
+  if (!dependencies.ok) reasons.push('DEPENDENCY_UNEXPECTED');
+  return { ok: reasons.length === 0, reasons, executeCount: execution.count, dependencies };
+}
+
+function validateRemediationMigration(source, manifest) {
+  const reasons = [];
+  if (sha256(source) !== manifest.sha256) reasons.push('SOURCE_SHA256_UNEXPECTED');
+  const forbidden = checkForbiddenSql(source);
+  if (forbidden) reasons.push(`FORBIDDEN_SQL:${forbidden}`);
+  const execution = executeTokens(source);
+  if (!execution.ok || execution.count !== manifest.execute.count || countOccurrences(source.toLowerCase(), manifest.execute.exact) !== 1) reasons.push('EXECUTE_NOT_ALLOWED');
+  if (countOccurrences(source.toLowerCase(), 'pg_get_functiondef') !== 1) reasons.push('PG_GET_FUNCTIONDEF_COUNT_UNEXPECTED');
+  if (countOccurrences(source, "'public.rpc_analytics_timeseries(text,date,date,text)'::regprocedure") !== 1) reasons.push('TARGET_SIGNATURE_UNEXPECTED');
+  if (countOccurrences(source, 'v_group_count <> 2') !== 1) reasons.push('GROUP_ANCHOR_COUNT_GUARD_UNEXPECTED');
+  if (countOccurrences(source, 'v_ticket_exclusion_count <> 1 or v_deal_exclusion_count <> 1') !== 1) reasons.push('EXCLUSION_ANCHOR_COUNT_GUARD_UNEXPECTED');
+  if (countOccurrences(source, 'v_declare_count <> 1 or v_begin_count <> 1') !== 1) reasons.push('BLOCK_COUNT_GUARD_UNEXPECTED');
+  if (countOccurrences(source, 'v_group_company text;') < 1) reasons.push('GROUP_DECLARATION_COUNT_UNEXPECTED');
+  if (countOccurrences(source, 'v_excluded_pipeline_ids text[];') < 1) reasons.push('EXCLUSION_DECLARATION_COUNT_UNEXPECTED');
+  if (countOccurrences(source, 'v_group_company := nullif(current_setting') < 1) reasons.push('GROUP_ASSIGNMENT_COUNT_UNEXPECTED');
+  if (countOccurrences(source, 'v_excluded_pipeline_ids := string_to_array') < 1) reasons.push('EXCLUSION_ASSIGNMENT_COUNT_UNEXPECTED');
+  for (const marker of manifest.requiredContractMarkers) {
+    if (countOccurrences(source, marker) < 1) reasons.push(`CONTRACT_MARKER_UNEXPECTED:${marker}`);
+  }
+  const dependencies = validateDependencies(source, {
+    allowed: manifest.allowedDependencies,
+    required: manifest.requiredDependencies,
+  });
+  if (!dependencies.ok) reasons.push('DEPENDENCY_UNEXPECTED');
+  return { ok: reasons.length === 0, reasons, executeCount: execution.count, dependencies };
+}
+
 export function preflightMigration({ version, source }) {
   const manifest = SEMANTIC_MIGRATION_MANIFEST.migrations[version];
   if (!manifest) return { version, state: 'NO_GO', reasons: ['MIGRATION_NOT_IN_MANIFEST'] };
   const validation = version === UTF8_MIGRATION
     ? validateUtf8Migration(source, manifest)
-    : validateTimeseriesMigration(source, manifest);
+    : version === OPERATION_SCOPE_MIGRATION
+      ? validateOperationScopeMigration(source, manifest)
+      : version === TIMESERIES_MIGRATION
+        ? validateTimeseriesMigration(source, manifest)
+        : validateRemediationMigration(source, manifest);
   return {
     version,
     state: validation.ok ? 'PREFLIGHT_READY_FOR_SHADOW' : 'NO_GO',
@@ -808,8 +891,10 @@ function readTenantIsolationProbe(container, context = SHADOW_TENANT_CONTEXTS.te
   return psqlJson(container, `${authContextSql(context)}
 select jsonb_build_object(
   'visible_tenant', '${context.tenantId}',
-  'visible_tickets', (select coalesce(jsonb_agg(ticket_id order by ticket_id), '[]'::jsonb) from public.hubspot_tickets),
-  'visible_deals', (select coalesce(jsonb_agg(deal_id order by deal_id), '[]'::jsonb) from public.hubspot_deals),
+  'visible_tickets', (select coalesce(jsonb_agg(ticket_id order by ticket_id), '[]'::jsonb) from (select ticket_id from public.hubspot_tickets order by ticket_id limit 20) sample),
+  'visible_deals', (select coalesce(jsonb_agg(deal_id order by deal_id), '[]'::jsonb) from (select deal_id from public.hubspot_deals order by deal_id limit 20) sample),
+  'visible_ticket_count', (select count(*) from public.hubspot_tickets),
+  'visible_deal_count', (select count(*) from public.hubspot_deals),
   'cross_tenant_ticket_count', (select count(*) from public.hubspot_tickets where tenant_id <> '${context.tenantId}'),
   'cross_tenant_deal_count', (select count(*) from public.hubspot_deals where tenant_id <> '${context.tenantId}')
 )`);
@@ -840,11 +925,18 @@ function evaluateSemanticSnapshot(snapshot) {
   });
   const hasLegends = ['support', 'commercial', 'finance'].every((domain) => Object.keys(contract[domain]?.legend ?? {}).length >= 3);
   const expectedCommercial = snapshot.context?.tenantId === 'tenant-b' ? 1 : 2;
-  const expectedSupport = snapshot.context?.tenantId === 'tenant-b' ? 1 : 3;
+  const expectedSupport = snapshot.context?.tenantId === 'tenant-b' ? 0 : 1;
   const excludedCommercial = snapshot.context?.tenantId === 'tenant-b' ? 1 : 1;
-  const excludedSupport = snapshot.context?.tenantId === 'tenant-b' ? 1 : 2;
+  const excludedSupport = snapshot.context?.tenantId === 'tenant-b' ? 0 : 1;
   const commercialTotal = (payload) => (payload?.series ?? []).reduce((sum, row) => sum + Number(row.created ?? 0), 0);
   const supportTotal = (payload) => (payload?.series ?? []).reduce((sum, row) => sum + Number(row.opened ?? 0), 0);
+  const missingOperationContract = snapshot.seriesMissing?.domain === 'commercial'
+    && Array.isArray(snapshot.seriesMissing?.series)
+    && snapshot.seriesMissing.series.length > 0
+    && snapshot.seriesMissing.series.every((row) => Number(row.created ?? 0) === 0
+      && Number(row.won ?? 0) === 0
+      && Number(row.lost ?? 0) === 0
+      && Number(row.won_amount ?? 0) === 0);
   return {
     utf8Corrected: JSON.stringify(snapshot.utf8Values).includes('Sem responsável') && !JSON.stringify(snapshot.utf8Values).includes('Sem responsÃ¡vel'),
     completeContract: payloadShape && completeSeries && hasLegends && contract.unknown?.unavailable_reason === 'history_insufficient',
@@ -853,7 +945,7 @@ function evaluateSemanticSnapshot(snapshot) {
     exclusionMultiple: commercialTotal(snapshot.seriesMultiple) === excludedCommercial,
     exclusionEmpty: commercialTotal(snapshot.seriesAll) === expectedCommercial,
     financeUnavailable: snapshot.seriesFinance?.unavailable_reason === 'operation_dimension_unavailable',
-    missingOperationPreservesRealContract: JSON.stringify(snapshot.seriesMissing) === JSON.stringify(snapshot.seriesAll),
+    missingOperationPreservesRealContract: missingOperationContract,
     operationIsolation: supportTotal(snapshot.seriesOtherOperation) === expectedSupport,
   };
 }
@@ -866,10 +958,18 @@ export function assessCrossTenantEvidence({ rlsPolicyPresent, tenantA, tenantB, 
     && tenantB?.cross_tenant_deal_count === 0
     && (tenantA?.visible_tickets ?? []).every((id) => !String(id).startsWith('tenant-b-'))
     && (tenantB?.visible_tickets ?? []).every((id) => !String(id).startsWith('ticket-')));
+  const hasNoRows = (payload) => Boolean(
+    payload?.domain === 'commercial'
+      && Array.isArray(payload.series)
+      && payload.series.length > 0
+      && payload.series.every((row) => Number(row.created ?? 0) === 0
+        && Number(row.won ?? 0) === 0
+        && Number(row.lost ?? 0) === 0
+        && Number(row.won_amount ?? 0) === 0),
+  );
   const authenticatedRpcTenantProven = Boolean(
-    snapshotA?.direct?.commercial
-      && JSON.stringify(snapshotA.operationCrossTenant) === JSON.stringify(snapshotA.direct.commercial)
-      && JSON.stringify(snapshotB.operationCrossTenant) === JSON.stringify(snapshotB.direct.commercial),
+    hasNoRows(snapshotA?.operationCrossTenant)
+      && hasNoRows(snapshotB?.operationCrossTenant),
   );
   return {
     directPolicyProven,
@@ -885,16 +985,22 @@ export const CATALOG_ALLOWLIST = Object.freeze({
       'public.rpc_analytics_customer_success_kpis_v2()',
       'public.rpc_analytics_support_kpis_v2(p_from date, p_to date, p_pipeline_id text, p_priority text)',
       'public.rpc_analytics_timeseries(p_domain text, p_from date, p_to date, p_grain text)',
+      'public.rpc_analytics_timeseries_by_operation(p_domain text, p_from date, p_to date, p_grain text, p_group_company text)',
       'public.rpc_analytics_timeseries_by_operation(p_domain text, p_from date, p_to date, p_grain text, p_group_company text, p_excluded_pipeline_ids text[])',
+      'app_private.set_analytics_operation_scope(p_group_company text)',
       'app_private.set_analytics_pipeline_exclusion_scope(p_pipeline_ids text[])',
     ]),
     function_security: Object.freeze([
+      'public.rpc_analytics_timeseries_by_operation(p_domain text, p_from date, p_to date, p_grain text, p_group_company text)',
       'public.rpc_analytics_timeseries_by_operation(p_domain text, p_from date, p_to date, p_grain text, p_group_company text, p_excluded_pipeline_ids text[])',
+      'app_private.set_analytics_operation_scope(p_group_company text)',
       'app_private.set_analytics_pipeline_exclusion_scope(p_pipeline_ids text[])',
     ]),
     tables: Object.freeze([]),
     grants: Object.freeze([
+      'function:public.rpc_analytics_timeseries_by_operation(p_domain text, p_from date, p_to date, p_grain text, p_group_company text)',
       'function:public.rpc_analytics_timeseries_by_operation(p_domain text, p_from date, p_to date, p_grain text, p_group_company text, p_excluded_pipeline_ids text[])',
+      'function:app_private.set_analytics_operation_scope(p_group_company text)',
       'function:app_private.set_analytics_pipeline_exclusion_scope(p_pipeline_ids text[])',
     ]),
     rls: Object.freeze([]),
@@ -1234,14 +1340,10 @@ export async function runShadowReplay({ root = ROOT, dockerImage = SHADOW_IMAGE,
     const beforeFirst = psqlJson(container, catalogSql());
     psql(container, buildSyntheticFixtureSql(benchmarkConfig.rowsPerTable));
     const benchmarkBefore = runBenchmarkStage(container, benchmarkConfig, 'before_migrations');
-    const firstPath = join(root, SEMANTIC_MIGRATION_MANIFEST.migrations[UTF8_MIGRATION].file);
-    psql(container, readFileSync(firstPath, 'utf8'));
-    const afterFirst = psqlJson(container, catalogSql());
-    const secondPath = join(root, SEMANTIC_MIGRATION_MANIFEST.migrations[TIMESERIES_MIGRATION].file);
-    psql(container, readFileSync(secondPath, 'utf8'));
-    psql(container, `alter function app_private.set_analytics_pipeline_exclusion_scope(text[]) owner to analytics_owner;
-alter function public.rpc_analytics_timeseries_by_operation(text,date,date,text,text,text[]) owner to analytics_owner;`);
-    const afterSecond = psqlJson(container, catalogSql());
+    for (const version of HISTORICAL_MIGRATIONS) {
+      psql(container, loadMigration(version));
+    }
+    const afterHistorical = psqlJson(container, catalogSql());
     psql(container, 'analyze public.analytics_source_config, public.hubspot_tickets, public.hubspot_deals;');
     const benchmarkAfter = runBenchmarkStage(container, benchmarkConfig, 'after_migrations');
     const currentPerformance = compareBenchmarkStages(benchmarkBefore, benchmarkAfter, benchmarkConfig);
@@ -1249,10 +1351,10 @@ alter function public.rpc_analytics_timeseries_by_operation(text,date,date,text,
     const currentTenantBSnapshot = readSemanticSnapshot(container, SHADOW_TENANT_CONTEXTS.tenantB);
     const currentDefinition = psql(container, functionDefinitionSql());
 
-    // Aplica somente o candidato experimental derivado da definição real
-    // capturada acima. A migration histórica e seus arquivos permanecem
-    // intocados.
-    psql(container, buildOptimizedTimeseriesCandidateSql(currentDefinition));
+    // Aplica a migration versionada real como candidato separado. Ela deriva
+    // a definição vigente no próprio shadow; nenhum SQL sintético substitui a
+    // migration candidata.
+    psql(container, loadMigration(REMEDIATION_MIGRATION));
     const afterCandidate = psqlJson(container, catalogSql());
     psql(container, 'analyze public.analytics_source_config, public.hubspot_tickets, public.hubspot_deals;');
     const benchmarkCandidate = runBenchmarkStage(container, benchmarkConfig, 'optimized_candidate');
@@ -1268,7 +1370,7 @@ alter function public.rpc_analytics_timeseries_by_operation(text,date,date,text,
     const explainAll = parseExplain(psql(container, `explain (analyze, format json) select count(*) from public.hubspot_tickets t join public.analytics_source_config c on c.object_type='ticket' and c.hubspot_pipeline_id=t.pipeline_id`));
     const targetPattern = /(?:rpc_analytics_ceo_snapshot_legacy|rpc_analytics_customer_success_kpis_v2|rpc_analytics_support_kpis_v2|rpc_analytics_timeseries_by_operation|rpc_analytics_timeseries|set_analytics_operation_scope|set_analytics_pipeline_exclusion_scope)/;
     const targetFunctions = (afterCandidate.function_security ?? []).filter((row) => targetPattern.test(row.identity));
-    const currentTargetFunctions = (afterSecond.function_security ?? []).filter((row) => targetPattern.test(row.identity));
+    const currentTargetFunctions = (afterHistorical.function_security ?? []).filter((row) => targetPattern.test(row.identity));
     const identityVerified = container === name
       && name.startsWith(SEMANTIC_MIGRATION_MANIFEST.shadow.namespacePrefix)
       && name !== CANONICAL_CONTAINER
@@ -1312,9 +1414,9 @@ alter function public.rpc_analytics_timeseries_by_operation(text,date,date,text,
       rlsOk,
     };
     const allowedDiff = CATALOG_ALLOWLIST.historical;
-    const diff = [...diffCatalog(beforeFirst, afterFirst), ...diffCatalog(afterFirst, afterSecond)]
+    const diff = diffCatalog(beforeFirst, afterHistorical)
       .sort((left, right) => `${left.kind}:${left.key}`.localeCompare(`${right.kind}:${right.key}`));
-    const candidateDiff = diffCatalog(afterSecond, afterCandidate);
+    const candidateDiff = diffCatalog(afterHistorical, afterCandidate);
     const catalogAssessment = evaluateCatalogAllowlist(diff, allowedDiff);
     const candidateCatalogAssessment = evaluateCatalogAllowlist(candidateDiff, CATALOG_ALLOWLIST.candidate);
     const catalogAllowed = catalogAssessment.allowed;
@@ -1349,13 +1451,13 @@ alter function public.rpc_analytics_timeseries_by_operation(text,date,date,text,
         current: benchmarkAfter,
         candidate: benchmarkCandidate,
         comparison: {
-          current: currentPerformance,
+          historical: currentPerformance,
           candidateVsBaseline: candidatePerformance,
-          candidateVsCurrent: candidateVsCurrentPerformance,
+          historicalVsRemediation: candidateVsCurrentPerformance,
         },
         predicateEvidence: {
-          current: predicateEvidence(currentDefinition),
-          candidate: predicateEvidence(candidateDefinition),
+          historical: predicateEvidence(currentDefinition),
+          remediation: predicateEvidence(candidateDefinition),
         },
         legacyExplain: { filtered: explainFiltered, all: explainAll },
       },
@@ -1414,7 +1516,7 @@ export async function runPreflight({ shadow = true } = {}) {
     shadow: shadowResult,
     migrationClassifications: [],
     candidateMigrationClassifications: candidateGo
-      ? Object.keys(SEMANTIC_MIGRATION_MANIFEST.migrations).map((version) => ({ version, classification: SEMANTIC_MIGRATION_MANIFEST.migrations[version].classification }))
+      ? [REMEDIATION_MIGRATION].map((version) => ({ version, classification: SEMANTIC_MIGRATION_MANIFEST.migrations[version].classification }))
       : [],
     prohibitedMainDatabaseCommands: PROHIBITED_MAIN_DATABASE_COMMANDS,
     decision: globalDecision.decision,

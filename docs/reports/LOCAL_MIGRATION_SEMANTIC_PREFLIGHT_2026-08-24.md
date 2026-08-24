@@ -466,3 +466,41 @@ Gates amplos finais desta rodada: `npm run test:focused` **322/322 PASS**;
 bloqueantes; `npm run quality:changed` aprovado com 0 findings; `npm run lint`
 PASS com 0 erros e 158 warnings preexistentes; contracts/web typecheck e build
 PASS; `git diff --check` PASS.
+
+## Continuação 68 — remediação real da regressão histórica — 2026-08-24
+
+Foi criada a migration versionada
+`20260824190000_analytics_timeseries_scope_performance_remediation_v1.sql`.
+Ela deriva a definição real de `public.rpc_analytics_timeseries` por
+`pg_get_functiondef`, valida assinatura, âncoras e cardinalidade, materializa
+`v_group_company` e `v_excluded_pipeline_ids` uma vez por chamada, substitui os
+predicados repetidos e preserva contrato, `SECURITY DEFINER`, `search_path` vazio
+e grants. As migrations históricas não foram alteradas.
+
+O replay foi executado no shadow descartável
+`confione_shadow_semantic_preflight_20260824_34520`, usando a imagem
+`public.ecr.aws/supabase/postgres:17.6.1.158`. O container foi verificado como
+distinto de `supabase_db_genius-support-os` e removido ao final.
+
+Medianas da rodada, em milissegundos:
+
+| workload | baseline | histórica | remediação | resultado |
+|---|---:|---:|---:|---|
+| `rpc_analytics_timeseries_all` | 6.341 | 7.778 | 5.592 | remediação reduz 28,1% contra histórica |
+| `rpc_analytics_timeseries_excluded` | 5.965 | 10.411 | 6.011 | remediação reduz 42,3% contra histórica |
+| `timeseries_join_all` | 3.218 | 5.238 | 3.257 | plano estável |
+| `timeseries_join_excluded` | 5.577 | 7.222 | 6.085 | plano estável |
+
+O resultado de performance foi `OPTIMIZED_CANDIDATE_GO`. A evidência lexical
+comparou a implementação histórica com a remediação:
+
+- histórica: `current_setting=4`, `string_to_array=2`, variáveis locais=0;
+- remediação: `current_setting=1`, `string_to_array=1`, variáveis locais
+  `v_group_company` e `v_excluded_pipeline_ids`, dois predicados variáveis;
+- a equivalência funcional, contrato completo, ACL, `SECURITY DEFINER`,
+  `search_path`, RLS/cross-tenant e RPC autenticada permaneceram aprovados.
+
+O resultado global permanece deliberadamente `NO_GO`, com
+`candidateState=candidate_go` e `historicalState=historical_no_go`. A remediação
+é candidata aprovada somente no shadow; isso não autoriza aplicar migration,
+reset, rebuild, repair ou SQL no banco local canônico ou remoto.
