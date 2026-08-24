@@ -8,7 +8,7 @@
 - Review mode: SENTINEL_REQUIRED
 - Coordinator: Codex Orchestrator
 - Base SHA: 84fd21729a69d327c18e3520cbfb1fbe3173620b
-- Implementation SHA: UNCOMMITTED_WORKTREE
+- Implementation SHA: 15661fbcf8210edcbaa91b283497713c46a44068
 - Agent coordination: REVIEW_ACTIVE
 - Allowlist: `apps/web/src/features/analytics/AnalyticsCommercialPage.tsx`,
   `apps/web/src/features/analytics/AnalyticsCustomerSuccessPage.tsx`,
@@ -38,7 +38,7 @@
   módulos; `npm run lint` PASS com 0 erros e 158 warnings legados;
   `npm run docs:validate` PASS com 0 bloqueios; `npm run review:gates` PASS
   com 0 regressões bloqueantes; `git diff --check` PASS.
-- Implementation SHA: UNCOMMITTED_WORKTREE. Não houve commit, push, merge,
+- Implementation SHA: 15661fbcf8210edcbaa91b283497713c46a44068. Não houve push, merge,
   deploy, banco, migration, integração externa ou publicação.
 - Limitações: não houve QA visual autenticado, validação em produção, RLS
   servido, integração HubSpot/OMIE ou medição de performance real. O estado

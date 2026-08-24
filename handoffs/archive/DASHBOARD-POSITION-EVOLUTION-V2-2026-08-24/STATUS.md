@@ -12,7 +12,7 @@
 - Approval: APPROVED
 - Dependências: filtros e contexto metodológico concluídos; replay local
   finalizado; Visão Geral simplificada e arquivada.
-- Implementation SHA: UNCOMMITTED_WORKTREE
+- Implementation SHA: 15661fbcf8210edcbaa91b283497713c46a44068
 - Review verdict: APPROVED
 - Resumo: Comercial concentra comparação e série em Evolução; Customer
   Success separa Posição e Evolução, mantendo Evolução indisponível sem série
