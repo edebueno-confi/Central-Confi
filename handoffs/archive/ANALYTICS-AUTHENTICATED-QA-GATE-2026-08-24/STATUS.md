@@ -12,7 +12,7 @@
 - Approval: APPROVED
 - Dependências: sync replay local, filtros, contexto metodológico, Visão Geral,
   evolução de Posição/Evolução e painel visual concluídos localmente.
-- Implementation SHA: UNCOMMITTED_WORKTREE
+- Implementation SHA: 1e795174d24df225e333889efefac8a8af292fea
 - Review verdict: APPROVED
 - Resumo: smoke read-only local cobriu 5 superfícies em 2 viewports, confirmou
   shell/guard não autenticado sem erros e registrou como NÃO COMPROVADO todo o

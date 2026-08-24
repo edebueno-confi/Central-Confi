@@ -9,7 +9,7 @@
 - Coordinator: Codex Orchestrator
 - Agent coordination: REVIEW_ACTIVE
 - Base SHA: 98dcbd3f55b3f5b4ac37bd45f3f43c599f8e1109
-- Implementation SHA: UNCOMMITTED_WORKTREE
+- Implementation SHA: 1e795174d24df225e333889efefac8a8af292fea
 - Allowlist efetiva: `docs/reports/ANALYTICS_AUTHENTICATED_QA_GATE_2026-08-24.md`
   e os três handoffs correntes `TASK.md`, `IMPLEMENTATION.md` e `STATUS.md`;
   `REVIEW.md` será preservado pelo reviewer. Nenhum teste auxiliar foi
