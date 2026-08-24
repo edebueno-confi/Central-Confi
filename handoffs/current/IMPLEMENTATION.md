@@ -2,9 +2,16 @@
 
 - State: IDLE
 - Owner: Forge
+- Role: EXECUTOR
 - Reviewer active: Sentinel
 - Review mode: SENTINEL_REQUIRED
+- Coordinator: Codex Orchestrator
 - Agent coordination: IDLE
-- Último lote: LOCAL-MIGRATION-PREFLIGHT-RECONCILIATION-2026-08-24
-- Resultado: finalizado localmente após APPROVED do Sentinel.
-- Limitação vigente: drift local, exceções históricas e objetos sem origem continuam NO-GO; não há autorização para migration, SQL, banco, push, merge, deploy ou publicação.
+- Implementation SHA: N/A
+
+O lote `LOCAL-SYNC-REPLAY-FOUNDATION-2026-08-24` foi finalizado localmente e
+arquivado após aprovação independente do Sentinel. Nenhuma nova implementação
+está ativa.
+
+Não há autorização implícita para replay adicional, migration, alteração de
+banco, ação remota, secrets, push, merge ou deploy.

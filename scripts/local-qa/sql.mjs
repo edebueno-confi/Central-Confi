@@ -4,6 +4,17 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runLocalCommand } from './assert-local-supabase.mjs';
 
+export const LOCAL_QA_DB_CONTAINER = 'supabase_db_genius-support-os';
+
+export function assertCanonicalLocalQaDbContainer(value = process.env.LOCAL_QA_DB_CONTAINER) {
+  if (value && value !== LOCAL_QA_DB_CONTAINER) {
+    throw new Error(
+      `LOCAL_QA_DB_CONTAINER_INVALID: esperado ${LOCAL_QA_DB_CONTAINER}; override divergente recusado.`,
+    );
+  }
+  return LOCAL_QA_DB_CONTAINER;
+}
+
 export function sqlEscape(value) {
   return String(value).replaceAll("'", "''");
 }
@@ -86,7 +97,7 @@ export function runSqlBatch(sql) {
   // CLI `db query` uses a prepared statement and rejects multiple commands;
   // the local database container is the supported single-session fallback.
   try {
-    const container = process.env.LOCAL_QA_DB_CONTAINER ?? 'supabase_db_genius-support-os';
+    const container = assertCanonicalLocalQaDbContainer();
     const result = spawnSync('docker', ['exec', '-i', container, 'psql', '-X', '-v', 'ON_ERROR_STOP=1', '-U', 'postgres', '-d', 'postgres', '-q'], {
       input: `${normalized}\n`, encoding: 'utf8', windowsHide: true,
     });
