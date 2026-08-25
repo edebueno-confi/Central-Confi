@@ -1,8 +1,7 @@
 # REVIEW
 
-- Task: IDLE
-- Reviewer: Sentinel
-- Review mode: SENTINEL_REQUIRED
-- Veredito: none
+- State: IDLE
+- Last task: ANALYTICS-DASHBOARD-RUNTIME-MATRIX-GATE-2026-08-24
+- Last verdict: APPROVED, limited to the local read-only runtime gate.
 
-Nenhuma revisão ativa.
+The complete independent review is preserved in the archived task package.

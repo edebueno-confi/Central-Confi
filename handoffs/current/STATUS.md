@@ -1,15 +1,13 @@
 # STATUS
 
-- Task: IDLE
 - State: IDLE
-- Owner: Forge
-- Role: EXECUTOR
+- Owner: None
+- Role: NONE
 - Reviewer active: Sentinel
 - Review mode: SENTINEL_REQUIRED
-- Base SHA: not applicable
-- Coordinator: Codex Orchestrator
 - Agent coordination: IDLE
-- Review verdict: none
+- Last task: ANALYTICS-DASHBOARD-RUNTIME-MATRIX-GATE-2026-08-24
+- Last result: APPROVED and archived after selective FINALIZE_LOCAL.
+- Notification: completion must reach Sentinel and Codex.
 
-Current normalizado após FINALIZE_LOCAL seletivo da task
-ANALYTICS-FILTER-SEMANTICS-CLOSURE-2026-08-24.
+No task is active in `handoffs/current`.
