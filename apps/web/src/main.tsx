@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider } from 'react-router/dom';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { router } from './app/router';
 import './index.css';
 
@@ -25,7 +26,12 @@ function ViewportHeightSync() {
     };
   }, []);
 
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <RouterProvider router={router} />
+      <SpeedInsights />
+    </>
+  );
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
