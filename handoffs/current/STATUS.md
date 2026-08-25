@@ -8,7 +8,7 @@
 - Review mode: SENTINEL_REQUIRED
 - Agent coordination: IDLE
 - Base SHA: 869ea70198856535e112801ea86808d501e4abc8
-- Implementation SHA: UNCOMMITTED_WORKTREE
+- Implementation SHA: e8dc9d92
 
 Review verdict: APPROVED pelo Sentinel, limitado ao harness, às regressões e à
 prova local read-only. F-FILTER-001 e F-FILTER-002 foram resolvidos. Gates
