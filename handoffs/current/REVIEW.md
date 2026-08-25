@@ -2,5 +2,5 @@
 
 State: IDLE.
 
-Last review archived under
-`handoffs/archive/ANALYTICS-KPI-REMOTE-PREREQUISITES-2026-08-25/`.
+Review archived under
+`handoffs/archive/ANALYTICS-KPI-REMOTE-PREREQUISITES-SHADOW-PREFLIGHT-2026-08-25/`.
