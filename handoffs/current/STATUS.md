@@ -1,31 +1,22 @@
 # STATUS
 
-- Task: REMOTE-SUPABASE-TRUNCATE-PRIVILEGE-REMEDIATION-2026-08-25
-- State: IDLE
-- Owner: Forge
+- Task: REMOTE-SUPABASE-TRUNCATE-PRIVILEGE-APPLICATION-2026-08-25
+- State: BLOCKED
+- Owner: OWNER_DECISION_REQUIRED
 - Role: EXECUTOR
 - Reviewer active: Sentinel
 - Review mode: SENTINEL_REQUIRED
-- Agent coordination: IDLE
-- Base SHA: 76855c61
+- Agent coordination: BLOCKED
+- Base SHA: 0be04a71
 - Implementation SHA: UNCOMMITTED_WORKTREE
 
-Review verdict: APPROVED pelo Sentinel, limitado à migration candidata local,
-ao teste determinístico e ao preflight documental/read-only. A aprovação não
-autoriza aplicação remota, SQL manual, alteração de grants/policies, secrets,
-produção, push, merge, deploy ou release.
+## Veredito operacional
 
-## Estado
+`OWNER_DECISION_REQUIRED`: a aplicação remota ocorreu uma única vez e a ACL
+foi corrigida, porém o histórico registrou
+`20260825061858_remote_authenticated_truncate_revoke_v1` em vez da versão local
+esperada `20260825093000_remote_authenticated_truncate_revoke_v1`.
 
-O candidato contém somente a revogação de `TRUNCATE` para `authenticated` em
-`public.profiles` e `public.tenants`. Os gates locais passaram: teste 1/1,
-`docs:validate`, `review:gates` sem regressões bloqueantes e
-`git diff --check`. O finding remoto HIGH continua aberto até aplicação
-versionada autorizada e confirmação read-only da ACL após a aplicação.
-
-A divergência das RPCs remotas de Comercial e Suporte permanece fora do lote.
-Não houve migration remota, SQL de escrita, alteração de banco, secrets,
-push, merge, deploy ou ação externa.
-
-FINALIZE_LOCAL concluído. O lote foi arquivado e o finding remoto HIGH segue
-pendente de task própria para aplicação remota aprovada.
+Não fazer retry, segunda migration, SQL manual, reset, repair, push, merge ou
+deploy. A decisão é somente sobre aceitar/documentar a divergência ou definir
+reconciliação formal.
