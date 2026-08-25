@@ -8,7 +8,7 @@
 - Review mode: SENTINEL_REQUIRED
 - Agent coordination: IDLE
 - Base SHA: 09dc2278653c311f03cd94ebc41f03501d37eea4
-- Implementation SHA: FINALIZE_LOCAL_PENDING_SHA
+- Implementation SHA: e1cc74c7
 
 Review verdict: APPROVED pelo Sentinel, limitado ao harness e às dimensões
 locais de autorização, negação, rotas, abas e requests read-only. F-AUTH-001,
