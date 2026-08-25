@@ -32,7 +32,10 @@ test('a chave inclui dimensões de recorte e normaliza a ordem dos pipelines', (
 
 test('filtros comuns são reativos e preservam validação sem Aplicar', () => {
   assert.match(filters, /const update = \(key: keyof AnalyticsFilters, next: string\)/);
-  assert.match(filters, /emit\(nextDraft\)/);
+  assert.match(filters, /emit\(\{ \.\.\.value, \[key\]: next \}\)/);
+  assert.match(filters, /onChange: \(next: AnalyticsFilters\)/);
+  assert.doesNotMatch(filters, /useState\(value\)/);
+  assert.doesNotMatch(filters, /draft/);
   assert.doesNotMatch(filters, />Aplicar</);
   assert.match(filters, /A data inicial precisa ser anterior ou igual à data final/);
   assert.match(filters, />Limpar</);

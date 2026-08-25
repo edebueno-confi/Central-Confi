@@ -700,7 +700,7 @@ function ExecutiveHdCanvas({
         <div className={`gso-hd-filters ${mobileFiltersOpen ? "is-open" : ""}`}>
           <Filters
             value={filters}
-            onApply={applyFilters}
+            onChange={applyFilters}
             stageOptions={[]}
             extraFields={
               configuredPipelines.length > 0 ? (
