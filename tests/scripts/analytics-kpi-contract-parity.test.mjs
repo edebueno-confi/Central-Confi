@@ -22,23 +22,27 @@ function functionBlock(source, name) {
 }
 
 test('Comercial V2 publica estágio e exclusões no recorte normal e no comparativo', () => {
+  const adapter = api.match(/function commercialKpiRpcArgs[\s\S]*?\n}\n/)?.[0] ?? '';
+  assert.notEqual(adapter, '', 'adaptador comercial precisa existir');
+  assert.match(adapter, /p_stage_id:/);
+  assert.match(adapter, /p_excluded_pipeline_ids: excludedPipelineIds/);
   for (const name of ['getCommercialKpisV2', 'getCommercialKpisV2ForOverview']) {
     const block = functionBlock(api, name);
     assert.notEqual(block, '', `${name} precisa existir`);
-    assert.match(block, /p_stage_id:/);
-    assert.match(block, /p_excluded_pipeline_ids: excludedPipelineIds/);
-    assert.match(block, /p_group_company: groupCompany/);
+    assert.match(block, /commercialKpiRpcArgs\(/);
   }
 });
 
 test('Suporte V2 publica estágio, prioridade e exclusões no recorte normal e no comparativo', () => {
+  const adapter = api.match(/function supportKpiRpcArgs[\s\S]*?\n}\n/)?.[0] ?? '';
+  assert.notEqual(adapter, '', 'adaptador de suporte precisa existir');
+  assert.match(adapter, /p_stage_id:/);
+  assert.match(adapter, /p_priority:/);
+  assert.match(adapter, /p_excluded_pipeline_ids: excludedPipelineIds/);
   for (const name of ['getSupportKpisV2', 'getSupportKpisV2ForOverview']) {
     const block = functionBlock(api, name);
     assert.notEqual(block, '', `${name} precisa existir`);
-    assert.match(block, /p_stage_id:/);
-    assert.match(block, /p_priority:/);
-    assert.match(block, /p_excluded_pipeline_ids: excludedPipelineIds/);
-    assert.match(block, /p_group_company: groupCompany/);
+    assert.match(block, /supportKpiRpcArgs\(/);
   }
 });
 

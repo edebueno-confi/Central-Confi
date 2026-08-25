@@ -227,6 +227,34 @@ function rpcFilters(filters: AnalyticsFilters) {
   };
 }
 
+function commercialKpiRpcArgs(filters: AnalyticsFilters, groupCompany: string | null, excludedPipelineIds: string[]) {
+  const base = {
+    ...rpcFilters(filters),
+    p_owner_id: filters.ownerId || null,
+    p_group_company: groupCompany,
+  };
+  if (!filters.stageId && excludedPipelineIds.length === 0) return base;
+  return {
+    ...base,
+    p_stage_id: filters.stageId || null,
+    p_excluded_pipeline_ids: excludedPipelineIds,
+  };
+}
+
+function supportKpiRpcArgs(filters: AnalyticsFilters, groupCompany: string | null, excludedPipelineIds: string[]) {
+  const base = {
+    ...rpcFilters(filters),
+    p_priority: filters.priority || null,
+    p_group_company: groupCompany,
+  };
+  if (!filters.stageId && excludedPipelineIds.length === 0) return base;
+  return {
+    ...base,
+    p_stage_id: filters.stageId || null,
+    p_excluded_pipeline_ids: excludedPipelineIds,
+  };
+}
+
 export async function getCommercialSnapshot(filters: AnalyticsFilters, excludedPipelineIds: string[] = [], groupCompany: string | null = null): Promise<CommercialSnapshot> {
   const client = requireSupabaseBrowserClient();
   const { data, error } = await client.rpc('rpc_analytics_commercial_snapshot_by_operation', {
@@ -288,13 +316,7 @@ export async function getCustomerSuccessSnapshot(): Promise<CustomerSuccessSnaps
 
 export async function getCommercialKpisV2(filters: AnalyticsFilters, groupCompany: string | null = null, excludedPipelineIds: string[] = []): Promise<unknown> {
   const client = requireSupabaseBrowserClient();
-  const { data, error } = await client.rpc('rpc_analytics_commercial_kpis_by_operation', {
-    ...rpcFilters(filters),
-    p_owner_id: filters.ownerId || null,
-    p_stage_id: filters.stageId || null,
-    p_excluded_pipeline_ids: excludedPipelineIds,
-    p_group_company: groupCompany,
-  });
+  const { data, error } = await client.rpc('rpc_analytics_commercial_kpis_by_operation', commercialKpiRpcArgs(filters, groupCompany, excludedPipelineIds));
   if (error) throw toAppError(error, 'Falha ao carregar os indicadores comerciais.');
   return data;
 }
@@ -302,34 +324,16 @@ export async function getCommercialKpisV2(filters: AnalyticsFilters, groupCompan
 export async function getCommercialKpisV2ForOverview(filters: AnalyticsFilters, groupCompany: string | null = null, excludedPipelineIds: string[] = []): Promise<{ period: unknown; current: unknown }> {
   const client = requireSupabaseBrowserClient();
   const plan = buildOverviewSnapshotQueryPlan(filters);
-  const periodResponse = await client.rpc('rpc_analytics_commercial_kpis_by_operation', {
-    ...rpcFilters(plan.period),
-    p_owner_id: plan.period.ownerId || null,
-    p_stage_id: plan.period.stageId || null,
-    p_excluded_pipeline_ids: excludedPipelineIds,
-    p_group_company: groupCompany,
-  });
+  const periodResponse = await client.rpc('rpc_analytics_commercial_kpis_by_operation', commercialKpiRpcArgs(plan.period, groupCompany, excludedPipelineIds));
   if (periodResponse.error) throw toAppError(periodResponse.error, 'Falha ao carregar os indicadores comerciais do período.');
-  const currentResponse = await client.rpc('rpc_analytics_commercial_kpis_by_operation', {
-    ...rpcFilters(plan.current),
-    p_owner_id: plan.current.ownerId || null,
-    p_stage_id: plan.current.stageId || null,
-    p_excluded_pipeline_ids: excludedPipelineIds,
-    p_group_company: groupCompany,
-  });
+  const currentResponse = await client.rpc('rpc_analytics_commercial_kpis_by_operation', commercialKpiRpcArgs(plan.current, groupCompany, excludedPipelineIds));
   if (currentResponse.error) throw toAppError(currentResponse.error, 'Falha ao carregar a posição comercial atual.');
   return { period: periodResponse.data, current: currentResponse.data };
 }
 
 export async function getSupportKpisV2(filters: AnalyticsFilters, groupCompany: string | null = null, excludedPipelineIds: string[] = []): Promise<unknown> {
   const client = requireSupabaseBrowserClient();
-  const { data, error } = await client.rpc('rpc_analytics_support_kpis_by_operation', {
-    ...rpcFilters(filters),
-    p_stage_id: filters.stageId || null,
-    p_priority: filters.priority || null,
-    p_excluded_pipeline_ids: excludedPipelineIds,
-    p_group_company: groupCompany,
-  });
+  const { data, error } = await client.rpc('rpc_analytics_support_kpis_by_operation', supportKpiRpcArgs(filters, groupCompany, excludedPipelineIds));
   if (error) throw toAppError(error, 'Falha ao carregar os indicadores de atendimento.');
   return data;
 }
@@ -337,21 +341,9 @@ export async function getSupportKpisV2(filters: AnalyticsFilters, groupCompany: 
 export async function getSupportKpisV2ForOverview(filters: AnalyticsFilters, groupCompany: string | null = null, excludedPipelineIds: string[] = []): Promise<{ period: unknown; current: unknown }> {
   const client = requireSupabaseBrowserClient();
   const plan = buildOverviewSnapshotQueryPlan(filters);
-  const periodResponse = await client.rpc('rpc_analytics_support_kpis_by_operation', {
-    ...rpcFilters(plan.period),
-    p_stage_id: plan.period.stageId || null,
-    p_priority: plan.period.priority || null,
-    p_excluded_pipeline_ids: excludedPipelineIds,
-    p_group_company: groupCompany,
-  });
+  const periodResponse = await client.rpc('rpc_analytics_support_kpis_by_operation', supportKpiRpcArgs(plan.period, groupCompany, excludedPipelineIds));
   if (periodResponse.error) throw toAppError(periodResponse.error, 'Falha ao carregar os indicadores de atendimento do período.');
-  const currentResponse = await client.rpc('rpc_analytics_support_kpis_by_operation', {
-    ...rpcFilters(plan.current),
-    p_stage_id: plan.current.stageId || null,
-    p_priority: plan.current.priority || null,
-    p_excluded_pipeline_ids: excludedPipelineIds,
-    p_group_company: groupCompany,
-  });
+  const currentResponse = await client.rpc('rpc_analytics_support_kpis_by_operation', supportKpiRpcArgs(plan.current, groupCompany, excludedPipelineIds));
   if (currentResponse.error) throw toAppError(currentResponse.error, 'Falha ao carregar a posição atual do atendimento.');
   return { period: periodResponse.data, current: currentResponse.data };
 }
