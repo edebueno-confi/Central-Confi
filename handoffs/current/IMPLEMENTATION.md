@@ -1,147 +1,111 @@
 # IMPLEMENTATION
 
-- Task: ANALYTICS-DASHBOARD-FILTER-RUNTIME-PROOF-2026-08-25
+- Task: ANALYTICS-DASHBOARD-AUTHORIZATION-RUNTIME-CLOSURE-2026-08-25
 - State: IDLE
 - Owner: Forge
+- Role: EXECUTOR
 - Reviewer active: Sentinel
 - Review mode: SENTINEL_REQUIRED
-- Role: EXECUTOR
 - Agent coordination: IDLE
-- Base SHA: 869ea70198856535e112801ea86808d501e4abc8
-- Implementation SHA: e8dc9d92
+- Base SHA: 09dc2278653c311f03cd94ebc41f03501d37eea4
+- Implementation SHA: FINALIZE_LOCAL_PENDING_SHA
 
-## Diagnóstico
+## Finalização local
 
-A auditoria autenticada read-only das cinco superfícies e 50 combinações de
-tema/viewport passou console, page errors, request failures, respostas
-inesperadas e overflow. O critério antigo de seis cards comerciais falhou por
-seletor obsoleto e não representa um defeito observado na tela.
+Sentinel aprovou o lote para finalização local seletiva. O commit deve conter
+somente os dois scripts do harness, o teste, o relatório e os quatro handoffs
+arquivados, preservando alterações preexistentes fora da allowlist.
 
-Permanece sem prova executável no runtime que a troca de cada filtro dispare
-nova RPC com o contexto correto e sem reaproveitar a leitura anterior.
+## Diagnóstico inicial
 
-## Plano
+`node scripts/local-qa/analytics-dashboard-runtime-matrix.mjs` foi executado
+contra `http://127.0.0.1:4173` em modo read-only e retornou `NO_GO` por ausência
+de `LOCAL_QA_AUTHORIZED_STORAGE_STATE`,
+`LOCAL_QA_DASHBOARD_VIEWER_STORAGE_STATE` e `LOCAL_QA_STALE_STORAGE_STATE`.
+A persona não autenticada chegou às cinco rotas de `/login` sem erros, falhas
+de request ou overflow. O gate atual não prova autorização autenticada porque
+não recebeu states.
 
-1. Criar gate Playwright local read-only usando as fixtures QA existentes.
-2. Exercitar operação, período, filtros de domínio, pipelines e granularidade.
-3. Sanitizar requests e validar parâmetros dos RPCs publicados.
-4. Registrar evidência e executar testes, typecheck/build/lint/documentação e
-   quality gates.
-5. Entregar para revisão independente sem alterar produto, banco ou integrações.
+O smoke genérico `npm run local:qa:smoke` não será usado neste lote: ele parou
+antes da validação do Dashboard em um cenário de Conhecimento que espera o
+botão `Editar` e contém uma etapa de escrita posterior. Nenhuma escrita foi
+alcançada nesta execução; a falha é fora do escopo do Dashboard.
 
-## Resposta aos findings F-FILTER-001 e F-FILTER-002
+## Plano de implementação
 
-- F-FILTER-001: resolvido no lote. O harness passou a comparar pathname e
-  parâmetros esperados da superfície, além do marcador `aria-current="page"`
-  com o rótulo da aba. Quando há subaba ativa, o conjunto de marcadores é
-  comparado e precisa conter a aba da superfície. Rota ou aba divergente agora
-  gera falha bloqueante.
-- F-FILTER-002: resolvido no lote. Cada janela de interação agora exige
-  parâmetros completos e exatos. Chave ausente, `null`, valor anterior ou
-  valor divergente falham; período valida `p_from` e `p_to`, filtros de domínio
-  validam o valor selecionado e pipelines validam o array completo de
-  exclusões, incluindo o ID identificado no payload read-only da superfície.
-- A primeira reexecução do browser revelou chamadas transitórias legítimas ao
-  preencher os dois limites de período: uma delas ainda carregava o outro
-  limite anterior. O comparador foi ajustado para validar o último payload
-  parametrizado da janela, mantendo falha para o último valor ausente, nulo ou
-  divergente. A regressão cobre valor anterior seguido do valor final correto.
-- O helper de asserções é puro, está dentro da allowlist e possui regressões
-  determinísticas independentes do browser.
+1. Criar um harness próprio de autorização, reaproveitando apenas o carregador
+   de configuração QA e o servidor local existente.
+2. Exercitar apenas navegação, guard, abas e diagnóstico read-only; não incluir
+   cenários de edição, sincronização ou exportação.
+3. Usar os logins QA existentes somente em memória para personas autorizadas e
+   negar explicitamente o cenário sem permissão; nunca persistir credenciais ou
+   storage state.
+4. Manter stale como dimensão condicional e fail-closed quando ausente.
+5. Adicionar regressões puras e relatório com evidência e limitações.
 
-## Allowlist efetiva da correção
+## Validações até aqui
 
-- `scripts/local-qa/analytics-dashboard-filter-runtime.mjs`
-- `scripts/local-qa/analytics-dashboard-filter-runtime-assertions.mjs`
-- `tests/scripts/analytics-dashboard-filter-runtime.test.mjs`
-- `docs/reports/ANALYTICS_DASHBOARD_FILTER_RUNTIME_PROOF_2026-08-25.md`
-- `handoffs/current/TASK.md`, `IMPLEMENTATION.md` e `STATUS.md`; `REVIEW.md`
-  permanece preservado pelo reviewer.
+- `node scripts/local-qa/analytics-dashboard-runtime-matrix.mjs`: `NO_GO`,
+  esperado por ausência de storage states; somente a persona sem sessão foi
+  exercitada.
+- `npm run local:qa:smoke`: interrompido por timeout no cenário de Conhecimento
+  em `scripts/local-qa/browser-smoke.mjs:292`, fora do Dashboard; sem escrita
+  alcançada.
 
-O helper novo contém somente comparadores puros usados pelo gate. Nenhum arquivo
-de produto, banco, migration, RPC, secret ou integração externa foi alterado.
+## Evidência do harness próprio
 
-## Implementação do gate
+`node scripts/local-qa/analytics-dashboard-authorization-runtime.mjs` foi
+reexecutado com o servidor local em `127.0.0.1:4173` e Supabase local em
+`127.0.0.1:54321`:
 
-- O alvo é fixado em `http://127.0.0.1:4173`; qualquer outro host ou porta
-  aborta o processo.
-- GET/HEAD/OPTIONS locais e POSTs de autenticação, RPCs analíticas e RPC de
-  contexto explicitamente allowlisted são capturados; requests de escrita,
-  hosts externos, falhas de rede, erros de console/página, respostas 4xx/5xx e
-  rotas indevidas bloqueiam o resultado.
-- A captura sanitiza corpos antes de persistir a evidência e não grava
-  credenciais, tokens, cookies ou chaves.
-- A validação usa a janela de requests criada por cada interação, exige ao
-  menos uma nova RPC analítica para cada alteração válida e confere o parâmetro
-  correspondente ao contrato da superfície.
-- Os contratos financeiros foram separados dos contratos de CRM: `p_status`
-  e `p_aging_bucket` não são confundidos com `p_stage_id` e `p_priority`.
+- 40 rotas funcionais, cobrindo `platform_admin`, `dashboard_viewer` e
+  `customer_user` em desktop e mobile, mais 10 rotas não autenticadas;
+- `platform_admin` e `dashboard_viewer`: cinco abas cada, pathname/query e
+  `aria-current` corretos, sem overflow;
+- `customer_user`: cinco tentativas em cada viewport, todas redirecionadas para
+  `/inicio`, sem acesso ao Dashboard;
+- não autenticado: 10 redirects para `/login` com `redirectTo` exato;
+- 0 falhas de rota, 0 erros de console/page, 0 request failures, 0 respostas
+  inesperadas, 0 requests de escrita e 0 hosts externos não permitidos;
+- configuração QA encontrada para as três personas autenticadas;
+- stale state ausente: `state=NOT_PROVEN`, portanto o resultado global é
+  `NO_GO`/`failClosed=true`, sem fabricar uma aprovação.
 
-## Evidência final do runtime
+## Resposta aos findings do Sentinel
 
-Execução final de `node scripts/local-qa/analytics-dashboard-filter-runtime.mjs`
-em 2026-08-25, reexecutada após as correções deste re-review:
+- F-AUTH-001: `isAllowedReadOnlyRequest` agora recebe a porta observada e
+  rejeita qualquer POST allowlisted fora de `127.0.0.1:54321`; a regressão
+  cobre o mesmo RPC em `4173`.
+- F-AUTH-002: `diagnosticFailures` é aplicado a cada rota e
+  `evidenceFailures(results)` também é agregado ao `allFailures` final,
+  incluindo não autenticado e stale.
+- F-AUTH-003: `customer_user` coleta links e botões da navegação principal;
+  rotas e rótulos administrativos indevidos falham o resultado em desktop e
+  mobile. Há regressões para rota, rótulo e link administrativo.
 
-- 10/10 combinações autenticadas locais sem falhas, cobrindo as cinco abas e
-  as fixtures `authorized` e `dashboard_viewer`;
-- 274 RPCs analíticas locais observadas;
-- 52 alterações válidas de filtros e 52 novas leituras correspondentes;
-- operações observadas: `Aftersale`, `Confi`, `Confi Analytics` e `Neotrust`;
-- 0 erros de console, 0 erros de página, 0 falhas de request, 0 respostas
-  locais 4xx/5xx, 0 requests externos e 0 rotas indevidas;
-- loading e mudança de conteúdo registrados por interação como diagnóstico;
-- Financeiro validado com período, situação e aging, sem inventar filtro de
-  operação que não existe no contrato.
-- As dez URLs finais coincidiram exatamente com pathname e query esperados, e a
-  aba de domínio esperada apareceu no marcador `aria-current="page"`.
-- O período foi validado em um único payload contendo simultaneamente
-  `p_from=2026-01-01` e `p_to=2026-08-24`; campos de domínio e pipelines foram
-  comparados com os valores selecionados, incluindo IDs obtidos do catálogo
-  local read-only.
+O resultado é `AUTHORIZATION_RUNTIME_GO` apenas para as dimensões executadas.
+Não é aprovação de stale, RLS/cross-tenant, equivalência numérica,
+performance real, remoto, produção ou deploy.
 
-As reexecuções pós-correção do smoke completo passaram 10/10 em alvo local.
-Elas não substituem a revisão independente. O resultado foi produzido sem
-nova escrita ou ação externa.
+## Gates
 
-O relatório completo está em
-`docs/reports/ANALYTICS_DASHBOARD_FILTER_RUNTIME_PROOF_2026-08-25.md`.
-
-## Validações executadas até aqui
-
-- `node --check scripts/local-qa/analytics-dashboard-filter-runtime.mjs` PASS;
-- `node --test tests/scripts/analytics-dashboard-filter-runtime.test.mjs` PASS,
-  9/9, incluindo regressões de rota/aba, payload incompleto ou divergente e
-  array completo de exclusões de pipeline;
-- `node scripts/local-qa/analytics-dashboard-filter-runtime.mjs` PASS,
-  10/10 combinações, 0 falhas.
-
-## Gates complementares
-
-- `npm run test:focused` PASS, 367/367;
-- `npm run contracts:typecheck` PASS;
-- `npm run web:typecheck` PASS;
-- `npm run build` PASS, 946 módulos;
-- `npm run lint` PASS, 0 erros e 158 warnings legados;
-- `npm run docs:validate` PASS, 0 bloqueios;
-- `npm run review:gates` PASS, 0 regressões bloqueantes e 47 itens de baseline
-  resolvidos;
-- `git diff --check` PASS.
-
-## Limitações
-
-O gate não corrige autenticação, RPCs ou banco. RLS/cross-tenant servido,
-performance com volume real, remoto e produção permanecem fora desta task.
+- `node --test tests/scripts/analytics-dashboard-authorization-runtime.test.mjs`: 10/10 PASS;
+- `node --check` dos dois scripts: PASS;
+- execução do harness: 0 falhas observadas nas dimensões executadas,
+  `state=NO_GO`, `failClosed=true` por stale ausente;
+- `npm run test:focused`: 377/377 PASS;
+- `npm run contracts:typecheck`: PASS;
+- `npm run web:typecheck`: PASS;
+- `npm run build`: PASS, 946 módulos;
+- `npm run lint`: PASS, 0 erros e 158 warnings legados;
+- `npm run docs:validate`: PASS, 0 bloqueios;
+- `npm run review:gates`: PASS, 0 regressões bloqueantes e 47 itens baseline resolvidos;
+- `git diff --check`: PASS.
 
 ## Transferência para revisão
 
 State=READY_FOR_REVIEW, Owner=Sentinel, Role=REVIEWER, Reviewer active=Sentinel,
 Review mode=SENTINEL_REQUIRED e Agent coordination=REVIEW_ACTIVE. Sentinel deve
-revisar independentemente a correção de F-FILTER-001/F-FILTER-002, incluindo as
-regressões 9/9 e a reexecução runtime 10/10 pós-correção.
-
-## Finalização local
-
-Sentinel aprovou o lote. FINALIZE_LOCAL foi executado seletivamente, com
-allowlist validada e handoffs arquivados. O commit funcional foi criado sem
-misturar as alterações preexistentes do worktree; o SHA final será registrado
-no checkpoint de metadados desta finalização.
+revisar o allowlist, a distinção entre GO parcial e NO_GO global, a negação do
+`customer_user`, a política de requests read-only e as regressões dos três
+findings respondidos.
