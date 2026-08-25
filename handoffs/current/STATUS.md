@@ -11,4 +11,5 @@
 - Agent coordination: IDLE
 - Review verdict: none
 
-Current normalizado após finalização local seletiva da task anterior.
+Current normalizado após finalização local seletiva da task
+ANALYTICS-KPI-CONTRACT-SHADOW-PREFLIGHT-2026-08-24.
