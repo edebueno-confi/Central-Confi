@@ -9,6 +9,7 @@ const filters = fs.readFileSync('apps/web/src/features/analytics/AnalyticsFilter
 const finance = fs.readFileSync('apps/web/src/features/analytics/AnalyticsFinancePage.tsx', 'utf8');
 const commercial = fs.readFileSync('apps/web/src/features/analytics/AnalyticsCommercialPage.tsx', 'utf8');
 const support = fs.readFileSync('apps/web/src/features/analytics/AnalyticsCsPage.tsx', 'utf8');
+const customerSuccess = fs.readFileSync('apps/web/src/features/analytics/AnalyticsCustomerSuccessPage.tsx', 'utf8');
 const queryKeySource = fs.readFileSync('apps/web/src/features/analytics/analytics-query-key.ts', 'utf8');
 
 test('TrendPanel estabiliza o default e ignora respostas fora da geração atual', () => {
@@ -64,4 +65,9 @@ test('cada superfície invalida o estado visível antes de iniciar a nova geraç
   assert.match(support, /setStagePayload\(null\)/);
   assert.match(support, /setQueuePayload\(null\)/);
   assert.match(finance, /setState\(createAnalyticsLoadingState\(\)\)/);
+  assert.match(customerSuccess, /const latestRequest = useRef\(0\)/);
+  assert.match(customerSuccess, /const requestId = latestRequest\.current \+ 1/);
+  assert.match(customerSuccess, /requestId !== latestRequest\.current/);
+  assert.match(customerSuccess, /setResult\(\{ loading: true \}\)/);
+  assert.match(customerSuccess, /if \(result\.loading\)/);
 });

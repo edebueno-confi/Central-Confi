@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AnalyticsPageProps, AnalyticsPipelineInventory } from './analytics-model';
 import { getAnalyticsPipelineInventory, getCustomerSuccessKpisV2 } from './analytics-api';
 import { AnalyticsHdDomainFrame } from './AnalyticsHdDomainFrame';
@@ -97,6 +97,7 @@ export function AnalyticsCustomerSuccessPage({ sharedOperation, onSharedOperatio
   const [configuredPipelines, setConfiguredPipelines] = useState<AnalyticsPipelineInventory[]>([]);
   const [groupCompany, setGroupCompany] = useState(sharedOperation ?? '');
   const [subTab, setSubTab] = useState('posicao');
+  const latestRequest = useRef(0);
 
   useEffect(() => {
     if (sharedOperation !== undefined && sharedOperation !== groupCompany) setGroupCompany(sharedOperation);
@@ -107,23 +108,31 @@ export function AnalyticsCustomerSuccessPage({ sharedOperation, onSharedOperatio
     onSharedOperationChange?.(value);
   };
 
-  const load = () => {
-    setResult((current) => (current.data ? { ...current, loading: true, error: undefined } : { loading: true }));
+  const load = useCallback(() => {
+    const requestId = latestRequest.current + 1;
+    latestRequest.current = requestId;
+    setResult({ loading: true });
     void Promise.all([
       getCustomerSuccessKpisV2(groupCompany || null),
       getAnalyticsPipelineInventory('ticket'),
     ])
       .then(([data, configs]) => {
+        if (requestId !== latestRequest.current) return;
         const activeConfigs = configs.filter((config) => config.areaKeys.includes('customer_success') && config.mappingState === 'confirmed' && config.isActive && !config.isArchived);
         setConfiguredPipelines(activeConfigs);
         setResult({ loading: false, data });
       })
-      .catch(() => setResult((current) => ({ ...current, loading: false, error: true })));
-  };
+      .catch(() => {
+        if (requestId === latestRequest.current) setResult({ loading: false, error: true });
+      });
+  }, [groupCompany]);
 
-  useEffect(() => { load(); }, [groupCompany]);
+  useEffect(() => {
+    load();
+    return () => { latestRequest.current += 1; };
+  }, [load]);
 
-  if (result.loading && !result.data) {
+  if (result.loading) {
     return (
       <AnalyticsHdDomainFrame title={TITLE} description={DESCRIPTION} source={SOURCE}>
         <AnalyticsLoadingState title="Carregando Customer Success" description="Estamos preparando a leitura desta área." />
