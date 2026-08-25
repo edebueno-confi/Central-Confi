@@ -13,6 +13,7 @@ import { isAnalyticsDomainPublishedInRelease } from '../../app/release-surface.m
 import { GeniusSyncOverlay, type SyncSource, type SyncVisualState } from '../../components/GeniusSyncOverlay';
 import { canManageAnalyticsIntegration } from './analytics-permissions.mjs';
 import { areAnalyticsSourcesActive, syncProgressLabel } from './analytics-sync-progress.mjs';
+import { AnalyticsDashboardHelp } from './AnalyticsDashboardHelp';
 import './high-density.css';
 
 const DOMAINS = listEnabledAnalyticsDomains();
@@ -69,6 +70,7 @@ export function AnalyticsShell() {
   const [reportOpen, setReportOpen] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState<{ source: SyncSource; state: SyncVisualState; detail?: string } | null>(null);
   const [syncBusy, setSyncBusy] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
     const from = urlParams.get('from');
@@ -133,6 +135,7 @@ export function AnalyticsShell() {
   return (
     <div className="gso-screen-frame gso-analytics-shell gso-pilot-shell gso-visual-v1-shell gso-high-density-ui flex h-full min-h-0 flex-col overflow-hidden bg-[color:var(--gso-canvas-bg,#081220)]">
       {syncFeedback ? <GeniusSyncOverlay source={syncFeedback.source} state={syncFeedback.state} hasValidSnapshot={Boolean(sourceStatus?.hubspot.hasValidSnapshot && sourceStatus?.omie.hasValidSnapshot)} detail={syncFeedback.detail} historyHref="/admin/settings/sync-history" /> : null}
+      {helpOpen ? <AnalyticsDashboardHelp onClose={() => setHelpOpen(false)} /> : null}
       <header className="gso-screen-header gso-workspace-header shrink-0 px-5 py-3 sm:px-6 bg-transparent">
         <div className="flex min-h-12 flex-wrap items-center justify-between gap-x-4 gap-y-2">
           <div className="min-w-0">
@@ -141,6 +144,7 @@ export function AnalyticsShell() {
             {isDashboardViewer ? <span className="text-[11px] font-medium text-[color:var(--minimal-text-tertiary)]">Visualizador gerencial</span> : null}
           </div>
           <div className="gso-shell-actions flex flex-wrap items-center justify-end gap-3">
+            <button type="button" onClick={() => setHelpOpen(true)} className="gso-shell-secondary-action" title="Abrir a Central de Ajuda do Dashboard">Como os dados são calculados</button>
             {isPlatformAdmin ? <Link to="/admin/settings/dashboard-sources" className="gso-shell-secondary-action" title="Abrir governança de fontes, pipelines, reconciliação e Integrações">Governança de dados</Link> : null}
             {isPlatformAdmin ? <button type="button" onClick={() => setReportOpen(true)} className="gso-shell-report-action">Exportar</button> : null}
           </div>

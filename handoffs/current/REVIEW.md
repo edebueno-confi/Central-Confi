@@ -1,96 +1,80 @@
 # REVIEW
 
-Task: RELEASE-HEADER-GLOBAL-SEARCH-ALIGNMENT-2026-08-25
+Task: `ANALYTICS-DASHBOARD-OPERATION-FILTER-PROVENANCE-AND-HELP-CENTER-2026-08-25`
 Reviewer: Sentinel
-State: APPROVED
+State: DONE
 Owner: Forge
-Role: EXECUTOR
+Role: REVIEWER
 Reviewer active: Sentinel
 Review mode: SENTINEL_REQUIRED
 Agent coordination: IDLE
-Base SHA: d701181bf2192ff55f9b4191e624a75fc6ec287a
-Implementation SHA: `06aed8b6a4d880c12644fa4cb35e51e4a8b1cf9f`
+Base SHA: `457eecdf`
+Implementation SHA: `LOCAL_COMMIT_PENDING`
 
-## Veredito
+## Revisão inicial independente
 
-APPROVED, limitado à finalização local seletiva do lote allowlisted. A busca
-global usa uma coluna central dedicada no topbar desktop, com largura limitada,
-`min-width: 0` e ocultação responsiva preservadas. Não foram identificadas
-alterações de permissões, destinos, router, backend, RLS, secrets ou
-integrações.
+### F-HELP-001 — MEDIUM — diálogo sem gerenciamento completo de foco
 
-## Findings
+Na primeira revisão, o diálogo usava `role="dialog"` e Escape, mas não movia
+o foco para o diálogo ao abrir, não mantinha o foco dentro dele durante a
+navegação por teclado e não restaurava o foco ao botão de origem.
 
-### F-HEADER-001 — HIGH — lote não elegível para revisão formal
+Correção solicitada: foco inicial, contenção de Tab e restauração do foco, com
+regressões determinísticas.
 
-`TASK.md`, `IMPLEMENTATION.md` e `STATUS.md` permanecem em `IMPLEMENTING`, com
-Owner Forge e `IMPLEMENTATION_ACTIVE`; `REVIEW.md` estava `NOT_STARTED`. A
-revisão independente não pode aceitar nem liberar um lote que ainda não foi
-entregue por Forge em `READY_FOR_REVIEW` com allowlist, SHA e gates registrados.
+### F-HELP-002 — LOW — status documental inconsistente
 
-Finding resolvido: Forge concluiu a implementação, registrou os gates e
-reconciliou os quatro handoffs para `READY_FOR_REVIEW`, Owner Sentinel, Role
-REVIEWER e `REVIEW_ACTIVE` antes desta revisão.
+Na primeira revisão, `docs/ANALYTICS_DASHBOARD_HELP_CENTER_V1.md` declarava
+`Status: IMPLEMENTING` enquanto a entrega estava em `READY_FOR_REVIEW`.
 
-### F-HEADER-002 — MEDIUM — regressão direcionada cobre somente padrões estáticos
+Correção solicitada: alinhar o status documental aos handoffs, preservando o
+histórico e sem tratá-lo como prova de QA autenticado ou publicação de artigos.
 
-O teste `release-header-global-search-alignment.test.mjs` verifica apenas a
-presença de `display: grid`, da coluna central e da ocultação mobile. Ele não
-prova ausência de overflow em viewport estreita, centralização computada, nem a
-preservação de Ctrl/Cmd+K, foco, Escape, navegação e filtragem por permissão,
-que são critérios explícitos da task.
+### Decisão inicial
 
-Finding resolvido no escopo determinístico: as regressões foram ampliadas para
-cobrir as invariantes do layout e do comportamento existente da busca, sem
-alterar seu contrato. QA visual/runtime segue explicitamente não comprovada.
+**CHANGES_REQUESTED**. Não publicar artigos nem alterar banco, permissões ou
+integrações externas antes da resposta aos findings.
 
-### F-HEADER-003 — MEDIUM — diff check falha nos handoffs correntes
+---
 
-`git diff --check` reporta uma linha em branco nova no fim de
-`handoffs/current/TASK.md` e outra em `handoffs/current/IMPLEMENTATION.md`.
-Isso impede declarar o lote limpo para finalização local.
+## Re-review independente — F-HELP-001/002
 
-Finding resolvido: o fim dos handoffs foi normalizado e `git diff --check` e
-`git diff --cached --check` passaram nesta re-review.
+- Reviewer: Sentinel (Codex Independent Reviewer)
+- Base SHA: `457eecdf`
+- Implementation: `UNCOMMITTED_WORKTREE`
+- State revisado: `READY_FOR_REVIEW`
+- Data: 2026-08-25
 
-## Nova entrega para re-review
+### Verificações
 
-- O teste direcionado agora cobre layout sem overflow por invariantes de
-  `minmax(0, ...)`, `min-width: 0`, largura limitada e ocultação mobile.
-- O mesmo teste confirma as invariantes existentes de Ctrl/Cmd+K, Escape,
-  foco, navegação e filtragem por permissões no componente da busca.
-- O lote foi reconciliado para `READY_FOR_REVIEW`, Owner Sentinel, Role
-  REVIEWER e `REVIEW_ACTIVE`.
+- `F-HELP-001`: **RESOLVIDO**. O diálogo guarda o elemento ativo anterior,
+  move o foco inicial para Fechar, contém Tab/Shift+Tab, trata Escape,
+  restaura o foco e restaura o overflow do body. A regressão cobre esses
+  comportamentos.
+- `F-HELP-002`: **RESOLVIDO**. O documento agora declara
+  `Status: READY_FOR_REVIEW`, alinhado aos handoffs correntes.
+- A auditoria mantém a distinção entre posição e evolução, estados
+  indisponíveis, ausência de dimensão financeira operacional e a recomendação
+  de não criar/preencher propriedade customizada nesta task.
 
-## Validações independentes executadas
+### Evidências independentes
 
-- `node --test tests/scripts/release-header-global-search-alignment.test.mjs`: 2/2 PASS.
-- `node --check tests/scripts/release-header-global-search-alignment.test.mjs`: PASS.
-- `npm run web:typecheck`: PASS.
-- `npm run web:build`: PASS, 946 módulos.
-- `npm run lint`: PASS, 0 erros e 157 warnings legados.
-- `npm run docs:validate`: PASS, 0 bloqueios e 9 alertas documentais existentes.
-- `npm run review:gates`: PASS, 0 regressões bloqueantes e 47 itens do baseline resolvidos.
-- `git diff --check`: PASS.
-- `git diff --cached --check`: PASS.
-- Auditoria `quality:module` de `apps/web/src/features/navigation`: não conclusiva,
-  sem blockers confirmados; navegador, QA visual, banco, credenciais externas e
-  performance real não foram executados.
+- Testes direcionados do lote: `10/10 PASS` nesta execução, incluindo
+  proveniência e foco da Central de Ajuda.
+- `npm run docs:validate`: `PASS`, 0 bloqueios.
+- `npm run review:gates`: `PASS`, 0 regressões bloqueantes e 47 itens baseline
+  resolvidos.
+- `git diff --check`: `PASS`.
+- Gates registrados pelo Forge: `test:focused 399/399`, typecheck, build
+  947 módulos e lint sem erros, com 157 avisos legados.
 
-## Allowlist e contaminação
+### Decisão
 
-O diff funcional está limitado a `apps/web/src/index.css`, ao teste direcionado
-e aos handoffs correntes. `MinimalAppShell.tsx` e `GeniusGlobalSearch.tsx`
-permanecem na allowlist por contrato, mas não possuem alteração funcional neste
-lote. Existem oito caminhos adicionais modificados no worktree fora da
-allowlist; foram preservados fora do lote e não estão staged. Forge deve
-revalidar a separação antes de qualquer commit local.
+**APPROVED**. A aprovação é limitada ao lote local, à Central de Ajuda e à
+documentação de proveniência. Não comprova QA autenticado de produção,
+equivalência numérica remota, RLS/cross-tenant servido, performance real ou
+publicação de artigos no banco de conhecimento.
 
-## Limitações e escopo da aprovação
-
-Não houve QA visual/browser autenticado, medição computada em viewport real,
-validação de console/rede, banco, migration, RLS, produção ou integração
-externa. A aprovação cobre somente o alinhamento local do header, suas
-regressões determinísticas e os handoffs allowlisted. Não autoriza push, merge,
-deploy ou publicação externa. Sentinel não alterou código, CSS, testes,
-configuração ou banco.
+Não houve escrita no HubSpot, migration, alteração de banco, RLS/ACL, secrets,
+push, merge ou deploy. Qualquer publicação de artigos, mudança de dimensão
+operacional ou alteração remota exige task e aprovação próprias.

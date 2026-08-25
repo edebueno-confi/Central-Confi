@@ -221,7 +221,7 @@ export function AnalyticsCommercialPage({ sharedPeriod, onSharedPeriodChange, sh
             </>
           ) : null}
           {dataState?.status !== 'empty' ? (
-            <ChartCard title="Funil por estágio" description="Quantidade de negócios em cada estágio do funil comercial.">
+            <ChartCard title="Funil atual por estágio" description="Posição dos negócios abertos agora. O período altera os indicadores de movimento, ganhos e perdas, mas não muda esta fotografia atual.">
               {funnel.length > 0 ? (
                 <CommercialFunnelChart data={funnel} />
               ) : (

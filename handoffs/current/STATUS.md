@@ -6,15 +6,20 @@
 - Role: EXECUTOR
 - Review mode: SENTINEL_REQUIRED
 - Agent coordination: IDLE
-- Task: RELEASE-HEADER-GLOBAL-SEARCH-ALIGNMENT-2026-08-25
-- Base SHA: d701181bf2192ff55f9b4191e624a75fc6ec287a
-- Implementation SHA: 06aed8b6a4d880c12644fa4cb35e51e4a8b1cf9f
+- Task: ANALYTICS-DASHBOARD-OPERATION-FILTER-PROVENANCE-AND-HELP-CENTER-2026-08-25
+- Base SHA: 457eecdf
+- Implementation SHA: LOCAL_COMMIT_PENDING
 
-Sentinel concluiu a re-review independente e aprovou o lote. Forge finalizou o
-lote local seletivo; o escopo continua limitado ao alinhamento visual da
-busca global no header; permissões, destinos, router, backend, RLS, secrets e
-integrações permanecem fora do lote.
+Forge corrigiu F-HELP-001 e F-HELP-002. Sentinel concluiu a re-review
+independente e aprovou o lote local. A Central de Ajuda possui foco inicial,
+contenção de Tab/Shift+Tab, Escape, restauração do foco e restauração do
+overflow do body; o documento está alinhado em `READY_FOR_REVIEW`.
 
-F-HEADER-001/002/003 estão resolvidos no escopo documentado. A aprovação não
-autoriza push ou merge; o deploy de produção será uma ação externa separada,
-autorizada pelo proprietário e validada após o commit local.
+A aprovação é limitada à auditoria de proveniência, à Central de Ajuda e às
+regressões locais. Não comprova QA autenticado de produção, equivalência
+numérica remota, RLS/cross-tenant servido, performance real ou publicação de
+artigos.
+
+Não houve escrita no HubSpot, migration, alteração de banco, RLS/ACL, secrets,
+push, merge ou deploy. Qualquer publicação de artigos, mudança de dimensão
+operacional ou alteração remota exige task e aprovação próprias.
