@@ -1,64 +1,49 @@
 # IMPLEMENTATION
 
-- Task: ANALYTICS-CUSTOMER-SUCCESS-REACTIVE-OPERATION-CLOSURE-2026-08-25
+- Task: REMOTE-SUPABASE-TRUNCATE-PRIVILEGE-REMEDIATION-2026-08-25
 - State: IDLE
 - Owner: Forge
 - Role: EXECUTOR
 - Reviewer active: Sentinel
 - Review mode: SENTINEL_REQUIRED
 - Agent coordination: IDLE
-- Base SHA: eeddbc2a6fa9bae6b83a7eddd1f927d6db2de2c8
-- Implementation SHA: 6b5b723c (metadata checkpoint; functional commit ece396d7)
+- Base SHA: 76855c61
+- Implementation SHA: UNCOMMITTED_WORKTREE
 
 ## Diagnóstico
 
-`AnalyticsCustomerSuccessPage` mantinha `result.data` durante a troca de
-operação e não identificava a geração da leitura. Uma resposta lenta da
-operação anterior podia sobrescrever a operação atualmente selecionada.
+O projeto remoto `jzmmvfcmruasqmrdmbup` foi confirmado como ConfiOne,
+`ACTIVE_HEALTHY`, região `us-east-1`, PostgreSQL `17.6.1.111`. A consulta
+read-only confirmou `TRUNCATE` concedido a `authenticated` em
+`public.profiles` e `public.tenants`. As RPCs remotas de Comercial e Suporte
+também usam assinaturas históricas de quatro argumentos; isso será tratado em
+task posterior, depois deste bloqueio.
 
 ## Correção
 
-- `latestRequest` identifica cada geração da leitura;
-- o estado passa para `{ loading: true }` e remove o snapshot anterior antes da
-  nova consulta;
-- sucesso e erro só atualizam a tela quando pertencem à geração corrente;
-- o efeito invalida a geração anterior no cleanup;
-- regressões determinísticas foram adicionadas ao teste de reatividade.
+- migration candidate isola a revogação mínima de `TRUNCATE` para as duas
+  tabelas e o papel identificado;
+- teste estático rejeita `GRANT`, DML, `DROP`, `ALTER` e objetos fora do escopo;
+- relatório separa o candidato local da aplicação remota futura.
 
 ## Evidência e gates
 
-- Teste específico de reatividade: 5/5 PASS.
-- `npm run test:focused`: 377/377 PASS.
-- `npm run web:typecheck`: PASS.
-- `npm run build`: PASS, 946 módulos.
-- `npm run lint`: PASS, 0 erros e 157 warnings legados.
-- `npm run docs:validate`: PASS.
-- `npm run review:gates`: PASS, 0 regressões bloqueantes.
+- Teste específico: 1/1 PASS.
+- `npm run docs:validate`: PASS, 0 bloqueios.
+- `npm run review:gates`: PASS, 0 regressões bloqueantes e 47 baseline resolvidos.
 - `git diff --check`: PASS.
 
 ## Sondagem runtime read-only
 
-Browser local autenticado confirmou a rota
-`/admin/analytics?tab=customer-success`, três operações disponíveis e nova
-leitura `rpc_analytics_customer_success_kpis_by_operation` com
-`p_group_company=Aftersale` após a troca. Não houve request de escrita,
-alteração de RPC, banco ou integração externa.
+Identidade remota e signatures foram consultadas por SQL SELECT read-only. Não
+houve aplicação de migration, alteração de grant/policy, SQL de escrita,
+secret, push, merge ou deploy.
 
-O smoke completo de filtros não foi usado como gate novo porque excedeu o
-limite operacional do runner; a execução anterior aprovada da task 87 continua
-como evidência das cinco superfícies. Esta task acrescenta somente a invalidação
-local de Customer Success.
+## Entrega
 
-## Entrega para revisão
+State=IDLE após FINALIZE_LOCAL. O lote aprovado foi arquivado em
+`handoffs/archive/REMOTE-SUPABASE-TRUNCATE-PRIVILEGE-REMEDIATION-2026-08-25/`.
+Qualquer aplicação remota será uma ação posterior, separada, com aprovação
+própria.
 
-State=READY_FOR_REVIEW, Owner=Sentinel, Role=REVIEWER, Reviewer active=Sentinel,
-Review mode=SENTINEL_REQUIRED e Agent coordination=REVIEW_ACTIVE. A aprovação,
-se houver, será limitada à superfície Customer Success e aos testes locais.
-
-Sem banco, migration, RPC alterada, secrets, remoto, push, merge ou deploy.
-
-## Finalização local
-
-Sentinel aprovou o lote de forma limitada à reatividade local de Customer Success.
-O lote foi arquivado e finalizado em commit seletivo; alterações preexistentes
-fora da allowlist foram preservadas.
+Sem aplicação remota nesta etapa.

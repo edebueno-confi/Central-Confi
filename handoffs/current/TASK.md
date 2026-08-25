@@ -1,37 +1,44 @@
 # TASK
 
-- Task: ANALYTICS-CUSTOMER-SUCCESS-REACTIVE-OPERATION-CLOSURE-2026-08-25
+- Task: REMOTE-SUPABASE-TRUNCATE-PRIVILEGE-REMEDIATION-2026-08-25
 - State: IDLE
 - Owner: Forge
 - Role: EXECUTOR
 - Reviewer active: Sentinel
 - Review mode: SENTINEL_REQUIRED
 - Agent coordination: IDLE
-- Base SHA: eeddbc2a6fa9bae6b83a7eddd1f927d6db2de2c8
-- Implementation SHA: 6b5b723c (metadata checkpoint; functional commit ece396d7)
+- Base SHA: 76855c61
+- Implementation SHA: UNCOMMITTED_WORKTREE
 
 ## Objetivo
 
-Corrigir a reatividade da superfície Customer Success ao trocar a operação:
-invalidar o snapshot visível antes da nova leitura, mostrar loading honesto,
-descartar respostas de gerações anteriores e preservar o contrato existente de
-`getCustomerSuccessKpisV2(groupCompany)`.
+Corrigir, de forma versionada e fail-closed, o finding HIGH da auditoria remota
+que concede `TRUNCATE` ao papel `authenticated` em `public.profiles` e
+`public.tenants`. O lote prepara a migration e seus gates; não executa escrita
+remota nesta etapa.
 
 ## Escopo allowlisted
 
-- `apps/web/src/features/analytics/AnalyticsCustomerSuccessPage.tsx`
-- `tests/scripts/analytics-reactive-filters-kpi-loop.test.mjs`
+- `supabase/migrations/20260825093000_remote_authenticated_truncate_revoke_v1.sql`
+- `tests/scripts/remote-supabase-security-truncate-revoke.test.mjs`
+- `docs/reports/REMOTE_SUPABASE_TRUNCATE_PRIVILEGE_REMEDIATION_2026-08-25.md`
 - `handoffs/current/TASK.md`
 - `handoffs/current/IMPLEMENTATION.md`
 - `handoffs/current/STATUS.md`
+- `handoffs/current/REVIEW.md`
 
-`REVIEW.md` será preservado pelo reviewer e não haverá alteração de produto
-fora da superfície Customer Success.
+Não haverá alteração de produto, frontend, RPC de KPI, RLS de dados, secret ou
+integração externa. A migration remota não será aplicada antes de APPROVED.
 
 ## Critérios de aceitação
 
-- nova operação limpa o snapshot anterior imediatamente;
-- respostas de requests anteriores não podem publicar dados no novo recorte;
-- erro da nova leitura não reaproveita dados antigos;
-- teste determinístico cobre geração, invalidação e loading;
-- não alterar RPC, migration, banco, RLS, secrets, remoto ou deploy.
+- migration contém somente `REVOKE TRUNCATE` dos dois objetos e do papel
+  `authenticated`;
+- teste determinístico impede grant amplo, DDL destrutivo e DML no lote;
+- relatório registra identidade remota, evidência read-only e limitação;
+- preflight local passa e o lote é entregue a Sentinel como READY_FOR_REVIEW;
+- nenhuma migration, SQL de escrita, grant/policy remoto, secret, push, merge ou
+  deploy é executado nesta etapa.
+
+Entrega finalizada localmente. O lote foi aprovado pelo Sentinel, arquivado e
+normalizado para `IDLE`. A aplicação remota permanece fora desta task.

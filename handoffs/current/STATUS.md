@@ -1,24 +1,31 @@
 # STATUS
 
-- Task: ANALYTICS-CUSTOMER-SUCCESS-REACTIVE-OPERATION-CLOSURE-2026-08-25
+- Task: REMOTE-SUPABASE-TRUNCATE-PRIVILEGE-REMEDIATION-2026-08-25
 - State: IDLE
 - Owner: Forge
 - Role: EXECUTOR
 - Reviewer active: Sentinel
 - Review mode: SENTINEL_REQUIRED
 - Agent coordination: IDLE
-- Base SHA: eeddbc2a6fa9bae6b83a7eddd1f927d6db2de2c8
-- Implementation SHA: 6b5b723c (metadata checkpoint; functional commit ece396d7)
+- Base SHA: 76855c61
+- Implementation SHA: UNCOMMITTED_WORKTREE
 
-Review verdict: APPROVED pelo Sentinel, limitado à reatividade local de Customer
-Success e aos testes determinísticos. O snapshot é invalidado antes da nova
-leitura e respostas de gerações anteriores são descartadas. O contrato RPC foi
-preservado. Sem alteração de produto fora da superfície, banco, migration,
-secrets, remoto, push, merge ou deploy.
+Review verdict: APPROVED pelo Sentinel, limitado à migration candidata local,
+ao teste determinístico e ao preflight documental/read-only. A aprovação não
+autoriza aplicação remota, SQL manual, alteração de grants/policies, secrets,
+produção, push, merge, deploy ou release.
 
 ## Estado
 
-Correção local concluída para impedir snapshot obsoleto durante troca de
-operação na aba Customer Success. O lote foi finalizado localmente após revisão
-independente e current está IDLE. Não autoriza banco, migration, remoto,
-secrets, push, merge ou deploy.
+O candidato contém somente a revogação de `TRUNCATE` para `authenticated` em
+`public.profiles` e `public.tenants`. Os gates locais passaram: teste 1/1,
+`docs:validate`, `review:gates` sem regressões bloqueantes e
+`git diff --check`. O finding remoto HIGH continua aberto até aplicação
+versionada autorizada e confirmação read-only da ACL após a aplicação.
+
+A divergência das RPCs remotas de Comercial e Suporte permanece fora do lote.
+Não houve migration remota, SQL de escrita, alteração de banco, secrets,
+push, merge, deploy ou ação externa.
+
+FINALIZE_LOCAL concluído. O lote foi arquivado e o finding remoto HIGH segue
+pendente de task própria para aplicação remota aprovada.
