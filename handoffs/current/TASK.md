@@ -2,6 +2,5 @@
 
 State: IDLE. No active task.
 
-The last task was `ANALYTICS-KPI-CONTRACT-REMOTE-APPLICATION-2026-08-25` and is
-archived after local finalization. Its approval was limited to documentary
-preflight; the remote KPI migration remains `NO_GO`.
+Last task `ANALYTICS-KPI-REMOTE-PREREQUISITES-2026-08-25` was approved locally
+and archived. The next controlled step is a disposable shadow preflight.
