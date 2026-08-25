@@ -1,6 +1,6 @@
 # TASK
 
-Task: `ANALYTICS-KPI-REMOTE-PREREQUISITES-SHADOW-PREFLIGHT-2026-08-25`
+Task: `ANALYTICS-KPI-REMOTE-PREREQUISITES-REMOTE-PREFLIGHT-2026-08-25`
 
 State: IDLE
 Owner: Forge
@@ -8,46 +8,51 @@ Role: EXECUTOR
 Reviewer active: Sentinel
 Review mode: SENTINEL_REQUIRED
 Agent coordination: IDLE
-Base SHA: ecf919f2
+Base SHA: eea38cc8
 
 ## Objetivo
 
-Validar, em um PostgreSQL descartável e namespaced, a migration de helpers
-`20260825123000_analytics_kpi_remote_prerequisites_v1.sql` junto com a
-migration de contrato KPI `20260824210000_analytics_kpi_contract_parity_v1.sql`.
+Pacote finalizado e arquivado após aprovação independente. O próximo passo
+deve ser uma task versionada separada para aplicação remota dos helpers.
+
+Executar auditoria remota read-only no projeto Supabase explicitamente
+reconfirmado `jzmmvfcmruasqmrdmbup`, verificando os quatro helpers e as
+dependências do contrato KPI antes de qualquer aplicação versionada.
 
 ## Escopo allowlisted
 
-- `scripts/local-qa/analytics-kpi-remote-prerequisites-shadow-preflight.mjs`
-- `tests/scripts/analytics-kpi-remote-prerequisites-shadow-preflight.test.mjs`
-- `docs/reports/ANALYTICS_KPI_REMOTE_PREREQUISITES_SHADOW_PREFLIGHT_2026-08-25.md`
+- `docs/reports/ANALYTICS_KPI_REMOTE_PREREQUISITES_REMOTE_PREFLIGHT_2026-08-25.md`
 - `handoffs/current/TASK.md`
 - `handoffs/current/IMPLEMENTATION.md`
 - `handoffs/current/REVIEW.md`
 - `handoffs/current/STATUS.md`
-- `handoffs/README.md` somente a linha 94 da fila canônica
+- `handoffs/README.md` somente a linha 95 da fila canônica
 
 ## Fora de escopo
 
-- banco local canônico `supabase_db_genius-support-os`;
-- projeto Supabase remoto `jzmmvfcmruasqmrdmbup`;
-- PostgREST remoto ou browser autenticado;
-- SQL manual fora do shadow;
-- reset, repair, rebuild, secrets, push, merge, deploy ou release.
+- aplicação de migration, SQL remoto de escrita, DDL ou alteração de ACL;
+- reset, repair, rebuild, secrets, push, merge e deploy;
+- smoke HTTP autenticado sem sessão válida disponível.
 
 ## Critérios de aceite
 
-1. O alvo é verificado como namespaced, descartável e diferente do container
-   canônico antes de qualquer SQL.
-2. O shadow inicia com as relações mínimas, `can_read_analytics()` seguro e
-   sem os quatro helpers; as duas migrations candidatas são aplicadas somente
-   no shadow.
-3. O preflight comprova existência, semântica, segurança e ausência de grants
-   indevidos dos helpers, além dos wrappers KPI de operação.
-4. Smoke SQL read-only sob role `authenticated` comprova operação selecionada,
-   exclusão de pipeline e comportamento `Todas`; o retorno do shadow sem
-   PostgREST permanece documentado como não equivalente ao remoto.
-5. Falha, alvo inválido ou shadow indisponível resulta em `NO_GO` e
-   `failClosed=true`, com limpeza best-effort sem tocar o canônico.
+1. Identidade e status do projeto são confirmados antes das consultas.
+2. Histórico, relações, funções, assinaturas, owner, segurança, `search_path`,
+   ACL e grants são registrados com consultas read-only sanitizadas.
+3. Divergência, falha, ausência de smoke ou resultado parcial mantém
+   `NO_GO`/`failClosed=true` e impede aplicação.
 
-O lote foi aprovado pelo Sentinel e arquivado no pacote correspondente.
+## Entrega read-only
+
+Identidade confirmada: projeto `ConfiOne`, ref `jzmmvfcmruasqmrdmbup`,
+`ACTIVE_HEALTHY`, PostgreSQL 17.6.1.111, us-east-1. O histórico contém 299
+migrations e não contém 20260825123000 ou 20260824210000.
+
+Os quatro helpers estão presentes e compatíveis com o candidato: owner
+postgres, `SECURITY DEFINER` quando aplicável, `search_path` vazio e nenhum
+EXECUTE para anon. Os wrappers novos de seis argumentos e os wrappers filtered
+auditados não estão presentes. Source config tem 38 linhas, 30 classificadas/
+confirmadas e 3 chaves ativas ambíguas.
+
+Resultado: `REMOTE_PREFLIGHT_NO_GO`, `failClosed=true`, application `NOT_RUN`.
+Smoke HTTP autenticado não foi executado por ausência de sessão válida.
