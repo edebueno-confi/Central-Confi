@@ -20,6 +20,7 @@ test('shadow é namespaced, descartável e rejeita o container canônico', () =>
 test('ambas as migrations candidatas são versionadas e auditáveis', () => {
   const result = auditCandidates();
   assert.equal(result.staticOk, true);
+  assert.equal(result.helperMarkers.transactionEnvelope, true);
   assert.match(HELPER_CANDIDATE, /20260825123000/);
   assert.match(CONTRACT_CANDIDATE, /20260824210000/);
   assert.equal(result.helperMarkers.invalidRatioNull, true);

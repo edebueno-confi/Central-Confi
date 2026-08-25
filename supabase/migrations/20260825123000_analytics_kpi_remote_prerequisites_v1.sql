@@ -5,6 +5,8 @@
 -- smoke autenticado posterior. Nenhum helper recebe EXECUTE direto de roles
 -- de cliente.
 
+begin;
+
 do $preflight$
 begin
   if to_regclass('public.analytics_source_config') is null then
@@ -171,3 +173,5 @@ comment on function app_private.analytics_pipeline_operation_eligible(text, text
 
 revoke all on function app_private.analytics_pipeline_operation_eligible(text, text, text, text)
   from public, anon, authenticated;
+
+commit;

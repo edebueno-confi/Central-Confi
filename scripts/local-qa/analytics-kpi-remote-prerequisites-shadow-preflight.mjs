@@ -65,6 +65,7 @@ export function auditCandidates(root = ROOT) {
   const helper = readFileSync(join(root, HELPER_CANDIDATE), 'utf8');
   const contract = readFileSync(join(root, CONTRACT_CANDIDATE), 'utf8');
   const helperMarkers = {
+    transactionEnvelope: /(?:^|\n)begin;\s/.test(helper) && /\ncommit;\s*$/.test(helper),
     canReadPreflight: helper.includes("pg_get_userbyid(p.proowner) = 'postgres'") && helper.includes("search_path=\"\"") && helper.includes("has_function_privilege('service_role', p.oid, 'EXECUTE')"),
     invalidRatioNull: helper.includes('p_numerator is null') && helper.includes('p_numerator > p_denominator'),
     operationEligibility: helper.includes("group_company_source = 'confirmed'") && helper.includes("a.area_key <> 'a_classificar'"),
