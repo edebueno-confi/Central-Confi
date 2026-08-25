@@ -9,8 +9,8 @@ const commercial = fs.readFileSync(path.join(root, 'apps/web/src/features/analyt
 const overview = fs.readFileSync(path.join(root, 'apps/web/src/features/analytics/AnalyticsCeoPage.tsx'), 'utf8');
 
 test('Comercial diferencia posição atual de movimento no período', () => {
-  assert.match(commercial, /Funil atual por estágio/);
-  assert.match(commercial, /O período altera os indicadores de movimento/);
+  assert.match(commercial, /Funil no período selecionado/);
+  assert.match(commercial, /coorte de criação do período/);
 });
 
 test('Visão Geral não promove métricas sem dimensão operacional', () => {

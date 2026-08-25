@@ -2,14 +2,14 @@
 
 Task: ANALYTICS-DASHBOARD-OVERVIEW-SCOPE-AND-CHARTS-2026-08-25
 Reviewer: Sentinel
-State: IDLE
+State: APPROVED
 Owner: Forge
-Role: EXECUTOR
+Role: REVIEWER
 Reviewer active: Sentinel
 Review mode: SENTINEL_REQUIRED
-Agent coordination: IDLE
+Agent coordination: HOLD
 Base SHA: f12f57b7
-Implementation SHA: FINALIZE_LOCAL
+Implementation SHA: UNCOMMITTED_WORKTREE
 
 A revisão independente foi concluída após a entrega em READY_FOR_REVIEW com
 allowlist, evidências e gates.

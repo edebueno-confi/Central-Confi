@@ -13,7 +13,6 @@ const migration = await readFile(
   new URL('../../supabase/migrations/20260824210000_analytics_kpi_contract_parity_v1.sql', import.meta.url),
   'utf8',
 );
-const task = await readFile(new URL('../../handoffs/current/TASK.md', import.meta.url), 'utf8');
 const report = await readFile(
   new URL('../../docs/reports/ANALYTICS_KPI_CONTRACT_REMOTE_APPLICATION_R2_2026-08-25.md', import.meta.url),
   'utf8',
@@ -38,7 +37,8 @@ test('preflight imediato cobre legados, alvos, segurança, ACL e fingerprints', 
   assert.match(query, /definition_fingerprint is null/);
   assert.match(query, /legacy_security_ok/);
   assert.match(query, /targets_absent/);
-  assert.match(task, /to_regprocedure[\s\S]*wrappers legados/);
+  // O contrato remoto é validado contra o relatório versionado da própria
+  // task. O TASK corrente é mutável e não pode ser dependência deste gate.
   assert.match(report, /to_regprocedure[\s\S]*wrappers legados/);
 });
 

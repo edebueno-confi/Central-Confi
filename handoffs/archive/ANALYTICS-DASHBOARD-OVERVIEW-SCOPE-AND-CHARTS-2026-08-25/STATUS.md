@@ -1,14 +1,14 @@
 # STATUS
 
-- State: IDLE
+- State: APPROVED
 - Owner: Forge
 - Reviewer active: Sentinel
-- Role: EXECUTOR
+- Role: REVIEWER
 - Review mode: SENTINEL_REQUIRED
-- Agent coordination: IDLE
+- Agent coordination: HOLD
 - Task: ANALYTICS-DASHBOARD-OVERVIEW-SCOPE-AND-CHARTS-2026-08-25
 - Base SHA: f12f57b7
-- Implementation SHA: FINALIZE_LOCAL
+- Implementation SHA: UNCOMMITTED_WORKTREE
 
 Task promovida pelo Orquestrador após a finalização local aprovada da task
 anterior. O lote é local e não autoriza migration, banco remoto, secrets,
@@ -22,8 +22,8 @@ Allowlist: `AnalyticsCommercialPage.tsx`, `AnalyticsPipelineCombobox.tsx`, os
 três testes allowlisted e os três handoffs correntes TASK/IMPLEMENTATION/STATUS.
 REVIEW.md foi preservado. O levantamento de Customer Success foi somente
 read-only e não alterou a UI.
-Review verdict: APPROVED por Sentinel, finalização local concluída. Limitado ao
-lote local e aos contratos existentes. Não autoriza migration, banco remoto,
-secrets, push, merge, deploy ou criação/preenchimento de propriedade HubSpot.
+Review verdict: APPROVED por Sentinel, limitado ao lote local e aos contratos
+existentes. Não autoriza migration, banco remoto, secrets, push, merge, deploy
+ou criação/preenchimento de propriedade HubSpot.
 O proprietário adicionou validação urgente do funil por período, cobertura de
 pipeline/operação/estágios, compactação do seletor e revisão das abas.

@@ -221,7 +221,7 @@ export function AnalyticsCommercialPage({ sharedPeriod, onSharedPeriodChange, sh
             </>
           ) : null}
           {dataState?.status !== 'empty' ? (
-            <ChartCard title="Funil atual por estágio" description="Posição dos negócios abertos agora. O período altera os indicadores de movimento, ganhos e perdas, mas não muda esta fotografia atual.">
+            <ChartCard title="Funil no período selecionado" description="Negócios do recorte selecionado, agrupados pelo estágio publicado. A contagem usa a coorte de criação do período e respeita operação, pipeline e estágio.">
               {funnel.length > 0 ? (
                 <CommercialFunnelChart data={funnel} />
               ) : (

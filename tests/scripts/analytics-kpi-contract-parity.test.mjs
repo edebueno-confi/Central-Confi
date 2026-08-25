@@ -8,10 +8,12 @@ const overview = await read('apps/web/src/features/analytics/AnalyticsCeoPage.ts
 const commercial = await read('apps/web/src/features/analytics/AnalyticsCommercialPage.tsx');
 const support = await read('apps/web/src/features/analytics/AnalyticsCsPage.tsx');
 const shell = await read('apps/web/src/features/analytics/AnalyticsShell.tsx');
+const pipelineCombobox = await read('apps/web/src/features/analytics/AnalyticsPipelineCombobox.tsx');
 const model = await read('apps/web/src/features/analytics/analytics-model.ts');
 const finance = await read('apps/web/src/features/analytics/AnalyticsFinancePage.tsx');
 const candidate = await read('supabase/migrations/20260824210000_analytics_kpi_contract_parity_v1.sql');
 const operationGovernance = await read('supabase/migrations/20260822073000_analytics_pipeline_operation_governance_findings_v1.sql');
+const { readAnalyticsStageScope, selectedAnalyticsPipelineIds } = await import('../../apps/web/src/features/analytics/analytics-stage-scope.mjs');
 
 function candidateFunctionBlock(name) {
   return candidate.match(new RegExp(`create or replace function public\\.${name}\\([\\s\\S]*?\\n\\$\\$;`))?.[0] ?? '';
@@ -119,6 +121,63 @@ test('elegibilidade canônica mantém exclusões sem misturar operações', () =
     assert.match(block, /current_setting\('app\.analytics_group_company', true\)/);
   }
   assert.match(candidate, /set_analytics_operation_scope\(p_group_company\)/g);
+});
+
+test('Comercial concentra posição detalhada e evolução sem duplicar a Visão Geral', () => {
+  assert.match(commercial, /CommercialFunnelChart/);
+  assert.match(commercial, /CommercialOwnerPerformanceChart/);
+  assert.match(commercial, /title="Ganhos no período"/);
+  assert.match(commercial, /id: 'posicao'[\s\S]*?Funil no período selecionado/);
+  assert.match(commercial, /id: 'evolucao'[\s\S]*?AnalyticsCommercialComparison[\s\S]*?AnalyticsTrendPanel/);
+  assert.doesNotMatch(overview, /AnalyticsTrendPanel/);
+  assert.doesNotMatch(overview, /Evolução por domínio/);
+});
+
+test('troca de período preserva a coorte comparável e invalida o recorte comercial', () => {
+  assert.match(commercial, /const previousPeriod = resolvePreviousComparablePeriod\(filters\)/);
+  assert.match(commercial, /getCommercialKpisV2\(\{ \.\.\.filters, \.\.\.previousPeriod \}, groupCompany \|\| null, excludedPipelineIds\)/);
+  assert.match(commercial, /setState\(createAnalyticsLoadingState\(\)\)/);
+  assert.match(commercial, /setKpiPayload\(null\)/);
+  assert.match(commercial, /setPreviousKpiPayload\(null\)/);
+  assert.match(commercial, /let cancelled = false/);
+  assert.match(commercial, /if \(!cancelled\) setKpiPayload\(payload\)/);
+  assert.match(commercial, /cancelled = true/);
+});
+
+test('funil usa período, operação, pipeline e todos os estágios publicados do recorte', () => {
+  assert.match(commercial, /buildCommercialStageQueryPlan\(filters, excludedPipelineIds, groupCompany \|\| null\)/);
+  assert.match(commercial, /getCommercialSnapshot\(queryPlan\.data\.filters, queryPlan\.data\.excludedPipelineIds, queryPlan\.data\.groupCompany\)/);
+  assert.match(commercial, /title="Funil no período selecionado"/);
+  assert.match(commercial, /coorte de criação do período e respeita operação, pipeline e estágio/);
+
+  const configs = [
+    { pipelineId: 'p-after-a', groupCompany: 'After Sale' },
+    { pipelineId: 'p-after-b', groupCompany: 'After Sale' },
+    { pipelineId: 'p-confi', groupCompany: 'Confi' },
+  ];
+  const rows = [
+    { label: 'Entrada', pipelineBreakdown: [{ pipelineId: 'p-after-a', stageId: 's-entry' }, { pipelineId: 'p-after-b', stageId: 's-entry' }] },
+    { label: 'Proposta', pipelineBreakdown: [{ pipelineId: 'p-after-b', stageId: 's-proposal' }] },
+    { label: 'Fechado', pipelineBreakdown: [{ pipelineId: 'p-confi', stageId: 's-closed' }] },
+  ];
+  const allPipelines = selectedAnalyticsPipelineIds(configs, '', []);
+  const afterSalePipelines = selectedAnalyticsPipelineIds(configs, 'After Sale', []);
+  const afterSaleWithoutOnePipeline = selectedAnalyticsPipelineIds(configs, 'After Sale', ['p-after-b']);
+  assert.deepEqual(allPipelines, ['p-after-a', 'p-after-b', 'p-confi']);
+  assert.deepEqual(afterSalePipelines, ['p-after-a', 'p-after-b']);
+  assert.deepEqual(afterSaleWithoutOnePipeline, ['p-after-a']);
+  assert.deepEqual(readAnalyticsStageScope(rows, allPipelines).options.map((option) => option.value), ['s-entry', 's-proposal', 's-closed']);
+  assert.deepEqual(readAnalyticsStageScope(rows, afterSalePipelines).options.map((option) => option.value), ['s-entry', 's-proposal']);
+  assert.deepEqual(readAnalyticsStageScope(rows, afterSaleWithoutOnePipeline).options.map((option) => option.value), ['s-entry']);
+});
+
+test('seletor compacto preserva valor selecionado e controles de teclado', () => {
+  assert.match(pipelineCombobox, /min-w-\[10rem\] max-w-\[15rem\]/);
+  assert.match(pipelineCombobox, /aria-controls=\{`\$\{storageKey\}-options`\}/);
+  assert.match(pipelineCombobox, /aria-expanded=\{open\}/);
+  assert.match(pipelineCombobox, /<span className="min-w-0 truncate">\{label\}<\/span>/);
+  assert.match(pipelineCombobox, /role="option" aria-selected=\{included\}/);
+  assert.match(pipelineCombobox, /type="button"/);
 });
 
 test('migration candidata preserva segurança e não usa SQL dinâmico', () => {
