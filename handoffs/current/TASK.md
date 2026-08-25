@@ -1,11 +1,14 @@
 # TASK
 
+- Task: IDLE
 - State: IDLE
 - Owner: Forge
+- Role: EXECUTOR
 - Reviewer active: Sentinel
-- Coordinator: Codex Orchestrator
+- Review mode: SENTINEL_REQUIRED
+- Base SHA: not applicable
+- Approval: none
 - Agent coordination: IDLE
-- Resume condition: promover somente a próxima task elegível após verificar dependências
 
-Nenhuma task ativa em `handoffs/current/`. O último lote foi arquivado após
-aprovação independente do Sentinel.
+Nenhuma task ativa. A fila canônica permanece como fonte da próxima promoção
+sequencial autorizada.

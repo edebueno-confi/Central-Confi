@@ -27,7 +27,7 @@ test('a falha de carregamento oferece ação de repetir a leitura', () => {
   assert.match(executive, /Tentar de novo/);
   // Sem o token nas dependências o efeito nunca refaz a leitura, porque o memo
   // de filtros é estável por valor: o botão existiria e não faria nada.
-  assert.match(executive, /\[stableFilters, groupCompany, sourceStatus, operationRetryToken\]/);
+  assert.match(executive, /\[stableFilters, groupCompany, sourceStatus, operationRetryToken, commercialExcludedPipelineIds, supportExcludedPipelineIds\]/);
 });
 
 test('a explicação do recorte não usa jargão técnico com o executivo', () => {

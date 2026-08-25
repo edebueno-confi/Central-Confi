@@ -19,8 +19,8 @@ const timeseriesScopeMigration = fs.readFileSync('supabase/migrations/2026082109
 const timeseriesPipelineExclusionMigration = fs.readFileSync('supabase/migrations/20260823100000_analytics_timeseries_pipeline_exclusion_v1.sql', 'utf8');
 
 test('visão executiva expõe evolução real por domínio sem misturar unidades', () => {
-  assert.match(executive, /<AnalyticsTrendPanel domain="commercial" groupCompany=\{groupCompany\} \/>/);
-  assert.match(executive, /<AnalyticsTrendPanel domain="support" groupCompany=\{groupCompany\} \/>/);
+  assert.match(executive, /<AnalyticsTrendPanel domain="commercial" groupCompany=\{groupCompany\} excludedPipelineIds=\{commercialExcludedPipelineIds\} \/>/);
+  assert.match(executive, /<AnalyticsTrendPanel domain="support" groupCompany=\{groupCompany\} excludedPipelineIds=\{supportExcludedPipelineIds\} \/>/);
   assert.match(executive, /<AnalyticsTrendPanel domain="finance" groupCompany=\{groupCompany\} \/>/);
   assert.match(executive, /Evolução por domínio/);
 });
@@ -62,9 +62,9 @@ test('performance de suporte usa identidade estável e não nome duplicável com
 
 test('escopo de operação é espelhado nos read models HubSpot e limita domínios sem dimensão publicada', () => {
   assert.match(executive, /const stableFilters = useMemo\(/);
-  assert.match(executive, /getCommercialKpisV2ForOverview\(stableFilters, groupCompany\)/);
-  assert.match(executive, /getSupportKpisV2ForOverview\(stableFilters, groupCompany\)/);
-  assert.match(executive, /getCsSnapshotForOverview\(stableFilters, \[\], groupCompany\)/);
+  assert.match(executive, /getCommercialKpisV2ForOverview\(stableFilters, groupCompany, commercialExcludedPipelineIds\)/);
+  assert.match(executive, /getSupportKpisV2ForOverview\(stableFilters, groupCompany, supportExcludedPipelineIds\)/);
+  assert.match(executive, /getCsSnapshotForOverview\(stableFilters, supportExcludedPipelineIds, groupCompany\)/);
   assert.match(executive, /applyOperationScope/);
   // V-04: esta asserção fixava a redação antiga, que falava "server-side" e
   // "read models publicados" para um público executivo. O que precisa continuar
@@ -82,8 +82,8 @@ test('escopo de operação é espelhado nos read models HubSpot e limita domíni
   assert.match(executive, /maskUnscopedOperationKpis/);
   assert.match(financePage, /Financeiro consolidado fora do recorte/);
   assert.match(financePage, /Abrir Governança/);
-  assert.match(executive, /<AnalyticsTrendPanel domain="commercial" groupCompany=\{groupCompany\} \/>/);
-  assert.match(executive, /<AnalyticsTrendPanel domain="support" groupCompany=\{groupCompany\} \/>/);
+  assert.match(executive, /<AnalyticsTrendPanel domain="commercial" groupCompany=\{groupCompany\} excludedPipelineIds=\{commercialExcludedPipelineIds\} \/>/);
+  assert.match(executive, /<AnalyticsTrendPanel domain="support" groupCompany=\{groupCompany\} excludedPipelineIds=\{supportExcludedPipelineIds\} \/>/);
   assert.match(commercialPage, /<AnalyticsTrendPanel domain="commercial" groupCompany=\{groupCompany\} excludedPipelineIds=\{excludedPipelineIds\} \/>/);
   assert.match(supportPage, /<AnalyticsTrendPanel domain="support" groupCompany=\{groupCompany\} excludedPipelineIds=\{excludedPipelineIds\} \/>/);
   assert.match(trendPanel, /getAnalyticsTimeseries\(domain, grain, undefined, groupCompany, effectiveExcludedPipelineIds\)/);

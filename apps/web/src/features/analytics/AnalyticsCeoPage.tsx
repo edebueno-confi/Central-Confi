@@ -52,6 +52,8 @@ const STATUS_LABELS: Record<AnalyticsDataStatus, string> = {
   unavailable_period: "Período indisponível",
 };
 
+const EMPTY_SHARED_PIPELINE_IDS: string[] = [];
+
 type MetricDelta = {
   label: string;
   tone: "positive" | "negative" | "neutral";
@@ -134,6 +136,7 @@ export function AnalyticsCeoPage({
   onSharedPeriodChange,
   sharedOperation,
   onSharedOperationChange,
+  sharedExcludedPipelineIds,
   onRetry,
   isDashboardViewer = false,
   sourceStatus,
@@ -166,6 +169,8 @@ export function AnalyticsCeoPage({
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [configuredPipelines, setConfiguredPipelines] = useState<AnalyticsSourceConfig[]>([]);
   const [groupCompany, setGroupCompany] = useState<string>(sharedOperation ?? '');
+  const commercialExcludedPipelineIds = sharedExcludedPipelineIds?.commercial ?? EMPTY_SHARED_PIPELINE_IDS;
+  const supportExcludedPipelineIds = sharedExcludedPipelineIds?.support ?? EMPTY_SHARED_PIPELINE_IDS;
   const stableFilters = useMemo(
     () => ({
       from: filters.from,
@@ -231,9 +236,9 @@ export function AnalyticsCeoPage({
         }));
         setRefreshing(false);
         const settledLoads = await Promise.allSettled([
-          getCommercialKpisV2ForOverview(stableFilters, groupCompany),
-          getSupportKpisV2ForOverview(stableFilters, groupCompany),
-          getCsSnapshotForOverview(stableFilters, [], groupCompany),
+          getCommercialKpisV2ForOverview(stableFilters, groupCompany, commercialExcludedPipelineIds),
+          getSupportKpisV2ForOverview(stableFilters, groupCompany, supportExcludedPipelineIds),
+          getCsSnapshotForOverview(stableFilters, supportExcludedPipelineIds, groupCompany),
         ]);
         if (!cancelled) {
           const operationLoad = buildOperationKpisFromSettledLoads(settledLoads);
@@ -299,7 +304,7 @@ export function AnalyticsCeoPage({
     return () => {
       cancelled = true;
     };
-  }, [stableFilters, groupCompany, sourceStatus, operationRetryToken]);
+  }, [stableFilters, groupCompany, sourceStatus, operationRetryToken, commercialExcludedPipelineIds, supportExcludedPipelineIds]);
 
   if (result.loading && !result.data)
     return (
@@ -429,6 +434,8 @@ export function AnalyticsCeoPage({
       applyFilters={applyFilters}
       isDashboardViewer={isDashboardViewer}
       configuredPipelines={configuredPipelines}
+      commercialExcludedPipelineIds={commercialExcludedPipelineIds}
+      supportExcludedPipelineIds={supportExcludedPipelineIds}
       groupCompany={groupCompany}
       onGroupCompanyChange={handleGroupCompanyChange}
     />
@@ -621,6 +628,8 @@ function ExecutiveHdCanvas({
   applyFilters,
   isDashboardViewer,
   configuredPipelines,
+  commercialExcludedPipelineIds,
+  supportExcludedPipelineIds,
   groupCompany,
   onGroupCompanyChange,
 }: {
@@ -650,6 +659,8 @@ function ExecutiveHdCanvas({
   applyFilters: (next: AnalyticsFilters) => void;
   isDashboardViewer: boolean;
   configuredPipelines: AnalyticsSourceConfig[];
+  commercialExcludedPipelineIds: string[];
+  supportExcludedPipelineIds: string[];
   groupCompany: string;
   onGroupCompanyChange: (value: string) => void;
 }) {
@@ -929,8 +940,8 @@ function ExecutiveHdCanvas({
           description="Séries por domínio, com período, unidade e disponibilidade explicitados."
         />
         <div className="grid gap-4 lg:grid-cols-3">
-          <AnalyticsTrendPanel domain="commercial" groupCompany={groupCompany} />
-          <AnalyticsTrendPanel domain="support" groupCompany={groupCompany} />
+          <AnalyticsTrendPanel domain="commercial" groupCompany={groupCompany} excludedPipelineIds={commercialExcludedPipelineIds} />
+          <AnalyticsTrendPanel domain="support" groupCompany={groupCompany} excludedPipelineIds={supportExcludedPipelineIds} />
           <AnalyticsTrendPanel domain="finance" groupCompany={groupCompany} />
         </div>
       </section>

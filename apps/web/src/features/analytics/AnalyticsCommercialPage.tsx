@@ -82,12 +82,17 @@ type State =
     }
   | { phase: 'error'; message: string };
 
-export function AnalyticsCommercialPage({ sharedPeriod, onSharedPeriodChange, sharedOperation, onSharedOperationChange, onRetry, sourceStatus }: AnalyticsPageProps) {
+export function AnalyticsCommercialPage({ sharedPeriod, onSharedPeriodChange, sharedOperation, onSharedOperationChange, sharedExcludedPipelineIds, onSharedExcludedPipelineIdsChange, onRetry, sourceStatus }: AnalyticsPageProps) {
   const [state, setState] = useState<State>({ phase: 'loading' });
   const period = sharedPeriod ?? resolveAnalyticsPeriod('month');
   const [filters, setFilters] = useState<AnalyticsFilters>({ ...DEFAULT_ANALYTICS_FILTERS, ...period });
   const [configuredPipelines, setConfiguredPipelines] = useState<AnalyticsSourceConfig[]>([]);
-  const [excludedPipelineIds, setExcludedPipelineIds] = useState<string[]>([]);
+  const [localExcludedPipelineIds, setLocalExcludedPipelineIds] = useState<string[]>([]);
+  const excludedPipelineIds = sharedExcludedPipelineIds?.commercial ?? localExcludedPipelineIds;
+  const setExcludedPipelineIds = (next: string[]) => {
+    setLocalExcludedPipelineIds(next);
+    onSharedExcludedPipelineIdsChange?.({ commercial: next, support: sharedExcludedPipelineIds?.support ?? [] });
+  };
   const [groupCompany, setGroupCompany] = useState(sharedOperation ?? '');
   const queryKey = buildAnalyticsQueryKey({
     domain: 'commercial',
@@ -125,7 +130,7 @@ export function AnalyticsCommercialPage({ sharedPeriod, onSharedPeriodChange, sh
     setPreviousKpiPayload(null);
     setComparisonPhase('loading');
 
-    void getCommercialKpisV2(filters, groupCompany || null)
+    void getCommercialKpisV2(filters, groupCompany || null, excludedPipelineIds)
       .then((payload) => { if (!cancelled) setKpiPayload(payload); })
       .catch(() => { if (!cancelled) setKpiPayload(null); });
 
@@ -134,7 +139,7 @@ export function AnalyticsCommercialPage({ sharedPeriod, onSharedPeriodChange, sh
       setComparisonPhase('unavailable');
     } else {
       setComparisonPhase('loading');
-      void getCommercialKpisV2({ ...filters, ...previousPeriod }, groupCompany || null)
+      void getCommercialKpisV2({ ...filters, ...previousPeriod }, groupCompany || null, excludedPipelineIds)
         .then((payload) => {
           if (cancelled) return;
           setPreviousKpiPayload(payload);

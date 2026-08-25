@@ -1,9 +1,13 @@
 # IMPLEMENTATION
 
+- Task: IDLE
 - State: IDLE
 - Owner: Forge
+- Role: EXECUTOR
 - Reviewer active: Sentinel
+- Review mode: SENTINEL_REQUIRED
+- Base SHA: not applicable
+- Implementation SHA: not applicable
 - Agent coordination: IDLE
 
-Último lote arquivado: `LOCAL-AUTH-CLOCK-SKEW-DIAGNOSIS-2026-08-24`.
-Não há implementação ativa neste handoff.
+Nenhuma implementação ativa.

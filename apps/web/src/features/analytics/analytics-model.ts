@@ -592,12 +592,20 @@ export interface AnalyticsSharedPeriod {
   to: string;
 }
 
+export interface AnalyticsSharedPipelineExclusions {
+  commercial: string[];
+  support: string[];
+}
+
 export interface AnalyticsPageProps {
   sharedPeriod?: AnalyticsSharedPeriod;
   onSharedPeriodChange?: (period: AnalyticsSharedPeriod) => void;
   /** Recorte de operação compartilhado entre todas as abas do Dashboard. */
   sharedOperation?: string;
   onSharedOperationChange?: (operation: string) => void;
+  /** Exclusões temporárias compartilhadas por objeto entre as abas e a Visão Geral. */
+  sharedExcludedPipelineIds?: AnalyticsSharedPipelineExclusions;
+  onSharedExcludedPipelineIdsChange?: (next: AnalyticsSharedPipelineExclusions) => void;
   onRetry?: () => void;
   isDashboardViewer?: boolean;
   sourceStatus?: AnalyticsSourceStatusPayload;

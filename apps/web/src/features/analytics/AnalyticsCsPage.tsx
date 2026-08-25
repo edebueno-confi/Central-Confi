@@ -89,7 +89,7 @@ type State =
 
 type PipelineFilterOption = AnalyticsSourceConfig & Pick<CsPipelinePoint, 'ticketCount' | 'sourceSummary'>;
 
-export function AnalyticsCsPage({ sharedPeriod, onSharedPeriodChange, sharedOperation, onSharedOperationChange, onRetry }: AnalyticsPageProps) {
+export function AnalyticsCsPage({ sharedPeriod, onSharedPeriodChange, sharedOperation, onSharedOperationChange, sharedExcludedPipelineIds, onSharedExcludedPipelineIdsChange, onRetry }: AnalyticsPageProps) {
   const [state, setState] = useState<State>({ phase: 'loading' });
   // Referência estável: sem o memo, `resolveAnalyticsPeriod` devolve um objeto
   // novo a cada render e a dependência do Effect precisaria ser desmembrada em
@@ -100,7 +100,12 @@ export function AnalyticsCsPage({ sharedPeriod, onSharedPeriodChange, sharedOper
   );
   const [filters, setFilters] = useState<AnalyticsFilters>({ ...DEFAULT_ANALYTICS_FILTERS, ...period });
   const [configuredPipelines, setConfiguredPipelines] = useState<AnalyticsSourceConfig[]>([]);
-  const [excludedPipelineIds, setExcludedPipelineIds] = useState<string[]>([]);
+  const [localExcludedPipelineIds, setLocalExcludedPipelineIds] = useState<string[]>([]);
+  const excludedPipelineIds = sharedExcludedPipelineIds?.support ?? localExcludedPipelineIds;
+  const setExcludedPipelineIds = (next: string[]) => {
+    setLocalExcludedPipelineIds(next);
+    onSharedExcludedPipelineIdsChange?.({ commercial: sharedExcludedPipelineIds?.commercial ?? [], support: next });
+  };
   const [groupCompany, setGroupCompany] = useState(sharedOperation ?? '');
   const queryKey = buildAnalyticsQueryKey({
     domain: 'support',
@@ -137,7 +142,7 @@ export function AnalyticsCsPage({ sharedPeriod, onSharedPeriodChange, sharedOper
     setStagePayload(null);
     setQueuePayload(null);
 
-    void getSupportKpisV2(filters, groupCompany || null)
+    void getSupportKpisV2(filters, groupCompany || null, excludedPipelineIds)
       .then((payload) => { if (!cancelled) setKpiPayload(payload); })
       .catch(() => { if (!cancelled) setKpiPayload(null); });
 

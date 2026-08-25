@@ -2,7 +2,7 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { getAnalyticsSourceStatus, triggerSequentialAnalyticsSync, waitForAnalyticsSyncCompletion } from './analytics-api';
 import { listEnabledAnalyticsDomains } from './analytics-domains';
-import type { AnalyticsSharedPeriod } from './analytics-model';
+import type { AnalyticsSharedPeriod, AnalyticsSharedPipelineExclusions } from './analytics-model';
 import type { AnalyticsSourceStatusPayload } from '@genius-support-os/contracts';
 import { useAuthContext } from '../auth/auth-context';
 import { resolveAnalyticsPeriod } from './analytics-periods';
@@ -16,6 +16,19 @@ import { areAnalyticsSourcesActive, syncProgressLabel } from './analytics-sync-p
 import './high-density.css';
 
 const DOMAINS = listEnabledAnalyticsDomains();
+
+function readSharedPipelineExclusions(): AnalyticsSharedPipelineExclusions {
+  try {
+    const read = (key: string) => {
+      const raw = window.sessionStorage.getItem(key);
+      const value = raw ? JSON.parse(raw) : [];
+      return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0) : [];
+    };
+    return { commercial: read('analytics-commercial-pipelines'), support: read('analytics-cs-pipelines') };
+  } catch {
+    return { commercial: [], support: [] };
+  }
+}
 
 function terminalSyncState(status: AnalyticsSourceStatusPayload): SyncVisualState {
   const sources = [status.hubspot, status.omie];
@@ -52,6 +65,7 @@ export function AnalyticsShell() {
       return '';
     }
   });
+  const [sharedExcludedPipelineIds, setSharedExcludedPipelineIds] = useState<AnalyticsSharedPipelineExclusions>(readSharedPipelineExclusions);
   const [reportOpen, setReportOpen] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState<{ source: SyncSource; state: SyncVisualState; detail?: string } | null>(null);
   const [syncBusy, setSyncBusy] = useState(false);
@@ -70,6 +84,10 @@ export function AnalyticsShell() {
     } catch {
       // Preferência de recorte não bloqueia o Dashboard.
     }
+  }, []);
+
+  const handleSharedExcludedPipelineIdsChange = useCallback((next: AnalyticsSharedPipelineExclusions) => {
+    setSharedExcludedPipelineIds(next);
   }, []);
 
   const activeDomain = visibleDomains.find((domain) => domain.key === activeKey) ?? visibleDomains[0];
@@ -136,7 +154,7 @@ export function AnalyticsShell() {
       </header>
       <div className="gso-analytics-content min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
         <Suspense fallback={<MinimalState loading title="Carregando área do dashboard" description="Estamos preparando os indicadores deste recorte." />}>
-          {ActiveComponent ? <ActiveComponent key={`${activeKey}-${reloadKey}`} sharedPeriod={sharedPeriod} onSharedPeriodChange={setSharedPeriod} sharedOperation={sharedOperation} onSharedOperationChange={handleSharedOperationChange} onRetry={() => setReloadKey((current) => current + 1)} isDashboardViewer={isDashboardViewer} sourceStatus={sourceStatus ?? undefined} canSyncSources={activeKey === 'ceo' && canSyncSources && Boolean(sourceStatus)} syncSources={activeKey === 'ceo' ? () => void syncSources() : undefined} syncBusy={syncBusy} /> : null}
+          {ActiveComponent ? <ActiveComponent key={`${activeKey}-${reloadKey}`} sharedPeriod={sharedPeriod} onSharedPeriodChange={setSharedPeriod} sharedOperation={sharedOperation} onSharedOperationChange={handleSharedOperationChange} sharedExcludedPipelineIds={sharedExcludedPipelineIds} onSharedExcludedPipelineIdsChange={handleSharedExcludedPipelineIdsChange} onRetry={() => setReloadKey((current) => current + 1)} isDashboardViewer={isDashboardViewer} sourceStatus={sourceStatus ?? undefined} canSyncSources={activeKey === 'ceo' && canSyncSources && Boolean(sourceStatus)} syncSources={activeKey === 'ceo' ? () => void syncSources() : undefined} syncBusy={syncBusy} /> : null}
         </Suspense>
       </div>
       <AnalyticsReportExport open={reportOpen} period={sharedPeriod} groupCompany={sharedOperation} onClose={() => setReportOpen(false)} />

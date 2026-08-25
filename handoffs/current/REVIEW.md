@@ -1,8 +1,11 @@
 # REVIEW
 
+- Task: IDLE
 - State: IDLE
 - Reviewer active: Sentinel
-- Veredito do último lote: APPROVED, arquivado em
-  `handoffs/archive/LOCAL-AUTH-CLOCK-SKEW-DIAGNOSIS-2026-08-24/`.
+- Review mode: SENTINEL_REQUIRED
+- Base SHA: not applicable
+- Review verdict: none
 
-Nenhuma revisão ativa.
+Nenhuma revisão ativa. Os vereditos históricos permanecem nos respectivos
+diretórios de archive.
