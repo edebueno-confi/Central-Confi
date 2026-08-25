@@ -43,7 +43,9 @@ test('filtros comuns são reativos e preservam validação sem Aplicar', () => {
 
 test('Financeiro mantém operação indisponível e debounce de busca', () => {
   assert.match(finance, /Financeiro consolidado fora do recorte/);
-  assert.match(finance, /clientSearchTimer/);
+  assert.doesNotMatch(finance, /\bdraft\b|setDraft/);
+  assert.match(finance, /debouncedClientQuery/);
+  assert.match(finance, /setTimeout\(\(\) => setDebouncedClientQuery/);
   assert.match(finance, /setTimeout\(\(\) =>/);
   assert.doesNotMatch(finance, />Aplicar</);
 });

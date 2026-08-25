@@ -84,6 +84,9 @@ test('Financeiro continua indisponível quando uma operação é selecionada', (
   assert.match(finance, /Financeiro consolidado fora do recorte/);
   assert.match(finance, /não publica dimensão de operação/);
   assert.doesNotMatch(finance, /getFinanceSnapshot\(filters, filters\.clientQuery\).*sharedOperation/);
+  assert.doesNotMatch(finance, /\bdraft\b|setDraft/);
+  assert.match(finance, /value=\{filters\.from\}/);
+  assert.match(finance, /value=\{filters\.clientQuery\}/);
 });
 
 test('migration candidata adiciona contrato de seis argumentos sem substituir o legado', () => {

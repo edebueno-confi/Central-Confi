@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { MinimalState } from '../../components/minimal-states';
 import { getFinanceSnapshot, getFinanceSourceStatus, listOmieSyncRuns } from './analytics-api';
 import { AnalyticsLoadingState, ChartCard, KpiCard, MetricInfo } from './analytics-ui';
 import { analyticsSourceToBlockState, formatCurrencyBRL, formatMonthLabel, formatPercent, type AnalyticsFilters, DEFAULT_ANALYTICS_FILTERS, type AnalyticsPageProps, type FinanceBreakdown, type FinanceSnapshot, type FinanceSourceStatus } from './analytics-model';
-import { ANALYTICS_PERIOD_OPTIONS, resolveAnalyticsPeriod, type AnalyticsPeriodPreset } from './analytics-periods';
+import { ANALYTICS_PERIOD_OPTIONS, matchAnalyticsPeriodPreset, resolveAnalyticsPeriod, type AnalyticsPeriodPreset } from './analytics-periods';
 import { AnalyticsExecutionMeta, AnalyticsHdDomainFrame } from './AnalyticsHdDomainFrame';
 import { AnalyticsDomainTabs } from './AnalyticsDomainTabs';
 import { AnalyticsTrendPanel } from './AnalyticsTrendPanel';
@@ -71,15 +71,14 @@ function BreakdownTable({ rows, valueHeader, labelHeader, humanize, toneFor }: {
 export function AnalyticsFinancePage({ sharedPeriod, onSharedPeriodChange, sharedOperation, onSharedOperationChange, sourceStatus: unifiedSourceStatus }: AnalyticsPageProps) {
   const period = sharedPeriod ?? resolveAnalyticsPeriod('month');
   const [filters, setFilters] = useState<FinanceFilters>({ ...DEFAULT_ANALYTICS_FILTERS, ...period, clientQuery: '' });
-  const [draft, setDraft] = useState(filters);
+  const [debouncedClientQuery, setDebouncedClientQuery] = useState('');
   const [state, setState] = useState<{ phase: 'loading' } | { phase: 'ready'; snapshot: FinanceSnapshot } | { phase: 'error'; message: string }>({ phase: 'loading' });
   const [financeSourceStatus, setFinanceSourceStatus] = useState<FinanceSourceStatus | null>(null);
   const [latestOmieRun, setLatestOmieRun] = useState<import('./analytics-model').OmieSyncRun | null>(null);
-  const [preset, setPreset] = useState<AnalyticsPeriodPreset | ''>('month');
   const [showReconciliationDetails, setShowReconciliationDetails] = useState(false);
   const [subTab, setSubTab] = useState('posicao');
   const [validation, setValidation] = useState<string | null>(null);
-  const clientSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const preset = matchAnalyticsPeriodPreset(filters) as AnalyticsPeriodPreset | '';
   const queryKey = buildAnalyticsQueryKey({
     domain: 'finance',
     period: filters,
@@ -88,17 +87,17 @@ export function AnalyticsFinancePage({ sharedPeriod, onSharedPeriodChange, share
     stageId: filters.stageId,
     priority: filters.priority,
     grain: 'position',
-    search: filters.clientQuery,
+    search: debouncedClientQuery,
   });
-
-  useEffect(() => () => {
-    if (clientSearchTimer.current) clearTimeout(clientSearchTimer.current);
-  }, []);
 
   useEffect(() => {
     setFilters((current) => current.from === period.from && current.to === period.to ? current : { ...current, ...period });
-    setDraft((current) => current.from === period.from && current.to === period.to ? current : { ...current, ...period });
   }, [period.from, period.to]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedClientQuery(filters.clientQuery), 300);
+    return () => clearTimeout(timer);
+  }, [filters.clientQuery]);
 
   useEffect(() => {
     let cancelled = false;
@@ -107,7 +106,7 @@ export function AnalyticsFinancePage({ sharedPeriod, onSharedPeriodChange, share
       setState({ phase: 'error', message: 'O Financeiro ainda não publica dimensão de operação.' });
       return () => { cancelled = true; };
     }
-    getFinanceSnapshot(filters, filters.clientQuery)
+    getFinanceSnapshot(filters, debouncedClientQuery)
       .then((snapshot) => { if (!cancelled) setState({ phase: 'ready', snapshot }); })
       .catch((error) => { if (!cancelled) setState({ phase: 'error', message: error instanceof Error ? error.message : 'Falha ao carregar o financeiro.' }); });
     return () => { cancelled = true; };
@@ -119,28 +118,19 @@ export function AnalyticsFinancePage({ sharedPeriod, onSharedPeriodChange, share
   useEffect(() => { getFinanceSourceStatus().then(setFinanceSourceStatus).catch(() => setFinanceSourceStatus(null)); }, []);
   useEffect(() => { listOmieSyncRuns().then((runs) => setLatestOmieRun(runs[0] ?? null)).catch(() => setLatestOmieRun(null)); }, []);
 
-  const updateDraft = (patch: Partial<FinanceFilters>) => {
-    const next = { ...draft, ...patch };
-    setDraft(next);
+  const updateFilters = (patch: Partial<FinanceFilters>) => {
+    const next = { ...filters, ...patch };
     if (next.from && next.to && next.from > next.to) {
       setValidation('A data inicial precisa ser anterior ou igual à data final.');
       return;
     }
     setValidation(null);
-    if ('clientQuery' in patch) {
-      if (clientSearchTimer.current) clearTimeout(clientSearchTimer.current);
-      clientSearchTimer.current = setTimeout(() => {
-        setFilters((current) => ({ ...current, clientQuery: next.clientQuery }));
-      }, 300);
-      return;
-    }
     setFilters(next);
     if ('from' in patch || 'to' in patch) onSharedPeriodChange?.({ from: next.from, to: next.to });
   };
   const applyPreset = (nextPreset: AnalyticsPeriodPreset) => {
-    setPreset(nextPreset);
-    const next = { ...draft, ...resolveAnalyticsPeriod(nextPreset) };
-    setDraft(next); setFilters(next); setValidation(null);
+    const next = { ...filters, ...resolveAnalyticsPeriod(nextPreset) };
+    setFilters(next); setValidation(null);
     onSharedPeriodChange?.(resolveAnalyticsPeriod(nextPreset));
   };
 
@@ -172,12 +162,12 @@ export function AnalyticsFinancePage({ sharedPeriod, onSharedPeriodChange, share
     <section className="rounded-xl border border-[color:var(--minimal-border)] bg-[color:var(--minimal-surface)] p-4">
       <div className="grid gap-3 md:grid-cols-8">
         <label className="text-xs text-[color:var(--minimal-text-secondary)]">Período<select value={preset} onChange={(e) => applyPreset(e.target.value as AnalyticsPeriodPreset)} className={controlClass}><option value="">Personalizado</option>{ANALYTICS_PERIOD_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
-        <label className="text-xs text-[color:var(--minimal-text-secondary)]">De<input type="date" value={draft.from} onChange={(e) => updateDraft({ from: e.target.value })} className={controlClass} /></label>
-        <label className="text-xs text-[color:var(--minimal-text-secondary)]">Até<input type="date" value={draft.to} onChange={(e) => updateDraft({ to: e.target.value })} className={controlClass} /></label>
-        <label className="text-xs text-[color:var(--minimal-text-secondary)]">Situação<select value={draft.stageId} onChange={(e) => updateDraft({ stageId: e.target.value })} className={controlClass}><option value="">Todas</option>{STATUS_OPTIONS.map((value) => <option key={value} value={value}>{titleCase(value)}</option>)}</select></label>
-        <label className="text-xs text-[color:var(--minimal-text-secondary)]">Aging<select value={draft.priority} onChange={(e) => updateDraft({ priority: e.target.value })} className={controlClass}><option value="">Todos</option>{AGING_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-        <label className="text-xs text-[color:var(--minimal-text-secondary)]">Cliente<input value={draft.clientQuery} onChange={(e) => updateDraft({ clientQuery: e.target.value })} placeholder="Nome ou CNPJ" className={controlClass} /></label>
-        <div className="flex items-end gap-2 md:col-span-2"><button type="button" onClick={() => { const next = { ...DEFAULT_ANALYTICS_FILTERS, ...resolveAnalyticsPeriod('month'), clientQuery: '' }; if (clientSearchTimer.current) clearTimeout(clientSearchTimer.current); setPreset('month'); setDraft(next); setFilters(next); setValidation(null); onSharedPeriodChange?.({ from: next.from, to: next.to }); }} className="h-9 rounded-lg border border-[color:var(--minimal-border-strong)] px-3 text-sm text-[color:var(--minimal-text)]">Limpar</button></div>
+        <label className="text-xs text-[color:var(--minimal-text-secondary)]">De<input type="date" value={filters.from} onChange={(e) => updateFilters({ from: e.target.value })} className={controlClass} /></label>
+        <label className="text-xs text-[color:var(--minimal-text-secondary)]">Até<input type="date" value={filters.to} onChange={(e) => updateFilters({ to: e.target.value })} className={controlClass} /></label>
+        <label className="text-xs text-[color:var(--minimal-text-secondary)]">Situação<select value={filters.stageId} onChange={(e) => updateFilters({ stageId: e.target.value })} className={controlClass}><option value="">Todas</option>{STATUS_OPTIONS.map((value) => <option key={value} value={value}>{titleCase(value)}</option>)}</select></label>
+        <label className="text-xs text-[color:var(--minimal-text-secondary)]">Aging<select value={filters.priority} onChange={(e) => updateFilters({ priority: e.target.value })} className={controlClass}><option value="">Todos</option>{AGING_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+        <label className="text-xs text-[color:var(--minimal-text-secondary)]">Cliente<input value={filters.clientQuery} onChange={(e) => updateFilters({ clientQuery: e.target.value })} placeholder="Nome ou CNPJ" className={controlClass} /></label>
+        <div className="flex items-end gap-2 md:col-span-2"><button type="button" onClick={() => { const next = { ...DEFAULT_ANALYTICS_FILTERS, ...resolveAnalyticsPeriod('month'), clientQuery: '' }; setFilters(next); setValidation(null); onSharedPeriodChange?.({ from: next.from, to: next.to }); }} className="h-9 rounded-lg border border-[color:var(--minimal-border-strong)] px-3 text-sm text-[color:var(--minimal-text)]">Limpar</button></div>
       </div>
       {validation ? <p role="alert" className="mt-2 text-xs text-[color:var(--minimal-danger-text)]">{validation}</p> : null}
     </section>
