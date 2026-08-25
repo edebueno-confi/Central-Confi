@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { chromium } from 'playwright';
+import { isExpectedStaleAuthResponse, isExpectedStaleConsoleError, staleRefreshLoopDetected } from './analytics-dashboard-runtime-matrix-logic.mjs';
 
 const baseUrl = process.env.LOCAL_QA_WEB_URL ?? 'http://127.0.0.1:4173';
 const parsedBaseUrl = new URL(baseUrl);
@@ -250,7 +251,17 @@ try {
   await browser.close();
 }
 
-const contractFailures = matrix.flatMap((item) => item.evidence.responses.filter((response) => response.status >= 400).map((response) => ({ persona: item.persona, ...response })));
+const expectedStaleAuthFailures = matrix.flatMap((item) => item.evidence.responses
+  .filter((response) => isExpectedStaleAuthResponse(item, response, tabRoutes.length))
+  .map((response) => ({ persona: item.persona, reason: 'stale_session_refresh_rejected', ...response })));
+const staleRefreshLoops = matrix.filter((item) => staleRefreshLoopDetected(item, tabRoutes.length)).map((item) => ({
+  persona: item.persona,
+  count: item.evidence.responses.filter((response) => response.method === 'POST' && response.path === '/auth/v1/token' && response.status === 400).length,
+  reason: 'stale_session_refresh_loop',
+}));
+const contractFailures = matrix.flatMap((item) => item.evidence.responses
+  .filter((response) => response.status >= 400 && !isExpectedStaleAuthResponse(item, response, tabRoutes.length))
+  .map((response) => ({ persona: item.persona, ...response })));
 const stateCoverageFailures = matrix.filter((item) => item.stateProvided && (!item.evidence.loadingTransitionObserved || (item.persona === 'stale_session' && !item.evidence.staleTransitionObserved))).map((item) => ({
   persona: item.persona,
   loadingObserved: item.evidence.loadingObserved,
@@ -258,7 +269,13 @@ const stateCoverageFailures = matrix.filter((item) => item.stateProvided && (!it
   staleGuardObserved: item.evidence.staleGuardObserved,
   staleTransitionObserved: item.evidence.staleTransitionObserved,
 }));
-const runtimeNoGo = missingAuthenticatedStates.length > 0 || contractFailures.length > 0 || stateCoverageFailures.length > 0 || matrix.some((item) => item.evidence.consoleErrors.length || item.evidence.pageErrors.length || item.evidence.requestFailures.length || item.evidence.externalRequests.length);
+const unexpectedDiagnostics = matrix.flatMap((item) => [
+  ...item.evidence.consoleErrors.filter((diagnostic) => !isExpectedStaleConsoleError(item, diagnostic, tabRoutes.length)).map((diagnostic) => ({ persona: item.persona, kind: 'console', diagnostic })),
+  ...item.evidence.pageErrors.map((diagnostic) => ({ persona: item.persona, kind: 'page', diagnostic })),
+  ...item.evidence.requestFailures.map((diagnostic) => ({ persona: item.persona, kind: 'request', diagnostic })),
+  ...item.evidence.externalRequests.map((diagnostic) => ({ persona: item.persona, kind: 'external', diagnostic })),
+]);
+const runtimeNoGo = missingAuthenticatedStates.length > 0 || contractFailures.length > 0 || staleRefreshLoops.length > 0 || stateCoverageFailures.length > 0 || unexpectedDiagnostics.length > 0;
 console.log(JSON.stringify({
   state: runtimeNoGo ? 'NO_GO' : 'RUNTIME_MATRIX_GO',
   failClosed: true,
@@ -266,8 +283,11 @@ console.log(JSON.stringify({
   baseUrl,
   personas: personas.map(({ key, expected, stateEnv }) => ({ key, expected, stateEnv })),
   missingAuthenticatedStates,
+  expectedStaleAuthFailures,
+  staleRefreshLoops,
   contractFailures,
   stateCoverageFailures,
+  unexpectedDiagnostics,
   matrix,
   limitations: [
     'Sem storageState autenticado fornecido, autorização, dados/RPCs, filtros aplicados, RLS/cross-tenant e performance permanecem NÃO COMPROVADOS.',

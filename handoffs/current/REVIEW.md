@@ -1,8 +1,8 @@
 # REVIEW
 
 - State: IDLE
-- Last task: ANALYTICS-KPI-CONTRACT-LOCAL-APPLICATION-2026-08-25
-- Last verdict: APPROVED, limitado à aplicação e validação local da migration
-  candidata pelo Sentinel.
+- Reviewer active: Sentinel
+- Veredito do último lote: APPROVED, arquivado em
+  `handoffs/archive/ANALYTICS-DASHBOARD-STALE-SESSION-RUNTIME-CLOSURE-2026-08-25/`.
 
-O veredito completo e as limitações estão preservados no pacote arquivado.
+Nenhuma revisão ativa.

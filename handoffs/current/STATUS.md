@@ -1,15 +1,16 @@
 # STATUS
 
-- Task: IDLE
 - State: IDLE
 - Owner: Forge
 - Role: EXECUTOR
 - Reviewer active: Sentinel
 - Review mode: SENTINEL_REQUIRED
+- Coordinator: Codex Orchestrator
 - Agent coordination: IDLE
-- Last task: ANALYTICS-KPI-CONTRACT-LOCAL-APPLICATION-2026-08-25
-- Last verdict: APPROVED, limitado à aplicação e validação local da migration
-  candidata
+- Resume condition: selecionar e promover somente a próxima task elegível da fila
+- Próximo passo: verificar a fila canônica e dependências antes de qualquer promoção.
 
-O pacote foi arquivado. O schema parity histórico permanece `NO_GO`/fail-closed
-e não há autorização implícita para banco remoto, produção ou deploy.
+Último lote arquivado: `ANALYTICS-DASHBOARD-STALE-SESSION-RUNTIME-CLOSURE-2026-08-25`.
+Veredito: APPROVED, limitado ao harness read-only e às regressões
+determinísticas. Runtime autenticado, RLS/cross-tenant servido, performance
+real e produção permanecem não comprovados.
