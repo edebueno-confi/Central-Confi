@@ -210,10 +210,6 @@ export function AnalyticsFinancePage({ sharedPeriod, onSharedPeriodChange, share
       </section>
       </div>
 
-      <ChartCard title="Performance financeira por responsável" description="A dimensão de responsável não está publicada no contrato atual de recebíveis do OMIE.">
-        <MinimalState title="Dimensão por pessoa indisponível" description="O read model financeiro atual expõe títulos, vencimentos, recebimentos, categorias e clientes, mas não publica responsável, cobrador ou centro de responsabilidade por título. Nenhuma atribuição é inferida no frontend." />
-      </ChartCard>
-
       {/* Previsibilidade + Aging por faixa */}
       <div className="grid gap-4 xl:grid-cols-2">
         <ChartCard title="Previsibilidade de recebíveis" description="Quanto deve entrar em cada mês, considerando o vencimento dos títulos ainda em aberto.">

@@ -53,10 +53,18 @@ test('a Visão Geral usa as mesmas exclusões por objeto que as abas', () => {
   assert.match(overview, /getCommercialKpisV2ForOverview\(stableFilters, groupCompany, commercialExcludedPipelineIds\)/);
   assert.match(overview, /getSupportKpisV2ForOverview\(stableFilters, groupCompany, supportExcludedPipelineIds\)/);
   assert.match(overview, /getCsSnapshotForOverview\(stableFilters, supportExcludedPipelineIds, groupCompany\)/);
-  assert.match(overview, /<AnalyticsTrendPanel domain="commercial" groupCompany=\{groupCompany\} excludedPipelineIds=\{commercialExcludedPipelineIds\} \/>/);
-  assert.match(overview, /<AnalyticsTrendPanel domain="support" groupCompany=\{groupCompany\} excludedPipelineIds=\{supportExcludedPipelineIds\} \/>/);
+  assert.doesNotMatch(overview, /<AnalyticsTrendPanel/);
+  assert.doesNotMatch(overview, /Evolução por domínio/);
   assert.match(commercial, /getCommercialKpisV2\(filters, groupCompany \|\| null, excludedPipelineIds\)/);
   assert.match(support, /getSupportKpisV2\(filters, groupCompany \|\| null, excludedPipelineIds\)/);
+});
+
+test('a Visão Geral não duplica KPIs nem séries das abas de domínio', () => {
+  assert.match(overview, /AnalyticsKpiBoard/);
+  assert.match(overview, /Mapa das áreas/);
+  assert.match(overview, /Atenção operacional/);
+  assert.doesNotMatch(overview, /Desempenho no período/);
+  assert.doesNotMatch(overview, /Posição atual, não afetada pelo período selecionado/);
 });
 
 test('a chave e a invalidação permanecem sensíveis às exclusões', () => {

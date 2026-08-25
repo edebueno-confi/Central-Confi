@@ -18,11 +18,15 @@ const operationGovernanceMigration = fs.readFileSync('supabase/migrations/202608
 const timeseriesScopeMigration = fs.readFileSync('supabase/migrations/20260821090000_analytics_timeseries_operation_scope_v1.sql', 'utf8');
 const timeseriesPipelineExclusionMigration = fs.readFileSync('supabase/migrations/20260823100000_analytics_timeseries_pipeline_exclusion_v1.sql', 'utf8');
 
-test('visão executiva expõe evolução real por domínio sem misturar unidades', () => {
-  assert.match(executive, /<AnalyticsTrendPanel domain="commercial" groupCompany=\{groupCompany\} excludedPipelineIds=\{commercialExcludedPipelineIds\} \/>/);
-  assert.match(executive, /<AnalyticsTrendPanel domain="support" groupCompany=\{groupCompany\} excludedPipelineIds=\{supportExcludedPipelineIds\} \/>/);
-  assert.match(executive, /<AnalyticsTrendPanel domain="finance" groupCompany=\{groupCompany\} \/>/);
-  assert.match(executive, /Evolução por domínio/);
+test('visão executiva resume as áreas e deixa evolução nas abas de domínio', () => {
+  assert.doesNotMatch(executive, /<AnalyticsTrendPanel/);
+  assert.doesNotMatch(executive, /Evolução por domínio/);
+  assert.match(commercialPage, /<AnalyticsTrendPanel domain="commercial"/);
+  assert.match(supportPage, /<AnalyticsTrendPanel domain="support"/);
+  assert.match(financePage, /<AnalyticsTrendPanel domain="finance"/);
+  assert.match(executive, /AnalyticsKpiBoard/);
+  assert.match(executive, /Mapa das áreas/);
+  assert.match(executive, /Atenção operacional/);
 });
 
 test('cobertura distingue contrato publicado de lacuna de integração', () => {
@@ -42,15 +46,17 @@ test('governança permanece uma ação controlada fora dos domínios de leitura'
   assert.match(domains, /conversas ainda não conectadas/);
 });
 
-test('domínios exibem performance por pessoa sem fabricar atividades', () => {
+test('domínios exibem análises úteis sem reservar espaço para fontes ausentes', () => {
   assert.match(commercialPage, /Performance comercial por responsável/);
   assert.match(commercialPage, /CommercialOwnerPerformanceChart/);
-  assert.match(commercialPage, /Atividades indisponíveis/);
+  assert.doesNotMatch(commercialPage, /Tarefas e atividades comerciais/);
   assert.match(customerSuccessPage, /Performance da carteira por responsável/);
   assert.match(customerSuccessPage, /customers_with_tickets/);
   assert.match(supportPage, /Performance do suporte por responsável/);
-  assert.match(supportPage, /Chat \/ Conversas/);
-  assert.match(supportPage, /Atividades indisponíveis/);
+  assert.doesNotMatch(supportPage, /Chat \/ Conversas/);
+  assert.doesNotMatch(supportPage, /Tarefas e atividades de suporte/);
+  assert.doesNotMatch(customerSuccessPage, /Tarefas e atividades de Customer Success/);
+  assert.doesNotMatch(financePage, /Performance financeira por responsável/);
 });
 
 test('performance de suporte usa identidade estável e não nome duplicável como chave React', () => {
@@ -82,8 +88,7 @@ test('escopo de operação é espelhado nos read models HubSpot e limita domíni
   assert.match(executive, /maskUnscopedOperationKpis/);
   assert.match(financePage, /Financeiro consolidado fora do recorte/);
   assert.match(financePage, /Abrir Governança/);
-  assert.match(executive, /<AnalyticsTrendPanel domain="commercial" groupCompany=\{groupCompany\} excludedPipelineIds=\{commercialExcludedPipelineIds\} \/>/);
-  assert.match(executive, /<AnalyticsTrendPanel domain="support" groupCompany=\{groupCompany\} excludedPipelineIds=\{supportExcludedPipelineIds\} \/>/);
+  assert.doesNotMatch(executive, /<AnalyticsTrendPanel/);
   assert.match(commercialPage, /<AnalyticsTrendPanel domain="commercial" groupCompany=\{groupCompany\} excludedPipelineIds=\{excludedPipelineIds\} \/>/);
   assert.match(supportPage, /<AnalyticsTrendPanel domain="support" groupCompany=\{groupCompany\} excludedPipelineIds=\{excludedPipelineIds\} \/>/);
   assert.match(trendPanel, /getAnalyticsTimeseries\(domain, grain, undefined, groupCompany, effectiveExcludedPipelineIds\)/);

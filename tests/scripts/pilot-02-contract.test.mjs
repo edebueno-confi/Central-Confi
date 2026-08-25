@@ -41,10 +41,11 @@ test('shell do dashboard viewer mostra apenas a Visão executiva e não expõe c
   assert.match(adminGate, /canOpenInternalRoute/);
 });
 
-test('Dashboard Gerencial distribui cinco KPIs em grade 3 + 2 a partir de 1024px', () => {
-  assert.match(ceoPage, /Desempenho no período/);
+test('Dashboard Gerencial concentra os KPIs no quadro reutilizável', () => {
+  assert.match(ceoPage, /AnalyticsKpiBoard/);
+  assert.doesNotMatch(ceoPage, /Desempenho no período/);
   assert.match(ceoPage, /Mapa das áreas/);
-  assert.match(ceoPage, /Posição atual, não afetada pelo período selecionado/);
+  assert.doesNotMatch(ceoPage, /Posição atual, não afetada pelo período selecionado/);
   assert.match(fs.readFileSync('apps/web/src/features/analytics/analytics-ui.tsx', 'utf8'), /min-h-\[170px\].*sm:min-h-\[240px\]/s);
   assert.match(fs.readFileSync('apps/web/src/features/analytics/analytics-ui.tsx', 'utf8'), /aria-busy="true"/);
   assert.match(ceoPage, /Não há registros no período selecionado/);

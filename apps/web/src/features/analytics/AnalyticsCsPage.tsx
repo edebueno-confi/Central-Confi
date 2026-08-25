@@ -276,16 +276,10 @@ export function AnalyticsCsPage({ sharedPeriod, onSharedPeriodChange, sharedOper
               <p className="mt-3 text-[11px] leading-4 text-[color:var(--minimal-text-tertiary)]">A mediana por pessoa segue a mesma cobertura do tempo de resolução publicado pelo read model. Tarefas, reuniões, ligações e e-mails não são inferidos de atendimentos.</p>
             </> : <MinimalState title="Sem performance por responsável" description="O período não publicou atendimentos atribuídos com movimento suficiente para separar a equipe." />}
           </ChartCard> : null}
-          <ChartCard title="Tarefas e atividades de suporte" description="A fila de atendimentos não é tratada como uma segunda lista de tarefas.">
-            <MinimalState title="Atividades indisponíveis" description="O contrato atual publica atendimentos e suas métricas de fila, mas não tarefas, reuniões, ligações ou e-mails. A experiência de chat também permanece fora do read model confirmado." />
-          </ChartCard>
           {dataState?.status !== 'empty' ? <ChartCard title="Origem, pipeline e responsável" description={`O recorte reúne os pipelines ativos de CS / Suporte. Último atendimento registrado: ${latestTicketCreatedAt ? new Date(latestTicketCreatedAt).toLocaleString('pt-BR') : 'indisponível'}.`}>
             <div className="grid gap-4 lg:grid-cols-3"><Breakdown title="Por origem" rows={bySource.map((row) => ({ label: row.label, value: row.ticketCount }))} /><Breakdown title="Por pipeline" rows={byPipeline.map((row) => ({ label: row.label, value: row.ticketCount }))} /><Breakdown title="Por responsável" rows={byOwner.slice(0, 8).map((row) => ({ label: row.ownerName, value: row.ticketCount }))} /></div>
             <OwnerPipelineNote owners={byOwner.slice(0, 8)} />
           </ChartCard> : null}
-          <ChartCard title="Chat / Conversas" description="Painel separado para não misturar conversas com atendimentos enquanto a fonte real ainda não está conectada.">
-            <MinimalState title="Chat indisponível" description="A fonte de conversas ainda não possui read model confirmado neste ambiente. O painel fica separado e nenhum atendimento é contado como chat por aproximação." />
-          </ChartCard>
         </div>
       ),
     },

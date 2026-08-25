@@ -6,10 +6,12 @@ const page = fs.readFileSync('apps/web/src/features/analytics/AnalyticsCeoPage.t
 const executive = fs.readFileSync('apps/web/src/features/analytics/analytics-executive.ts', 'utf8');
 const shell = fs.readFileSync('apps/web/src/features/analytics/AnalyticsShell.tsx', 'utf8');
 
-test('visão executiva separa desempenho de posição atual', () => {
-  assert.match(page, /Desempenho no período/);
-  assert.match(page, /Posição atual, não afetada pelo período selecionado/);
+test('visão executiva concentra a leitura no quadro de decisão', () => {
+  assert.match(page, /AnalyticsKpiBoard/);
+  assert.doesNotMatch(page, /Desempenho no período/);
+  assert.doesNotMatch(page, /Posição atual, não afetada pelo período selecionado/);
   assert.match(page, /Mapa das áreas/);
+  assert.match(page, /Atenção operacional/);
   assert.doesNotMatch(page, /Decida com o contexto certo/);
 });
 
@@ -53,9 +55,8 @@ test('rotas internas usam React Router e não links HTML diretos', () => {
   assert.doesNotMatch(page, /<a key=/);
 });
 
-test('comparação temporal só aparece quando há base válida', () => {
-  assert.match(page, /previous\.commercial/);
-  assert.match(page, /previousDenominator === 0/);
-  assert.match(page, /comparison\.revenue/);
+test('comparação temporal fica nas abas que possuem contrato de evolução', () => {
+  assert.doesNotMatch(page, /getCeoHistory/);
+  assert.doesNotMatch(page, /previous\.commercial/);
   assert.doesNotMatch(page, /Comparação temporal disponível para o mesmo recorte/);
 });

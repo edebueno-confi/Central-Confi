@@ -286,9 +286,6 @@ export function AnalyticsCommercialPage({ sharedPeriod, onSharedPeriodChange, sh
               <MinimalState title="Sem responsáveis" description="Nenhum negócio aberto ou ganho foi atribuído no recorte." />
             )}
           </ChartCard> : null}
-          <ChartCard title="Tarefas e atividades comerciais" description="Ações pendentes por pessoa ainda dependem de uma ingestão de atividades validada no backend.">
-            <MinimalState title="Atividades indisponíveis" description="O dashboard ainda não publica tarefas, reuniões, ligações ou e-mails do HubSpot como read model. Nenhuma pendência é estimada a partir de negócios ou atendimentos." />
-          </ChartCard>
           {kpiPayload ? <ChartCard title="Ganhos no período" description="Negócios efetivamente fechados como ganho no intervalo selecionado.">
             {commercialKpiDetails.closedWins.length > 0 ? (
               <div className="overflow-x-auto">

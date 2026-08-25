@@ -16,12 +16,11 @@ test("Canvas executivo mantém as camadas gerenciais e as áreas publicadas", ()
   for (const layer of [
     "gso-hd-pulse",
     "gso-hd-context",
-    "gso-hd-ribbon",
-    "gso-hd-current-strip",
     "gso-hd-domain-matrix",
     "gso-hd-exceptions",
   ])
     assert.match(page, new RegExp(layer));
+  assert.doesNotMatch(page, /gso-hd-ribbon|gso-hd-current-strip/);
   assert.doesNotMatch(page, /gso-hd-integrity|gso-hd-pipelines|Fila operacional|Governança e cobertura/);
   for (const domain of ["Comercial", "Customer Success", "Suporte", "Financeiro"])
     assert.match(page, new RegExp(domain));
@@ -29,8 +28,9 @@ test("Canvas executivo mantém as camadas gerenciais e as áreas publicadas", ()
   assert.match(page, /Fonte indisponível/);
 });
 
-test("Canvas HD não fabrica indicadores e separa posição atual do recorte", () => {
-  assert.match(page, /Posição atual, não afetada pelo período selecionado/);
+test("Canvas HD não fabrica indicadores nem duplica o quadro de KPIs", () => {
+  assert.match(page, /AnalyticsKpiBoard/);
+  assert.doesNotMatch(page, /Posição atual, não afetada pelo período selecionado/);
   assert.match(page, /Não há registros no período selecionado/);
   assert.match(page, /Indisponível/);
   assert.doesNotMatch(page, /142\.800|1\.240|68%|R\$\s*142/);

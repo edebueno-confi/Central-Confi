@@ -82,7 +82,7 @@ export function auditConsumers(root = ROOT) {
     commercialAndSupportApiSendExclusions: count(api, /p_excluded_pipeline_ids: excludedPipelineIds/g) >= 4,
     overviewCallsShareOperationAndExclusions: overview.includes('getCommercialKpisV2ForOverview(stableFilters, groupCompany, commercialExcludedPipelineIds)')
       && overview.includes('getSupportKpisV2ForOverview(stableFilters, groupCompany, supportExcludedPipelineIds)'),
-    financeOperationUnavailable: overview.includes('financeUnavailable={omieUnavailable || Boolean(groupCompany)}'),
+    financeOperationUnavailable: overview.includes('Financeiro não é separado por operação'),
     customerSuccessContractRemainsDistinct: api.includes('getCustomerSuccessKpisV2(groupCompany')
       && !api.includes('getCustomerSuccessKpisV2(filters, groupCompany, excludedPipelineIds'),
   };

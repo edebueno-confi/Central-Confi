@@ -5,7 +5,7 @@ import type {
   AnalyticsBlockState,
   AnalyticsSourceStatusPayload,
 } from '@genius-support-os/contracts';
-import { getAnalyticsSourceStatus, getCeoHistory, getCeoSnapshot, getCommercialKpisV2ForOverview, getCsSnapshotForOverview, getExecutiveKpisV2, getSupportKpisV2ForOverview, listAnalyticsSourceConfig } from "./analytics-api";
+import { getAnalyticsSourceStatus, getCeoSnapshot, getCommercialKpisV2ForOverview, getCsSnapshotForOverview, getExecutiveKpisV2, getSupportKpisV2ForOverview, listAnalyticsSourceConfig } from "./analytics-api";
 import {
   analyticsGlobalToBlockState,
   analyticsSourceToBlockState,
@@ -13,7 +13,6 @@ import {
   type AnalyticsFilters,
   type AnalyticsPageProps,
   type AnalyticsSourceConfig,
-  type CeoHistory,
   type CeoSnapshot,
   type CsSnapshot,
 } from "./analytics-model";
@@ -31,7 +30,6 @@ import {
 } from "./analytics-executive";
 import { analyticsHref } from "./analytics-navigation";
 import { AnalyticsBoardLimitations, AnalyticsKpiBoard, type BoardBand } from "./AnalyticsKpiBoard";
-import { AnalyticsTrendPanel } from './AnalyticsTrendPanel';
 import { readKpi } from './analytics-kpi-contract.mjs';
 import { buildOperationKpisFromSettledLoads, buildOperationPeriodMetrics, buildUnavailableCeoSnapshot, buildUnavailableOperationKpiPayload, mergeOperationKpiPayload } from './analytics-ceo-snapshot.mjs';
 
@@ -53,11 +51,6 @@ const STATUS_LABELS: Record<AnalyticsDataStatus, string> = {
 };
 
 const EMPTY_SHARED_PIPELINE_IDS: string[] = [];
-
-type MetricDelta = {
-  label: string;
-  tone: "positive" | "negative" | "neutral";
-} | null;
 
 type OperationCurrentAvailability = {
   commercialPipeline: boolean;
@@ -149,7 +142,6 @@ export function AnalyticsCeoPage({
   const [result, setResult] = useState<{
     loading: boolean;
     data?: CeoSnapshot;
-    history?: CeoHistory;
     sourceStatus?: AnalyticsSourceStatusPayload;
     error?: boolean;
   }>({ loading: true });
@@ -287,12 +279,6 @@ export function AnalyticsCeoPage({
           }
           if (cancelled) return;
           if (!executiveLoaded) return;
-          try {
-            const history = await getCeoHistory(stableFilters);
-            if (!cancelled) setResult((current) => ({ ...current, history }));
-          } catch {
-            // Histórico é complementar. Sua falha não derruba o dashboard.
-          }
         })();
       })
       .catch(() => {
@@ -364,38 +350,6 @@ export function AnalyticsCeoPage({
   ].includes(state?.status ?? "unavailable");
   const hubspotUnavailable = currentSourceStatus ? !hasUsableSnapshot(currentSourceStatus.hubspot.status, currentSourceStatus.hubspot.lastSuccessAt, currentSourceStatus.hubspot.hasValidSnapshot) : snapshotUnavailable;
   const omieUnavailable = currentSourceStatus ? !hasUsableSnapshot(currentSourceStatus.omie.status, currentSourceStatus.omie.lastSuccessAt, currentSourceStatus.omie.hasValidSnapshot) : snapshotUnavailable;
-  const history = result.history;
-  const comparison =
-    history && !hubspotUnavailable && !groupCompany
-      ? {
-          revenue: buildDelta(
-            data.commercial.wonRevenue,
-            history.previous.commercial.wonRevenue,
-            "currency",
-          ),
-          deals: buildDelta(
-            data.commercial.wonDeals,
-            history.previous.commercial.wonDeals,
-            "count",
-          ),
-          conversion:
-            data.commercial.conversionRate === null ||
-            history.previous.commercial.conversionRate === null
-              ? null
-              : buildPercentagePointDelta(
-                  data.commercial.conversionRate,
-                  history.previous.commercial.conversionRate,
-                  data.commercial.wonDeals + data.commercial.lostDeals,
-                  history.previous.commercial.wonDeals +
-                    history.previous.commercial.lostDeals,
-                ),
-          tickets: buildDelta(
-            data.support.createdTickets,
-            history.previous.support.createdTickets,
-            "count",
-          ),
-        }
-      : { revenue: null, deals: null, conversion: null, tickets: null };
   const applyFilters = (next: AnalyticsFilters) => {
     setFilters(next);
     onSharedPeriodChange?.({ from: next.from, to: next.to });
@@ -413,29 +367,21 @@ export function AnalyticsCeoPage({
 
   return (
     <ExecutiveHdCanvas
-      data={data}
       executiveKpis={scopedExecutiveKpis}
       state={state}
       filters={filters}
       domainCards={domainCards}
       exceptions={exceptions}
-      comparison={comparison}
-      unavailable={hubspotUnavailable}
-      financeUnavailable={omieUnavailable || Boolean(groupCompany)}
       operationScoped={operationScoped}
       operationLoadFailed={operationLoadFailed}
       operationLoadPartial={operationLoadPartial}
       onRetryOperation={() => setOperationRetryToken((token) => token + 1)}
-      operationCurrentAvailability={operationCurrentAvailability}
-      operationPeriodAvailability={operationPeriodAvailability}
       refreshing={refreshing}
       mobileFiltersOpen={mobileFiltersOpen}
       setMobileFiltersOpen={setMobileFiltersOpen}
       applyFilters={applyFilters}
       isDashboardViewer={isDashboardViewer}
       configuredPipelines={configuredPipelines}
-      commercialExcludedPipelineIds={commercialExcludedPipelineIds}
-      supportExcludedPipelineIds={supportExcludedPipelineIds}
       groupCompany={groupCompany}
       onGroupCompanyChange={handleGroupCompanyChange}
     />
@@ -607,60 +553,39 @@ function buildDomainCards(
 }
 
 function ExecutiveHdCanvas({
-  data,
   executiveKpis,
   state,
   filters,
   domainCards,
   exceptions,
-  comparison,
-  unavailable,
-  financeUnavailable,
   operationScoped,
   operationLoadFailed,
   operationLoadPartial,
   onRetryOperation,
-  operationCurrentAvailability,
-  operationPeriodAvailability,
   refreshing,
   mobileFiltersOpen,
   setMobileFiltersOpen,
   applyFilters,
   isDashboardViewer,
   configuredPipelines,
-  commercialExcludedPipelineIds,
-  supportExcludedPipelineIds,
   groupCompany,
   onGroupCompanyChange,
 }: {
-  data: CeoSnapshot;
   executiveKpis: unknown;
   state?: AnalyticsBlockState;
   filters: AnalyticsFilters;
   domainCards: DomainCard[];
   exceptions: ReturnType<typeof buildExecutiveExceptions>;
-  comparison: {
-    revenue: MetricDelta;
-    deals: MetricDelta;
-    conversion: MetricDelta;
-    tickets: MetricDelta;
-  };
-  unavailable: boolean;
-  financeUnavailable: boolean;
   operationScoped: boolean;
   operationLoadFailed: boolean;
   operationLoadPartial: boolean;
   onRetryOperation?: () => void;
-  operationCurrentAvailability: OperationCurrentAvailability;
-  operationPeriodAvailability: OperationPeriodAvailability;
   refreshing: boolean;
   mobileFiltersOpen: boolean;
   setMobileFiltersOpen: (value: boolean) => void;
   applyFilters: (next: AnalyticsFilters) => void;
   isDashboardViewer: boolean;
   configuredPipelines: AnalyticsSourceConfig[];
-  commercialExcludedPipelineIds: string[];
-  supportExcludedPipelineIds: string[];
   groupCompany: string;
   onGroupCompanyChange: (value: string) => void;
 }) {
@@ -679,7 +604,7 @@ function ExecutiveHdCanvas({
             <h2 id="executive-heading">Visão Geral</h2>
           </div>
           <p>
-            Desempenho no período, posição atual e sinais que merecem contexto.
+            Resumo executivo, posição atual e sinais que merecem contexto.
           </p>
         </div>
       </section>
@@ -769,117 +694,6 @@ function ExecutiveHdCanvas({
         </p>
       ) : null}
 
-      <section className="gso-hd-ribbon" aria-labelledby="performance-heading">
-        <HdSectionHeading
-          id="performance-heading"
-          title="Desempenho no período"
-          description="Sinais afetados pelo recorte selecionado."
-        />
-        <div className="gso-hd-metric-grid">
-          <HdMetric
-            label="Receita ganha"
-            value={
-              unavailable || (operationScoped && !operationPeriodAvailability.commercialWonRevenue)
-                ? "Indisponível"
-                : formatCurrency(data.commercial.wonRevenue)
-            }
-            detail={unavailable || (operationScoped && !operationPeriodAvailability.commercialWonRevenue)
-              ? operationScoped && !operationPeriodAvailability.commercialWonDeals
-                ? "Receita e negócios ganhos indisponíveis"
-                : data.commercial.wonDeals > 0
-                ? `${formatCountLabel(data.commercial.wonDeals, "negócio ganho", "negócios ganhos")}; valor não disponível`
-                : "Valor da receita indisponível"
-              : formatCountLabel(data.commercial.wonDeals, "negócio ganho", "negócios ganhos")}
-            comparison={comparison.revenue?.label}
-          />
-          <HdMetric
-            label="Negócios ganhos"
-            value={
-              unavailable || (operationScoped && !operationPeriodAvailability.commercialWonDeals)
-                ? "Indisponível"
-                : data.commercial.wonDeals.toLocaleString("pt-BR")
-            }
-            detail={unavailable || (operationScoped && (!operationPeriodAvailability.commercialWonDeals || !operationPeriodAvailability.commercialLostDeals))
-              ? "Dados comerciais indisponíveis"
-              : formatCountLabel(data.commercial.lostDeals, "negócio perdido", "negócios perdidos")}
-            comparison={comparison.deals?.label}
-          />
-          <HdMetric
-            label="Conversão"
-            value={
-              unavailable ||
-              (operationScoped && !operationPeriodAvailability.commercialConversion) ||
-              data.commercial.conversionRate === null ||
-              data.commercial.wonDeals + data.commercial.lostDeals === 0
-                ? "Indisponível"
-                : formatPercent(data.commercial.conversionRate)
-            }
-            detail={unavailable || (operationScoped && !operationPeriodAvailability.commercialConversion) ? "Dados comerciais indisponíveis" : "Ganhos sobre ganhos e perdas"}
-            comparison={comparison.conversion?.label}
-          />
-          <HdMetric
-            label="Atendimentos recebidos"
-            value={
-              unavailable || (operationScoped && !operationPeriodAvailability.supportCreated)
-                ? "Indisponível"
-                : data.support.createdTickets.toLocaleString("pt-BR")
-            }
-            detail={unavailable || (operationScoped && !operationPeriodAvailability.supportCreated)
-              ? "Contagem de tickets indisponível"
-              : operationScoped
-                ? "Encerramentos do recorte indisponíveis"
-                : formatCountLabel(data.support.closedTickets, "ticket encerrado", "tickets encerrados")}
-            comparison={comparison.tickets?.label}
-          />
-        </div>
-      </section>
-
-      <section
-        className="gso-hd-current-strip"
-        aria-labelledby="current-heading"
-      >
-        <HdSectionHeading
-          id="current-heading"
-          title="Posição atual"
-          description="Posição atual, não afetada pelo período selecionado."
-        />
-        <div className="gso-hd-current-line">
-          <HdMetric
-            label="Saldo vencido"
-            value={
-              financeUnavailable
-                ? "Indisponível"
-                : formatCurrency(data.finance.overdueBalance)
-            }
-            detail={financeUnavailable
-              ? "Dados financeiros indisponíveis"
-              : formatCountLabel(data.finance.overdueTitles, "título vencido", "títulos vencidos")}
-          />
-          <HdMetric
-            label="Clientes com alerta"
-            value={
-              financeUnavailable || unavailable
-                ? "Indisponível"
-                : data.financialAlerts.length.toLocaleString("pt-BR")
-            }
-            detail={financeUnavailable || unavailable ? "Reconciliação financeira indisponível" : "Inadimplência reconciliada"}
-          />
-          <HdMetric
-            label="Atendimentos em aberto"
-            value={
-              unavailable || (operationScoped && !operationCurrentAvailability.supportOpen)
-                ? "Indisponível"
-                : data.support.openTickets.toLocaleString("pt-BR")
-            }
-            detail={unavailable || (operationScoped && !operationCurrentAvailability.supportOpen)
-              ? "Contagem de tickets indisponível"
-              : operationScoped
-                ? "Prioridade do recorte indisponível"
-                : formatCountLabel(data.support.highPriorityOpen, "alta prioridade aberta", "altas prioridades abertas")}
-          />
-        </div>
-      </section>
-
       <section
         className="gso-hd-domain-matrix"
         aria-labelledby="domains-heading"
@@ -933,19 +747,6 @@ function ExecutiveHdCanvas({
         </section>
       </div>
 
-      <section className="space-y-4" aria-labelledby="trends-heading">
-        <HdSectionHeading
-          id="trends-heading"
-          title="Evolução por domínio"
-          description="Séries por domínio, com período, unidade e disponibilidade explicitados."
-        />
-        <div className="grid gap-4 lg:grid-cols-3">
-          <AnalyticsTrendPanel domain="commercial" groupCompany={groupCompany} excludedPipelineIds={commercialExcludedPipelineIds} />
-          <AnalyticsTrendPanel domain="support" groupCompany={groupCompany} excludedPipelineIds={supportExcludedPipelineIds} />
-          <AnalyticsTrendPanel domain="finance" groupCompany={groupCompany} />
-        </div>
-      </section>
-
     </div>
   );
 }
@@ -959,26 +760,6 @@ function HdStatus({ state }: { state: AnalyticsBlockState }) {
       <i aria-hidden="true" />
       {shortStatus(state.status)}{lastValidLabel}
     </span>
-  );
-}
-function HdMetric({
-  label,
-  value,
-  detail,
-  comparison,
-}: {
-  label: string;
-  value: string;
-  detail?: string;
-  comparison?: string;
-}) {
-  return (
-    <div className="gso-hd-metric">
-      <span>{label}</span>
-      <strong>{value}</strong>
-      <small>{detail ?? "Sem detalhe complementar"}</small>
-      {comparison ? <em>{comparison}</em> : null}
-    </div>
   );
 }
 function HdDomain({
@@ -1087,9 +868,6 @@ function formatCurrency(value: number) {
     maximumFractionDigits: 0,
   });
 }
-function formatPercent(value: number) {
-  return `${(value * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
-}
 function formatPeriod(filters: AnalyticsFilters) {
   return filters.from && filters.to
     ? `${formatDate(filters.from)} a ${formatDate(filters.to)}`
@@ -1097,35 +875,4 @@ function formatPeriod(filters: AnalyticsFilters) {
 }
 function formatDate(value: string) {
   return new Date(`${value}T12:00:00`).toLocaleDateString("pt-BR");
-}
-function buildDelta(
-  current: number,
-  previous: number,
-  kind: "currency" | "count",
-): MetricDelta {
-  if (previous === 0) return null;
-  const change = ((current - previous) / Math.abs(previous)) * 100;
-  const sign = change > 0 ? "+" : "";
-  const value =
-    kind === "currency"
-      ? `${sign}${change.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`
-      : `${sign}${change.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
-  return {
-    label: `${value} vs. período anterior`,
-    tone: change > 0 ? "positive" : change < 0 ? "negative" : "neutral",
-  };
-}
-function buildPercentagePointDelta(
-  current: number,
-  previous: number,
-  currentDenominator: number,
-  previousDenominator: number,
-): MetricDelta {
-  if (currentDenominator === 0 || previousDenominator === 0) return null;
-  const change = (current - previous) * 100;
-  const sign = change > 0 ? "+" : "";
-  return {
-    label: `${sign}${change.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} p.p. vs. período anterior`,
-    tone: change > 0 ? "positive" : change < 0 ? "negative" : "neutral",
-  };
 }

@@ -243,10 +243,6 @@ export function AnalyticsCustomerSuccessPage({ sharedOperation, onSharedOperatio
         </ChartCard>
       </div>
 
-      <ChartCard title="Tarefas e atividades de Customer Success" description="Pendências por pessoa exigem um read model de atividades do HubSpot.">
-        <MinimalState title="Atividades indisponíveis" description="O contrato atual publica carteira, MRR, atendimentos e data de última interação, mas não tarefas, reuniões, ligações ou e-mails. Nenhuma atividade é inferida a partir da carteira." />
-      </ChartCard>
-
       <ChartCard
         title="Clientes com maior valor vencido"
         description="Cruzamento entre a carteira e os títulos vencidos, feito apenas por cadastro fiscal conferido."
