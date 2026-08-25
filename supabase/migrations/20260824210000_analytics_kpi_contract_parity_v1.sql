@@ -7,6 +7,9 @@
 -- contrato estiver aplicado no ambiente alvo.
 -- As CTEs também aplicam a elegibilidade canônica. O wrapper apenas configura
 -- o contexto; ele não substitui o predicado server-side.
+
+begin;
+
 create or replace function public.rpc_analytics_commercial_kpis_v2_filtered(
   p_from date,
   p_to date,
@@ -549,3 +552,5 @@ comment on function public.rpc_analytics_support_kpis_by_operation(date, date, t
   'KPIs de suporte no recorte de operação com estágio, prioridade e exclusões de pipeline; operação é filtro de leitura, não permissão.';
 
 notify pgrst, 'reload schema';
+
+commit;
