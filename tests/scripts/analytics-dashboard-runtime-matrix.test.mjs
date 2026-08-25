@@ -16,8 +16,15 @@ test('gate exige alvo local e não aceita métodos de escrita', () => {
   assert.match(source, /LOCAL_QA_RUNTIME_MATRIX_WRITE_METHOD/);
   assert.match(source, /54321/);
   assert.match(source, /rpc_analytics_\[a-z0-9_\]/);
+  assert.match(source, /rpc_internal_actor_workspace_context/);
+  assert.match(source, /request\.method\(\) !== 'POST' \|\| !isLocalTarget\(url\) \|\| url\.port !== '54321'/);
   assert.doesNotMatch(source, /LOCAL_QA_\w+_PASSWORD/);
   assert.doesNotMatch(source, /getByLabel\(['"]Senha/);
+});
+
+test('POST allowlisted exige hostname local mesmo na porta do Supabase', () => {
+  assert.match(source, /request\.method\(\) !== 'POST' \|\| !isLocalTarget\(url\) \|\| url\.port !== '54321'/);
+  assert.match(source, /if \(\['GET', 'HEAD', 'OPTIONS'\]\.includes\(request\.method\(\)\)\) return isLocalTarget\(url\)/);
 });
 
 test('evidência de rede é sanitizada antes de ser publicada', () => {

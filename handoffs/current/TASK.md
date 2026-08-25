@@ -6,7 +6,7 @@
 - Reviewer active: Sentinel
 - Review mode: SENTINEL_REQUIRED
 - Agent coordination: IDLE
-- Last task: ANALYTICS-DASHBOARD-RUNTIME-MATRIX-GATE-2026-08-24
+- Last task: ANALYTICS-DASHBOARD-RUNTIME-AUTH-CONTEXT-REPAIR-2026-08-25
 - Last result: APPROVED and archived after selective FINALIZE_LOCAL.
 
 No task is active in `handoffs/current`.

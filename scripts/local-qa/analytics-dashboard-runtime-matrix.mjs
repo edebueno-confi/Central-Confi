@@ -38,8 +38,10 @@ function isLocalTarget(url) {
 function isReadOnlyRequest(request) {
   const url = new URL(request.url());
   if (['GET', 'HEAD', 'OPTIONS'].includes(request.method())) return isLocalTarget(url);
-  if (request.method() !== 'POST' || url.port !== '54321') return false;
-  return /^\/auth\/v1\/token$/i.test(url.pathname) || /^\/rest\/v1\/rpc\/rpc_analytics_[a-z0-9_]+$/i.test(url.pathname);
+  if (request.method() !== 'POST' || !isLocalTarget(url) || url.port !== '54321') return false;
+  return /^\/auth\/v1\/token$/i.test(url.pathname)
+    || /^\/rest\/v1\/rpc\/rpc_analytics_[a-z0-9_]+$/i.test(url.pathname)
+    || url.pathname === '/rest/v1/rpc/rpc_internal_actor_workspace_context';
 }
 
 function sanitizeText(value) {
