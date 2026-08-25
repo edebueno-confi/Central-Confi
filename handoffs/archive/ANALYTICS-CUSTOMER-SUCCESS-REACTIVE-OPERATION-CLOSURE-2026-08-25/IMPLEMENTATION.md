@@ -2,7 +2,7 @@
 
 - Task: ANALYTICS-CUSTOMER-SUCCESS-REACTIVE-OPERATION-CLOSURE-2026-08-25
 - Final state: APPROVED / FINALIZE_LOCAL
-- Functional commit: 2b8a8c3d
+- Functional commit: ece396d7
 
 Changed `AnalyticsCustomerSuccessPage.tsx` to invalidate the visible snapshot,
 show loading, and guard success/error publication by request generation. Added
