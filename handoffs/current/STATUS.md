@@ -8,7 +8,7 @@
 - Review mode: SENTINEL_REQUIRED
 - Agent coordination: IDLE
 - Base SHA: eeddbc2a6fa9bae6b83a7eddd1f927d6db2de2c8
-- Implementation SHA: ece396d7 (functional commit); metadata checkpoint pending
+- Implementation SHA: 6b5b723c (metadata checkpoint; functional commit ece396d7)
 
 Review verdict: APPROVED pelo Sentinel, limitado à reatividade local de Customer
 Success e aos testes determinísticos. O snapshot é invalidado antes da nova
