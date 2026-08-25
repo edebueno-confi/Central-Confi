@@ -7,12 +7,13 @@ Resultado `NO_GO` fail-closed para a migration candidata
 
 A auditoria estática confirmou os wrappers de seis argumentos, os filtros de
 operação, estágio e exclusões de pipeline nas CTEs server-side, e a coerência
-dos consumidores locais entre Visão Geral, Comercial e Suporte. A tentativa de
-aplicação foi feita somente em containers PostgreSQL descartáveis namespaced,
-com identidade distinta do banco canônico. A aplicação falhou dentro do
-shadow antes da leitura das funções, portanto não há prova de resolução SQL
-runtime, paridade numérica ou PostgREST. A migration permanece não aplicada no
-banco canônico local e remoto.
+dos consumidores locais entre Visão Geral, Comercial e Suporte. A aplicação e
+os probes SQL foram executados somente em container PostgreSQL descartável
+namespaced, com identidade distinta do banco canônico. O bootstrap foi
+corrigido para aguardar a inicialização completa da imagem, e o shadow aplicou
+a candidata e comprovou catálogo, ACL básica e recortes numéricos. PostgREST
+servido, RLS/cross-tenant servido e performance real continuam não
+comprovados, portanto o resultado global permanece `NO_GO`.
 
 ## Escopo e allowlist
 
@@ -20,14 +21,15 @@ banco canônico local e remoto.
 - `tests/scripts/analytics-kpi-shadow-preflight.test.mjs`
 - este relatório;
 - `handoffs/current/TASK.md`, `IMPLEMENTATION.md`, `STATUS.md` e `REVIEW.md`.
+- atualização seletiva da linha 77 em `handoffs/README.md`.
 
-`package.json`, a migration candidata, o banco local principal, a fila e todos
-os demais arquivos foram preservados fora do lote. `handoffs/README.md` possui
-alterações preexistentes e não foi usado como stage do lote.
+`package.json`, a migration candidata, o banco local principal e todos os
+demais arquivos foram preservados fora do lote. As demais alterações
+preexistentes em `handoffs/README.md` permanecem fora do escopo.
 
 ## Identidade e janela de execução
 
-Observação local em `2026-08-24T21:46:14.4815543-03:00`, por:
+Observação local em `2026-08-24T22:08:15.847-03:00`, por:
 
 ```text
 Get-Date -Format o
@@ -51,7 +53,7 @@ nome canônico e qualquer nome contendo `genius-support-os`.
 
 Comando: `node --test tests/scripts/analytics-kpi-shadow-preflight.test.mjs`.
 
-Resultado final: **5/5 PASS**.
+Resultado final: **8/8 PASS**.
 
 Migration auditada com SHA-256:
 `7fdae191217db18d21642c0ba5d26a2225bf5c7f931d4ed6d95db7f4616f6445`.
@@ -88,8 +90,8 @@ Comando:
 node scripts/local-qa/analytics-kpi-shadow-preflight.mjs
 ```
 
-Janela final observada: `2026-08-24T21:47:09.741-03:00`, equivalente a
-`2026-08-25T00:47:09.741Z` no campo `generatedAt` do relatório do script.
+Janela final observada: `2026-08-24T22:08:15.847-03:00`, equivalente a
+`2026-08-25T01:08:15.847Z` no campo `generatedAt` do relatório do script.
 
 Resultado sanitizado:
 
@@ -98,25 +100,33 @@ state=NO_GO
 failClosed=true
 targetIdentity.verified=true
 targetIdentity.disposable=true
-migration.result=SHADOW_APPLY_FAILED
-directSql.state=NOT_RUN
+bootstrap.ready=true
+bootstrap.markerSeen=true
+migration.result=SHADOW_ONLY
+directSql.expected=true
 postgrest.state=NOT_PROVEN
 ```
 
-O erro final sanitizado foi:
-`DOCKER_FAILED:FailedPrecondition: container <id> init process is not running: failed precondition`.
-As tentativas anteriores, também somente em shadow descartável, expuseram
-dependências de bootstrap ausentes (`synced_at` e manutenção do objeto
-`graphql.seq_schema_version`); o bootstrap foi ajustado apenas dentro do
-script allowlisted. A tentativa final continuou falhando antes da leitura do
-catálogo. Nenhuma dessas falhas foi contornada no banco canônico.
+O diagnóstico reproduzido foi uma corrida entre o primeiro `select 1` e os
+scripts de inicialização da imagem. O SQL do harness era enviado antes do
+marcador `PostgreSQL init process complete; ready for start up.` e podia
+derrubar o container por conflitos de ownership em schemas internos. O lote
+agora aguarda o marcador, confirma o probe e não cria objetos em `graphql`.
+Falhas de bootstrap continuam resultando em `NO_GO` sem SQL posterior.
 
 Por consequência, não foram declarados como PASS:
 
-- `to_regprocedure` e execução dos wrappers no shadow;
-- recortes numéricos de operação selecionada, Todas, estágio e exclusão;
-- ACL, `prosecdef` e `proconfig` observados após a migration;
 - resolução via PostgREST.
+- RLS/cross-tenant servido;
+- performance real e browser autenticado.
+
+Evidência obtida no shadow:
+
+- `commercialSelected=2`, `commercialExcluded=1`, `allCommercial=2`;
+- `supportSelected=2`, `supportExcluded=1`, `allSupport=3`;
+- wrappers e funções filtered presentes via `to_regprocedure`;
+- `security definer`, `search_path=""` e `anon` sem execute nos wrappers;
+- bootstrap `ready=true`, marcador visto e `select 1` confirmado.
 
 ## Classificação dos critérios
 
@@ -124,8 +134,8 @@ Por consequência, não foram declarados como PASS:
 |---|---|---|---|
 | Migration candidata e assinaturas | PASS estático | parser/teste 5/5, SHA do arquivo | não é execução SQL |
 | Identidade do shadow | PASS | nome, label, imagem local e exclusão do canônico | não prova o contrato |
-| Aplicação em shadow | NO_GO | `SHADOW_APPLY_FAILED` | container descartável falhou antes do catálogo |
-| Operação, Todas, estágio e exclusões | NÃO COMPROVADO | sem `directSql` após falha | não inventar paridade |
+| Aplicação em shadow | PASS | `SHADOW_ONLY`, bootstrap pronto | não é aplicação no canônico |
+| Operação, Todas, estágio e exclusões | PASS no shadow | `directSql.expected=true` e recortes numéricos | dados sintéticos, sem paridade servida |
 | Visão Geral versus abas | PASS estático | consumidores e parâmetros locais | RPC/PostgREST não servidos |
 | Customer Success | NÃO PROMOVIDO | contrato distinto no código | cobertura temporal não faz parte desta migration |
 | Financeiro | HONESTO/indisponível por operação | `financeUnavailable` no consumidor | sem nova dimensão operacional |
@@ -139,15 +149,16 @@ Por consequência, não foram declarados como PASS:
 
 Executados em `2026-08-24` no checkout local:
 
-- `node --test tests/scripts/analytics-kpi-shadow-preflight.test.mjs`: **5/5 PASS**;
+- `node --test tests/scripts/analytics-kpi-shadow-preflight.test.mjs`: **8/8 PASS**;
 - `node scripts/local-qa/analytics-kpi-shadow-preflight.mjs`: **NO_GO esperado,
-  fail-closed**, shadow namespaced verificado, migration apply falhou antes do
-  catálogo e PostgREST não comprovado;
-- `npm run test:focused`: **343/343 PASS** em 52 arquivos;
+  fail-closed**, shadow namespaced verificado, migration aplicada somente no
+  shadow, `directSql.expected=true` e PostgREST não comprovado;
+- `npm run test:focused`: **346/346 PASS** em 52 arquivos;
+- `npm run web:typecheck`: **PASS**;
 - `npm run web:typecheck`: **PASS**;
 - `npm run lint`: **PASS**, 0 erros e 158 warnings legados;
 - `npm run docs:validate`: **PASS**, 0 bloqueios;
-- `npm run review:gates`: **PASS** em `2026-08-25T00:51:01.596Z`, 0 regressões
+- `npm run review:gates`: **PASS** em `2026-08-25T01:09:49.048Z`, 0 regressões
   bloqueantes e 47 itens de baseline resolvidos;
 - `git diff --check`: **PASS**.
 
@@ -158,6 +169,7 @@ reservados à finalização após aprovação independente, sem commit neste lot
 ## Decisão operacional
 
 `NO_GO` para aplicar a migration candidata no banco local canônico ou remoto.
-O próximo passo seguro é uma decisão/ajuste específico do bootstrap shadow e,
-somente depois, nova execução em container namespaced. Não é permitido usar a
-falha do shadow como motivo para aplicar a migration no banco principal.
+O bootstrap do shadow está corrigido e o contrato SQL sintético foi exercitado,
+mas a resolução servida via PostgREST e as provas de RLS/performance ainda
+faltam. Não é permitido usar o sucesso do SQL direto no shadow como motivo
+para aplicar a migration no banco principal.

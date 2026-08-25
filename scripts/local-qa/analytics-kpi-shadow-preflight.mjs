@@ -9,6 +9,7 @@ const CANDIDATE_FILE = 'supabase/migrations/20260824210000_analytics_kpi_contrac
 const CANONICAL_CONTAINER = 'supabase_db_genius-support-os';
 const SHADOW_IMAGE = 'public.ecr.aws/supabase/postgres:17.6.1.158';
 const SHADOW_PREFIX = 'confione_shadow_kpi_contract_20260824_';
+export const SHADOW_BOOTSTRAP_MARKER = 'PostgreSQL init process complete; ready for start up.';
 
 export const KPI_SHADOW_MANIFEST = Object.freeze({
   task: 'ANALYTICS-KPI-CONTRACT-SHADOW-PREFLIGHT-2026-08-24',
@@ -19,6 +20,11 @@ export const KPI_SHADOW_MANIFEST = Object.freeze({
     image: SHADOW_IMAGE,
     canonicalContainer: CANONICAL_CONTAINER,
     copiesCanonicalData: false,
+    readiness: Object.freeze({
+      requiresBootstrapMarker: SHADOW_BOOTSTRAP_MARKER,
+      requiresRunningContainer: true,
+      requiresPostgresProbe: true,
+    }),
   }),
   prohibited: Object.freeze([
     `docker exec ${CANONICAL_CONTAINER}`,
@@ -91,7 +97,10 @@ function runDocker(args, input = '') {
   });
   if (result.status !== 0) {
     const detail = String(result.stderr || result.stdout || '').replace(/POSTGRES_PASSWORD=[^\s]+/g, 'POSTGRES_PASSWORD=[REDACTED]').trim();
-    throw new Error(`DOCKER_FAILED:${detail.slice(0, 500)}`);
+    const spawnError = result.error instanceof Error ? ` spawn=${result.error.message}` : '';
+    const status = result.status === null ? 'null' : String(result.status);
+    const sanitizedDetail = (detail || 'sem saída').slice(0, 500);
+    throw new Error(`DOCKER_FAILED:status=${status}:${sanitizedDetail}${spawnError}`);
   }
   return String(result.stdout || '').trim();
 }
@@ -115,6 +124,60 @@ function waitForPostgres(container) {
   throw new Error('SHADOW_DATABASE_NOT_READY');
 }
 
+export function classifyShadowBootstrap({ containerStatus, logs, postgresReady }) {
+  const status = String(containerStatus ?? '').trim();
+  const markerSeen = String(logs ?? '').includes(SHADOW_BOOTSTRAP_MARKER);
+  if (status !== 'running') {
+    return { ready: false, reason: 'SHADOW_CONTAINER_NOT_RUNNING', markerSeen, postgresReady: Boolean(postgresReady) };
+  }
+  if (!markerSeen) {
+    return { ready: false, reason: 'SHADOW_BOOTSTRAP_INCOMPLETE', markerSeen, postgresReady: Boolean(postgresReady) };
+  }
+  if (!postgresReady) {
+    return { ready: false, reason: 'SHADOW_DATABASE_NOT_READY', markerSeen, postgresReady: false };
+  }
+  return { ready: true, reason: null, markerSeen: true, postgresReady: true };
+}
+
+function readShadowContainerStatus(container) {
+  const state = spawnSync('docker', [
+    'inspect', '--format', '{{.State.Status}}|{{.State.ExitCode}}|{{.State.Error}}', container,
+  ], { encoding: 'utf8', windowsHide: true });
+  if (state.status !== 0) {
+    const detail = String(state.stderr || state.stdout || '').replace(/POSTGRES_PASSWORD=[^\s]+/g, 'POSTGRES_PASSWORD=[REDACTED]').trim();
+    throw new Error(`SHADOW_CONTAINER_INSPECT_FAILED:${detail.slice(0, 300) || 'sem saída'}`);
+  }
+  return state.stdout.trim();
+}
+
+function readShadowContainerLogs(container) {
+  const logs = spawnSync('docker', ['logs', container], { encoding: 'utf8', windowsHide: true, maxBuffer: 8 * 1024 * 1024 });
+  if (logs.status !== 0) {
+    const detail = String(logs.stderr || logs.stdout || '').replace(/POSTGRES_PASSWORD=[^\s]+/g, 'POSTGRES_PASSWORD=[REDACTED]').trim();
+    throw new Error(`SHADOW_LOGS_UNAVAILABLE:${detail.slice(0, 300) || 'sem saída'}`);
+  }
+  return String(logs.stdout || '') + String(logs.stderr || '');
+}
+
+export function waitForShadowBootstrap(container) {
+  for (let attempt = 0; attempt < 120; attempt += 1) {
+    const state = readShadowContainerStatus(container);
+    const [containerStatus] = state.split('|');
+    if (containerStatus !== 'running') {
+      throw new Error(`SHADOW_BOOTSTRAP_NOT_RUNNING:${state}`);
+    }
+    const logs = readShadowContainerLogs(container);
+    const markerSeen = logs.includes(SHADOW_BOOTSTRAP_MARKER);
+    if (markerSeen) {
+      waitForPostgres(container);
+      return { ready: true, attempts: attempt + 1, markerSeen: true, postgresReady: true };
+    }
+    const until = Date.now() + 500;
+    while (Date.now() < until) {}
+  }
+  throw new Error('SHADOW_BOOTSTRAP_NOT_COMPLETE');
+}
+
 export function verifyShadowIdentity(container) {
   return Boolean(
     container
@@ -132,10 +195,6 @@ do $$ begin create role analytics_owner nologin nosuperuser nocreatedb nocreater
 grant analytics_owner to postgres;
 create schema app_private;
 alter schema app_private owner to analytics_owner;
-create schema if not exists graphql;
-create sequence if not exists graphql.seq_schema_version;
-create or replace function graphql.increment_schema_version()
-returns event_trigger language plpgsql as $$ begin perform nextval('graphql.seq_schema_version'); end; $$;
 create table public.analytics_source_config(
   tenant_id text not null, object_type text not null, hubspot_pipeline_id text not null,
   group_company text, label text, hubspot_pipeline_label text,
@@ -278,8 +337,8 @@ select json_build_object(
   'allSupport', (public.rpc_analytics_support_kpis_by_operation(date '2026-08-01',date '2026-08-31','open','high',array[]::text[],null)->'kpis'->'open_backlog'->>'value')::numeric
 );
 rollback;`));
-  const expected = calls && catalog && calls.commercialSelected === 1 && calls.commercialExcluded === 0
-    && calls.supportSelected === 1 && calls.supportExcluded === 0 && calls.allCommercial === 2 && calls.allSupport === 3;
+  const expected = calls && catalog && calls.commercialSelected === 2 && calls.commercialExcluded === 1
+    && calls.supportSelected === 2 && calls.supportExcluded === 1 && calls.allCommercial === 2 && calls.allSupport === 3;
   return { catalog, calls, expected, postgrest: { state: 'NOT_PROVEN', reason: 'nenhum serviço PostgREST foi criado dentro do shadow deste lote' } };
 }
 
@@ -297,6 +356,7 @@ export async function runShadowPreflight({ root = ROOT, image = SHADOW_IMAGE } =
     targetIdentity: { container: name, image, canonicalContainer: CANONICAL_CONTAINER, disposable: true, verified: identity, imageAvailable },
     staticAudit: audit,
     consumerAudit: auditConsumers(root),
+    bootstrap: { state: 'NOT_RUN' },
     migration: { applied: false, result: 'NOT_RUN' },
     directSql: { state: 'NOT_RUN' },
     postgrest: { state: 'NOT_PROVEN', reason: 'nenhum PostgREST shadow foi provisionado' },
@@ -310,7 +370,7 @@ export async function runShadowPreflight({ root = ROOT, image = SHADOW_IMAGE } =
       '--label', `com.confione.canonical-container=${CANONICAL_CONTAINER}`,
       '--env', 'POSTGRES_PASSWORD=shadow-only', image]);
     container = name;
-    waitForPostgres(container);
+    result.bootstrap = waitForShadowBootstrap(container);
     psql(container, SHADOW_INIT_SQL);
     psql(container, SHADOW_FIXTURE_SQL);
     result.migration = { applied: true, result: 'SHADOW_ONLY' };

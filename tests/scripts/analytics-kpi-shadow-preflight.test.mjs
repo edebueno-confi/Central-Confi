@@ -5,7 +5,9 @@ import { join } from 'node:path';
 import {
   auditCandidate,
   auditConsumers,
+  classifyShadowBootstrap,
   KPI_SHADOW_MANIFEST,
+  SHADOW_BOOTSTRAP_MARKER,
   SHADOW_INIT_SQL,
   verifyShadowIdentity,
 } from '../../scripts/local-qa/analytics-kpi-shadow-preflight.mjs';
@@ -52,5 +54,41 @@ test('consumidores compartilham os parâmetros suportados e mantêm limites hone
 test('bootstrap do shadow não contém o container canônico nem credenciais reais', () => {
   assert.doesNotMatch(SHADOW_INIT_SQL, /supabase_db_genius-support-os/);
   assert.doesNotMatch(SHADOW_INIT_SQL, /postgresql:\/\//i);
+  assert.doesNotMatch(SHADOW_INIT_SQL, /graphql\.seq_schema_version|graphql\.increment_schema_version/);
   assert.match(KPI_SHADOW_MANIFEST.prohibited.join('\n'), /docker exec supabase_db_genius-support-os/);
+});
+
+test('readiness não libera SQL enquanto o bootstrap da imagem está incompleto', () => {
+  assert.deepEqual(classifyShadowBootstrap({
+    containerStatus: 'running',
+    logs: 'database system is ready to accept connections',
+    postgresReady: true,
+  }), {
+    ready: false,
+    reason: 'SHADOW_BOOTSTRAP_INCOMPLETE',
+    markerSeen: false,
+    postgresReady: true,
+  });
+  assert.equal(SHADOW_BOOTSTRAP_MARKER, KPI_SHADOW_MANIFEST.shadow.readiness.requiresBootstrapMarker);
+});
+
+test('readiness rejeita container encerrado mesmo com marcador ou probe anterior', () => {
+  assert.deepEqual(classifyShadowBootstrap({
+    containerStatus: 'exited',
+    logs: SHADOW_BOOTSTRAP_MARKER,
+    postgresReady: true,
+  }), {
+    ready: false,
+    reason: 'SHADOW_CONTAINER_NOT_RUNNING',
+    markerSeen: true,
+    postgresReady: true,
+  });
+});
+
+test('fixture do shadow separa operação selecionada, exclusões e Todas', () => {
+  assert.match(SHADOW_INIT_SQL, /deal-commercial-keep/);
+  assert.match(SHADOW_INIT_SQL, /deal-commercial-drop/);
+  assert.match(SHADOW_INIT_SQL, /ticket-support-keep/);
+  assert.match(SHADOW_INIT_SQL, /ticket-support-drop/);
+  assert.match(SHADOW_INIT_SQL, /ticket-other/);
 });
