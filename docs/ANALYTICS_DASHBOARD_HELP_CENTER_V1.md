@@ -85,6 +85,14 @@ sido criado antes do período, salvo se o contrato de posição disser o contrá
 | Por fonte, pipeline e responsável | `source_type`, `hs_pipeline`, `hubspot_owner_id` | distribuição do mesmo universo filtrado |
 | SLA/resolução | `closed_date` e histórico de resolução | somente com cobertura válida do campo/status |
 
+Os KPIs e o snapshot de Suporte aceitam período, operação, etapa, prioridade e
+exclusões de pipeline conforme o contrato publicado. Os read models auxiliares
+de posição atual, usados para distribuição por etapa e saúde da fila, não
+recebem filtros de período, etapa ou exclusões. Quando uma dessas dimensões é
+selecionada, a interface mantém os KPIs no recorte e mostra os detalhes
+auxiliares como indisponíveis, sem exibir o universo não filtrado como se fosse
+o resultado solicitado.
+
 ### Customer Success
 
 | Indicador | Fonte/campos | Fórmula | Limitação |
@@ -93,6 +101,13 @@ sido criado antes do período, salvo se o contrato de posição disser o contrá
 | MRR/ARPA | Companies, MRR e vínculos OMIE | soma de MRR; MRR / clientes com MRR | cobertura parcial de identidade |
 | Tickets da carteira | associação ticket→empresa e estágio | empresas ativas com tickets abertos/críticos | não atribuir por nome ou deal |
 | Churn, NRR, GRR e evolução | snapshots/transições | comparação entre estados temporais | `awaiting_history` sem série real |
+
+Customer Success publica posição atual da carteira e a operação quando existe
+associação ticket→empresa com classificação confirmada. A evolução não publica
+uma série temporal neste contrato, portanto permanece indisponível; período,
+etapa e exclusões de pipeline não são enviados para o KPI de carteira. A
+ausência de clientes em atraso ou recorrência não é convertida em zero: depende
+da identidade financeira e da cobertura do vínculo Companies/OMIE.
 
 ### Financeiro
 

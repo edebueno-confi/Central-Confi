@@ -172,7 +172,7 @@ test('funil usa período, operação, pipeline e todos os estágios publicados d
 });
 
 test('seletor compacto preserva valor selecionado e controles de teclado', () => {
-  assert.match(pipelineCombobox, /min-w-\[10rem\] max-w-\[15rem\]/);
+  assert.match(pipelineCombobox, /min-w-\[14rem\] max-w-\[22rem\] flex-\[1\.5\] basis-56/);
   assert.match(pipelineCombobox, /aria-controls=\{`\$\{storageKey\}-options`\}/);
   assert.match(pipelineCombobox, /aria-expanded=\{open\}/);
   assert.match(pipelineCombobox, /<span className="min-w-0 truncate">\{label\}<\/span>/);

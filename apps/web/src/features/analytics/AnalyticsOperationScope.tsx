@@ -36,7 +36,7 @@ export function dedupeAnalyticsOperationOptions(options: AnalyticsOperationOptio
   );
 }
 
-export function AnalyticsOperationScope({ storageKey, options, value, onChange }: { storageKey: string; options: AnalyticsOperationOption[]; value: string; onChange: (value: string) => void }) {
+export function AnalyticsOperationScope({ storageKey, options, value, onChange, inline = false }: { storageKey: string; options: AnalyticsOperationOption[]; value: string; onChange: (value: string) => void; inline?: boolean }) {
   const [restored, setRestored] = useState(false);
   const visible = useMemo(() => dedupeAnalyticsOperationOptions(options), [options]);
 
@@ -53,9 +53,9 @@ export function AnalyticsOperationScope({ storageKey, options, value, onChange }
 
   if (visible.length === 0) return null;
   const selected = visible.find((option) => option.value === value);
-  return <label className="flex min-w-[12rem] flex-1 basis-48 flex-col gap-1.5 text-xs font-medium text-[color:var(--minimal-text-secondary)]">
+  return <label className={`flex flex-col gap-1.5 text-xs font-medium text-[color:var(--minimal-text-secondary)] ${inline ? 'min-w-[8rem] max-w-[11rem] flex-1 basis-36' : 'min-w-[12rem] flex-1 basis-48'}`}>
     Operação
-    <select value={value} onChange={(event) => onChange(event.target.value)} className="h-9 rounded-md border border-[color:var(--minimal-border)] bg-[color:var(--minimal-surface)] px-2.5 text-sm font-normal text-[color:var(--minimal-text)] outline-none transition focus:border-[color:var(--minimal-text-secondary)] focus:ring-2 focus:ring-[color:var(--minimal-border-strong)]">
+    <select value={value} onChange={(event) => onChange(event.target.value)} className={`${inline ? 'h-8 px-2 text-xs' : 'h-9 px-2.5 text-sm'} rounded-md border border-[color:var(--minimal-border)] bg-[color:var(--minimal-surface)] font-normal text-[color:var(--minimal-text)] outline-none transition focus:border-[color:var(--minimal-text-secondary)] focus:ring-2 focus:ring-[color:var(--minimal-border-strong)]`}>
       <option value="">Todas</option>
       {visible.map((option) => <option key={option.value} value={option.value}>{option.value}{option.source === 'suggested' ? ' (sugerida)' : option.source === 'pending' ? ' (a definir)' : ''}</option>)}
     </select>

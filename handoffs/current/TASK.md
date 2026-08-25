@@ -1,91 +1,79 @@
 # TASK
 
-Task: ANALYTICS-DASHBOARD-OVERVIEW-SCOPE-AND-CHARTS-2026-08-25
+Task: ANALYTICS-DASHBOARD-DOMAIN-FILTER-PARITY-2026-08-25
 State: IDLE
 Owner: Forge
 Role: EXECUTOR
 Reviewer active: Sentinel
 Review mode: SENTINEL_REQUIRED
 Agent coordination: IDLE
-Base SHA: f12f57b7
+Base SHA: daa6731f
 Implementation SHA: FINALIZE_LOCAL
 
 ## Objetivo
 
-Reestruturar a Visão Geral e posicionar os gráficos comerciais na superfície
-correta, reduzindo duplicação e mantendo uma leitura executiva simples.
+Garantir que os filtros do Dashboard representem o mesmo recorte de dados em
+Visão Geral, Comercial, Suporte, Customer Success e Financeiro, sem snapshots
+antigos, fallback consolidado ou KPI artificialmente zerado.
+
+## Prioridade de produto
+
+Comercial é a superfície principal. O funil, KPIs e gráficos devem respeitar
+período, operação, pipeline, etapa, exclusões e responsável quando publicados
+pelo contrato. O período selecionado deve alterar a coorte do funil e de todos
+os indicadores compatíveis.
 
 ## Escopo
 
-- manter na Visão Geral o mapa das áreas, KPIs executivos, atenção operacional e
-  no máximo uma tendência temporal com contrato válido;
-- concentrar na aba Comercial funil por etapa, ganhos, perdas, valor em
-  negociação, negócios fechados e performance por responsável;
-- separar explicitamente Posição atual de Evolução temporal;
-- garantir que período, operação, pipeline e filtros comerciais usem o mesmo
-  contexto de request, sem snapshot antigo após troca;
-- validar Todas e After Sale com payloads exatos e estados honestos;
-- garantir que o funil por estágio use a coorte do período selecionado e não
-  um snapshot fora do recorte;
-- validar operação, pipeline e todos os estágios publicados no recorte, sem
-  ocultar estágios com dados nem preencher ausências com zero;
-- compactar visualmente o seletor de pipeline, preservando leitura, teclado e
-  estado selecionado;
-- revisar as abas Analytics em busca de inconsistência de filtros, títulos,
-  loading, estados vazios e duplicação;
-- depois de proteger o Comercial, executar um levantamento read-only de
-  Customer Success sobre atraso, recorrência, clientes e cruzamento financeiro,
-  sem alterar a UI ou criar fallback;
-- reutilizar componentes e biblioteca visual existentes;
-- preservar Customer Success, Suporte e Financeiro fora deste lote, salvo
-  regressão diretamente causada pela reorganização;
-- alterar somente contratos locais comprovados. Não criar cálculo no frontend.
+- auditar Comercial e manter filtros reativos com payloads completos;
+- garantir limpeza/loading/descarte de resposta obsoleta em cada troca;
+- validar Todas e After Sale sem misturar operações;
+- auditar Suporte e Customer Success e habilitar somente dimensões realmente
+  publicadas pelo backend;
+- investigar por que clientes em atraso/recorrência não aparecem em Customer
+  Success, registrando origem, cobertura e limitações sem criar fallback;
+- auditar Financeiro read-only e documentar se a fonte é exclusivamente After
+  Sale; nenhuma mudança de contrato sem prova de dimensão operacional;
+- compactar combos apenas se necessário, preservando teclado e valor exato;
+- adicionar regressões para período, operação, pipeline, etapas publicadas,
+  limpeza de snapshot e respostas obsoletas;
+- atualizar a Central de Ajuda somente com campos, fórmulas e contratos
+  comprovados.
 
-## Fora do escopo
+## Fora de escopo
 
-- migration, RPC, RLS, ACL ou SQL remoto;
-- alteração ou criação de propriedade HubSpot;
-- aplicação de migration no remoto;
-- publicação de artigos no banco de conhecimento;
-- predição, reuniões ou série temporal inventada;
-- deploy, push, merge, release ou secrets.
+Migration, SQL, banco remoto, alteração de RLS/ACL, HubSpot write, criação de
+propriedade customizada, secrets, deploy, push, merge, dados fictícios e
+Evolução de Customer Success sem série temporal real.
 
-## Critérios de aceite
+## Allowlist do lote
 
-1. Visão Geral não duplica os gráficos detalhados da aba Comercial.
-2. Comercial exibe posição e evolução com títulos, coortes e estados
-   compreensíveis.
-3. Funil e métricas de movimento respeitam período; o funil atual declara
-   quando representa snapshot fora da coorte histórica.
-4. Todas e After Sale enviam o recorte correto e não recebem fallback
-   consolidado indevido.
-5. Troca de filtro invalida snapshot, mostra loading e descarta resposta
-   obsoleta.
-6. Testes direcionados cobrem posição, evolução, período, operação, pipeline,
-   todos os estágios publicados e ausência de dados.
-7. test:focused, typecheck, build, lint, docs:validate, review:gates e
-   git diff --check passam.
-8. Entrega deve terminar em READY_FOR_REVIEW para o Sentinel.
-9. O seletor de pipeline permanece compacto e acessível sem alterar contratos
-   de dados ou permissões.
-10. O levantamento de Customer Success registra fonte, campo, join, filtro,
-    cobertura e motivo verificável para cada KPI ausente.
+- `apps/web/src/features/analytics/AnalyticsCsPage.tsx`
+- `apps/web/src/features/analytics/AnalyticsCommercialPage.tsx`
+- `apps/web/src/features/analytics/AnalyticsOperationScope.tsx`
+- `apps/web/src/features/analytics/AnalyticsPipelineCombobox.tsx`
+- `tests/scripts/analytics-dashboard-domain-filter-parity.test.mjs`
+- `tests/scripts/analytics-kpi-contract-parity.test.mjs`
+- `docs/ANALYTICS_DASHBOARD_HELP_CENTER_V1.md`
+- `handoffs/current/TASK.md`
+- `handoffs/current/IMPLEMENTATION.md`
+- `handoffs/current/STATUS.md`
 
-## Allowlist efetiva deste lote
+`handoffs/current/REVIEW.md` foi preservado para o Sentinel. Alterações
+preexistentes em `docs/PROJECT_STATE.md`, `docs/README.md`,
+`docs/ROADMAP_BUILDOUT_V3.md`, `docs/engineering/OWNER_DECISIONS.md`,
+`docs/reports/REMOTE_SUPABASE_TRUNCATE_PRIVILEGE_APPLICATION_2026-08-25.md`,
+`handoffs/README.md`, `package.json`, `scripts/run-focused-tests.mjs`,
+`docs/CONFI_ONE_ANALYTICS_LOCAL_PARITY_AND_DASHBOARD_PLAN_V1.md`,
+`docs/reports/LOCAL_MIGRATION_HISTORY_REPAIR_2026-08-23.md`, os arquivos
+arquivados de outras tasks e `supabase/migrations/20260822130000...sql`
+permanecem fora do lote e não devem ser staged.
 
-- `apps/web/src/features/analytics/AnalyticsCommercialPage.tsx`;
-- `apps/web/src/features/analytics/AnalyticsPipelineCombobox.tsx`;
+## Aceite
 
-- `tests/scripts/analytics-kpi-contract-parity.test.mjs`;
-- `tests/scripts/analytics-dashboard-filter-provenance.test.mjs`;
-- `tests/scripts/analytics-kpi-contract-remote-application-preflight.test.mjs`,
-  apenas para remover a dependência do gate no TASK corrente mutável;
-- `handoffs/current/TASK.md`, `handoffs/current/IMPLEMENTATION.md` e
-  `handoffs/current/STATUS.md`;
-- `handoffs/current/REVIEW.md` é preservado pelo reviewer e não foi editado pelo
-  executor.
-
-`AnalyticsCustomerSuccessPage.tsx` e seus contratos foram somente lidos para o
-levantamento de Customer Success; não receberam alteração. A task 112
-`ANALYTICS-DASHBOARD-MOBILE-RESPONSIVE-2026-08-25` permanece fora do lote e não
-teve arquivos de responsividade alterados.
+- testes provam payload e recálculo por período/operação/pipeline nas superfícies
+  com contrato;
+- dados sem cobertura aparecem como `unavailable`/`partial`, nunca como zero;
+- `test:focused`, typecheck, build, lint, docs:validate, review:gates e
+  `git diff --check` passam;
+- handoff READY_FOR_REVIEW completo, allowlist explícita e limitações honestas.

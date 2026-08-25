@@ -146,16 +146,19 @@ export function AnalyticsCsPage({ sharedPeriod, onSharedPeriodChange, sharedOper
       .then((payload) => { if (!cancelled) setKpiPayload(payload); })
       .catch(() => { if (!cancelled) setKpiPayload(null); });
 
-    // A distribuição por etapa não recebe o recorte de data: ela responde "quem
-    // está na fila agora", e filtrar por período faria a barra contar apenas
-    // parte de quem espera.
-    void getSupportStageBreakdown(null, groupCompany || null)
-      .then((payload) => { if (!cancelled) setStagePayload(payload); })
-      .catch(() => { if (!cancelled) setStagePayload(null); });
+    // A distribuição por etapa e a saúde da fila não recebem período, etapa ou
+    // exclusões: respondem "quem está na fila agora" por operação. Quando uma
+    // dimensão não publicada está selecionada, não consultar nem renderizar o
+    // universo sem filtro como se fosse o recorte pedido.
+    if (!filters.stageId && excludedPipelineIds.length === 0) {
+      void getSupportStageBreakdown(null, groupCompany || null)
+        .then((payload) => { if (!cancelled) setStagePayload(payload); })
+        .catch(() => { if (!cancelled) setStagePayload(null); });
 
-    void getSupportQueueHealth(groupCompany || null)
-      .then((payload) => { if (!cancelled) setQueuePayload(payload); })
-      .catch(() => { if (!cancelled) setQueuePayload(null); });
+      void getSupportQueueHealth(groupCompany || null)
+        .then((payload) => { if (!cancelled) setQueuePayload(payload); })
+        .catch(() => { if (!cancelled) setQueuePayload(null); });
+    }
 
     Promise.all([getCsSnapshot(filters, excludedPipelineIds, groupCompany || null), listAnalyticsSourceConfig()])
       .then(([snapshot, configs]) => {
@@ -199,6 +202,10 @@ export function AnalyticsCsPage({ sharedPeriod, onSharedPeriodChange, sharedOper
   const stageScope = readAnalyticsStageScope(byStatus, selectedPipelineIds);
   const stageOptions = stageScope.options;
   const priorityOptions = [{ value: 'HIGH', label: 'Alta' }, { value: 'MEDIUM', label: 'Média' }, { value: 'LOW', label: 'Baixa' }];
+  // KPIs e snapshot aceitam etapa e exclusões. Os read models auxiliares de
+  // posição atual publicam somente operação, portanto não podem aparecer como
+  // se fossem o mesmo recorte quando uma dimensão não publicada foi escolhida.
+  const unsupportedPositionFilter = Boolean(filters.stageId) || excludedPipelineIds.length > 0;
   const pipelineOptions: PipelineFilterOption[] = configuredPipelines.map((pipeline) => {
     const observed = byPipeline.find((item) => item.pipelineId === pipeline.pipelineId);
     return { ...pipeline, ticketCount: observed?.ticketCount ?? 0, sourceSummary: observed?.sourceSummary ?? [] };
@@ -217,10 +224,15 @@ export function AnalyticsCsPage({ sharedPeriod, onSharedPeriodChange, sharedOper
               <AnalyticsBoardLimitations payload={kpiPayload} />
             </>
           ) : null}
+          {dataState?.status !== 'empty' && unsupportedPositionFilter ? (
+            <ChartCard title="Detalhes atuais da fila" description="Este recorte pede uma dimensão que os read models auxiliares ainda não publicam.">
+              <MinimalState title="Detalhes indisponíveis neste recorte" description="Etapa e exclusões de pipeline são aplicadas aos KPIs e ao snapshot. A distribuição por etapa e a saúde da fila publicam somente a posição atual por operação; nenhum dado sem filtro é exibido como se fosse deste recorte." />
+            </ChartCard>
+          ) : null}
           {/* A saúde da fila vem logo depois dos indicadores e antes da
               distribuição por etapa: ela qualifica o número que acabou de ser
               lido, e qualificação atrasada não conserta leitura já feita. */}
-          {dataState?.status !== 'empty' && queuePayload ? (
+          {dataState?.status !== 'empty' && !unsupportedPositionFilter && queuePayload ? (
             <AnalyticsQueueHealth payload={queuePayload} />
           ) : null}
           {/* A lista de "clientes sem resposta" saiu da tela.
@@ -230,7 +242,7 @@ export function AnalyticsCsPage({ sharedPeriod, onSharedPeriodChange, sharedOper
               Publicar aquilo levaria a cobrar o time por uma dívida que não
               existe no tamanho anunciado. O read model continua no banco; volta
               quando distinguir espera de abandono. */}
-          {dataState?.status !== 'empty' ? (
+          {dataState?.status !== 'empty' && !unsupportedPositionFilter ? (
             <ChartCard
               title="Atendimentos / Service desk · fila por etapa"
               description="O painel de atendimentos concentra a fila operacional. Etapas cruzadas entre pipelines aparecem somadas; o tooltip abre a composição por pipeline."
@@ -294,7 +306,7 @@ export function AnalyticsCsPage({ sharedPeriod, onSharedPeriodChange, sharedOper
   return (
     <AnalyticsHdDomainFrame title="Suporte" description="Fila, tempo de resposta e distribuição dos atendimentos." source="HubSpot" state={dataState}>
     <div className="gso-hd-domain-surface space-y-5">
-      <AnalyticsFiltersBar value={filters} onChange={(next) => { setFilters(next); onSharedPeriodChange?.({ from: next.from, to: next.to }); }} stageOptions={stageOptions} priorityOptions={priorityOptions} stageLabel="Status" extraFields={pipelineOptions.length > 0 ? <><AnalyticsOperationScope storageKey="analytics-operation-scope" value={groupCompany} onChange={(value) => { handleGroupCompanyChange(value); setFilters((current) => ({ ...current, stageId: '' })); }} options={configuredPipelines.map((pipeline) => ({ value: pipeline.groupCompany, source: pipeline.groupCompanySource }))} /><AnalyticsPipelineCombobox inline operation={groupCompany} storageKey="analytics-cs-pipelines" pipelines={pipelineOptions.map((pipeline) => ({ ...pipeline, count: pipeline.ticketCount, groupCompany: configuredPipelines.find((config) => config.pipelineId === pipeline.pipelineId)?.groupCompany ?? null }))} excludedPipelineIds={excludedPipelineIds} onChange={(next) => { setExcludedPipelineIds(next); setFilters((current) => hasCompatibleAnalyticsStage(byStatus, selectedAnalyticsPipelineIds(configuredPipelines, groupCompany, next), current.stageId) ? current : { ...current, stageId: '' }); }} /></> : null} />
+      <AnalyticsFiltersBar value={filters} onChange={(next) => { setFilters(next); onSharedPeriodChange?.({ from: next.from, to: next.to }); }} stageOptions={stageOptions} priorityOptions={priorityOptions} stageLabel="Status" extraFields={pipelineOptions.length > 0 ? <><AnalyticsOperationScope inline storageKey="analytics-operation-scope" value={groupCompany} onChange={(value) => { handleGroupCompanyChange(value); setFilters((current) => ({ ...current, stageId: '' })); }} options={configuredPipelines.map((pipeline) => ({ value: pipeline.groupCompany, source: pipeline.groupCompanySource }))} /><AnalyticsPipelineCombobox inline operation={groupCompany} storageKey="analytics-cs-pipelines" pipelines={pipelineOptions.map((pipeline) => ({ ...pipeline, count: pipeline.ticketCount, groupCompany: configuredPipelines.find((config) => config.pipelineId === pipeline.pipelineId)?.groupCompany ?? null }))} excludedPipelineIds={excludedPipelineIds} onChange={(next) => { setExcludedPipelineIds(next); setFilters((current) => hasCompatibleAnalyticsStage(byStatus, selectedAnalyticsPipelineIds(configuredPipelines, groupCompany, next), current.stageId) ? current : { ...current, stageId: '' }); }} /></> : null} />
       {stageScope.notice ? <p role="status" className="text-xs text-[color:var(--minimal-text-tertiary)]">{stageScope.notice}</p> : null}
       {dataState?.status === 'empty' ? <MinimalState title="Nenhum dado neste recorte" description="Ajuste os filtros ou execute uma sincronização concluída para consultar o histórico." /> : null}
       <AnalyticsDomainTabs tabs={subTabs} activeId={subTab} onChange={setSubTab} />
