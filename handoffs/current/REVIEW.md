@@ -9,7 +9,7 @@ Reviewer active: Sentinel
 Review mode: SENTINEL_REQUIRED
 Agent coordination: IDLE
 Base SHA: d701181bf2192ff55f9b4191e624a75fc6ec287a
-Implementation SHA: UNCOMMITTED_WORKTREE
+Implementation SHA: `06aed8b6a4d880c12644fa4cb35e51e4a8b1cf9f`
 
 ## Veredito
 
