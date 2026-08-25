@@ -1,23 +1,14 @@
 # TASK
 
 - Task: ANALYTICS-DASHBOARD-FILTER-RUNTIME-PROOF-2026-08-25
-- State: IDLE
-- Owner: Forge
-- Role: EXECUTOR
+- State: READY_FOR_REVIEW
+- Owner: Sentinel
+- Role: REVIEWER
 - Reviewer active: Sentinel
 - Review mode: SENTINEL_REQUIRED
-- Agent coordination: IDLE
+- Agent coordination: REVIEW_ACTIVE
 - Base SHA: 869ea70198856535e112801ea86808d501e4abc8
 - Implementation SHA: UNCOMMITTED_WORKTREE
-
-## Finalização local
-
-- Veredito: APPROVED pelo Sentinel, limitado ao harness, regressões e prova
-  local read-only.
-- Finalize: FINALIZE_LOCAL seletivo concluído; commit SHA registrado no
-  checkpoint de implementação.
-- Sem alteração de produto, RPC, migration, banco, remoto, secrets, push,
-  merge ou deploy.
 
 ## Objetivo
 

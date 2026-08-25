@@ -1,12 +1,12 @@
 # IMPLEMENTATION
 
 - Task: ANALYTICS-DASHBOARD-FILTER-RUNTIME-PROOF-2026-08-25
-- State: IDLE
-- Owner: Forge
+- State: READY_FOR_REVIEW
+- Owner: Sentinel
 - Reviewer active: Sentinel
 - Review mode: SENTINEL_REQUIRED
-- Role: EXECUTOR
-- Agent coordination: IDLE
+- Role: REVIEWER
+- Agent coordination: REVIEW_ACTIVE
 - Base SHA: 869ea70198856535e112801ea86808d501e4abc8
 - Implementation SHA: UNCOMMITTED_WORKTREE
 
@@ -138,10 +138,3 @@ State=READY_FOR_REVIEW, Owner=Sentinel, Role=REVIEWER, Reviewer active=Sentinel,
 Review mode=SENTINEL_REQUIRED e Agent coordination=REVIEW_ACTIVE. Sentinel deve
 revisar independentemente a correção de F-FILTER-001/F-FILTER-002, incluindo as
 regressões 9/9 e a reexecução runtime 10/10 pós-correção.
-
-## Finalização local
-
-Sentinel aprovou o lote. FINALIZE_LOCAL foi executado seletivamente, com
-allowlist validada e handoffs arquivados. O commit funcional foi criado sem
-misturar as alterações preexistentes do worktree; o SHA final será registrado
-no checkpoint de metadados desta finalização.

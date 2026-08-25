@@ -10,7 +10,7 @@
 - Role: EXECUTOR
 - Reviewer active: Sentinel
 - Review mode: SENTINEL_REQUIRED
-- Agent coordination: IDLE
+- Agent coordination: HOLD
 - Veredito: APPROVED
 
 ## Escopo e evidência reconhecida
