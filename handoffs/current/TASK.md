@@ -1,6 +1,6 @@
 # TASK
 
-Task: `ANALYTICS-KPI-CONTRACT-REMOTE-APPLICATION-R2-2026-08-25`
+Task: `RELEASE-HEADER-GLOBAL-SEARCH-ALIGNMENT-2026-08-25`
 
 State: DONE
 Owner: Forge
@@ -8,69 +8,56 @@ Role: EXECUTOR
 Reviewer active: Sentinel
 Review mode: SENTINEL_REQUIRED
 Agent coordination: IDLE
-Base SHA: 596a2b59
-
-## Resultado
-
-A migration foi aplicada uma única vez no projeto `ConfiOne /
-jzmmvfcmruasqmrdmbup` após preflight imediato `GO`. A pós-validação
-read-only confirmou os quatro wrappers, segurança, ACLs e predicados de
-operação. O histórico remoto registrou o nome versionado em
-`20260825144746`. Não houve retry nem escrita fora da migration aprovada.
+Base SHA: `d701181bf2192ff55f9b4191e624a75fc6ec287a`
 
 ## Objetivo
 
-Aplicar, somente após nova aprovação independente, a migration versionada
-`supabase/migrations/20260824210000_analytics_kpi_contract_parity_v1.sql` no
-projeto explicitamente confirmado `ConfiOne / jzmmvfcmruasqmrdmbup`. A migration
-cria os wrappers filtrados e `by_operation` de seis argumentos e preserva as
-assinaturas legadas de quatro argumentos.
+Centralizar visualmente a busca global no header para a apresentação interna,
+sem alterar a regra de acesso, destinos, permissões ou comportamento de
+Ctrl/Cmd+K.
 
 ## Allowlist
 
-- `supabase/migrations/20260824210000_analytics_kpi_contract_parity_v1.sql`
-- `scripts/local-qa/analytics-kpi-contract-remote-application-preflight.mjs`
-- `tests/scripts/analytics-kpi-contract-remote-application-preflight.test.mjs`
-- `docs/reports/ANALYTICS_KPI_CONTRACT_REMOTE_APPLICATION_R2_2026-08-25.md`
+- `apps/web/src/features/navigation/MinimalAppShell.tsx`
+- `apps/web/src/features/navigation/GeniusGlobalSearch.tsx`
+- `apps/web/src/index.css`
+- `tests/scripts/release-header-global-search-alignment.test.mjs`
 - `handoffs/current/TASK.md`
 - `handoffs/current/IMPLEMENTATION.md`
 - `handoffs/current/REVIEW.md`
 - `handoffs/current/STATUS.md`
+- `handoffs/archive/RELEASE-HEADER-GLOBAL-SEARCH-ALIGNMENT-2026-08-25/TASK.md`
+- `handoffs/archive/RELEASE-HEADER-GLOBAL-SEARCH-ALIGNMENT-2026-08-25/IMPLEMENTATION.md`
+- `handoffs/archive/RELEASE-HEADER-GLOBAL-SEARCH-ALIGNMENT-2026-08-25/REVIEW.md`
+- `handoffs/archive/RELEASE-HEADER-GLOBAL-SEARCH-ALIGNMENT-2026-08-25/STATUS.md`
+
+Arquivos adicionais exigem atualização explícita deste allowlist.
 
 ## Fora de escopo
 
-- SQL manual fora da migration versionada;
-- retry, reset, repair, rebuild, ACL fora da migration ou aplicação parcial;
-- alteração de secrets, produção fora do alvo, push, merge, deploy ou release;
-- execução de qualquer migration de dashboard além desta migration KPI.
-
-## Guardrails de aplicação
-
-1. Reconfirmar identidade exata do projeto e versão ausente imediatamente antes.
-2. Reconfirmar, por leitura, os quatro helpers, owner, `SECURITY DEFINER`,
-   `search_path`, fingerprints, ACLs e probes registrados no preflight aprovado.
-3. Na mesma leitura, confirmar por `to_regprocedure` os dois wrappers legados
-   de quatro argumentos e os quatro alvos de seis argumentos; conferir owner,
-   `SECURITY DEFINER`, `search_path`, ACLs e fingerprint dos legados. Os dois
-   legados devem existir e os quatro alvos devem estar ausentes. Qualquer
-   divergência é `NO_GO` antes de `CREATE OR REPLACE`.
-4. Usar exclusivamente `mcp__codex_apps__supabase_apply_migration`, com a
-   migration inteira e nome versionado, em uma única chamada.
-5. Não repetir em timeout, resposta ambígua, falha ou parcialidade. Parar em
-   `OWNER_DECISION_REQUIRED`.
-6. Após sucesso inequívoco, fazer somente leituras de histórico, catálogo,
-   ACL/RLS, predicados de operação e probes read-only dos wrappers legados e
-   novos. Smoke autenticado permanece `NOT_PROVEN` sem sessão válida.
+- alteração de permissões, capabilities, router, destinos, RLS ou backend;
+- alteração do conteúdo ou contrato da busca;
+- refatoração geral do shell;
+- push, merge, deploy ou publicação sem aprovação independente.
 
 ## Critérios de aceite
 
-- aprovação independente registrada pelo Sentinel;
-- envelope `BEGIN`/`COMMIT` explícito na migration;
-- preflight imediato executável cobre legados, alvos, segurança, ACLs e
-  fingerprints, com regressões fail-closed;
-- migration aplicada uma única vez no projeto confirmado, sem divergência;
-- quatro wrappers de seis argumentos presentes com segurança e ACL esperadas;
-- predicado server-side de operação e exclusões de pipeline preservado;
-- assinaturas legadas de quatro argumentos permanecem presentes;
-- pós-validação read-only sem erro, parcialidade ou retry;
-- qualquer falha mantém o rollout em `NO_GO` e não autoriza seguir para UI.
+1. A busca fica geometricamente centralizada no header em desktop.
+2. O layout continua utilizável em viewport estreita, sem overflow horizontal.
+3. Ctrl/Cmd+K, Escape, foco, navegação e filtragem por permissões permanecem
+   inalterados.
+4. Nenhum menu global ou identidade do usuário é duplicado ou reposicionado.
+5. Teste determinístico, typecheck, build, lint, docs:validate,
+   review:gates e git diff --check passam.
+6. A entrega fica pronta para revisão independente até a janela de deploy.
+
+## Regra de deploy
+
+O prazo de apresentação é um requisito de release, não uma autorização para
+pular gates. Se a janela não comportar revisão independente e validação, o
+estado deve permanecer NO-GO e o motivo deve ser registrado.
+
+## Resultado
+
+APPROVED pelo Sentinel e finalizado localmente de forma seletiva. A busca foi
+centralizada no header sem alteração de permissões, destinos ou contrato.
