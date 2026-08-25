@@ -1,13 +1,15 @@
 # STATUS
 
+- Task: IDLE
 - State: IDLE
-- Owner: None
-- Role: NONE
+- Owner: Forge
+- Role: EXECUTOR
 - Reviewer active: Sentinel
 - Review mode: SENTINEL_REQUIRED
 - Agent coordination: IDLE
 - Last task: ANALYTICS-KPI-CONTRACT-LOCAL-APPLICATION-2026-08-25
-- Last result: APPROVED and archived after selective FINALIZE_LOCAL.
-- Notification: completion must reach Sentinel and Codex.
+- Last verdict: APPROVED, limitado à aplicação e validação local da migration
+  candidata
 
-No task is active in `handoffs/current`.
+O pacote foi arquivado. O schema parity histórico permanece `NO_GO`/fail-closed
+e não há autorização implícita para banco remoto, produção ou deploy.
